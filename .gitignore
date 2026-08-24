@@ -1,4 +1,4 @@
-# dependencies
+﻿# dependencies
 node_modules
 
 # build output
@@ -38,4 +38,5 @@ release7
 release8
 release9
 dist-verify
+dist-build/
 vite.config.js.timestamp-*

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, FolderKanban, ArrowRight } from 'lucide-react';
 import {
   NotebookPen, Link, Lightbulb, BookOpen, Baby, Share2, Trophy, Globe,
-  Wrench, CalendarDays, CalendarClock, Bot, Newspaper, Sword,
+  Wrench, CalendarDays, CalendarClock, Bot, Newspaper, Sword, Sparkles,
 } from 'lucide-react';
 
 /* ============================================================
@@ -27,7 +27,9 @@ const TOOLS = [
   { to: '/planner',     label: '个人日程', desc: '日历与假期，日程一目了然', icon: CalendarClock, accent: '#0EA5E9' },
   { to: '/agents',      label: 'AI Agent', desc: 'Agent 与 Skill 资源聚合', icon: Bot,       accent: '#7C5CFF' },
   { to: '/news',        label: 'AI 情报', desc: 'AI 五大类每日资讯速览', icon: Newspaper, accent: '#3B5BFF' },
-  { to: '/jianlai',     label: '剑来·人生模拟', desc: '开放世界文字冒险游戏', icon: Sword, accent: '#B5462F' },
+    { to: '/jianlai',     label: '剑来·人生模拟', desc: '开放世界文字冒险游戏', icon: Sword, accent: '#B5462F' },
+  { to: '/zhanshen',    label: '斩神·世界',    desc: '神明漫天，凡躯执剑的沉浸互动', icon: Sword, accent: '#5B6BFF' },
+  { to: '/perfect-world', label: '完美世界', desc: '视觉小说·粒子光效体验', icon: Sparkles, accent: '#6366F1' },
 ];
 
 export default function Dashboard({ onLogout, user }) {

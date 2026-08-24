@@ -21,6 +21,8 @@ const Planner = lazy(() => import('./pages/Planner'))
 const AgentSkills = lazy(() => import('./pages/AgentSkills'))
 const AINews = lazy(() => import('./pages/AINews'))
 const Jianlai = lazy(() => import('./pages/Jianlai'))
+const PerfectWorld = lazy(() => import('./pages/PerfectWorld'))
+const ZhanShen = lazy(() => import('./pages/ZhanShen'))
 
 
 function App() {
@@ -54,6 +56,8 @@ function App() {
                 <Route path="/agents" element={<AgentSkills />} />
                 <Route path="/news" element={<AINews />} />
                 <Route path="/jianlai" element={<Jianlai />} />
+                <Route path="/perfect-world" element={<PerfectWorld />} />
+                <Route path="/zhanshen" element={<ZhanShen />} />
 
                 {/* 未知路径重定向回首页，避免空白页 */}
                 <Route path="*" element={<Navigate to="/" replace />} />
