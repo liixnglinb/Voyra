@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   NotebookPen, Link, Lightbulb, BookOpen, Baby, Share2, Globe,
-  Wrench, CalendarDays, CalendarClock, Bot, Newspaper, Sword, Sparkles, Flame,
+  Wrench, CalendarDays, CalendarClock, Bot, Newspaper,
   Github, ArrowUpRight, ChevronDown, Zap, Waves, Frame,
 } from 'lucide-react';
 
@@ -16,7 +16,6 @@ import {
 /* ---------- 数据 ---------- */
 const FEATURED = [
   { to: '/smart-notes', no: '01', name: 'Spell', en: 'NOTES', desc: '随手记录灵感，沉淀结构化知识', tag: '效率工具', Icon: NotebookPen },
-  { to: '/zhanshen',     no: '02', name: 'ZhanShen', en: 'WORLD', desc: '神明漫天，凡躯执剑的沉浸式互动阅读', tag: '小说沉浸', Icon: Sword },
   { to: '/prompts',      no: '03', name: 'Prompt', en: 'LIB', desc: '管理 AI 提示词模板，随用随取', tag: '创作工具', Icon: Lightbulb },
   { to: '/agents',       no: '04', name: 'Hub', en: 'AGENTS', desc: '主流 Agent 聚合与高分 Skill 资源', tag: 'AI 前沿', Icon: Bot },
   { to: '/planner',      no: '05', name: 'Plan', en: 'DAY', desc: '日历假期与自定义日程，精准到点', tag: '效率工具', Icon: CalendarClock },
@@ -44,18 +43,10 @@ const TOOL_GROUPS = [
       { to: '/news', label: 'AI 每日情报站', desc: '五大类资讯速览', Icon: Newspaper },
     ],
   },
-  {
-    title: '小说沉浸', items: [
-      { to: '/zhanshen', label: '斩神·世界', desc: '神明漫天，凡躯执剑', Icon: Sword },
-      { to: '/perfect-world', label: '完美世界', desc: '粒子光效视觉小说', Icon: Sparkles },
-      { to: '/doupo-cangqiong', label: '斗破苍穹', desc: '异火大陆沉浸阅读', Icon: Flame },
-      { to: '/jianlai', label: '剑来·人生模拟', desc: '开放世界文字冒险', Icon: Sword },
-    ],
-  },
 ];
 
 const INSIGHTS = [
-  { Icon: Waves, title: 'Voyra 是什么', en: 'ABOUT', body: '把高频工具与 AI 能力聚合到一处：笔记、日程、资料、小说沉浸阅读，一个域名全部搞定。' },
+  { Icon: Waves, title: 'Voyra 是什么', en: 'ABOUT', body: '把高频工具与 AI 能力聚合到一处：笔记、日程、资料与 AI 工具，一个域名全部搞定。' },
   { Icon: Frame, title: '用什么构建', en: 'STACK', body: 'React + Vite 前端，Bmob 云端数据，Cloudflare Pages 全球加速部署，零服务器成本。' },
   { Icon: Zap, title: '怎么使用', en: 'GUIDE', body: '无需注册登录，打开即用。数据存于云端多端同步，随时记录、随时随地继续。' },
 ];
@@ -63,7 +54,7 @@ const INSIGHTS = [
 const ME_TAGS = ['Voyra', 'Frontend', 'AI', 'Creator', 'Cloudflare', 'Bmob'];
 
 const EXPERIENCES = [
-  { state: '现在', name: 'Voyra 个人站', desc: '云端一站式创作与效率平台，聚合 16+ 高频工具与小说沉浸页。', Icon: NotebookPen },
+  { state: '现在', name: 'Voyra 个人站', desc: '云端一站式创作与效率平台，聚合 15 个高频效率与 AI 工具。', Icon: NotebookPen },
   { state: '基建', name: 'Cloudflare Pages', desc: 'GitHub 到 Cloudflare 自动构建部署，自定义域名 lxlrwxs.top。', Icon: Share2 },
   { state: '数据', name: 'Bmob 云后端', desc: '用户数据云端存储，免服务器，开箱即用。', Icon: Globe },
 ];
@@ -398,7 +389,7 @@ export default function Dashboard() {
           <div className="oy-section-en">ABOUT ME</div>
           <p style={{ fontSize: 15, color: '#444', lineHeight: 1.8, margin: '0 0 22px', maxWidth: 640 }}>
             独立开发者的个人工具站 Voyra 的作者。喜欢把高频需求做成小而美的网页应用，
-            从笔记、日程到小说沉浸阅读，都在这里一点点被点亮。
+            从笔记、日程到 AI 工具，都在这里一点点被点亮。
           </p>
           <div className="oy-me-tags">
             {ME_TAGS.map((t) => <span key={t}>{t}</span>)}
