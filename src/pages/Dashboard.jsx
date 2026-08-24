@@ -276,7 +276,7 @@ export default function Dashboard() {
 
       {/* tab 导航 */}
       <nav className="oy-nav">
-        {[['products', '产品'], ['skills', 'Skills'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']].map(([k, l]) => (
+        {[['products', '产品'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']].map(([k, l]) => (
           <button key={k} className={'oy-tab ' + (tab === k ? 'on' : '')} onClick={() => setTab(k)}>{l}</button>
         ))}
       </nav>
@@ -319,6 +319,29 @@ export default function Dashboard() {
             })}
           </div>
 
+          {/* 全部工具 */}
+          <div style={{ marginTop: 46 }}>
+            <div className="oy-section-title">全部工具</div>
+            <div className="oy-section-en">ALL TOOLS</div>
+            {TOOL_GROUPS.map((g) => (
+              <div className="oy-group" key={g.title}>
+                <div className="oy-group-title">{g.title} <span className="cnt">{g.items.length}</span></div>
+                <div className="oy-grid">
+                  {g.items.map((t) => {
+                    const I = t.Icon;
+                    return (
+                      <button key={t.to} className="oy-cell" onClick={() => go(t.to)}>
+                        <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
+                        <span className="c-name">{t.label}</span>
+                        <span className="c-desc">{t.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* 编号动效演示卡（复刻原站 N° 交互教学） */}
           <div style={{ marginTop: 46 }}>
             <div className="oy-section-title">交互演示</div>
@@ -344,31 +367,6 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ============ Skills ============ */}
-      {tab === 'skills' && (
-        <div className="oy-wrap">
-          <div className="oy-section-title">Skills</div>
-          <div className="oy-section-en">能力 · 工具</div>
-          {TOOL_GROUPS.map((g) => (
-            <div className="oy-group" key={g.title}>
-              <div className="oy-group-title">{g.title} <span className="cnt">{g.items.length}</span></div>
-              <div className="oy-grid">
-                {g.items.map((t) => {
-                  const I = t.Icon;
-                  return (
-                    <button key={t.to} className="oy-cell" onClick={() => go(t.to)}>
-                      <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
-                      <span className="c-name">{t.label}</span>
-                      <span className="c-desc">{t.desc}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
         </div>
       )}
 
