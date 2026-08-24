@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   NotebookPen, Link, Lightbulb, BookOpen, Baby, Share2, Globe,
   Wrench, CalendarDays, CalendarClock, Bot, Newspaper,
@@ -67,7 +66,6 @@ const CONTACTS = [
 
 /* ---------- 组件 ---------- */
 export default function Dashboard() {
-  const navigate = useNavigate();
   const [tab, setTab] = useState('products'); // products | skills | articles | me | contact
   const [replay, setReplay] = useState(0);
 
@@ -76,7 +74,7 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, []);
 
-  const go = (to) => navigate(to);
+  const go = (to) => window.open(to, '_blank', 'noopener,noreferrer');
 
   return (
     <div className="oy">
