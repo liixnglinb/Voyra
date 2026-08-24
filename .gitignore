@@ -40,3 +40,7 @@ release9
 dist-verify
 dist-build/
 vite.config.js.timestamp-*
+
+# browser verification artifacts
+.playwright-cli/
+output/playwright/

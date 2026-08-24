@@ -209,7 +209,7 @@ export default function AuthGate({ children }) {
         <div className="sx-card">
           <div className="sx-brand">
             <div className="sx-brand-ico"><Sparkles size={15} strokeWidth={2} /></div>
-            <div className="sx-brand-txt">LocalHub</div>
+            <div className="sx-brand-txt">Voyra</div>
           </div>
 
           {/* 主 tab：登录 / 注册 */}

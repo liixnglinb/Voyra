@@ -1,386 +1,241 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  NotebookPen, Link, Lightbulb, BookOpen, Baby, Share2, Globe,
-  Wrench, CalendarDays, CalendarClock, Bot, Newspaper,
-  Github, ArrowUpRight, ChevronDown, Zap, Waves, Frame, Sparkles,
+  ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarClock,
+  CalendarDays, Check, ChevronDown, Code2, Frame, Github,
+  Globe, LayoutGrid, Lightbulb, Link, MousePointer2, NotebookPen,
+  Sparkles, Star, Waves,
 } from 'lucide-react';
 
-/* ============================================================
-   Voyra 首页 · 一比一复刻 oiloil.org 布局（纯文字版）
-   - 产品卡：幽灵大编号 + 40px 标题 + 描述 + 数字标签
-   - Skills：大字号标题放上方 + 星标计数 + 纯文字卡
-   - 标签胶囊 / 联系区编号列表 全部对齐原站
-   ============================================================ */
-
 const FEATURED = [
-  { to: '/smart-notes', no: '01', name: '智能笔记', en: 'NOTES · 随手记录灵感，沉淀结构化知识', match: 12, Icon: NotebookPen },
-  { to: '/prompts',      no: '02', name: '提示词库', en: 'LIB · 管理 AI 提示词模板，随用随取', match: 8, Icon: Lightbulb },
-  { to: '/agents',       no: '03', name: 'AI Agent', en: 'AGENTS · 主流 Agent 聚合与高分 Skill 资源', match: 6, Icon: Bot },
-  { to: '/planner',      no: '04', name: '个人日程', en: 'PLAN · 日历假期与自定义日程，精准到点', match: 9, Icon: CalendarClock },
-  { to: '/web-links',    no: '05', name: '网页链接', en: 'LINKS · 收藏与管理常用网页，分类快速访问', match: 7, Icon: Link },
+  { to: '/smart-notes', no: '01', name: '智能笔记', desc: '随手记录灵感，把零散内容整理成可继续推进的笔记。', cta: '打开笔记', Icon: NotebookPen, art: 'notes' },
+  { to: '/prompts', no: '02', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompt' },
+  { to: '/agents', no: '03', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'motion' },
+  { to: '/planner', no: '04', name: '个人日程', desc: '把课程、假期和自定义事项排到可执行的时间线上。', cta: '打开日程', Icon: CalendarClock, art: 'calendar' },
+  { to: '/web-links', no: '05', name: '网页链接', desc: '收藏常用服务，分类整理后从一个界面直接访问。', cta: '整理链接', Icon: Link, art: 'links' },
 ];
 
-const TOOL_GROUPS = [
-  { title: 'EFFICIENCY · 效率工具', count: 6, items: [
-    { to: '/smart-notes', label: '智能笔记', Icon: NotebookPen },
-    { to: '/web-links', label: '网页链接', Icon: Link },
-    { to: '/mindmap', label: '思维导图', Icon: Share2 },
-    { to: '/tools', label: '工具网站', Icon: Wrench },
-    { to: '/schedule', label: '个人课表', Icon: CalendarDays },
-    { to: '/planner', label: '个人日程', Icon: CalendarClock },
-  ]},
-  { title: 'CREATION · 创作工具', count: 3, items: [
-    { to: '/prompts', label: '提示词库', Icon: Lightbulb },
-    { to: '/learning', label: '学习资料', Icon: BookOpen },
-    { to: '/blog', label: '个人博客', Icon: Globe },
-  ]},
-  { title: 'LIFE · 生活与 AI', count: 3, items: [
-    { to: '/baby-care', label: '宝宝护理', Icon: Baby },
-    { to: '/agents', label: 'AI Agent & Skill', Icon: Bot },
-    { to: '/news', label: 'AI 每日情报站', Icon: Newspaper },
-  ]},
-];
+const MATHMODEL_SKILL = {
+  href: 'https://github.com/liixnglinb/mathmodel-skill',
+  name: '数学建模 Skill',
+  tagline: '国赛（CUMCM）数学建模十阶段工作流',
+};
 
-const MY_SKILLS = [
-  { href: 'https://github.com/liixnglinb/mathmodel-skill', label: '数学建模', en: '竞赛课题建模全流程：分析 · 建模 · 出图 · 论文', Icon: BookOpen },
+const ARTICLES = [
+  { date: '2026.08.24', title: '把个人工具站做成能每天使用的工作台', desc: '从一个工具入口开始，把记录、安排和资料整理成连续的个人工作流。' },
+  { date: '2026.08.18', title: '给日常任务留下一条可复用的路径', desc: '当模板、链接和笔记相互连接，重复操作会变得越来越少。' },
+  { date: '2026.08.12', title: '从灵感到执行：一个轻量的整理方法', desc: '不追求复杂系统，只让眼前的内容在需要时能够被快速找到。' },
+  { date: '2026.08.06', title: '如何为 AI 工具建立自己的资源库', desc: '把平台、提示词和使用经验收进同一个可维护的个人目录。' },
 ];
-
-const ME_TAGS = ['VOYRA', 'FRONTEND', 'AI', 'CREATOR', 'CLOUDFLARE', 'BMOB'];
 
 const EXPERIENCES = [
-  { state: '现在', name: 'Voyra 个人站', desc: '云端一站式创作与效率平台，聚合 15 个高频效率与 AI 工具。', Icon: NotebookPen },
-  { state: '基建', name: 'Cloudflare Pages', desc: 'GitHub 到 Cloudflare 自动构建部署，自定义域名 lxlrwxs.top。', Icon: Share2 },
-  { state: '数据', name: 'Bmob 云后端', desc: '用户数据云端存储，免服务器，开箱即用。', Icon: Globe },
+  { state: '现在', name: 'Voyra 个人站', desc: '云端一站式创作与效率平台，聚合常用工具与 AI 资源。', Icon: NotebookPen },
+  { state: '基建', name: 'Cloudflare Pages', desc: 'GitHub 推送后自动构建，自定义域名稳定访问。', Icon: Globe },
+  { state: '数据', name: 'Bmob 云后端', desc: '工具数据可云端保存，免去自建服务端的维护成本。', Icon: LayoutGrid },
 ];
 
 const CONTACTS = [
-  { no: '01', label: 'GitHub', val: '@liixnglinb', href: 'https://github.com/liixnglinb', Icon: Github },
-  { no: '02', label: 'Email', val: 'hello@lxlrwxs.top', href: 'mailto:hello@lxlrwxs.top', Icon: Sparkles },
-  { no: '03', label: '网站', val: 'https://lxlrwxs.top', href: 'https://lxlrwxs.top', Icon: Globe },
+  { no: '01', label: 'GitHub', value: '@liixnglinb', href: 'https://github.com/liixnglinb', Icon: Github },
+  { no: '02', label: 'Email', value: 'hello@lxlrwxs.top', href: 'mailto:hello@lxlrwxs.top', Icon: Sparkles },
+  { no: '03', label: '网站', value: 'lxlrwxs.top', href: 'https://lxlrwxs.top', Icon: Globe },
 ];
 
-export default function Dashboard() {
-  const [tab, setTab] = useState('products');
-  const [replay, setReplay] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const rootRef = useRef(null);
+const TABS = [['products', '产品'], ['skills', 'Skills'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']];
+const MOTION_SCENES = [['hover', '悬停', MousePointer2], ['spring', '弹性', Waves], ['blur', '毛玻璃', Frame]];
 
+function useReveal(rootRef, activeTab) {
   useEffect(() => {
-    const t = setTimeout(() => setReplay((r) => r + 1), 4000);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const onScroll = () => {
-      const total = el.scrollHeight - el.clientHeight;
-      setProgress(total > 0 ? Math.min(100, Math.round((el.scrollTop / total) * 100)) : 0);
-    };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => el.removeEventListener('scroll', onScroll);
-  }, []);
-
-  useEffect(() => {
-    const el = rootRef.current;
-    if (!el) return;
-    const nodes = el.querySelectorAll('.oy-reveal');
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting) {
-          const s = en.target;
-          const d = s.dataset.revealDelays ? Number(s.dataset.revealDelays) : 0;
-          setTimeout(() => s.classList.add('oy-in'), d);
-          io.unobserve(s);
+    const root = rootRef.current;
+    if (!root) return undefined;
+    const scroller = root.parentElement;
+    const nodes = root.querySelectorAll('[data-reveal]');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('vr-is-visible');
+          observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12 });
-    nodes.forEach((n) => io.observe(n));
-    return () => io.disconnect();
-  }, [tab]);
+    }, { root: scroller || null, threshold: 0.1 });
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [activeTab, rootRef]);
+}
 
-  const go = (to) => window.open('#' + to, '_blank', 'noopener,noreferrer');
+function updateSpotlight(event) {
+  const card = event.currentTarget;
+  const bounds = card.getBoundingClientRect();
+  card.style.setProperty('--spot-x', `${event.clientX - bounds.left}px`);
+  card.style.setProperty('--spot-y', `${event.clientY - bounds.top}px`);
+}
 
+function FeatureArt({ type, motionMode, onMotionMode, springVersion, onReplay, blurOn, onBlur }) {
+  if (type === 'notes') return (
+    <div className="vr-art vr-note-art" aria-hidden="true">
+      <div className="vr-note-toolbar"><span /><span /><span /></div>
+      <div className="vr-note-title">今天的想法</div><div className="vr-note-line wide" /><div className="vr-note-line" /><div className="vr-note-line short" />
+      <div className="vr-note-chip"><Check size={13} /> 已整理</div>
+    </div>
+  );
+
+  if (type === 'prompt') return (
+    <div className="vr-art vr-prompt-art" aria-hidden="true">
+      <div className="vr-code-top"><Code2 size={15} /><span>Prompt.md</span><i /></div>
+      <p>请基于以下内容</p><p><mark>提炼结构</mark> 并给出行动项</p><p>保留原有语气与重点</p>
+      <div className="vr-code-status"><span>3 条规则</span><b>ready</b></div>
+    </div>
+  );
+
+  if (type === 'calendar') return (
+    <div className="vr-art vr-calendar-art" aria-hidden="true">
+      <div className="vr-calendar-head"><CalendarDays size={15} /><strong>八月</strong><span>2026</span></div>
+      <div className="vr-days">{['一', '二', '三', '四', '五', '六', '日'].map((day) => <i key={day}>{day}</i>)}</div>
+      <div className="vr-date-grid">{Array.from({ length: 28 }, (_, index) => <span className={index === 14 || index === 17 || index === 22 ? 'is-marked' : ''} key={index}>{index + 1}</span>)}</div>
+      <div className="vr-calendar-event">15:00 项目复盘</div>
+    </div>
+  );
+
+  if (type === 'links') return (
+    <div className="vr-art vr-link-art" aria-hidden="true">
+      <div className="vr-browser-bar"><span /><span /><span /><b>voyra.link</b></div>
+      {['工作台', '学习资料', 'AI 资源'].map((item, index) => <div className="vr-link-row" key={item}><i>{index + 1}</i><span>{item}</span><ArrowUpRight size={14} /></div>)}
+    </div>
+  );
+
+  const SceneIcon = MOTION_SCENES.find(([id]) => id === motionMode)?.[2] || MousePointer2;
+  const currentIndex = MOTION_SCENES.findIndex(([id]) => id === motionMode);
+  const selectPrevious = () => onMotionMode(MOTION_SCENES[(currentIndex + 2) % MOTION_SCENES.length][0]);
+  const selectNext = () => onMotionMode(MOTION_SCENES[(currentIndex + 1) % MOTION_SCENES.length][0]);
   return (
-    <div className="oy" ref={rootRef}>
-      <style>{`
-        .oy {
-          min-height: 100vh;
-          background: #fff;
-          color: #1a1a1a;
-          font-family: "Helvetica Neue", -apple-system, "PingFang SC", "Noto Sans SC", sans-serif;
-          -webkit-font-smoothing: antialiased;
-          overflow-x: hidden;
-        }
-        .oy * { box-sizing: border-box; }
-        .oy a { color: inherit; text-decoration: none; }
-        .oy button { font-family: inherit; cursor: pointer; }
-
-        .oy-progress { position: sticky; top: 0; left: 0; z-index: 30; height: 2px; background: #1a1a1a; width: 0%; transition: width .12s linear; }
-
-        .oy-top { display: flex; align-items: center; justify-content: space-between; padding: 26px 44px 0; flex-wrap: wrap; }
-        .oy-brand { font-size: 20px; font-weight: 800; letter-spacing: -0.04em; }
-        .oy-gh { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #555; border: 1px solid #e5e5e5; border-radius: 999px; padding: 7px 14px; transition: all .2s ease; }
-        .oy-gh:hover { background: #fafafa; color: #1a1a1a; }
-
-        /* tab 导航：大字号标题在下方固定 */
-        .oy-nav { display: flex; justify-content: center; gap: 42px; padding: 20px 44px 16px; position: sticky; top: 2px; z-index: 20; background: rgba(255,255,255,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-        .oy-tab { appearance: none; border: none; background: none; font-size: 48px; font-weight: 700; letter-spacing: -0.03em; padding: 0; opacity: .76; color: #b8b8b8; transition: all .3s ease; position: relative; }
-        .oy-tab:hover { color: #777; transform: translateY(-2px); opacity: 1; }
-        .oy-tab.on { color: #1a1a1a; opacity: 1; }
-        .oy-tab.on::after { content: ""; position: absolute; left: -2%; bottom: 4px; width: 104%; height: .3em; background: rgba(255,226,138,.9); z-index: -1; transform-origin: left; animation: oy-hl .5s cubic-bezier(.22,1,.36,1) both; }
-        @keyframes oy-hl { 0%{transform:scaleX(0)} 100%{transform:scaleX(1)} }
-
-        .oy-wrap { position: relative; max-width: 1032px; margin: 0 auto; padding: 48px 44px 100px; }
-        .oy-panel { animation: oy-panelin .62s cubic-bezier(.19,1,.22,1) both; }
-        @keyframes oy-panelin { 0%{opacity:0; transform:translateY(16px)} 100%{opacity:1; transform:translateY(0)} }
-        .oy-reveal { opacity: 0; transform: translateY(22px); transition: opacity .9s cubic-bezier(.19,1,.22,1), transform .9s cubic-bezier(.19,1,.22,1); }
-        .oy-reveal.oy-in { opacity: 1; transform: translateY(0); }
-
-        .oy-hero { padding: 70px 0 30px; }
-        .oy-hero h1 { font-size: clamp(56px, 9vw, 108px); font-weight: 700; letter-spacing: -0.045em; line-height: 1; margin: 0 0 24px; }
-        .oy-hero h1 .lift { display: inline-block; animation: oy-lift 1.5s cubic-bezier(.19,1,.22,1) both; }
-        .oy-hero h1 .lift:nth-child(2) { animation-delay: .16s; }
-        .oy-hero h1 .lift:nth-child(3) { animation-delay: .32s; }
-        @keyframes oy-lift { 0%{transform:translateY(38px); opacity:0} 100%{transform:translateY(0); opacity:1} }
-        .oy-hero .hero-sub { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 15px; color: #555; margin-bottom: 34px; animation: oy-fadein .9s .5s both; }
-        @keyframes oy-fadein { 0%{opacity:0; transform:translateY(10px)} 100%{opacity:1; transform:translateY(0)} }
-        .oy-hero .hero-sub .sep { color: #ccc; }
-        .oy-scroll { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #999; animation: oy-bob 1.8s ease-in-out infinite; }
-        @keyframes oy-bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(6px)} }
-
-        /* 产品卡 */
-        .oy-feat-list { display: flex; flex-direction: column; gap: 18px; }
-        .oy-feat { position: relative; overflow: hidden; display: flex; align-items: center; gap: 24px; border: 1px solid #e8e8e8; border-radius: 20px; padding: 22px 26px; background: #fff; min-height: 150px; transition: transform .45s cubic-bezier(.19,1,.22,1), box-shadow .7s cubic-bezier(.19,1,.22,1), border-color .7s ease; text-align: left; }
-        .oy-feat:hover { transform: translateY(-3px); box-shadow: 0 3px 6px rgba(0,0,0,.04), 0 26px 48px -18px rgba(0,0,0,.18); border-color: #d5d5d5; }
-        .oy-feat .f-no { position: absolute; top: 20px; left: 26px; font-size: 42px; font-weight: 800; letter-spacing: -0.84px; line-height: 1; color: transparent; -webkit-text-stroke: 1px rgba(0,0,0,.14); transition: transform .5s cubic-bezier(.19,1,.22,1); font-family: "Helvetica Neue", Arial, sans-serif; }
-        .oy-feat:hover .f-no { transform: translateY(-6px); }
-        .oy-feat .f-icon { width: 46px; height: 46px; border-radius: 12px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #1a1a1a; flex-shrink: 0; transition: all .25s ease; margin-top: 16px; }
-        .oy-feat:hover .f-icon { background: #1a1a1a; color: #fff; animation: oy-nod .5s cubic-bezier(.34,1.56,.64,1); }
-        @keyframes oy-nod { 0%{transform:scale(1)} 40%{transform:scale(1.1)} 100%{transform:scale(1)} }
-        .oy-feat .f-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
-        .oy-feat .f-name { font-size: 52px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-top: 30px; }
-        .oy-feat .f-desc { font-size: 15px; color: #555; line-height: 1.6; margin-top: 6px; }
-        .oy-feat .f-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: #999; font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .44px; padding: 7px 12px; border-radius: 999px; border: 1px solid #e8e8e8; background: transparent; transition: all .2s ease; flex-shrink: 0; }
-        .oy-feat:hover .f-tag { background: rgba(255,226,138,.5); border-color: rgba(255,226,138,.6); color: #1a1a1a; }
-        .oy-feat .f-arrow { color: #999; transition: all .35s ease; flex-shrink: 0; }
-        .oy-feat:hover .f-arrow { color: #1a1a1a; transform: translate(3px,-3px); }
-
-        /* Skills 分组 */
-        .oy-group { margin-bottom: 56px; }
-        .oy-group-title { font-size: 14px; font-weight: 400; letter-spacing: 3.36px; text-transform: uppercase; text-align: left; display: flex; align-items: baseline; gap: 8px; margin: 0 0 22px; }
-        .oy-group-title .cnt { font-size: 12px; color: #999; letter-spacing: 3.36px; }
-        .oy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
-        .oy-cell { position: relative; display: flex; flex-direction: column; border: 1px solid #e8e8e8; border-radius: 18px; padding: 24px 24px 26px; background: #fff; min-height: 168px; text-align: left; transition: transform .45s cubic-bezier(.19,1,.22,1), box-shadow .7s cubic-bezier(.19,1,.22,1), border-color .7s ease; }
-        .oy-cell:hover { transform: translateY(-3px); box-shadow: 0 3px 6px rgba(0,0,0,.04), 0 26px 48px -18px rgba(0,0,0,.16); border-color: #d5d5d5; }
-        .oy-cell .c-ic { width: 34px; height: 34px; border-radius: 9px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #1a1a1a; margin-top: 14px; transition: all .25s ease; }
-        .oy-cell:hover .c-ic { background: #1a1a1a; color: #fff; }
-        .oy-cell .c-name { font-size: 34px; font-weight: 900; letter-spacing: -1.9px; line-height: 1; }
-        .oy-cell .c-ext { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; color: #555; margin-top: 14px; transition: all .2s ease; }
-        .oy-cell:hover .c-ext { background: rgba(255,226,138,.55); color: #1a1a1a; transform: translate(2px,-2px); }
-
-        /* 标签胶囊 */
-        .oy-me-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 40px; }
-        .oy-me-tags span { font-size: 11px; font-weight: 400; color: #555; padding: 7px 11px; border-radius: 999px; border: 1px solid #e8e8e8; background: rgba(255,255,255,.72); font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .44px; line-height: 1.5; transition: all .2s ease; }
-        .oy-me-tags span:hover { background: rgba(255,226,138,.5); border-color: rgba(255,226,138,.6); color: #1a1a1a; }
-
-        /* 关于我 */
-        .oy-me p { font-size: 15px; color: #555; line-height: 1.8; max-width: 640px; margin: 0; }
-        .oy-exp { display: grid; grid-template-columns: 96px 1fr; gap: 18px; align-items: center; border: 1px solid #e8e8e8; border-radius: 18px; padding: 22px 26px; margin-bottom: 14px; transition: transform .45s cubic-bezier(.19,1,.22,1), box-shadow .7s cubic-bezier(.19,1,.22,1), border-color .7s ease; }
-        .oy-exp:hover { transform: translateY(-3px); box-shadow: 0 3px 6px rgba(0,0,0,.04), 0 26px 48px -18px rgba(0,0,0,.16); }
-        .oy-exp .e-state { font-size: 12px; color: #555; font-family: ui-monospace, Menlo, monospace; }
-        .oy-exp .e-main { display: flex; align-items: center; gap: 14px; min-width: 0; }
-        .oy-exp .e-ic { width: 36px; height: 36px; border-radius: 11px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .oy-exp .e-name { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; }
-        .oy-exp .e-desc { font-size: 13px; color: #777; margin-top: 3px; }
-
-        /* 交流 */
-        .oy-contact-list { display: flex; flex-direction: column; }
-        .oy-contact { display: grid; grid-template-columns: 40px 36px 1fr 1fr 24px; gap: 16px; align-items: center; padding: 24px 4px; border-bottom: 1px solid #e8e8e8; transition: all .35s cubic-bezier(.19,1,.22,1); }
-        .oy-contact:hover { padding-left: 22px; }
-        .oy-contact .c-no { font-size: 12px; color: #999; letter-spacing: .96px; font-family: ui-monospace, Menlo, monospace; }
-        .oy-contact .c-ico { width: 36px; height: 36px; border-radius: 11px; border: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: center; transition: all .3s ease; }
-        .oy-contact:hover .c-ico { background: rgba(255,226,138,.7); transform: rotate(-6deg) scale(1.07); border-color: transparent; }
-        .oy-contact .c-label { font-size: 28px; font-weight: 800; letter-spacing: -0.56px; transition: all .3s ease; }
-        .oy-contact:hover .c-label { color: #1a1a1a; }
-        .oy-contact .c-sub { font-size: 13px; color: #999; letter-spacing: .96px; }
-        .oy-contact .c-open { opacity: 0; transform: translateX(-8px); transition: all .35s cubic-bezier(.19,1,.22,1); color: #1a1a1a; }
-        .oy-contact:hover .c-open { opacity: 1; transform: translateX(0); }
-
-        .oy-foot { display: flex; justify-content: space-between; max-width: 1032px; margin: 0 auto; padding: 80px 44px 46px; border-top: none; font-size: 14px; color: #999; flex-wrap: wrap; gap: 14px; }
-        .oy-foot b { color: #1a1a1a; }
-      `}</style>
-
-      <div className="oy-progress" style={{ width: progress + '%' }} />
-
-      <div className="oy-top">
-        <div className="oy-brand">VOYRA<sup>®</sup></div>
-        <a className="oy-gh" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} strokeWidth={1.8} />github.com/liixnglinb</a>
+    <div className={`vr-art vr-motion-art scene-${motionMode}`} aria-label="交互展示">
+      <div className="vr-motion-title"><SceneIcon size={16} /><span>Interaction Lab</span></div>
+      <div className="vr-motion-stage" key={`${motionMode}-${springVersion}`}>
+        {motionMode === 'hover' && <button className="vr-hover-sample">悬停我 <span>↗</span></button>}
+        {motionMode === 'spring' && <button className="vr-spring-sample" onClick={onReplay}>重新播放</button>}
+        {motionMode === 'blur' && <div className={`vr-glass-sample${blurOn ? ' is-blurred' : ''}`}><div className="vr-glass-copy"><b>工作台</b><span>backdrop filter</span></div><button onClick={onBlur}>{blurOn ? 'blur: on' : 'blur: off'}</button></div>}
       </div>
-
-      <nav className="oy-nav">
-        {[['products', '产品'], ['skills', 'Skills'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']].map(([k, l]) => (
-          <button key={k} className={'oy-tab ' + (tab === k ? 'on' : '')} onClick={() => setTab(k)}>{l}</button>
-        ))}
-      </nav>
-
-      {tab === 'products' && (
-        <div className="oy-wrap oy-panel">
-          <div className="oy-hero">
-            <h1><span className="lift">Voyra</span>{' '}<span className="lift">makes</span>{' '}<span className="lift">things.</span></h1>
-            <div className="hero-sub">
-              <span>帅帅你阿历</span><span className="sep">/</span><span>BUILDER</span><span className="sep">/</span><span>CREATOR</span><span className="sep">/</span><span>OPEN-SOURCE</span>
-            </div>
-            <div className="oy-scroll"><ChevronDown size={15} />往下滑</div>
-          </div>
-
-          <div className="oy-feat-list">
-            {FEATURED.map((f, i) => {
-              const I = f.Icon;
-              return (
-                <button key={f.to} className="oy-feat oy-reveal" data-reveal-delays={i * 70} onClick={() => go(f.to)}>
-                  <span className="f-no">{f.no}</span>
-                  <span className="f-main">
-                    <span className="f-name">{f.name}</span>
-                    <span className="f-desc">{f.en}</span>
-                    <span className="f-icon"><I size={22} strokeWidth={1.7} /></span>
-                  </span>
-                  <span className="f-tag">AI {f.match}<ArrowUpRight size={11} strokeWidth={2.2} /></span>
-                  <span className="f-arrow"><ArrowUpRight size={20} strokeWidth={1.8} /></span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div style={{ marginTop: 70 }}>
-            <div className="oy-group-title oy-reveal">INTERACTION · 交互演示 <span className="cnt">03</span></div>
-            <div className="oy-grid" key={replay}>
-              {[
-                { Icon: Zap, en: 'N°01 HOVER', t: '悬停 Hover', d: '鼠标放上去卡片上浮、图标反色，让人知道它能点。整个页面都是这样的反馈。' },
-                { Icon: Waves, en: 'N°02 MOTION', t: '弹性 Motion', d: '页面切换与卡片入场带轻微回弹动画，先越过目标再回到原位，不僵硬。' },
-                { Icon: Frame, en: 'N°03 BACKDROP', t: '毛玻璃 Blur', d: '顶部导航半透明，内容滚动经过时模糊淡出，保持页面干净通透。' },
-              ].map((it, j) => (
-                <div className="oy-cell oy-reveal" data-reveal-delays={j * 80} key={it.en}>
-                  <span className="c-name">{it.t}</span>
-                  <span className="c-ic"><it.Icon size={18} strokeWidth={1.7} /></span>
-                  <span className="c-ext" style={{ fontSize: 12, marginTop: 10 }}>{it.en}</span>
-                  <span className="c-desc oy-desc" style={{ fontSize: 13, color: '#777', lineHeight: 1.6, marginTop: 8 }}>{it.d}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === 'skills' && (
-        <div className="oy-wrap oy-panel">
-          <div className="oy-group-title oy-reveal">MY SKILL · 我的 Skill <span className="cnt">01</span></div>
-          <div className="oy-grid oy-reveal">
-            {MY_SKILLS.map((s) => {
-              const I = s.Icon;
-              return (
-                <a className="oy-cell" key={s.href} href={s.href} target="_blank" rel="noreferrer">
-                  <span className="c-name">{s.label}</span>
-                  <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
-                  <span className="c-ext">GitHub <ArrowUpRight size={14} strokeWidth={2} /></span>
-                  <span className="c-desc" style={{ fontSize: 13, color: '#777', lineHeight: 1.6, marginTop: 8 }}>{s.en}</span>
-                </a>
-              );
-            })}
-          </div>
-
-          {TOOL_GROUPS.map((g) => (
-            <div className="oy-group oy-reveal" key={g.title}>
-              <div className="oy-group-title">{g.title} <span className="cnt">{g.count}</span></div>
-              <div className="oy-grid">
-                {g.items.map((t) => {
-                  const I = t.Icon;
-                  return (
-                    <button key={t.to} className="oy-cell" onClick={() => go(t.to)}>
-                      <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
-                      <span className="c-name">{t.label}</span>
-                      <span className="c-ext">打开 <ArrowUpRight size={14} strokeWidth={2} /></span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'articles' && (
-        <div className="oy-wrap oy-panel">
-          <div className="oy-me">
-            <p className="oy-reveal">把高频工具与 AI 能力聚合到一处：笔记、日程、资料与 AI 工具，一个域名全部搞定。</p>
-          </div>
-          <div className="oy-grid" style={{ marginTop: 40 }}>
-            {[
-              { Icon: Waves, t: 'Voyra 是什么', d: 'React + Vite 前端，Bmob 云端数据，Cloudflare Pages 全球加速部署，零服务器成本。' },
-              { Icon: Frame, t: '用什么构建', d: 'React + Vite 前端，Bmob 云端数据，Cloudflare Pages 全球加速部署，零服务器成本。' },
-              { Icon: Zap, t: '怎么使用', d: '无需注册登录，打开即用。数据存于云端多端同步，随时记录、随时随地继续。' },
-            ].map((it, j) => (
-              <div className="oy-cell oy-reveal" data-reveal-delays={j * 80} key={it.t}>
-                <span className="c-ic"><it.Icon size={18} strokeWidth={1.7} /></span>
-                <span className="c-name" style={{ fontSize: 24 }}>{it.t}</span>
-                <span className="c-desc" style={{ fontSize: 13, color: '#777', lineHeight: 1.6, marginTop: 8 }}>{it.d}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {tab === 'me' && (
-        <div className="oy-wrap oy-panel">
-          <div className="oy-me oy-reveal">
-            <p>独立开发者的个人工具站 Voyra 的作者。喜欢把高频需求做成小而美的网页应用，从笔记、日程到 AI 工具，都在这里一点点被点亮。</p>
-          </div>
-          <div className="oy-me-tags oy-reveal">
-            {ME_TAGS.map((t) => <span key={t}>{t}</span>)}
-          </div>
-          <div className="oy-group-title oy-reveal" style={{ marginTop: 40 }}>EXPERIENCE · 经历</div>
-          {EXPERIENCES.map((e, i) => {
-            const I = e.Icon;
-            return (
-              <div className="oy-exp oy-reveal" data-reveal-delays={i * 80} key={e.name}>
-                <span className="e-state">{e.state}</span>
-                <div className="e-main">
-                  <span className="e-ic"><I size={18} strokeWidth={1.7} /></span>
-                  <div>
-                    <div className="e-name">{e.name}</div>
-                    <div className="e-desc">{e.desc}</div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {tab === 'contact' && (
-        <div className="oy-wrap oy-panel">
-          <div className="oy-contact-list">
-            {CONTACTS.map((c, i) => {
-              const I = c.Icon;
-              return (
-                <a className="oy-contact oy-reveal" data-reveal-delays={i * 70} key={c.no} href={c.href} target={c.href.startsWith('http') ? '_blank' : undefined} rel="noreferrer">
-                  <span className="c-no">{c.no}</span>
-                  <span className="c-ico"><I size={17} strokeWidth={1.8} /></span>
-                  <span className="c-label">{c.label}</span>
-                  <span className="c-sub">{c.val}</span>
-                  <span className="c-open"><ArrowUpRight size={20} strokeWidth={1.8} /></span>
-                </a>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="oy-foot">
-        <span>© 2026 <b>Voyra®</b></span>
-        <span>React · Bmob · Cloudflare</span>
+      <div className="vr-motion-controls">
+        <button className="vr-control-arrow" onClick={selectPrevious} aria-label="上一个演示"><ArrowLeft size={15} /></button>
+        {MOTION_SCENES.map(([id, label]) => <button key={id} className={`vr-control-dot${motionMode === id ? ' is-active' : ''}`} onClick={() => onMotionMode(id)} aria-label={`切换到${label}`} />)}
+        <button className="vr-control-arrow" onClick={selectNext} aria-label="下一个演示"><ArrowRight size={15} /></button>
       </div>
     </div>
   );
+}
+
+function ProductPanel({ go }) {
+  const [motionMode, setMotionMode] = useState('hover');
+  const [springVersion, setSpringVersion] = useState(0);
+  const [blurOn, setBlurOn] = useState(true);
+  return <div className="vr-product-list">{FEATURED.map((feature, index) => {
+    const Icon = feature.Icon;
+    return (
+      <article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal key={feature.to} onPointerMove={updateSpotlight}>
+        <span className="vr-spotlight" aria-hidden="true" />
+        <div className="vr-feature-copy"><span className="vr-feature-index">{feature.no}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{feature.desc}</p><button className="vr-arrow-link" onClick={() => go(feature.to)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
+        <FeatureArt type={feature.art} motionMode={motionMode} onMotionMode={setMotionMode} springVersion={springVersion} onReplay={() => setSpringVersion((version) => version + 1)} blurOn={blurOn} onBlur={() => setBlurOn((value) => !value)} />
+      </article>
+    );
+  })}</div>;
+}
+
+function SkillsPanel() {
+  return <section className="vr-skill-group vr-solo-skill" data-reveal>
+    <div className="vr-group-label"><span>我的 Skills</span><b>01</b></div>
+    <a className="vr-mathmodel-card vr-card" href={MATHMODEL_SKILL.href} target="_blank" rel="noreferrer" onPointerMove={updateSpotlight}>
+      <span className="vr-spotlight" aria-hidden="true" />
+      <span className="vr-mathmodel-top"><strong>{MATHMODEL_SKILL.name}</strong><span className="vr-mathmodel-meta"><Star size={16} fill="currentColor" /> GitHub</span><span className="vr-mathmodel-open"><ArrowUpRight size={17} /></span></span>
+      <span className="vr-mathmodel-tagline">{MATHMODEL_SKILL.tagline}</span>
+      <span className="vr-text-figure" aria-hidden="true"><i className="vr-figure-head">题</i><i className="vr-figure-arm vr-figure-arm-left">数</i><i className="vr-figure-body">建<br />模</i><i className="vr-figure-arm vr-figure-arm-right">据</i><i className="vr-figure-leg vr-figure-leg-left">求</i><i className="vr-figure-leg vr-figure-leg-right">解</i></span>
+    </a>
+  </section>;
+}
+
+function ArticlesPanel({ go }) {
+  return <div className="vr-article-grid">{ARTICLES.map((article, index) => <button className="vr-article-card vr-card" data-reveal onPointerMove={updateSpotlight} onClick={() => go('/blog')} key={article.title}>
+    <span className="vr-spotlight" aria-hidden="true" /><span className="vr-article-index">{String(index + 1).padStart(2, '0')}</span><span className="vr-article-date">{article.date}</span><strong>{article.title}</strong><span className="vr-article-desc">{article.desc}</span><span className="vr-article-open">阅读 <ArrowUpRight size={16} /></span>
+  </button>)}<button className="vr-all-link" onClick={() => go('/blog')}>全部文章 <ArrowUpRight size={17} /></button></div>;
+}
+
+function AboutPanel() {
+  return <div className="vr-about-panel">
+    <section className="vr-about-intro" data-reveal><span>SHUAI SHUAI / VOYRA</span><p>个人开发者，持续把灵感、工具和 AI 能力整理成真正能反复使用的产品。</p><div className="vr-tags" aria-label="个人标签">{['VOYRA', 'FRONTEND', 'AI', 'CREATOR', 'CLOUDFLARE', 'BMOB'].map((tag) => <span key={tag}>{tag}</span>)}</div></section>
+    <section className="vr-experience" data-reveal><div className="vr-experience-label"><span>经历 / EXPERIENCE</span><b>持续构建</b></div><div className="vr-experience-list">{EXPERIENCES.map((item, index) => {
+      const Icon = item.Icon;
+      return <article className="vr-experience-card vr-card" onPointerMove={updateSpotlight} key={item.name}><span className="vr-spotlight" aria-hidden="true" /><span className="vr-experience-index">{String(index + 1).padStart(2, '0')}</span><div><span>{item.state}</span><h2>{item.name}</h2><p>{item.desc}</p></div><Icon className="vr-experience-icon" size={35} strokeWidth={1.35} /></article>;
+    })}</div></section>
+  </div>;
+}
+
+function ContactPanel() {
+  return <section className="vr-contact-panel" data-reveal><div className="vr-contact-head"><span>联系 / ELSEWHERE</span><b>保持交流</b></div><div className="vr-contact-list">{CONTACTS.map((contact) => {
+    const Icon = contact.Icon;
+    return <a href={contact.href} className="vr-contact-row" target="_blank" rel="noreferrer" key={contact.label}><span>{contact.no}</span><Icon size={19} strokeWidth={1.6} /><strong>{contact.label}</strong><em>{contact.value}</em><ArrowUpRight size={18} /></a>;
+  })}</div></section>;
+}
+
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState('products');
+  const [progress, setProgress] = useState(0);
+  const rootRef = useRef(null);
+  useReveal(rootRef, activeTab);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const scroller = root?.parentElement;
+    if (!root || !scroller) return undefined;
+    const updateProgress = () => {
+      const available = scroller.scrollHeight - scroller.clientHeight;
+      setProgress(available > 0 ? Math.round((scroller.scrollTop / available) * 100) : 0);
+    };
+    scroller.addEventListener('scroll', updateProgress, { passive: true });
+    updateProgress();
+    return () => scroller.removeEventListener('scroll', updateProgress);
+  }, []);
+
+  const go = useCallback((to) => window.open(`#${to}`, '_blank', 'noopener,noreferrer'), []);
+  const changeTab = useCallback((next) => setActiveTab(next), []);
+  const panel = useMemo(() => {
+    if (activeTab === 'skills') return <SkillsPanel />;
+    if (activeTab === 'articles') return <ArticlesPanel go={go} />;
+    if (activeTab === 'me') return <AboutPanel />;
+    if (activeTab === 'contact') return <ContactPanel />;
+    return <ProductPanel go={go} />;
+  }, [activeTab, go]);
+
+  return <div className="vr-home" ref={rootRef}>
+    <style>{`
+      .vr-home{--ink:#1b1b1b;--muted:#8d8d8d;--line:rgba(27,27,27,.11);--paper:#fdfcf8;min-height:100%;color:var(--ink);background-color:var(--paper);background-image:linear-gradient(rgba(29,29,29,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(29,29,29,.055) 1px,transparent 1px);background-size:32px 32px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}.vr-home *,.vr-home *::before,.vr-home *::after{box-sizing:border-box}.vr-home button,.vr-home a{font:inherit}.vr-home button{cursor:pointer}.vr-home button:focus-visible,.vr-home a:focus-visible{outline:2px solid #1b1b1b;outline-offset:4px}.vr-stage{width:min(100% - 48px,756px);margin:0 auto}.vr-rail{position:fixed;left:28px;top:42%;z-index:30;display:grid;grid-template-columns:2px 30px;align-items:end;gap:9px;color:#9c9c9c;font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-rail-line{position:relative;height:120px;background:var(--line)}.vr-rail-line::before{content:"";position:absolute;top:0;left:0;width:2px;height:34px;background:var(--ink);transform:translateY(var(--rail-y));transition:transform .16s linear}.vr-progress-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.vr-top{width:min(100% - 48px,756px);margin:0 auto;padding:40px 0 0;display:flex;align-items:center;justify-content:space-between;color:#666;font:14px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-brand{display:inline-flex;gap:6px;align-items:center;color:#555}.vr-brand::before{content:"";width:7px;height:7px;border:1px solid #a48830;border-radius:50%}.vr-brand sup{font-size:8px}.vr-github{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;transition:color .2s ease}.vr-github:hover{color:var(--ink)}.vr-hero{min-height:555px;display:flex;flex-direction:column;justify-content:center;padding:72px 0 48px}.vr-hero h1{max-width:620px;margin:0;font-size:106px;font-weight:780;line-height:.99}.vr-hero h1 span{display:block;animation:vr-word-in .72s cubic-bezier(.16,1,.3,1) both}.vr-hero h1 span:nth-child(2){animation-delay:.07s}.vr-hero h1 span:nth-child(3){animation-delay:.14s}@keyframes vr-word-in{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}.vr-hero-meta{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:36px;color:#686868;font-size:13px}.vr-hero-meta strong{color:var(--ink);font-size:17px}.vr-scroll-cue{display:inline-flex;gap:7px;align-items:center;margin-top:28px;color:#999;font-size:13px;animation:vr-cue 1.7s ease-in-out infinite}@keyframes vr-cue{50%{transform:translateY(5px)}}.vr-tab-zone{position:relative;padding-top:26px}.vr-tab-zone::after{content:"01";position:absolute;top:-4px;right:4px;color:transparent;-webkit-text-stroke:1px rgba(27,27,27,.08);font-size:190px;font-weight:800;line-height:1;pointer-events:none}.vr-tabs{position:sticky;top:0;z-index:20;display:flex;gap:38px;align-items:flex-end;padding:0 0 24px;background:rgba(253,252,248,.78);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.vr-tab{position:relative;flex:0 0 auto;border:0;padding:0;background:transparent;color:#c5c5c5;font-size:48px;font-weight:760;line-height:1;transition:color .2s ease,transform .2s ease}.vr-tab:hover{color:#777;transform:translateY(-2px)}.vr-tab.is-active{color:var(--ink)}.vr-tab.is-active::after{content:"";position:absolute;left:-3px;right:-3px;bottom:1px;z-index:-1;height:13px;background:#ffe08a;transform-origin:left;animation:vr-marker .35s cubic-bezier(.16,1,.3,1) both}@keyframes vr-marker{from{transform:scaleX(0)}to{transform:scaleX(1)}}.vr-panel{position:relative;padding:42px 0 110px;min-height:520px;animation:vr-panel-in .48s cubic-bezier(.16,1,.3,1) both}@keyframes vr-panel-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}[data-reveal]{opacity:0;transform:translateY(18px);transition:opacity .64s cubic-bezier(.16,1,.3,1),transform .64s cubic-bezier(.16,1,.3,1)}[data-reveal].vr-is-visible{opacity:1;transform:translateY(0)}.vr-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,0,.02);transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}.vr-card:hover{border-color:rgba(27,27,27,.18);box-shadow:0 18px 34px rgba(34,30,15,.1);transform:translateY(-3px)}.vr-spotlight{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;background:radial-gradient(220px circle at var(--spot-x,50%) var(--spot-y,50%),rgba(255,224,134,.3),transparent 72%);transition:opacity .22s ease}.vr-card:hover .vr-spotlight{opacity:1}.vr-product-list{display:grid;gap:18px}.vr-feature{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:278px}.vr-feature.is-reverse .vr-feature-copy{order:2}.vr-feature.is-reverse .vr-art{order:1}.vr-feature-copy{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:40px 32px}.vr-feature-index,.vr-skill-number,.vr-article-index,.vr-experience-index{position:absolute;color:transparent;-webkit-text-stroke:1px rgba(27,27,27,.12);font-size:44px;font-weight:760;line-height:1}.vr-feature-index{bottom:18px;left:25px}.vr-feature-title{display:flex;align-items:center;gap:12px}.vr-feature-title h2{margin:0;font-size:40px;font-weight:760;line-height:1}.vr-feature-copy p{max-width:285px;margin:18px 0 22px;color:#626262;font-size:15px;line-height:1.8}.vr-arrow-link{display:inline-flex;align-items:center;gap:7px;border:0;padding:0;color:#666;background:transparent;font-size:14px;transition:color .2s ease,transform .2s ease}.vr-arrow-link:hover{color:var(--ink);transform:translateX(4px)}.vr-art{position:relative;z-index:1;align-self:center;justify-self:stretch;min-height:202px;margin:24px;border:1px solid rgba(27,27,27,.1);border-radius:8px;background:#fcfcfc;box-shadow:0 12px 22px rgba(30,30,30,.07)}.vr-note-art{padding:18px;transform:rotate(-1deg)}.vr-note-toolbar,.vr-browser-bar{display:flex;gap:5px;align-items:center;padding-bottom:12px;border-bottom:1px solid #ececec}.vr-note-toolbar span,.vr-browser-bar span{width:7px;height:7px;border-radius:50%;background:#d8d8d8}.vr-note-title{margin-top:17px;font-size:13px;font-weight:700}.vr-note-line{height:7px;width:68%;margin-top:13px;background:#e5e5e5;border-radius:2px}.vr-note-line.wide{width:90%}.vr-note-line.short{width:44%}.vr-note-chip{position:absolute;right:15px;bottom:16px;display:inline-flex;gap:4px;align-items:center;padding:5px 8px;border:1px solid #dbe4d7;border-radius:99px;background:#f3f8f1;color:#608059;font-size:10px}.vr-prompt-art{padding:17px 20px;transform:rotate(1deg);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.vr-code-top{display:flex;align-items:center;gap:7px;color:#666;font-size:11px}.vr-code-top i{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#f2c641}.vr-prompt-art p{margin:15px 0 0;color:#4e4e4e;font-size:12px}.vr-prompt-art mark{padding:2px 3px;background:#f2e4a4;color:inherit}.vr-code-status{display:flex;justify-content:space-between;margin-top:25px;color:#929292;font-size:10px}.vr-code-status b{color:#71976b;font-weight:600}.vr-motion-art{display:grid;grid-template-rows:auto 1fr auto;padding:14px;overflow:hidden}.vr-motion-title{display:flex;align-items:center;gap:7px;color:#626262;font-size:11px;font-weight:700}.vr-motion-stage{display:grid;min-height:121px;place-items:center}.vr-hover-sample,.vr-spring-sample{border:1px solid #222;border-radius:7px;padding:13px 17px;background:#fff;color:var(--ink);font-weight:700;transition:transform .25s cubic-bezier(.16,1,.3,1),background .25s ease,color .25s ease}.vr-hover-sample:hover{background:var(--ink);color:#fff;transform:translateY(-5px) rotate(-2deg)}.vr-hover-sample span{padding-left:5px}.vr-spring-sample{animation:vr-spring .82s cubic-bezier(.34,1.56,.64,1) both}.vr-spring-sample:hover{background:#ffe08a;transform:translateY(-3px)}@keyframes vr-spring{0%{opacity:0;transform:scale(.5)}55%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}.vr-glass-sample{position:relative;width:88%;padding:14px;overflow:hidden;border:1px solid rgba(27,27,27,.12);border-radius:7px;background:rgba(255,255,255,.64)}.vr-glass-sample::before{content:"";position:absolute;inset:-20px;background:repeating-linear-gradient(135deg,#f2d760 0 16px,#fff 16px 32px,#8bd0d2 32px 48px)}.vr-glass-sample.is-blurred{backdrop-filter:blur(9px)}.vr-glass-copy,.vr-glass-sample button{position:relative;z-index:1}.vr-glass-copy{display:flex;justify-content:space-between;align-items:center}.vr-glass-copy b{font-size:14px}.vr-glass-copy span{color:#666;font-size:10px}.vr-glass-sample button{margin-top:13px;border:1px solid rgba(27,27,27,.16);border-radius:99px;padding:4px 7px;background:rgba(255,255,255,.82);color:#555;font-size:10px}.vr-motion-controls{display:flex;justify-content:center;align-items:center;gap:8px}.vr-motion-controls button{display:grid;place-items:center;width:19px;height:19px;border:0;padding:0;color:#8a8a8a;background:transparent}.vr-control-dot::after{content:"";width:5px;height:5px;border-radius:50%;background:#c6c6c6}.vr-control-dot.is-active{width:24px}.vr-control-dot.is-active::after{width:20px;height:3px;border-radius:99px;background:var(--ink)}.vr-calendar-art{padding:15px;transform:rotate(-1deg)}.vr-calendar-head{display:flex;align-items:center;gap:7px;border-bottom:1px solid #e8e8e8;padding-bottom:9px;color:#555;font-size:11px}.vr-calendar-head span{margin-left:auto;color:#999}.vr-days,.vr-date-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.vr-days{margin-top:10px;color:#aaa;font-size:8px;font-style:normal}.vr-date-grid{margin-top:8px}.vr-date-grid span{display:grid;place-items:center;width:19px;height:18px;justify-self:center;color:#666;font-size:9px}.vr-date-grid span.is-marked{border-radius:50%;background:#f6da73;color:#333;font-weight:700}.vr-calendar-event{margin-top:10px;border-left:3px solid #6d9875;padding:4px 7px;background:#f4f8f1;color:#5e735a;font-size:9px}.vr-link-art{padding:14px;transform:rotate(1deg)}.vr-browser-bar{padding-bottom:11px}.vr-browser-bar b{margin-left:8px;color:#999;font-size:10px;font-weight:500}.vr-link-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:7px;padding:12px 2px;border-bottom:1px solid #ededed;color:#555;font-size:12px}.vr-link-row:last-child{border-bottom:0}.vr-link-row i{display:grid;place-items:center;width:20px;height:20px;border:1px solid #ddd;border-radius:50%;color:#999;font-size:9px;font-style:normal}.vr-skill-groups{display:grid;gap:53px}.vr-group-label,.vr-experience-label,.vr-contact-head{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:18px;color:#444;font-size:13px;font-weight:700}.vr-group-label b{color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-skill-grid,.vr-article-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.vr-skill-card{min-height:186px;border:1px solid var(--line);padding:22px;text-align:left;color:var(--ink)}.vr-skill-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-skill-number{right:15px;bottom:13px;font-size:38px}.vr-skill-icon{display:grid;place-items:center;width:41px;height:41px;border:1px solid #e3e3e3;border-radius:7px;background:#fff;transition:transform .25s cubic-bezier(.16,1,.3,1),background .25s ease,color .25s ease}.vr-skill-card:hover .vr-skill-icon{background:var(--ink);color:#fff;transform:rotate(-6deg) scale(1.08)}.vr-skill-name{display:block;margin-top:27px;font-size:28px;font-weight:760;line-height:1.05}.vr-skill-hint{display:block;margin-top:8px;color:#707070;font-size:13px}.vr-skill-open{position:absolute;top:19px;right:19px;display:grid;place-items:center;width:29px;height:29px;border:1px solid #dedede;border-radius:50%;color:#777;transition:background .2s ease,color .2s ease,transform .2s ease}.vr-skill-card:hover .vr-skill-open{background:#fff;color:var(--ink);transform:translate(2px,-2px)}.vr-article-card{min-height:235px;border:1px solid var(--line);padding:26px 24px 22px;text-align:left;color:var(--ink)}.vr-article-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-article-index{right:16px;bottom:14px;font-size:42px}.vr-article-date{display:block;color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-article-card strong{display:block;max-width:260px;margin-top:17px;font-size:23px;line-height:1.34}.vr-article-desc{display:block;margin-top:12px;color:#666;font-size:13px;line-height:1.65}.vr-article-open{position:absolute;left:24px;bottom:20px;display:inline-flex;align-items:center;gap:5px;color:#777;font-size:12px;transition:color .2s ease,transform .2s ease}.vr-article-card:hover .vr-article-open{color:var(--ink);transform:translateX(3px)}.vr-all-link{grid-column:1/-1;justify-self:start;display:inline-flex;gap:8px;align-items:center;border:0;padding:3px 0;color:#555;background:transparent;font-size:14px;text-decoration:underline;text-decoration-color:#df6262;text-decoration-thickness:2px;text-underline-offset:5px}.vr-about-panel{display:grid;gap:66px}.vr-about-intro>span{color:#888;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-about-intro p{max-width:590px;margin:26px 0 22px;color:#666;font-size:19px;line-height:1.9}.vr-tags{display:flex;flex-wrap:wrap;gap:8px}.vr-tags span{border:1px solid #dedede;border-radius:99px;padding:7px 10px;color:#666;background:rgba(255,255,255,.7);font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;transition:background .2s ease,border-color .2s ease,color .2s ease}.vr-tags span:hover{border-color:#e7c750;background:#fff4c8;color:var(--ink)}.vr-experience{border-top:1px solid var(--line);padding-top:24px}.vr-experience-label b,.vr-contact-head b{color:#999;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400}.vr-experience-list{display:grid;gap:14px}.vr-experience-card{display:grid;grid-template-columns:58px 1fr auto;align-items:center;min-height:154px;padding:26px 28px}.vr-experience-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-experience-index{left:22px;bottom:15px;font-size:40px}.vr-experience-card div>span{color:#999;font-size:12px}.vr-experience-card h2{margin:7px 0 8px;font-size:28px;line-height:1}.vr-experience-card p{max-width:425px;margin:0;color:#666;font-size:13px;line-height:1.65}.vr-experience-icon{color:#7c7c7c}.vr-contact-panel{border-top:1px solid var(--line);padding-top:24px}.vr-contact-list{display:grid}.vr-contact-row{display:grid;grid-template-columns:38px 34px minmax(124px,1fr) minmax(0,1fr) 24px;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:20px 3px;color:var(--ink);text-decoration:none;transition:padding .25s cubic-bezier(.16,1,.3,1),background .25s ease}.vr-contact-row:hover{padding-left:16px;background:rgba(255,255,255,.52)}.vr-contact-row>span{color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-contact-row strong{font-size:24px;line-height:1}.vr-contact-row em{overflow:hidden;color:#777;font-size:13px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.vr-contact-row svg:last-child{justify-self:end;color:#777;opacity:0;transform:translateX(-5px);transition:opacity .2s ease,transform .2s ease}.vr-contact-row:hover svg:last-child{opacity:1;transform:translateX(0)}.vr-footer{width:min(100% - 48px,756px);margin:0 auto;padding:0 0 42px;color:#999;font-size:12px}@media(max-width:720px){.vr-stage,.vr-top,.vr-footer{width:min(100% - 40px,756px)}.vr-top{padding-top:24px;font-size:11px}.vr-github{max-width:170px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.vr-rail{display:none}.vr-hero{min-height:465px;padding:72px 0 38px}.vr-hero h1{font-size:62px}.vr-hero-meta{gap:10px;margin-top:28px;font-size:11px}.vr-hero-meta strong{font-size:14px}.vr-tab-zone{padding-top:10px}.vr-tab-zone::after{top:10px;right:-12px;font-size:116px}.vr-tabs{gap:26px;overflow-x:auto;padding:0 0 16px;scrollbar-width:none}.vr-tabs::-webkit-scrollbar{display:none}.vr-tab{font-size:28px}.vr-tab.is-active::after{height:8px}.vr-panel{padding:30px 0 72px}.vr-feature{grid-template-columns:1fr;min-height:0}.vr-feature.is-reverse .vr-feature-copy,.vr-feature.is-reverse .vr-art{order:initial}.vr-art{min-height:192px;margin:18px 18px 0}.vr-feature-copy{padding:26px 24px 30px}.vr-feature-title h2{font-size:31px}.vr-feature-copy p{margin:14px 0 18px;font-size:14px}.vr-feature-index{left:17px;bottom:13px;font-size:38px}.vr-skill-groups{gap:38px}.vr-skill-grid,.vr-article-grid{grid-template-columns:1fr}.vr-skill-card{min-height:166px}.vr-skill-name{margin-top:22px;font-size:27px}.vr-article-card{min-height:208px}.vr-article-card strong{font-size:21px}.vr-about-panel{gap:46px}.vr-about-intro p{margin-top:20px;font-size:17px}.vr-experience-card{grid-template-columns:44px 1fr;padding:24px 20px}.vr-experience-icon{display:none}.vr-contact-row{grid-template-columns:28px 27px minmax(82px,1fr) 18px;gap:8px}.vr-contact-row em{display:none}.vr-contact-row strong{font-size:19px}.vr-contact-row svg:last-child{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.vr-home *,.vr-home *::before,.vr-home *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+    `}</style>
+    <style>{`
+      .vr-home .vr-tab { font-size: 48px; font-weight: 760; line-height: 1; }
+      .vr-home .vr-arrow-link, .vr-home .vr-all-link { font-size: 14px; }
+      .vr-home .vr-solo-skill { max-width: 756px; }
+      .vr-home .vr-mathmodel-card { display: block; min-height: 314px; padding: 26px; color: var(--ink); text-decoration: none; }
+      .vr-home .vr-mathmodel-card > *:not(.vr-spotlight) { position: relative; z-index: 1; }
+      .vr-home .vr-mathmodel-top { display: grid; grid-template-columns: minmax(0, 1fr) auto 29px; gap: 12px; align-items: center; }
+      .vr-home .vr-mathmodel-top strong { font-size: 31px; font-weight: 760; line-height: 1; }
+      .vr-home .vr-mathmodel-meta { display: inline-flex; align-items: center; gap: 5px; color: #535353; font-size: 13px; font-weight: 700; }
+      .vr-home .vr-mathmodel-meta svg { color: #d4a930; }
+      .vr-home .vr-mathmodel-open { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid #dedede; border-radius: 50%; color: #777; transition: background .2s ease, color .2s ease, transform .2s ease; }
+      .vr-home .vr-mathmodel-card:hover .vr-mathmodel-open { background: #fff; color: var(--ink); transform: translate(2px, -2px); }
+      .vr-home .vr-mathmodel-tagline { display: block; margin-top: 8px; color: #777; font-size: 16px; font-weight: 650; }
+      .vr-home .vr-mathmodel-card .vr-text-figure { position: absolute; right: 45px; bottom: 18px; z-index: 1; width: 180px; height: 174px; color: #303030; opacity: .92; transition: transform .35s cubic-bezier(.16,1,.3,1); }
+      .vr-home .vr-mathmodel-card:hover .vr-text-figure { transform: translateY(-5px) rotate(-2deg); }
+      .vr-home .vr-text-figure i { position: absolute; display: grid; place-items: center; margin: 0; border: 1px solid rgba(27,27,27,.24); border-radius: 4px; background: rgba(255,255,255,.74); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; font-style: normal; font-weight: 700; line-height: 1; box-shadow: 0 5px 12px rgba(27,27,27,.06); }
+      .vr-home .vr-figure-head { top: 0; left: 71px; width: 39px; height: 39px; border-radius: 50% !important; }
+      .vr-home .vr-figure-body { top: 50px; left: 65px; width: 50px; height: 60px; line-height: 1.55 !important; }
+      .vr-home .vr-figure-arm { top: 60px; width: 38px; height: 30px; }
+      .vr-home .vr-figure-arm-left { left: 11px; transform: rotate(-17deg); }
+      .vr-home .vr-figure-arm-right { right: 10px; transform: rotate(17deg); }
+      .vr-home .vr-figure-leg { top: 121px; width: 39px; height: 35px; }
+      .vr-home .vr-figure-leg-left { left: 50px; transform: rotate(10deg); }
+      .vr-home .vr-figure-leg-right { right: 49px; transform: rotate(-10deg); }
+      @media (max-width: 720px) { .vr-home .vr-tab { font-size: 28px; } }
+      @media (max-width: 720px) { .vr-home .vr-mathmodel-card { min-height: 294px; padding: 22px; } .vr-home .vr-mathmodel-top { grid-template-columns: minmax(0, 1fr) 29px; gap: 9px; } .vr-home .vr-mathmodel-top strong { font-size: 27px; } .vr-home .vr-mathmodel-meta { grid-column: 1 / -1; grid-row: 2; font-size: 12px; } .vr-home .vr-mathmodel-open { grid-column: 2; grid-row: 1; } .vr-home .vr-mathmodel-tagline { margin-top: 12px; font-size: 14px; } .vr-home .vr-text-figure { right: 18px; bottom: 5px; transform: scale(.83); transform-origin: bottom right; } .vr-home .vr-mathmodel-card:hover .vr-text-figure { transform: translateY(-5px) rotate(-2deg) scale(.83); } }
+    `}</style>
+    <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
+    <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
+    <main><section className="vr-stage vr-hero"><h1><span>Voyra</span><span>makes</span><span>things.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>BUILDER / CREATOR / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 往下滑</div></section><section className="vr-stage vr-tab-zone" aria-label="内容分类"><div className="vr-tabs" role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button key={id} role="tab" aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panel" role="tabpanel" aria-label={TABS.find(([id]) => id === activeTab)?.[1]} key={activeTab}>{panel}</div></section></main>
+    <footer className="vr-footer">© 2026 Voyra®</footer>
+  </div>;
 }
