@@ -15,24 +15,28 @@ import {
 /* ---------- 数据 ---------- */
 const FEATURED = [
   { to: '/smart-notes', no: '01', name: 'Spell', en: 'NOTES', desc: '随手记录灵感，沉淀结构化知识', tag: '效率工具', Icon: NotebookPen },
-  { to: '/prompts',      no: '03', name: 'Prompt', en: 'LIB', desc: '管理 AI 提示词模板，随用随取', tag: '创作工具', Icon: Lightbulb },
-  { to: '/agents',       no: '04', name: 'Hub', en: 'AGENTS', desc: '主流 Agent 聚合与高分 Skill 资源', tag: 'AI 前沿', Icon: Bot },
-  { to: '/planner',      no: '05', name: 'Plan', en: 'DAY', desc: '日历假期与自定义日程，精准到点', tag: '效率工具', Icon: CalendarClock },
-  { to: '/web-links',    no: '06', name: 'Links', en: 'URLS', desc: '收藏与管理常用网页，分类快速访问', tag: '效率工具', Icon: Link },
+  { to: '/prompts',      no: '02', name: 'Prompt', en: 'LIB', desc: '管理 AI 提示词模板，随用随取', tag: '创作工具', Icon: Lightbulb },
+  { to: '/agents',       no: '03', name: 'Hub', en: 'AGENTS', desc: '主流 Agent 聚合与高分 Skill 资源', tag: 'AI 前沿', Icon: Bot },
+  { to: '/planner',      no: '04', name: 'Plan', en: 'DAY', desc: '日历假期与自定义日程，精准到点', tag: '效率工具', Icon: CalendarClock },
+  { to: '/web-links',    no: '05', name: 'Links', en: 'URLS', desc: '收藏与管理常用网页，分类快速访问', tag: '效率工具', Icon: Link },
 ];
 
 const TOOL_GROUPS = [
   {
-    title: '效率与创作', items: [
+    title: '效率工具', items: [
       { to: '/smart-notes', label: '智能笔记', desc: '随手记录灵感', Icon: NotebookPen },
       { to: '/web-links', label: '网页链接', desc: '收藏常用网页', Icon: Link },
-      { to: '/prompts', label: '提示词库', desc: 'AI 模板管理', Icon: Lightbulb },
-      { to: '/learning', label: '学习资料', desc: '笔记与资料', Icon: BookOpen },
       { to: '/mindmap', label: '思维导图', desc: '独立工作台', Icon: Share2 },
-      { to: '/blog', label: '个人博客', desc: '阅读与思考', Icon: Globe },
       { to: '/tools', label: '工具网站', desc: '效率导航', Icon: Wrench },
       { to: '/schedule', label: '个人课表', desc: '按周同步', Icon: CalendarDays },
       { to: '/planner', label: '个人日程', desc: '日程一目了然', Icon: CalendarClock },
+    ],
+  },
+  {
+    title: '创作工具', items: [
+      { to: '/prompts', label: '提示词库', desc: 'AI 模板管理', Icon: Lightbulb },
+      { to: '/learning', label: '学习资料', desc: '笔记与资料', Icon: BookOpen },
+      { to: '/blog', label: '个人博客', desc: '阅读与思考', Icon: Globe },
     ],
   },
   {
@@ -42,6 +46,11 @@ const TOOL_GROUPS = [
       { to: '/news', label: 'AI 每日情报站', desc: '五大类资讯速览', Icon: Newspaper },
     ],
   },
+];
+
+/* 自研 Skills（GitHub 开源） */
+const MY_SKILLS = [
+  { href: 'https://github.com/liixnglinb/mathmodel-skill', label: '数学建模', desc: '竞赛课题建模全流程：分析、建模、出图、论文', Icon: BookOpen },
 ];
 
 const INSIGHTS = [
@@ -74,7 +83,7 @@ export default function Dashboard() {
     return () => clearTimeout(t);
   }, []);
 
-  const go = (to) => window.open(to, '_blank', 'noopener,noreferrer');
+  const go = (to) => window.open('#' + to, '_blank', 'noopener,noreferrer');
 
   return (
     <div className="oy">
@@ -105,9 +114,9 @@ export default function Dashboard() {
         }
         .oy-gh:hover { background: #fafafa; color: #1a1a1a; transform: translateY(-1px); }
 
-        /* ---- tab 导航 ---- */
+        /* ---- tab 导航（居中） ---- */
         .oy-nav {
-          display: flex; gap: 22px;
+          display: flex; justify-content: center; gap: 26px;
           padding: 18px 36px 0;
           position: sticky; top: 0; z-index: 5;
           background: rgba(255,255,255,.85);
@@ -133,7 +142,7 @@ export default function Dashboard() {
         .oy-section-en { font-size: 12px; color: #999; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 28px; }
 
         /* ---- HERO ---- */
-        .oy-hero { padding: 64px 0 40px; }
+        .oy-hero { padding: 56px 0 40px; }
         .oy-hero h1 {
           font-size: clamp(44px, 8vw, 74px);
           font-weight: 700; letter-spacing: -0.045em; line-height: 1.02;
@@ -207,6 +216,8 @@ export default function Dashboard() {
         .oy-cell:hover .c-ic { background: #1a1a1a; color: #fff; }
         .oy-cell .c-name { font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
         .oy-cell .c-desc { font-size: 12px; color: #888; line-height: 1.5; }
+        .oy-cell .c-ext { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #bbb; font-weight: 600; }
+        .oy-cell:hover .c-ext { color: #1a1a1a; }
 
         /* ---- 文章/说明卡片 ---- */
         .oy-insight-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
@@ -263,9 +274,9 @@ export default function Dashboard() {
         </a>
       </div>
 
-      {/* tab 导航 */}
+      {/* tab 导航（Skills 第二位，居中） */}
       <nav className="oy-nav">
-        {[['products', '产品'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']].map(([k, l]) => (
+        {[['products', '产品'], ['skills', 'Skills'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']].map(([k, l]) => (
           <button key={k} className={'oy-tab ' + (tab === k ? 'on' : '')} onClick={() => setTab(k)}>{l}</button>
         ))}
       </nav>
@@ -280,7 +291,7 @@ export default function Dashboard() {
               <span className="lift">things.</span>
             </h1>
             <div className="hero-sub">
-              <span>欧 呦</span><span className="sep">/</span>
+              <span>帅帅你阿历</span><span className="sep">/</span>
               <span>BUILDER</span><span className="sep">/</span>
               <span>CREATOR</span><span className="sep">/</span>
               <span>OPEN-SOURCE</span>
@@ -308,29 +319,6 @@ export default function Dashboard() {
             })}
           </div>
 
-          {/* 全部工具 */}
-          <div style={{ marginTop: 46 }}>
-            <div className="oy-section-title">全部工具</div>
-            <div className="oy-section-en">ALL TOOLS</div>
-            {TOOL_GROUPS.map((g) => (
-              <div className="oy-group" key={g.title}>
-                <div className="oy-group-title">{g.title} <span className="cnt">{g.items.length}</span></div>
-                <div className="oy-grid">
-                  {g.items.map((t) => {
-                    const I = t.Icon;
-                    return (
-                      <button key={t.to} className="oy-cell" onClick={() => go(t.to)}>
-                        <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
-                        <span className="c-name">{t.label}</span>
-                        <span className="c-desc">{t.desc}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-
           {/* 编号动效演示卡（复刻原站 N° 交互教学） */}
           <div style={{ marginTop: 46 }}>
             <div className="oy-section-title">交互演示</div>
@@ -356,6 +344,51 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ============ Skills ============ */}
+      {tab === 'skills' && (
+        <div className="oy-wrap">
+          <div className="oy-section-title">Skills</div>
+          <div className="oy-section-en">能力 · 工具</div>
+
+          {/* 自研 Skills */}
+          <div className="oy-group">
+            <div className="oy-group-title">我的 Skill <span className="cnt">{MY_SKILLS.length}</span></div>
+            <div className="oy-grid">
+              {MY_SKILLS.map((s) => {
+                const I = s.Icon;
+                return (
+                  <a className="oy-cell" key={s.href} href={s.href} target="_blank" rel="noreferrer">
+                    <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
+                    <span className="c-name">{s.label}</span>
+                    <span className="c-desc">{s.desc}</span>
+                    <span className="c-ext">GitHub <ArrowUpRight size={12} strokeWidth={2} /></span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 全部工具分组 */}
+          {TOOL_GROUPS.map((g) => (
+            <div className="oy-group" key={g.title}>
+              <div className="oy-group-title">{g.title} <span className="cnt">{g.items.length}</span></div>
+              <div className="oy-grid">
+                {g.items.map((t) => {
+                  const I = t.Icon;
+                  return (
+                    <button key={t.to} className="oy-cell" onClick={() => go(t.to)}>
+                      <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
+                      <span className="c-name">{t.label}</span>
+                      <span className="c-desc">{t.desc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
