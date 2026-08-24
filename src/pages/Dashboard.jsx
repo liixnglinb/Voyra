@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   NotebookPen, Link, Lightbulb, BookOpen, Baby, Share2, Globe,
   Wrench, CalendarDays, CalendarClock, Bot, Newspaper,
-  Github, ArrowUpRight, ChevronDown, Zap, Waves, Frame,
+  Github, ArrowUpRight, ChevronDown, Zap, Waves, Frame, Sparkles,
 } from 'lucide-react';
 
 /* ============================================================
