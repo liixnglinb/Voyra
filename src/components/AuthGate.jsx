@@ -172,7 +172,7 @@ export default function AuthGate({ children }) {
 
           .sx-card { width: 100%; max-width: 372px; }
 
-          .sx-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 30px; }
+          .sx-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 26px; }
           .sx-brand-ico {
             width: 30px; height: 30px; border-radius: 8px;
             background: #1A1D24; color: #FFFFFF;
@@ -180,15 +180,25 @@ export default function AuthGate({ children }) {
           }
           .sx-brand-txt { font-weight: 700; font-size: 16px; color: #1A1D24; letter-spacing: -0.01em; }
 
-          .sx-tabs { display: flex; gap: 18px; margin-bottom: 0; }
+          /* 顶部主 tab：登录 / 注册 */
+          .sx-tabs-main { display: flex; gap: 22px; border-bottom: 1px solid #F0F1F4; }
+          .sx-tab-main {
+            appearance: none; border: none; background: none; cursor: pointer; padding: 0 0 9px;
+            font: 600 14px/1 "PingFang SC", system-ui, sans-serif; color: #8A8F99;
+            border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s ease;
+          }
+          .sx-tab-main.sx-on { color: #1A1D24; border-bottom-color: #1A1D24; }
+
+          /* 登录方式子 tab */
+          .sx-tabs-sub { display: flex; gap: 18px; margin-top: 16px; }
           .sx-tab {
-            appearance: none; border: none; background: none; cursor: pointer; padding: 0 0 8px;
-            font: 600 13px/1 "PingFang SC", system-ui, sans-serif; color: #8A8F99;
+            appearance: none; border: none; background: none; cursor: pointer; padding: 0 0 6px;
+            font: 500 12.5px/1 "PingFang SC", system-ui, sans-serif; color: #8A8F99;
             border-bottom: 2px solid transparent; transition: all .15s ease;
           }
           .sx-tab.sx-on { color: #1A1D24; border-bottom-color: #1A1D24; }
 
-          .sx-form { width: 100%; padding-top: 22px; display: flex; flex-direction: column; gap: 18px; }
+          .sx-form { width: 100%; padding-top: 20px; display: flex; flex-direction: column; gap: 18px; }
 
           .sx-field { display: flex; flex-direction: column; gap: 7px; }
           .sx-label { font: 500 12.5px/1 "PingFang SC", system-ui, sans-serif; color: #4A4E57; }
@@ -250,7 +260,7 @@ export default function AuthGate({ children }) {
           .sx-spinner { width: 15px; height: 15px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: #FFFFFF; animation: sxspin .7s linear infinite; }
           @keyframes sxspin { to { transform: rotate(360deg); } }
 
-          .sx-row { display: flex; align-items: center; justify-content: space-between; }
+          .sx-row { display: flex; align-items: center; justify-content: flex-end; }
           .sx-check { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 12.5px; color: #4A4E57; }
           .sx-check input { width: 15px; height: 15px; accent-color: #1A1D24; margin: 0; cursor: pointer; }
 
@@ -264,10 +274,6 @@ export default function AuthGate({ children }) {
             font: 500 13.5px/1 "PingFang SC", system-ui, sans-serif; cursor: pointer; transition: all .15s ease;
           }
           .sx-github:hover { border-color: #1A1D24; }
-
-          .sx-switch { width: 100%; margin-top: 20px; appearance: none; border: none; background: none; padding: 0; cursor: pointer; font: 400 12.5px/1 "PingFang SC", system-ui, sans-serif; color: #8A8F99; transition: color .15s ease; }
-          .sx-switch:hover { color: #1A1D24; }
-          .sx-switch span { color: #1A1D24; font-weight: 600; }
         `}</style>
 
         <div className="sx-card">
@@ -276,14 +282,18 @@ export default function AuthGate({ children }) {
             <div className="sx-brand-txt">LocalHub</div>
           </div>
 
+          {/* 主 tab：登录 / 注册 */}
+          <div className="sx-tabs-main" role="tablist">
+            <button type="button" role="tab" aria-selected={mode === 'login'} className={'sx-tab-main ' + (mode === 'login' ? 'sx-on' : '')} onClick={() => switchMode('login')}>登录</button>
+            <button type="button" role="tab" aria-selected={mode === 'register'} className={'sx-tab-main ' + (mode === 'register' ? 'sx-on' : '')} onClick={() => switchMode('register')}>注册</button>
+          </div>
+
+          {/* 登录方式子 tab（仅登录模式显示） */}
           {mode === 'login' && (
-            <div className="sx-tabs" role="tablist">
+            <div className="sx-tabs-sub" role="tablist">
               <button type="button" role="tab" aria-selected={tab === 'password'} className={'sx-tab ' + (tab === 'password' ? 'sx-on' : '')} onClick={() => switchTab('password')}>邮箱密码</button>
               <button type="button" role="tab" aria-selected={tab === 'otp'} className={'sx-tab ' + (tab === 'otp' ? 'sx-on' : '')} onClick={() => switchTab('otp')}>验证码</button>
             </div>
-          )}
-          {mode === 'register' && (
-            <div className="sx-tabs"><div className="sx-tab sx-on">注册</div></div>
           )}
 
           <form onSubmit={doSubmit} className="sx-form">
@@ -367,12 +377,6 @@ export default function AuthGate({ children }) {
               </button>
             </>)}
           </form>
-
-          {mode === 'login' ? (
-            <button type="button" className="sx-switch" onClick={() => switchMode('register')}>还没有账号？<span>立即注册</span></button>
-          ) : (
-            <button type="button" className="sx-switch" onClick={() => switchMode('login')}>已有账号？<span>直接登录</span></button>
-          )}
         </div>
       </div>
     );
