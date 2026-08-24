@@ -81,18 +81,14 @@ export async function isLoggedIn() { return !!currentUserObj(); }
 // ---------- 邮箱密码 ----------
 export async function login(email, password) {
   try {
-    await Bmob.User().login(email, password);
+    await Bmob.User.login(email, password);
   } catch (e) { throw new Error(authErrorMessage(e)); }
   return { user: mapUser(currentUserObj()) };
 }
 
 export async function register(email, password) {
   try {
-    const u = Bmob.User();
-    u.set('username', email);
-    u.set('email', email);
-    u.set('password', password);
-    await u.register({ username: email, email, password });
+    await Bmob.User.register({ username: email, email, password });
   } catch (e) { throw new Error(authErrorMessage(e)); }
   return { user: mapUser(currentUserObj()) };
 }
@@ -110,14 +106,14 @@ export async function resetPassword(email) {
 
 async function requestEmailVerify(email) {
   try {
-    await Bmob.User().requestEmailVerify(email);
+    await Bmob.User.requestEmailVerify(email);
   } catch (e) { throw new Error(authErrorMessage(e)); }
   return { ok: true };
 }
 
 // ---------- 更新资料 / 密码 ----------
 export async function updateProfile(meta) {
-  try { await Bmob.User().upInfo(meta); } catch (e) { throw new Error(authErrorMessage(e)); }
+  try { await Bmob.User.upInfo(meta); } catch (e) { throw new Error(authErrorMessage(e)); }
   return { user: mapUser(currentUserObj()) };
 }
 
@@ -127,7 +123,7 @@ export async function changePassword(oldPassword, newPassword) {
 }
 
 // ---------- 退出 / 清理 ----------
-export async function logout() { try { Bmob.User().logout(); } catch {} }
+export async function logout() { try { Bmob.User.logout(); } catch {} }
 
 export function clearToken() { logout(); }
 
