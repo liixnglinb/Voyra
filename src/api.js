@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    LocalHub 云端前端 · API 层（Bmob 后端版）
    数据读写走 Bmob user_data 表（按用户隔离）。
    接口签名与原 electronAPI 一致，页面代码无需改动。
@@ -13,8 +13,8 @@ async function requireUid() {
 
 async function findRow(uid, key) {
   const q = Bmob.Query(USER_TABLE);
-  q.equalTo('userKey', uid);
-  q.equalTo('key', key);
+  q.equalTo('userKey', '==', uid);
+  q.equalTo('key', '==', key);
   q.limit(1);
   const rows = await q.find();
   return rows && rows[0] ? rows[0] : null;
