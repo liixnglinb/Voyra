@@ -1,4 +1,4 @@
-﻿/**
+/**
  * LocalHub 云端前端 · 鉴权模块（Bmob 版）
  * 登录/注册/退出基于 Bmob 用户系统：
  *  - 邮箱密码（username 存邮箱）
@@ -115,23 +115,6 @@ async function requestEmailVerify(email) {
   return { ok: true };
 }
 
-// ---------- 验证码（Bmob 不支持邮箱验证码登录，改为发送重置邮件提示） ----------
-export async function sendCode(email) {
-  try {
-    await Bmob.requestPasswordReset({ email });
-  } catch (e) { throw new Error(authErrorMessage(e)); }
-  return { ok: true };
-}
-
-export async function loginWithCode(email) {
-  throw new Error('该登录方式暂不可用，请使用邮箱密码登录');
-}
-
-// ---------- GitHub OAuth（Bmob 需后台配置，暂不支持） ----------
-export async function signInWithGitHub() {
-  throw new Error('GitHub 登录暂未开放，请使用邮箱密码登录');
-}
-
 // ---------- 更新资料 / 密码 ----------
 export async function updateProfile(meta) {
   try { await Bmob.User().upInfo(meta); } catch (e) { throw new Error(authErrorMessage(e)); }
@@ -156,8 +139,7 @@ export function subscribeAuth(cb) { return onAuthStateChange(cb); }
 
 export default {
   getSession, onAuthStateChange, getToken, getUser, isLoggedIn,
-  login, register, resendConfirmation, resetPassword, sendCode, loginWithCode,
-  signInWithGitHub, logout, clearToken, checkInit, fetchMe,
+  login, register, resendConfirmation, resetPassword, logout, clearToken, checkInit, fetchMe,
   updateProfile, changePassword,
   completeGitHubLogin, subscribeAuth, authErrorMessage,
 };

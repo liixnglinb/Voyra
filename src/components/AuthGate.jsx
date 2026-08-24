@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  subscribeAuth, getSession, login, register, resendConfirmation, resetPassword,
-  sendCode, loginWithCode, signInWithGitHub, logout,
+  subscribeAuth, getSession, login, register, resendConfirmation, resetPassword, logout,
 } from '../auth';
 import {
-  ShieldCheck, Github, Eye, EyeOff,
+  ShieldCheck, Eye, EyeOff,
   UserPlus, LogIn, Sparkles,
 } from 'lucide-react';
 
@@ -12,17 +11,13 @@ export default function AuthGate({ children }) {
   const [authed, setAuthed] = useState(false);
   const [user, setUser] = useState(null);
   const [mode, setMode] = useState('login');       // 'login' | 'register'
-  const [tab, setTab] = useState('password');       // 'password' | 'otp'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [otp, setOtp] = useState('');
   const [remember, setRemember] = useState(true);
   const [err, setErr] = useState('');
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [countdown, setCountdown] = useState(0);
   const [showPw, setShowPw] = useState(false);
   const [pwStrength, setPwStrength] = useState(0);
 
@@ -33,7 +28,7 @@ export default function AuthGate({ children }) {
     const unsub = subscribeAuth((u) => {
       setUser(u);
       setAuthed(!!u);
-      if (!u) { setEmail(''); setPassword(''); setConfirm(''); setOtp(''); setErr(''); }
+      if (!u) { setEmail(''); setPassword(''); setConfirm(''); setErr(''); }
     });
     return () => { if (unsub && unsub.data) unsub.data.subscription.unsubscribe(); };
   }, []);
@@ -46,27 +41,9 @@ export default function AuthGate({ children }) {
     };
   }
 
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown]);
-
   const validateEmail = () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setErr('请输入正确的邮箱地址'); return false; }
     return true;
-  };
-
-  const doSendOtp = async () => {
-    setErr(''); setMsg('');
-    if (!validateEmail()) return;
-    setSending(true);
-    try {
-      await sendCode(email);
-      setMsg('验证码已发送到邮箱，请查收');
-      setCountdown(60);
-    } catch (ex) { setErr(ex.message || '发送失败，请稍后再试'); }
-    finally { setSending(false); }
   };
 
   const doSubmit = async (e) => {
@@ -80,8 +57,8 @@ export default function AuthGate({ children }) {
       setBusy(true);
       try {
         const data = await register(email, password);
-        if (data.session?.user) { setAuthed(true); setUser(mapLocal(data.session.user)); }
-        else { setMsg('注册成功，请查收邮箱完成验证后再登录'); }
+        if (data && data.user) { setAuthed(true); setUser(data.user); }
+        else { setMsg('注册成功，请登录'); setMode('login'); }
       } catch (ex) {
         const m = regErrText(ex);
         if (/已注册|已存在/.test(m)) {
@@ -93,21 +70,12 @@ export default function AuthGate({ children }) {
       return;
     }
 
-    if (tab === 'password') {
-      if (!validateEmail()) return;
-      if (!password) { setErr('请输入密码'); return; }
-      setBusy(true);
-      try { await login(email, password); }
-      catch (ex) { setErr(ex.message || '登录失败'); }
-      finally { setBusy(false); }
-    } else {
-      if (!validateEmail()) return;
-      if (otp.length < 6) { setErr('请输入 6 位验证码'); return; }
-      setBusy(true);
-      try { await loginWithCode(email, otp); }
-      catch (ex) { setErr(ex.message || '验证码错误或已过期'); }
-      finally { setBusy(false); }
-    }
+    if (!validateEmail()) return;
+    if (!password) { setErr('请输入密码'); return; }
+    setBusy(true);
+    try { await login(email, password); }
+    catch (ex) { setErr(ex.message || '登录失败'); }
+    finally { setBusy(false); }
   };
 
   const regErrText = (ex) => ex.message || '注册失败，请稍后再试';
@@ -131,19 +99,12 @@ export default function AuthGate({ children }) {
     finally { setBusy(false); }
   };
 
-  const handleGitHub = async () => {
-    setErr('');
-    try { await signInWithGitHub(); }
-    catch (ex) { setErr(ex.message || 'GitHub 登录失败'); }
-  };
-
   const handleLogout = async () => {
     await logout();
     setAuthed(false); setUser(null);
   };
 
-  const switchMode = (m) => { setMode(m); setErr(''); setMsg(''); setShowPw(false); setOtp(''); };
-  const switchTab = (t) => { setTab(t); setErr(''); setMsg(''); setShowPw(false); };
+  const switchMode = (m) => { setMode(m); setErr(''); setMsg(''); setShowPw(false); };
 
   const chgPw = (v) => {
     setPassword(v); if (err) setErr('');
@@ -189,15 +150,6 @@ export default function AuthGate({ children }) {
           }
           .sx-tab-main.sx-on { color: #1A1D24; border-bottom-color: #1A1D24; }
 
-          /* 登录方式子 tab */
-          .sx-tabs-sub { display: flex; gap: 18px; margin-top: 16px; }
-          .sx-tab {
-            appearance: none; border: none; background: none; cursor: pointer; padding: 0 0 6px;
-            font: 500 12.5px/1 "PingFang SC", system-ui, sans-serif; color: #8A8F99;
-            border-bottom: 2px solid transparent; transition: all .15s ease;
-          }
-          .sx-tab.sx-on { color: #1A1D24; border-bottom-color: #1A1D24; }
-
           .sx-form { width: 100%; padding-top: 20px; display: flex; flex-direction: column; gap: 18px; }
 
           .sx-field { display: flex; flex-direction: column; gap: 7px; }
@@ -217,7 +169,6 @@ export default function AuthGate({ children }) {
           .sx-input:hover { border-color: #C9CDD6; }
           .sx-input:focus { border-color: #1A1D24; box-shadow: 0 0 0 3px rgba(20, 24, 33, 0.06); }
           .sx-input::placeholder { color: #B4B8C0; }
-          .sx-otp-input { letter-spacing: .4em; font-variant-numeric: tabular-nums; font-weight: 600; text-align: center; }
 
           .sx-toggle-pw {
             position: absolute; right: 4px; z-index: 2;
@@ -231,16 +182,6 @@ export default function AuthGate({ children }) {
 
           .sx-strength { height: 2px; border-radius: 999px; background: #F1F2F5; overflow: hidden; margin-top: 2px; }
           .sx-strength i { display: block; height: 100%; border-radius: 999px; transition: width .2s ease, background .2s ease; }
-
-          .sx-otp-row { display: flex; gap: 10px; align-items: center; }
-          .sx-otp-row .sx-input-wrap { flex: 1; }
-          .sx-send {
-            height: 42px; padding: 0 14px; border-radius: 8px;
-            border: 1px solid #E5E7EB; background: #FFFFFF; color: #1A1D24;
-            font: 600 12.5px/1 "PingFang SC", system-ui, sans-serif; cursor: pointer; transition: all .15s ease; white-space: nowrap;
-          }
-          .sx-send:hover:not(:disabled) { border-color: #1A1D24; }
-          .sx-send:disabled { opacity: .45; cursor: not-allowed; }
 
           .sx-error { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border-radius: 8px; background: #FDF1F1; border: 1px solid #FBC6C6; color: #DC2626; font: 500 12.5px/1.4 "PingFang SC", system-ui, sans-serif; }
           .sx-msg { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border-radius: 8px; background: #EFFAF4; border: 1px solid #C6F0DA; color: #16A34A; font: 500 12.5px/1.4 "PingFang SC", system-ui, sans-serif; }
@@ -263,17 +204,6 @@ export default function AuthGate({ children }) {
           .sx-row { display: flex; align-items: center; justify-content: flex-end; }
           .sx-check { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 12.5px; color: #4A4E57; }
           .sx-check input { width: 15px; height: 15px; accent-color: #1A1D24; margin: 0; cursor: pointer; }
-
-          .sx-divider { display: flex; align-items: center; gap: 12px; color: #B4B8C0; font-size: 11.5px; margin: 0; }
-          .sx-divider::before, .sx-divider::after { content: ''; flex: 1; height: 1px; background: #F0F1F4; }
-
-          .sx-github {
-            width: 100%; height: 42px;
-            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-            border-radius: 8px; border: 1px solid #E5E7EB; background: #FFFFFF; color: #1A1D24;
-            font: 500 13.5px/1 "PingFang SC", system-ui, sans-serif; cursor: pointer; transition: all .15s ease;
-          }
-          .sx-github:hover { border-color: #1A1D24; }
         `}</style>
 
         <div className="sx-card">
@@ -287,14 +217,6 @@ export default function AuthGate({ children }) {
             <button type="button" role="tab" aria-selected={mode === 'login'} className={'sx-tab-main ' + (mode === 'login' ? 'sx-on' : '')} onClick={() => switchMode('login')}>登录</button>
             <button type="button" role="tab" aria-selected={mode === 'register'} className={'sx-tab-main ' + (mode === 'register' ? 'sx-on' : '')} onClick={() => switchMode('register')}>注册</button>
           </div>
-
-          {/* 登录方式子 tab（仅登录模式显示） */}
-          {mode === 'login' && (
-            <div className="sx-tabs-sub" role="tablist">
-              <button type="button" role="tab" aria-selected={tab === 'password'} className={'sx-tab ' + (tab === 'password' ? 'sx-on' : '')} onClick={() => switchTab('password')}>邮箱密码</button>
-              <button type="button" role="tab" aria-selected={tab === 'otp'} className={'sx-tab ' + (tab === 'otp' ? 'sx-on' : '')} onClick={() => switchTab('otp')}>验证码</button>
-            </div>
-          )}
 
           <form onSubmit={doSubmit} className="sx-form">
             <div className="sx-field">
@@ -322,7 +244,7 @@ export default function AuthGate({ children }) {
                   </button>
                 </div>
               </div>
-            </>) : tab === 'password' ? (<>
+            </>) : (
               <div className="sx-field">
                 <div className="sx-label-row">
                   <label className="sx-label">密码</label>
@@ -335,20 +257,10 @@ export default function AuthGate({ children }) {
                   </button>
                 </div>
               </div>
-            </>) : (<>
-              <div className="sx-field">
-                <label className="sx-label">验证码</label>
-                <div className="sx-otp-row">
-                  <input type="text" inputMode="numeric" maxLength={6} value={otp} autoComplete="one-time-code" onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); if (err) setErr(''); }} placeholder="6 位验证码" className="sx-input sx-otp-input" />
-                  <button type="button" className="sx-send" disabled={sending || countdown > 0} onClick={doSendOtp}>
-                    {sending ? '发送中…' : countdown > 0 ? `${countdown}s` : '发送验证码'}
-                  </button>
-                </div>
-              </div>
-            </>)}
+            )}
 
             {err && <div className="sx-error"><ShieldCheck size={14} strokeWidth={1.8} /><span>{err}</span></div>}
-            {mode === 'login' && tab === 'password' && /尚未验证/.test(err) && email && (
+            {mode === 'login' && /尚未验证/.test(err) && email && (
               <button type="button" className="sx-resend" onClick={handleResendConfirmation} disabled={busy}>重新发送验证邮件</button>
             )}
             {msg && <div className="sx-msg"><ShieldCheck size={14} strokeWidth={1.8} /><span>{msg}</span></div>}
@@ -357,23 +269,12 @@ export default function AuthGate({ children }) {
               <button type="submit" disabled={busy || !email || !password || !confirm} className="sx-submit">
                 {busy ? (<><span className="sx-spinner" /><span>注册中…</span></>) : (<><UserPlus size={16} strokeWidth={2} /><span>创建账号</span></>)}
               </button>
-            ) : tab === 'password' ? (<>
+            ) : (<>
               <div className="sx-row">
                 <label className="sx-check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /><span>记住我</span></label>
               </div>
               <button type="submit" disabled={busy || !email || !password} className="sx-submit">
                 {busy ? (<><span className="sx-spinner" /><span>登录中…</span></>) : (<><LogIn size={16} strokeWidth={2} /><span>登录</span></>)}
-              </button>
-            </>) : (
-              <button type="submit" disabled={busy || otp.length < 6 || !email} className="sx-submit">
-                {busy ? (<><span className="sx-spinner" /><span>验证中…</span></>) : (<><LogIn size={16} strokeWidth={2} /><span>验证并登录</span></>)}
-              </button>
-            )}
-
-            {mode === 'login' && (<>
-              <div className="sx-divider"><span>或</span></div>
-              <button type="button" className="sx-github" onClick={handleGitHub}>
-                <Github size={16} strokeWidth={1.9} /><span>使用 GitHub 登录</span>
               </button>
             </>)}
           </form>
