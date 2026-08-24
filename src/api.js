@@ -1,46 +1,48 @@
-/* ============================================================
-   LocalHub 云端前端 · API 层（Supabase 登录版）
-   数据读写走 Supabase user_data 表（按用户隔离，RLS 保证仅本人可见）。
-   接口签名与原 electronAPI 保持一致，页面代码无需改动。
+﻿/* ============================================================
+   LocalHub 云端前端 · API 层（Bmob 后端版）
+   数据读写走 Bmob user_data 表（按用户隔离）。
+   接口签名与原 electronAPI 一致，页面代码无需改动。
    ============================================================ */
-import { supabase } from './lib/supabase';
+import Bmob, { currentUserId, USER_TABLE } from './lib/bmob';
 
-// ============ 数据读写（saveData / loadData / deleteData） ============
 async function requireUid() {
-  const { data } = await supabase.auth.getSession();
-  if (!data?.session?.user?.id) throw new Error('未登录');
-  return data.session.user.id;
+  const uid = currentUserId();
+  if (!uid) throw new Error('未登录');
+  return uid;
+}
+
+async function findRow(uid, key) {
+  const q = Bmob.Query(USER_TABLE);
+  q.equalTo('userKey', uid);
+  q.equalTo('key', key);
+  q.limit(1);
+  const rows = await q.find();
+  return rows && rows[0] ? rows[0] : null;
 }
 
 export async function saveData(key, value) {
   const uid = await requireUid();
-  const { error } = await supabase
-    .from('user_data')
-    .upsert({ user_id: uid, key, value }, { onConflict: 'user_id,key' });
-  if (error) throw new Error(error.message);
+  const row = await findRow(uid, key);
+  const q = Bmob.Query(USER_TABLE);
+  if (row && row.objectId) { q.set('id', row.objectId); }
+  q.set('userKey', uid);
+  q.set('key', key);
+  q.set('value', JSON.stringify(value));
+  await q.save();
   return { ok: true };
 }
 
 export async function loadData(key) {
   const uid = await requireUid();
-  const { data, error } = await supabase
-    .from('user_data')
-    .select('value')
-    .eq('user_id', uid)
-    .eq('key', key)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  return data ? data.value : null;
+  const row = await findRow(uid, key);
+  if (!row) return null;
+  try { return JSON.parse(row.value); } catch { return row.value || null; }
 }
 
 export async function deleteData(key) {
   const uid = await requireUid();
-  const { error } = await supabase
-    .from('user_data')
-    .delete()
-    .eq('user_id', uid)
-    .eq('key', key);
-  if (error) throw new Error(error.message);
+  const row = await findRow(uid, key);
+  if (row && row.objectId) { const q = Bmob.Query(USER_TABLE); await q.destroy(row.objectId); }
   return { ok: true };
 }
 
@@ -55,8 +57,7 @@ export async function openExternal(url) {
 export async function fetchFavicon(url) {
   try {
     const u = new URL(url.startsWith('http') ? url : `https://${url}`);
-    const domain = u.hostname;
-    return { ok: true, data: `https://favicon.im/${domain}?larger=true` };
+    return { ok: true, data: `https://favicon.im/${u.hostname}?larger=true` };
   } catch {
     return null;
   }
@@ -67,8 +68,7 @@ export async function systemInfo() {
   const cpus = navigator.hardwareConcurrency || 4;
   const mem = (navigator && navigator.deviceMemory) || 8;
   return {
-    electronVersion: 'web',
-    cpus,
+    electronVersion: 'web', cpus,
     freemem: mem * 1024 ** 3,
     platform: navigator.platform || 'web',
   };
@@ -81,19 +81,16 @@ export async function openFolderDialog() { return null; }
 export async function openFilesDialog() { return null; }
 export async function saveFileDialog() { return null; }
 
-// ============ 思维导图 / 排行榜（浏览器直接访问独立前端文件） ============
+// ============ 思维导图（浏览器直接访问独立前端文件） ============
 export async function mindmapStart() { return { ready: true, port: -1, url: '/mindmap-app/' }; }
 export async function mindmapStatus() { return { ready: true, port: -1, url: '/mindmap-app/' }; }
-export async function leaderboardStart() { return { ready: true, port: -1, url: '/lb/' }; }
-export async function leaderboardStatus() { return { ready: true, port: -1, url: '/lb/' }; }
 export async function canvasStatus() { return { ready: true, port: -1, url: '/canvas' }; }
 
-// 统一导出为 electronAPI 兼容对象，便于页面直接替换
 export const electronAPI = {
   saveData, loadData, deleteData, openExternal, fetchFavicon,
   systemInfo, detectFfmpeg, getVideoWorkflowPath,
   openFolderDialog, openFilesDialog, saveFileDialog,
-  mindmapStart, mindmapStatus, leaderboardStart, leaderboardStatus, canvasStatus,
+  mindmapStart, mindmapStatus, canvasStatus,
 };
 
 export default electronAPI;

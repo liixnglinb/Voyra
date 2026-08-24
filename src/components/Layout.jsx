@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   NotebookPen, Link, Lightbulb, BookOpen, Baby, KeyRound, Wrench, CalendarDays, CalendarClock, Bot, Newspaper, UserRound,
@@ -12,7 +12,7 @@ import {
  *    无渐变 / 无光晕 / 无玻璃 / 无弹跳动画
  */
 
-const FULLSCREEN_PATHS = ['/', '/mindmap', '/leaderboard', '/blog', '/baby-care', '/jianlai', '/zhanshen', '/perfect-world', '/doupo-cangqiong'];
+const FULLSCREEN_PATHS = ['/', '/mindmap', '/blog', '/baby-care', '/jianlai', '/zhanshen', '/perfect-world', '/doupo-cangqiong'];
 
 const TOOL_META = {
   '/smart-notes': {

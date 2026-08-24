@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react'
+﻿import React, { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -12,7 +12,6 @@ const PromptLibrary = lazy(() => import('./pages/PromptLibrary'))
 const LearningHub = lazy(() => import('./pages/LearningHub'))
 const SmartNotes = lazy(() => import('./pages/SmartNotes'))
 const MindMap = lazy(() => import('./pages/MindMap'))
-const Leaderboard = lazy(() => import('./pages/Leaderboard'))
 const BabyCare = lazy(() => import('./pages/BabyCare'))
 const Blog = lazy(() => import('./pages/Blog'))
 const ToolHubs = lazy(() => import('./pages/ToolHubs'))
@@ -23,6 +22,7 @@ const AINews = lazy(() => import('./pages/AINews'))
 const Jianlai = lazy(() => import('./pages/Jianlai'))
 const PerfectWorld = lazy(() => import('./pages/PerfectWorld'))
 const ZhanShen = lazy(() => import('./pages/ZhanShen'))
+const DoupoCangqiong = lazy(() => import('./pages/DoupoCangqiong'))
 
 
 function App() {
@@ -44,7 +44,6 @@ function App() {
                 <Route path="/api-keys" element={<ApiKeys />} />
                 <Route path="/web-links" element={<WebLinks />} />
                 <Route path="/mindmap" element={<MindMap />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/prompts" element={<PromptLibrary />} />
                 <Route path="/learning" element={<LearningHub />} />
                 <Route path="/smart-notes" element={<SmartNotes />} />

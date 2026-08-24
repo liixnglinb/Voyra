@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, FolderKanban, ArrowRight } from 'lucide-react';
 import {
@@ -20,7 +20,6 @@ const TOOLS = [
   { to: '/learning',    label: '学习资料', desc: '笔记与学习资料管理', icon: BookOpen,     accent: '#059669' },
   { to: '/baby-care',   label: '宝宝护理', desc: '宝宝成长记录与护理', icon: Baby,        accent: '#F97316' },
   { to: '/mindmap',     label: '思维导图', desc: '独立思维导图工作台', icon: Share2,      accent: '#8B5CF6' },
-  { to: '/leaderboard', label: 'AI排行榜', desc: '大模型 Benchmark 榜单', icon: Trophy,   accent: '#3B5BFF' },
   { to: '/blog',        label: '个人博客', desc: '阅读与思考的空间', icon: Globe,         accent: '#0EA5E9' },
   { to: '/tools',       label: '工具网站', desc: '金融与效率工具导航', icon: Wrench,      accent: '#0CA678' },
   { to: '/schedule',    label: '个人课表', desc: '课程安排，按周自动提醒', icon: CalendarDays, accent: '#6366F1' },
