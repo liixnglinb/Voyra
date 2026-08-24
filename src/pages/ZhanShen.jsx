@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Sparkles, BookOpen, Ghost, X, Play, RotateCcw, ChevronRight, Send, Swords, Eye } from 'lucide-react';
 
 /**
@@ -336,9 +336,8 @@ export default function ZhanShen() {
             </div>
           </div>
         </div>
-      )}
+            )}
 
-      {/* ===== 组件内样式 ===== */}
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         .zs-root { position: relative; min-height: 100vh; width: 100%; background: linear-gradient(160deg, #F4F7FF 0%, #EFF2FF 34%, #F4F0FF 68%, #ECF5FF 100%); color: #232a3d; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
