@@ -6,9 +6,9 @@
 import Bmob, { currentUserId, USER_TABLE } from './lib/bmob';
 
 async function requireUid() {
+  // 去掉登录门禁后，先用固定本地 ID 隔离数据，后续要上线可恢复真实用户体系
   const uid = currentUserId();
-  if (!uid) throw new Error('未登录');
-  return uid;
+  return uid || 'local-user';
 }
 
 async function findRow(uid, key) {

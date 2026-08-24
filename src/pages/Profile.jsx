@@ -146,12 +146,6 @@ export default function Profile({ user, onLogout }) {
           {msg && <div className="pf-msg"><ShieldCheck size={14} /><span>{msg}</span></div>}
         </div>
 
-        {/* 退出卡 */}
-        <div className="pf-box">
-          <button type="button" className="pf-btn pf-btn-danger" style={{ width: '100%' }} onClick={doLogout}>
-            <LogOut size={16} strokeWidth={2} />退出登录
-          </button>
-        </div>
       </div>
     </div>
   );

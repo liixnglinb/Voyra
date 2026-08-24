@@ -1,8 +1,7 @@
-﻿import React, { Suspense, lazy } from 'react'
+import React, { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
-import AuthGate from './components/AuthGate'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 
@@ -28,9 +27,7 @@ const DoupoCangqiong = lazy(() => import('./pages/DoupoCangqiong'))
 function App() {
   return (
     <ErrorBoundary>
-      <AuthGate>
-        {({ onLogout, user }) => (
-          <Layout>
+      <Layout>
             <Suspense
               fallback={
                 <div className="flex items-center justify-center min-h-[60vh]">
@@ -39,8 +36,8 @@ function App() {
               }
             >
               <Routes>
-                <Route path="/" element={<Dashboard onLogout={onLogout} user={user} />} />
-                <Route path="/profile" element={<Profile user={user} onLogout={onLogout} />} />
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/api-keys" element={<ApiKeys />} />
                 <Route path="/web-links" element={<WebLinks />} />
                 <Route path="/mindmap" element={<MindMap />} />
@@ -63,9 +60,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
-          </Layout>
-        )}
-      </AuthGate>
+      </Layout>
     </ErrorBoundary>
   )
 }
