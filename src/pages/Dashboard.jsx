@@ -156,10 +156,10 @@ export default function Dashboard() {
         .oy-feat:hover { transform: translateY(-3px); box-shadow: 0 3px 6px rgba(0,0,0,.04), 0 26px 48px -18px rgba(0,0,0,.18); border-color: #d5d5d5; }
         .oy-feat .f-no { position: absolute; top: 20px; left: 26px; font-size: 42px; font-weight: 800; letter-spacing: -0.84px; line-height: 1; color: transparent; -webkit-text-stroke: 1px rgba(0,0,0,.14); transition: transform .5s cubic-bezier(.19,1,.22,1); font-family: "Helvetica Neue", Arial, sans-serif; }
         .oy-feat:hover .f-no { transform: translateY(-6px); }
-        .oy-feat .f-icon { width: 46px; height: 46px; border-radius: 12px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #1a1a1a; flex-shrink: 0; transition: all .25s ease; margin-top: 28px; }
+        .oy-feat .f-icon { width: 46px; height: 46px; border-radius: 12px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #1a1a1a; flex-shrink: 0; transition: all .25s ease; margin-top: 16px; }
         .oy-feat:hover .f-icon { background: #1a1a1a; color: #fff; animation: oy-nod .5s cubic-bezier(.34,1.56,.64,1); }
         @keyframes oy-nod { 0%{transform:scale(1)} 40%{transform:scale(1.1)} 100%{transform:scale(1)} }
-        .oy-feat .f-main { flex: 1; min-width: 0; }
+        .oy-feat .f-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
         .oy-feat .f-name { font-size: 52px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-top: 30px; }
         .oy-feat .f-desc { font-size: 15px; color: #555; line-height: 1.6; margin-top: 6px; }
         .oy-feat .f-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: #999; font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .44px; padding: 7px 12px; border-radius: 999px; border: 1px solid #e8e8e8; background: transparent; transition: all .2s ease; flex-shrink: 0; }
@@ -174,7 +174,7 @@ export default function Dashboard() {
         .oy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px; }
         .oy-cell { position: relative; display: flex; flex-direction: column; border: 1px solid #e8e8e8; border-radius: 18px; padding: 24px 24px 26px; background: #fff; min-height: 168px; text-align: left; transition: transform .45s cubic-bezier(.19,1,.22,1), box-shadow .7s cubic-bezier(.19,1,.22,1), border-color .7s ease; }
         .oy-cell:hover { transform: translateY(-3px); box-shadow: 0 3px 6px rgba(0,0,0,.04), 0 26px 48px -18px rgba(0,0,0,.16); border-color: #d5d5d5; }
-        .oy-cell .c-ic { width: 34px; height: 34px; border-radius: 9px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #1a1a1a; margin-bottom: 14px; transition: all .25s ease; }
+        .oy-cell .c-ic { width: 34px; height: 34px; border-radius: 9px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; justify-content: center; color: #1a1a1a; margin-top: 14px; transition: all .25s ease; }
         .oy-cell:hover .c-ic { background: #1a1a1a; color: #fff; }
         .oy-cell .c-name { font-size: 34px; font-weight: 900; letter-spacing: -1.9px; line-height: 1; }
         .oy-cell .c-ext { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; color: #555; margin-top: 14px; transition: all .2s ease; }
@@ -241,10 +241,10 @@ export default function Dashboard() {
               return (
                 <button key={f.to} className="oy-feat oy-reveal" data-reveal-delays={i * 70} onClick={() => go(f.to)}>
                   <span className="f-no">{f.no}</span>
-                  <span className="f-icon"><I size={22} strokeWidth={1.7} /></span>
                   <span className="f-main">
                     <span className="f-name">{f.name}</span>
                     <span className="f-desc">{f.en}</span>
+                    <span className="f-icon"><I size={22} strokeWidth={1.7} /></span>
                   </span>
                   <span className="f-tag">AI {f.match}<ArrowUpRight size={11} strokeWidth={2.2} /></span>
                   <span className="f-arrow"><ArrowUpRight size={20} strokeWidth={1.8} /></span>
@@ -262,8 +262,8 @@ export default function Dashboard() {
                 { Icon: Frame, en: 'N°03 BACKDROP', t: '毛玻璃 Blur', d: '顶部导航半透明，内容滚动经过时模糊淡出，保持页面干净通透。' },
               ].map((it, j) => (
                 <div className="oy-cell oy-reveal" data-reveal-delays={j * 80} key={it.en}>
-                  <span className="c-ic"><it.Icon size={18} strokeWidth={1.7} /></span>
                   <span className="c-name">{it.t}</span>
+                  <span className="c-ic"><it.Icon size={18} strokeWidth={1.7} /></span>
                   <span className="c-ext" style={{ fontSize: 12, marginTop: 10 }}>{it.en}</span>
                   <span className="c-desc oy-desc" style={{ fontSize: 13, color: '#777', lineHeight: 1.6, marginTop: 8 }}>{it.d}</span>
                 </div>
@@ -281,8 +281,8 @@ export default function Dashboard() {
               const I = s.Icon;
               return (
                 <a className="oy-cell" key={s.href} href={s.href} target="_blank" rel="noreferrer">
-                  <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
                   <span className="c-name">{s.label}</span>
+                  <span className="c-ic"><I size={18} strokeWidth={1.7} /></span>
                   <span className="c-ext">GitHub <ArrowUpRight size={14} strokeWidth={2} /></span>
                   <span className="c-desc" style={{ fontSize: 13, color: '#777', lineHeight: 1.6, marginTop: 8 }}>{s.en}</span>
                 </a>
