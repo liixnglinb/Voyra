@@ -448,7 +448,8 @@ const Engine = {
   _genFreeScene: function() {
     const s = this.state;
     const loc = LOCATIONS[s.location];
-    const charsHere = Object.keys(s.characters).filter(id => s.characters[id] && CHARACTERS[id] && CHARACTERS[id].location === s.location);
+    // 修复：使用 LOCATIONS 中的 chars 数组判断角色是否在当前位置
+    const charsHere = Object.keys(s.characters).filter(id => s.characters[id] && CHARACTERS[id] && loc.chars && loc.chars.includes(id));
     let narration = loc.acl;
     let dialogues = [];
     
@@ -489,7 +490,10 @@ const Engine = {
     if(choice.text === '打坐修炼') return this._processCultivation();
     if(choice.text === '探索周边') return this._processExplore();
     if(choice.text.includes('深入交谈')) {
-      const charsHere = Object.keys(s.characters).filter(id=>s.characters[id]&&CHARACTERS[id]&&CHARACTERS[id].location===s.location);
+      const s = this.state;
+      const loc = LOCATIONS[s.location];
+      // 修复：使用 LOCATIONS 中的 chars 数组判断角色是否在当前位置
+      const charsHere = Object.keys(s.characters).filter(id=>s.characters[id]&&CHARACTERS[id]&&loc.chars&&loc.chars.includes(id));
       if(charsHere.length>0) {
         const cid = charsHere[0];
         s.characters[cid].disposition = Math.min(100, s.characters[cid].disposition + 3);
@@ -590,7 +594,7 @@ const Engine = {
     const s=this.state; let h='<h3 style="text-align:center;margin-bottom:15px">修士状态</h3>';
     h+='<div style="margin-bottom:6px"><span style="color:var(--ink-gray)">道号：</span>'+s.name+'</div>';
     h+='<div style="margin-bottom:6px"><span style="color:var(--ink-gray)">境界：</span>'+this.getRealmName()+'</div>';
-    h+='<div style="margin-bottom:6px"><span style="color:var(--ink-gray)">剧情：</span>第'+s.storyStep+'步/'+(s.mode==='story'?'19':'自由')+'</div></div>';
+    h+='<div style="margin-bottom:6px"><span style="color:var(--ink-gray)">剧情：</span>第'+s.storyStep+'步/'+(s.mode==='story'?'19':'自由')+'</div>';
     const st=s.stats;
     [['body','体魄','#9a4a4a'],['qi','灵气','#4a7a9a'],['swordIntent','剑意','#7a7a7a'],['wuxing','悟性','#6a5a3a'],['rootbone','根骨','#5a7a5a']].forEach(([k,n,c])=>{
       h+='<div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:0.9rem"><span>'+n+'</span><span style="color:'+c+'">'+st[k]+'</span></div>';

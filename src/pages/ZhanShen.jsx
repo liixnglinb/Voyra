@@ -317,7 +317,7 @@ export default function ZhanShen() {
           <p>灵感来自《我在精神病院学斩神》· 非官方粉丝向页面 · 图片来自网络公开资料</p>
           <button className="zs-top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}><RotateCcw size={14} /> 回到顶部</button>
         </footer>
-            </div>
+                  </div>
 
       {showModal && (
         <div className="zs-modal" onClick={() => setShowModal(false)}>
@@ -337,8 +337,6 @@ export default function ZhanShen() {
           </div>
         </div>
       )}
-
-    </div>
 
       {/* ===== 组件内样式 ===== */}
       <style>{`

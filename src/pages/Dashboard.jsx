@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, FolderKanban, ArrowRight } from 'lucide-react';
 import {
   NotebookPen, Link, Lightbulb, BookOpen, Baby, Share2, Trophy, Globe,
-  Wrench, CalendarDays, CalendarClock, Bot, Newspaper, Sword, Sparkles,
+  Wrench, CalendarDays, CalendarClock, Bot, Newspaper, Sword, Sparkles, Flame,
 } from 'lucide-react';
 
 /* ============================================================
@@ -30,6 +30,7 @@ const TOOLS = [
     { to: '/jianlai',     label: '剑来·人生模拟', desc: '开放世界文字冒险游戏', icon: Sword, accent: '#B5462F' },
   { to: '/zhanshen',    label: '斩神·世界',    desc: '神明漫天，凡躯执剑的沉浸互动', icon: Sword, accent: '#5B6BFF' },
   { to: '/perfect-world', label: '完美世界', desc: '视觉小说·粒子光效体验', icon: Sparkles, accent: '#6366F1' },
+  { to: '/doupo-cangqiong', label: '斗破苍穹', desc: '异火大陆·沉浸式视觉小说', icon: Flame, accent: '#F97316' },
 ];
 
 export default function Dashboard({ onLogout, user }) {

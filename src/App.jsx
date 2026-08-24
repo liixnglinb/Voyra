@@ -58,6 +58,7 @@ function App() {
                 <Route path="/jianlai" element={<Jianlai />} />
                 <Route path="/perfect-world" element={<PerfectWorld />} />
                 <Route path="/zhanshen" element={<ZhanShen />} />
+                <Route path="/doupo-cangqiong" element={<DoupoCangqiong />} />
 
                 {/* 未知路径重定向回首页，避免空白页 */}
                 <Route path="*" element={<Navigate to="/" replace />} />
