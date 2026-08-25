@@ -383,7 +383,7 @@ export default function Dashboard() {
     `}</style>
     <style>{`
       .vr-home .vr-hero-shell { width: min(100% - 48px, 1016px); min-height: calc(100svh - 34px); }
-      .vr-home .vr-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(268px, 358px); align-items: center; gap: 28px; min-height: calc(100svh - 112px); padding: 28px 18px 46px 0; text-align: left; }
+      .vr-home .vr-hero { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(268px, 330px); align-items: center; gap: 0; min-height: calc(100svh - 112px); padding: 28px 18px 46px 0; text-align: left; }
       .vr-home .vr-hero-copy { position: relative; z-index: 2; align-self: center; }
       .vr-home .vr-hero h1 { width: auto; max-width: 560px; font-size: 126px; font-weight: 800; line-height: .8; }
       .vr-home .vr-hero-meta { justify-content: flex-start; margin-top: 34px; }
@@ -391,10 +391,17 @@ export default function Dashboard() {
       .vr-home .vr-person-stage { position: relative; z-index: 1; align-self: stretch; min-height: 570px; overflow: visible; }
       .vr-home .vr-person-stage::before { content: ""; position: absolute; top: 13%; right: -7%; width: 86%; aspect-ratio: 1; border: 1px solid rgba(27,27,27,.1); border-radius: 50%; background: rgba(255,255,255,.24); }
       .vr-home .vr-person-stage::after { content: ""; position: absolute; right: -1%; bottom: 7%; width: 88%; height: 14px; border-radius: 50%; background: rgba(27,27,27,.11); filter: blur(9px); transform: rotate(-4deg); }
-      .vr-home .vr-person-frame { position: absolute; right: 0; bottom: 0; z-index: 1; width: min(100%, 282px); clip-path: inset(100% 0 0); animation: vr-person-enter 1.5s cubic-bezier(.19,1,.22,1) .24s forwards; }
-      .vr-home .vr-person-frame img { display: block; width: 100%; height: auto; filter: drop-shadow(0 14px 18px rgba(0,0,0,.09)); transform-origin: 51% 94%; animation: vr-person-breathe 5.4s ease-in-out 1.7s infinite; }
+      .vr-home .vr-person-frame { position: absolute; right: 140px; bottom: 0; z-index: 1; width: min(100%, 282px); clip-path: inset(100% 0 0); animation: vr-person-enter 1.5s cubic-bezier(.19,1,.22,1) .24s forwards; }
+      .vr-home .vr-person-motion { position: relative; transform-origin: 51% 94%; animation: vr-person-breathe 5.4s ease-in-out 1.7s infinite; }
+      .vr-home .vr-person-motion img { width: 100%; height: auto; }
+      .vr-home .vr-person-body { display: block; filter: drop-shadow(0 14px 18px rgba(0,0,0,.09)); }
+      .vr-home .vr-person-hair, .vr-home .vr-person-collar { position: absolute; inset: 0; display: block; pointer-events: none; }
+      .vr-home .vr-person-hair { transform-origin: 49% 8%; animation: vr-hair-sway 6.8s ease-in-out 1.3s infinite; }
+      .vr-home .vr-person-collar { transform-origin: 50% 20%; animation: vr-collar-sway 5.4s ease-in-out 1.7s infinite; }
       @keyframes vr-person-enter { to { clip-path: inset(0); } }
       @keyframes vr-person-breathe { 0%, 100% { transform: translateY(0) rotate(1deg); } 50% { transform: translateY(-5px) rotate(.55deg); } }
+      @keyframes vr-hair-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(1px) rotate(.65deg); } }
+      @keyframes vr-collar-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(-.8px) rotate(-.45deg); } }
       @media (max-width: 720px) {
         .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(100svh - 14px); }
         .vr-home .vr-hero { display: block; min-height: calc(100svh - 82px); padding: 65px 0 35px; }
@@ -406,13 +413,13 @@ export default function Dashboard() {
         .vr-home .vr-person-stage { position: absolute; right: -9px; bottom: 8px; width: 52%; min-height: 0; height: min(72svh, 520px); }
         .vr-home .vr-person-stage::before { top: 12%; right: -10%; width: 115%; }
         .vr-home .vr-person-stage::after { right: -8%; bottom: 6%; width: 100%; height: 10px; }
-        .vr-home .vr-person-frame { width: min(100%, 222px); }
+        .vr-home .vr-person-frame { right: 0; width: min(100%, 222px); }
       }
     `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
-    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className="vr-person-frame"><img src="/hero/voyra-person-v1.png" alt="" /></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
+    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className="vr-person-frame"><div className="vr-person-motion"><img className="vr-person-body" src="/hero/voyra-person-body-v2.png" alt="" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.png" alt="" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.png" alt="" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
     <footer className="vr-footer" data-roll>© 2026 Voyra®</footer>
   </div>;
 }
