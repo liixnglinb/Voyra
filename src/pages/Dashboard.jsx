@@ -389,7 +389,6 @@ export default function Dashboard() {
       .vr-home .vr-hero-meta { justify-content: flex-start; margin-top: 24px; }
       .vr-home .vr-scroll-cue { margin-top: 24px; }
       .vr-home .vr-person-stage { position: relative; z-index: 1; align-self: end; width: 282px; height: 699px; min-height: 0; overflow: visible; }
-      .vr-home .vr-person-stage::before { content: ""; position: absolute; top: 13%; right: -15%; width: 86%; aspect-ratio: 1; border: 1px solid rgba(27,27,27,.1); border-radius: 50%; background: rgba(255,255,255,.24); }
       .vr-home .vr-person-stage::after { content: ""; position: absolute; right: -5%; bottom: 3%; width: 88%; height: 14px; border-radius: 50%; background: rgba(27,27,27,.11); filter: blur(9px); transform: rotate(-4deg); }
       .vr-home .vr-person-frame { position: absolute; right: 0; bottom: 0; z-index: 1; width: 282px; clip-path: inset(100% 0 0); animation: vr-person-enter 1.5s cubic-bezier(.19,1,.22,1) .24s forwards; }
       .vr-home .vr-person-motion { position: relative; transform-origin: 51% 94%; animation: vr-person-breathe 5.4s ease-in-out 1.7s infinite; }
