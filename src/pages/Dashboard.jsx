@@ -212,14 +212,16 @@ function ProductPanel({ openProduct }) {
 }
 
 function SkillsPanel() {
+  const workflow = ['题意', '假设', '变量', '建模', '求解', '检验', '评价', '图表', '论文', '提交'];
   return <section className="vr-skill-group vr-solo-skill vr-panel-stagger" data-roll>
     <div className="vr-group-label"><span>我的 Skills</span><b>01</b></div>
     <a className="vr-mathmodel-card vr-card" data-reveal href={MATHMODEL_SKILL.href} target="_blank" rel="noreferrer" onPointerMove={updateSpotlight}>
       <span className="vr-spotlight" aria-hidden="true" />
-      <span className="vr-mathmodel-top"><strong>{MATHMODEL_SKILL.name}</strong><span className="vr-mathmodel-meta"><Star size={16} fill="currentColor" /> GitHub</span><span className="vr-mathmodel-open"><ArrowUpRight size={17} /></span></span>
-      <span className="vr-mathmodel-tagline">{MATHMODEL_SKILL.tagline}</span>
-      <span className="vr-model-steps" aria-label="十阶段工作流"><i className="is-active">建模</i><i>求解</i><i>检验</i><i>论文</i><b>10</b></span>
-      <span className="vr-text-figure" aria-hidden="true"><i className="vr-figure-head">题</i><i className="vr-figure-arm vr-figure-arm-left">数</i><i className="vr-figure-body">建<br />模</i><i className="vr-figure-arm vr-figure-arm-right">据</i><i className="vr-figure-leg vr-figure-leg-left">求</i><i className="vr-figure-leg vr-figure-leg-right">解</i></span>
+      <span className="vr-mathmodel-watermark" aria-hidden="true">10</span>
+      <span className="vr-mathmodel-top"><span className="vr-mathmodel-kicker">CUMCM / REUSABLE WORKFLOW</span><span className="vr-mathmodel-meta"><Star size={16} fill="currentColor" /> GitHub</span><span className="vr-mathmodel-open"><ArrowUpRight size={17} /></span></span>
+      <span className="vr-mathmodel-heading"><strong>{MATHMODEL_SKILL.name}</strong><span>{MATHMODEL_SKILL.tagline}</span></span>
+      <span className="vr-model-workflow" aria-label="数学建模十阶段工作流">{workflow.map((step, index) => <span className={index === 3 ? 'is-core' : ''} key={step}><i>{String(index + 1).padStart(2, '0')}</i><b>{step}</b></span>)}</span>
+      <span className="vr-model-caption"><b>10</b> STEPS / FROM QUESTION TO PAPER</span>
     </a>
   </section>;
 }
@@ -376,28 +378,30 @@ export default function Dashboard() {
       .vr-home .vr-tab { font-size: 48px; font-weight: 760; line-height: 1; }
       .vr-home .vr-arrow-link, .vr-home .vr-all-link { font-size: 14px; }
       .vr-home .vr-solo-skill { max-width: 756px; }
-      .vr-home .vr-mathmodel-card { display: block; min-height: 314px; padding: 26px; color: var(--ink); text-decoration: none; }
-      .vr-home .vr-mathmodel-card > *:not(.vr-spotlight) { position: relative; z-index: 1; }
+      .vr-home .vr-mathmodel-card { display: block; min-height: 344px; padding: 27px; color: var(--ink); text-decoration: none; }
+      .vr-home .vr-mathmodel-card > *:not(.vr-spotlight):not(.vr-mathmodel-watermark) { position: relative; z-index: 1; }
+      .vr-home .vr-mathmodel-watermark { position: absolute; top: 13px; right: 22px; z-index: 0; color: transparent; -webkit-text-stroke: 1px rgba(27,27,27,.07); font: 116px/.8 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; pointer-events: none; }
       .vr-home .vr-mathmodel-top { display: grid; grid-template-columns: minmax(0, 1fr) auto 29px; gap: 12px; align-items: center; }
-      .vr-home .vr-mathmodel-top strong { font-size: 31px; font-weight: 760; line-height: 1; }
+      .vr-home .vr-mathmodel-kicker { color: #888; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
       .vr-home .vr-mathmodel-meta { display: inline-flex; align-items: center; gap: 5px; color: #535353; font-size: 13px; font-weight: 700; }
       .vr-home .vr-mathmodel-meta svg { color: #d4a930; }
       .vr-home .vr-mathmodel-open { display: grid; place-items: center; width: 29px; height: 29px; border: 1px solid #dedede; border-radius: 50%; color: #777; transition: background .2s ease, color .2s ease, transform .2s ease; }
       .vr-home .vr-mathmodel-card:hover .vr-mathmodel-open { background: #fff; color: var(--ink); transform: translate(2px, -2px); }
-      .vr-home .vr-mathmodel-tagline { display: block; margin-top: 8px; color: #777; font-size: 16px; font-weight: 650; }
-      .vr-home .vr-mathmodel-card .vr-text-figure { position: absolute; right: 45px; bottom: 18px; z-index: 1; width: 180px; height: 174px; color: #303030; opacity: .92; transition: transform .35s cubic-bezier(.16,1,.3,1); }
-      .vr-home .vr-mathmodel-card:hover .vr-text-figure { transform: translateY(-5px) rotate(-2deg); }
-      .vr-home .vr-text-figure i { position: absolute; display: grid; place-items: center; margin: 0; border: 1px solid rgba(27,27,27,.24); border-radius: 4px; background: rgba(255,255,255,.74); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; font-style: normal; font-weight: 700; line-height: 1; box-shadow: 0 5px 12px rgba(27,27,27,.06); }
-      .vr-home .vr-figure-head { top: 0; left: 71px; width: 39px; height: 39px; border-radius: 50% !important; }
-      .vr-home .vr-figure-body { top: 50px; left: 65px; width: 50px; height: 60px; line-height: 1.55 !important; }
-      .vr-home .vr-figure-arm { top: 60px; width: 38px; height: 30px; }
-      .vr-home .vr-figure-arm-left { left: 11px; transform: rotate(-17deg); }
-      .vr-home .vr-figure-arm-right { right: 10px; transform: rotate(17deg); }
-      .vr-home .vr-figure-leg { top: 121px; width: 39px; height: 35px; }
-      .vr-home .vr-figure-leg-left { left: 50px; transform: rotate(10deg); }
-      .vr-home .vr-figure-leg-right { right: 49px; transform: rotate(-10deg); }
+      .vr-home .vr-mathmodel-heading { display: grid; gap: 8px; max-width: 520px; margin-top: 27px; }
+      .vr-home .vr-mathmodel-heading strong { font-size: 37px; font-weight: 760; line-height: 1; }
+      .vr-home .vr-mathmodel-heading > span { color: #777; font-size: 15px; font-weight: 650; }
+      .vr-home .vr-model-workflow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 28px; border-top: 1px solid rgba(27,27,27,.14); border-left: 1px solid rgba(27,27,27,.14); }
+      .vr-home .vr-model-workflow > span { display: grid; gap: 6px; min-height: 61px; align-content: center; padding: 9px 10px; border-right: 1px solid rgba(27,27,27,.14); border-bottom: 1px solid rgba(27,27,27,.14); background: rgba(255,255,255,.68); transition: background .2s ease, color .2s ease, transform .2s ease; }
+      .vr-home .vr-model-workflow > span:nth-child(-n+5) { border-bottom: 0; }
+      .vr-home .vr-model-workflow i { color: #9a9a9a; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-model-workflow b { font-size: 13px; line-height: 1; }
+      .vr-home .vr-model-workflow > span.is-core { background: #ffe08a; color: #1b1b1b; }
+      .vr-home .vr-mathmodel-card:hover .vr-model-workflow > span { background: #fff; }.vr-home .vr-mathmodel-card:hover .vr-model-workflow > span.is-core { background: #ffe08a; }
+      .vr-home .vr-model-workflow > span:hover { background: #fff9df !important; transform: translateY(-2px); }
+      .vr-home .vr-model-caption { display: flex; align-items: baseline; gap: 7px; margin-top: 12px; color: #8e8e8e; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-model-caption b { color: #a48830; font-size: 17px; }
       @media (max-width: 720px) { .vr-home .vr-top { width: min(100% - 40px, 756px); } .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(100svh - 14px); } .vr-home .vr-hero { min-height: calc(100svh - 14px); padding: 78px 0 54px; } .vr-home .vr-hero h1 { font-size: 76px; line-height: .84; } .vr-home .vr-hero-outline { -webkit-text-stroke-width: 1.25px; text-shadow: 4px 4px 0 rgba(255,226,138,.42); } .vr-home .vr-hero-meta { gap: 11px; margin-top: 31px; font-size: 10px; } .vr-home .vr-hero-meta strong { padding-right: 12px; font-size: 13px; } .vr-home .vr-hero-meta strong::after { width: 6px; } .vr-home .vr-scroll-cue { margin-top: 30px; } .vr-home .vr-tab { font-size: 28px; } .vr-home [data-roll] { transform: perspective(900px) translate3d(0, var(--roll-y), 0) rotateX(var(--roll-angle-mobile)); } .vr-home [data-reveal] { filter: none; transform: translateY(30px); } .vr-home [data-reveal].vr-is-visible { transform: translateY(0); } }
-      @media (max-width: 720px) { .vr-home .vr-mathmodel-card { min-height: 294px; padding: 22px; } .vr-home .vr-mathmodel-top { grid-template-columns: minmax(0, 1fr) 29px; gap: 9px; } .vr-home .vr-mathmodel-top strong { font-size: 27px; } .vr-home .vr-mathmodel-meta { grid-column: 1 / -1; grid-row: 2; font-size: 12px; } .vr-home .vr-mathmodel-open { grid-column: 2; grid-row: 1; } .vr-home .vr-mathmodel-tagline { margin-top: 12px; font-size: 14px; } .vr-home .vr-text-figure { right: 18px; bottom: 5px; transform: scale(.83); transform-origin: bottom right; } .vr-home .vr-mathmodel-card:hover .vr-text-figure { transform: translateY(-5px) rotate(-2deg) scale(.83); } }
+      @media (max-width: 720px) { .vr-home .vr-mathmodel-card { min-height: 404px; padding: 22px; } .vr-home .vr-mathmodel-watermark { top: 18px; right: 15px; font-size: 92px; } .vr-home .vr-mathmodel-top { grid-template-columns: minmax(0, 1fr) 29px; gap: 9px; } .vr-home .vr-mathmodel-kicker { font-size: 9px; } .vr-home .vr-mathmodel-meta { grid-column: 1 / -1; grid-row: 2; font-size: 12px; } .vr-home .vr-mathmodel-open { grid-column: 2; grid-row: 1; } .vr-home .vr-mathmodel-heading { margin-top: 23px; gap: 9px; } .vr-home .vr-mathmodel-heading strong { font-size: 30px; } .vr-home .vr-mathmodel-heading > span { max-width: 250px; font-size: 14px; line-height: 1.55; } .vr-home .vr-model-workflow { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; } .vr-home .vr-model-workflow > span { min-height: 44px; grid-template-columns: 25px 1fr; align-items: center; gap: 5px; padding: 7px 9px; } .vr-home .vr-model-workflow > span:nth-child(-n+5) { border-bottom: 1px solid rgba(27,27,27,.14); } .vr-home .vr-model-workflow > span:nth-child(n+9) { border-bottom: 0; } .vr-home .vr-model-workflow b { font-size: 12px; } .vr-home .vr-model-caption { margin-top: 10px; font-size: 9px; } .vr-home .vr-model-caption b { font-size: 15px; } }
     `}</style>
     <style>{`
       .vr-home .vr-hero-shell { width: min(100% - 48px, 820px); min-height: calc(100svh - 34px); }
@@ -483,12 +487,7 @@ export default function Dashboard() {
       .vr-home .vr-care-stats b { color: #444; font: 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
       .vr-home .vr-care-check { display: inline-flex; width: fit-content; align-items: center; gap: 5px; padding: 6px 9px; font-size: 10px; }
       .vr-home .vr-care-check.is-active { border-color: #e0c35f; background: #ffe08a; color: #1b1b1b; }
-      .vr-home .vr-model-steps { position: absolute; bottom: 24px; left: 26px; display: grid; grid-template-columns: repeat(4, 1fr) 30px; align-items: center; width: min(51%, 365px); border-top: 1px solid #dedede; padding-top: 11px; }
-      .vr-home .vr-model-steps i { position: relative; color: #8a8a8a; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
-      .vr-home .vr-model-steps i::before { content: ""; position: absolute; top: -14px; left: 0; width: 6px; height: 6px; border: 1px solid #b7b7b7; border-radius: 50%; background: #fff; }
-      .vr-home .vr-model-steps i.is-active { color: #1b1b1b; font-weight: 700; }.vr-home .vr-model-steps i.is-active::before { border-color: #a48830; background: #ffe08a; }
-      .vr-home .vr-model-steps b { justify-self: end; color: #a48830; font: 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
-      @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; }.vr-home .vr-model-steps { bottom: 19px; left: 22px; width: 53%; }.vr-home .vr-model-steps i { font-size: 8px; }.vr-home .vr-model-steps b { font-size: 14px; } }
+      @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; } }
     `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
