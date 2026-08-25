@@ -13,6 +13,7 @@ import {
  */
 
 const FULLSCREEN_PATHS = ['/', '/blog', '/articles'];
+const WIDE_WORKSPACE_PATHS = ['/mindmap', '/planner', '/schedule', '/learning', '/baby-care'];
 
 const TOOL_META = {
   '/prompts': {
@@ -62,6 +63,7 @@ export default function Layout({ children }) {
     (p) => p === '/' ? pathname === '/' : (pathname === p || pathname.startsWith(p + '/'))
   );
   const meta = getMeta(pathname);
+  const isWideWorkspace = WIDE_WORKSPACE_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'));
 
   if (isFullscreen) {
     return (
@@ -83,7 +85,7 @@ export default function Layout({ children }) {
   // ===== 工具页：统一外壳（简约商务白底） =====
   return (
     <div className="tool-wrap">
-      <div className="tool-inner">
+      <div className={`tool-inner${isWideWorkspace ? ' tool-inner-wide' : ''}`}>
         {/* 页头：白卡片 */}
         {meta && (() => {
           const { label, sub, Icon, accent } = meta;
@@ -333,6 +335,10 @@ export default function Layout({ children }) {
           padding: 34px 0 56px;
           gap: 0;
         }
+        .tool-inner.tool-inner-wide {
+          width: min(100% - 48px, 1400px);
+          max-width: 1400px;
+        }
         .tool-head {
           min-height: 56px;
           padding: 0 0 18px;
@@ -469,7 +475,7 @@ export default function Layout({ children }) {
         .tool-content table :is(th, td) { border-color: rgba(27,27,27,.13) !important; }
         .tool-content thead th { background: #fff9df !important; color: #555 !important; }
         @media (max-width: 720px) {
-          .tool-inner { width: min(100% - 40px, 1080px); padding-top: 24px; padding-bottom: 40px; }
+          .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 40px, 1080px); padding-top: 24px; padding-bottom: 40px; }
           .tool-head { align-items: flex-start; }
           .tool-head-right { display: none; }
           .tool-back { width: 27px; height: 27px; }
