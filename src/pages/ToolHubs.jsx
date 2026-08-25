@@ -8,9 +8,9 @@ import { Search, X, ExternalLink, Compass, Copy } from 'lucide-react';
    - 白底商务卡片，浅色分类标，favicon 自动加载 + 首字母兜底
    ============================================================ */
 
-const ACCENT = '#0CA678';
-const ACCENT_SOFT = 'rgba(12,166,120,.10)';
-const ACCENT_LINE = 'rgba(12,166,120,.28)';
+const ACCENT = '#A48830';
+const ACCENT_SOFT = '#FFF9DF';
+const ACCENT_LINE = 'rgba(164,136,48,.42)';
 
 const CATEGORIES = [
   { key: '金融行情', color: '#E8590C', bg: '#FFF4E6' },
@@ -124,9 +124,8 @@ const CAT_META = Object.fromEntries(CATEGORIES.map((c) => [c.key, c]));
 
 function fallbackFavicon(name) {
   const ch = (name || '?').trim().charAt(0).toUpperCase();
-  const colors = ['#0CA678', '#1971C2', '#E8590C', '#6741D9', '#E64980', '#2F9E44', '#F08C00', '#F03E3E'];
-  const c = colors[Math.abs((name || '?').toUpperCase().charCodeAt(0)) % colors.length];
-  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='${c}'/><text x='16' y='22' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='18' fill='white'>${ch}</text></svg>`;
+  const c = '#1B1B1B';
+  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='${c}'/><text x='16' y='22' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='18' fill='%23FFE08A'>${ch}</text></svg>`;
 }
 
 function faviconUrl(url) {
@@ -315,7 +314,7 @@ export default function ToolHubs() {
             const m = CAT_META[s.cat] || { color: ACCENT, bg: ACCENT_SOFT };
             // 有缓存/已加载则显示真实图标，否则先用本地字母色块（零等待）
             const real = !!favs[s.name];
-            const fav = real ? faviconUrl(s.url) : fallbackFavicon(s.name);
+            const fav = favs[s.name] || fallbackFavicon(s.name);
             return (
               <div key={s.url} className="hub-box" onClick={() => open(s.url)}>
                 <div className="hub-box-head">
@@ -324,7 +323,15 @@ export default function ToolHubs() {
                     alt={s.name}
                     className="hub-favicon"
                     style={{ transition: 'opacity .3s ease', opacity: real ? 1 : 0.9 }}
-                    onError={() => { if (real) { failedRef.current.add(s.name); dropFav(s.name); } }}
+                    onError={(event) => {
+                      // A third-party favicon must never leave a broken-image placeholder behind.
+                      event.currentTarget.onerror = null;
+                      event.currentTarget.src = fallbackFavicon(s.name);
+                      if (real) {
+                        failedRef.current.add(s.name);
+                        dropFav(s.name);
+                      }
+                    }}
                   />
                   <div style={{ minWidth: 0 }}>
                     <div className="hub-name">{s.name}</div>

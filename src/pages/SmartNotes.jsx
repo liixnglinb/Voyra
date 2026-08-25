@@ -39,7 +39,7 @@ function fmtTime(ts) {
 }
 
 // 主题色
-const ACCENT = '#7C5CFF';
+const ACCENT = '#A48830';
 
 export default function SmartNotes() {
   const [activeTab, setActiveTab] = useState('assistant'); // assistant | daily
@@ -431,7 +431,7 @@ export default function SmartNotes() {
         .luc.sm { width: 12px; height: 12px; }
 
         .sn-textarea { width: 100%; resize: none; font-size: 13px; line-height: 1.6; color: #212529; background: #fff; border: 1px solid rgba(20,24,33,.12); border-radius: 10px; padding: 11px 13px; font-family: inherit; }
-        .sn-textarea:focus { border-color: ${ACCENT}; box-shadow: 0 0 0 3px rgba(124,92,255,.12); outline: none; }
+        .sn-textarea:focus { border-color: ${ACCENT}; box-shadow: 0 0 0 3px rgba(255,224,138,.52); outline: none; }
 
         .sn-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; }
         .sn-sub { font-size: 11.5px; color: #8a8f98; }
@@ -453,7 +453,7 @@ export default function SmartNotes() {
         .sn-time { font-family: var(--font-mono); font-size: 10.5px; color: #adb5bd; flex-shrink: 0; white-space: nowrap; margin-top: 2px; }
         .sn-item-act { display: flex; gap: 6px; flex-shrink: 0; }
         .sn-icobtn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 7px; background: #fff; border: 1px solid rgba(20,24,33,.09); color: #8a8f98; cursor: pointer; transition: all .15s ease; }
-        .sn-icobtn:hover { color: ${ACCENT}; border-color: rgba(124,92,255,.5); background: #f5f2ff; }
+        .sn-icobtn:hover { color: ${ACCENT}; border-color: rgba(164,136,48,.5); background: #fff9df; }
         .sn-icobtn:disabled { opacity: .3; cursor: not-allowed; }
         .sn-icobtn.danger:hover { color: #EF4444; border-color: rgba(239,68,68,.4); background: #fef2f2; }
 

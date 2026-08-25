@@ -13,9 +13,9 @@ import {
    ============================================================ */
 
 const LS_KEY = 'ClassScheduleData';
-const ACCENT = '#6366F1';
-const ACCENT_SOFT = 'rgba(99,102,241,.10)';
-const ACCENT_LINE = 'rgba(99,102,241,.30)';
+const ACCENT = '#A48830';
+const ACCENT_SOFT = '#FFF9DF';
+const ACCENT_LINE = 'rgba(164,136,48,.42)';
 
 const WEEKDAY = ['一', '二', '三', '四', '五', '六', '日'];
 const MAX_WEEK = 20;

@@ -12,9 +12,9 @@ import {
    ============================================================ */
 
 const LS_KEY = 'PlannerData';
-const ACCENT = '#0EA5E9';
-const ACCENT_SOFT = 'rgba(14,165,233,.10)';
-const ACCENT_LINE = 'rgba(14,165,233,.30)';
+const ACCENT = '#A48830';
+const ACCENT_SOFT = '#FFF9DF';
+const ACCENT_LINE = 'rgba(164,136,48,.42)';
 
 const WEEK = ['一', '二', '三', '四', '五', '六', '日'];
 
@@ -171,6 +171,17 @@ export default function Planner() {
         .pl-ev .meta { font-size:11px;color:#6c757d; }
         .pl-cat { display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px; }
         .pl-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12.5px;z-index:99; }
+        @media (max-width:560px) {
+          .pl-card { padding:14px 12px; }
+          .pl-top { gap:8px; align-items:flex-start; flex-wrap:wrap; }
+          .pl-mbar { gap:6px; flex:0 0 auto; }
+          .pl-mbar b { flex:0 0 auto; white-space:nowrap; font-size:14px; }
+          .pl-mbar .pl-btn { padding:8px 10px; }
+          .pl-top > .pl-label { width:calc(100% - 42px); margin-left:42px !important; }
+          .pl-grid { gap:4px; }
+          .pl-cell { min-height:76px; padding:5px; }
+          .pl-cell .hol, .pl-cell .ev { font-size:9px; }
+        }
       `}</style>
 
       {/* 顶部导航 + 月历 */}

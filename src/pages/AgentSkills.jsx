@@ -10,7 +10,7 @@ import {
    - 模块2：Skill 资源卡片 + GitHub Star 排行榜
    ============================================================ */
 
-const ACCENT = '#7C5CFF';
+const ACCENT = '#A48830';
 
 /* ---------- 模块1：Agent 数据 ---------- */
 /* type: download=可下载软件 / web=网页版 / local=国内需本地部署 */
@@ -336,7 +336,7 @@ export default function AgentSkills() {
         <div className="ag-rank">
           {RANKED.map((s, idx) => (
             <div key={s.repo} className="ag-rank-row">
-              <span className="ag-rank-no" style={{ background: ['#F59E0B', '#94A3B8', '#CD7F32'][idx] || '#7C5CFF' }}>{idx + 1}</span>
+              <span className="ag-rank-no" style={{ background: ['#F59E0B', '#94A3B8', '#CD7F32'][idx] || ACCENT }}>{idx + 1}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13.5, fontWeight: 700, color: '#212529', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Star size={13} color="#F59E0B" />

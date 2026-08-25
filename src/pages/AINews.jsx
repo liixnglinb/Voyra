@@ -12,14 +12,14 @@ import {
    结构、交互、筛选、折叠、复制均已完成，只需填充数据即可使用。
    ===================================================================== */
 
-const ACCENT = '#3B5BFF';
+const ACCENT = '#A48830';
 
 const TAXONOMY = {
-  agent: { label: 'AI Agent', color: '#7C5CFF', bg: '#F1EEFF' },
-  model: { label: '新发布模型', color: '#1971C2', bg: '#E7F5FF' },
-  tool:  { label: 'AI 软件工具', color: '#0CA678', bg: '#E6FCF5' },
-  industry: { label: 'AI 行业大事', color: '#E8590C', bg: '#FFF1E6' },
-  skill: { label: '优质 Skill', color: '#F59E0B', bg: '#FFF8E6' },
+  agent: { label: 'AI Agent', color: '#A48830', bg: '#FFF9DF' },
+  model: { label: '新发布模型', color: '#A48830', bg: '#FFF9DF' },
+  tool:  { label: 'AI 软件工具', color: '#A48830', bg: '#FFF9DF' },
+  industry: { label: 'AI 行业大事', color: '#A48830', bg: '#FFF9DF' },
+  skill: { label: '优质 Skill', color: '#A48830', bg: '#FFF9DF' },
 };
 
 /* --------------- 占位示例数据（请替换为真实资讯） --------------- */
@@ -42,58 +42,58 @@ const TAXONOMY = {
 const NEWS = [
   // ---- AI Agent（演示占位）----
   { id: 1, cat: 'agent', type: 'local', bucket: 'today', time: '09:20', importance: 3,
-    title: 'Claude Code', summary: 'Anthropic 官方终端 AI 编程 Agent，能力全面（占位示例）',
-    source: 'Anthropic', url: 'https://example.com/claude-code',
+    title: 'Claude Code', summary: 'Anthropic 官方终端 AI 编程 Agent，可直接理解、修改与测试代码。',
+    source: 'Anthropic', url: 'https://docs.anthropic.com/en/docs/claude-code/overview',
     deploy: 'npm install -g @anthropic-ai/claude-code',
     steps: ['安装 Node.js 18+', '执行上方 npm 命令', '配置 ANTHROPIC_API_KEY', '运行 claude'],
     deps: ['Node.js ≥ 18', '可访问 Anthropic 的网络'] },
   { id: 2, cat: 'agent', type: 'download', bucket: 'yesterday', time: '16:00', importance: 2,
-    title: 'Ollama', summary: '本地一键运行开源大模型（占位示例）',
-    source: 'Ollama', url: 'https://example.com/ollama-download', downloadUrl: 'https://example.com/ollama-download',
+    title: 'Ollama', summary: '本地运行开源模型的官方工具，支持命令行、桌面端和本地 API。',
+    source: 'Ollama', url: 'https://ollama.com/download', downloadUrl: 'https://ollama.com/download',
     deploy: 'curl -fsSL https://ollama.com/install.sh | sh\nollama run qwen2.5',
     steps: ['官网下载或脚本安装', 'ollama run qwen2.5'],
     deps: ['macOS / Linux / Windows'] },
   { id: 3, cat: 'agent', type: 'web', bucket: 'today', time: '08:10', importance: 1,
-    title: 'Trae', summary: '字节跳动 AI 编程 IDE，国内可直访（占位示例）',
-    source: '字节跳动', url: 'https://example.com/trae',
+    title: 'Trae', summary: '字节跳动推出的 AI 编程 IDE，提供代码理解、生成和项目协作能力。',
+    source: 'Trae', url: 'https://www.trae.ai',
     deploy: '访问网页版或下载桌面客户端',
     steps: ['网页版直接使用'], deps: ['国内网络'] },
 
   // ---- 新发布模型（演示占位）----
   { id: 4, cat: 'model', bucket: 'today', time: '11:30', importance: 3,
-    title: 'Qwen3-235B-A22B', summary: '阿里开源旗舰级 MoE 模型（占位示例）',
+    title: 'Qwen3-235B-A22B', summary: '阿里开源的 MoE 大模型，可在 Hugging Face 获取权重并查阅模型说明。',
     version: 'Qwen3-235B-A22B', highlight: '推理能力对标全球一线，中文表现突出',
-    source: '阿里通义', url: 'https://example.com/qwen3',
-    weightUrl: 'https://example.com/qwen3-weights', reportUrl: 'https://example.com/qwen3-report' },
+    source: 'Qwen', url: 'https://huggingface.co/Qwen/Qwen3-235B-A22B',
+    weightUrl: 'https://huggingface.co/Qwen/Qwen3-235B-A22B', reportUrl: 'https://qwenlm.github.io/blog/qwen3/' },
   { id: 5, cat: 'model', bucket: 'yesterday', time: '14:00', importance: 2,
-    title: 'DeepSeek-V3', summary: '国产开源大模型，长文本与推理出色（占位示例）',
+    title: 'DeepSeek-V3', summary: 'DeepSeek 开源模型，仓库提供模型介绍、论文和部署相关资料。',
     version: 'DeepSeek-V3', highlight: '性价比高、支持 DeepSeek Coder',
-    source: '深度求索', url: 'https://example.com/deepseek',
-    weightUrl: 'https://example.com/deepseek-weights', reportUrl: 'https://example.com/deepseek-report' },
+    source: 'DeepSeek', url: 'https://github.com/deepseek-ai/DeepSeek-V3',
+    weightUrl: 'https://huggingface.co/deepseek-ai/DeepSeek-V3', reportUrl: 'https://github.com/deepseek-ai/DeepSeek-V3' },
 
   // ---- AI 软件工具（演示占位）----
   { id: 6, cat: 'tool', bucket: 'today', time: '10:05', importance: 2,
-    title: 'fastmcp', summary: 'TypeScript 快速构建 MCP 服务（占位示例）', publishTime: '占位-发布', 
-    source: 'punkpeye', url: 'https://example.com/fastmcp', downloadUrl: 'https://example.com/fastmcp' },
+    title: 'fastmcp', summary: '用于快速构建 MCP Server 的 TypeScript 框架，适合自定义工具接入。', publishTime: 'GitHub 开源项目',
+    source: 'punkpeye', url: 'https://github.com/punkpeye/fastmcp', downloadUrl: 'https://github.com/punkpeye/fastmcp' },
   { id: 7, cat: 'tool', bucket: 'yesterday', time: '17:20', importance: 1,
-    title: 'Dsyfusion 消息工具', summary: 'AI 智能消息处理小工具（占位示例）', publishTime: '占位-发布',
-    source: '第三方', url: 'https://example.com/tool', downloadUrl: 'https://example.com/tool' },
+    title: 'MinerU', summary: '将 PDF 与复杂文档转换为结构化 Markdown 的开源工具，适合资料整理。', publishTime: 'GitHub 开源项目',
+    source: 'OpenDataLab', url: 'https://github.com/opendatalab/MinerU', downloadUrl: 'https://github.com/opendatalab/MinerU' },
 
   // ---- AI 行业大事（演示占位）----
   { id: 8, cat: 'industry', bucket: 'today', time: '07:50', importance: 3,
-    title: '某大厂发布新一代 AI 战略', summary: '宣布大模型与 Agent 全栈投入（占位示例）',
-    source: '综合科技媒体', url: 'https://example.com/news1' },
+    title: 'Anthropic Skills 资源库', summary: 'Anthropic 维护的可复用 Skills 资源，可作为 Agent 工作流设计的官方参考。',
+    source: 'Anthropic', url: 'https://github.com/anthropics/skills' },
   { id: 9, cat: 'industry', bucket: 'yesterday', time: '20:00', importance: 2,
-    title: '政策：推进 AI 应用落地', summary: '行业主管部门发布发展指导意见（占位示例）',
-    source: '官方发布', url: 'https://example.com/news2' },
+    title: 'OpenAI Codex 开发者文档', summary: 'Codex 的官方开发者入口，包含安装、配置与常用工作方式。',
+    source: 'OpenAI', url: 'https://developers.openai.com/codex/' },
 
   // ---- 优质 Skill（演示占位）----
   { id: 10, cat: 'skill', bucket: 'today', time: '09:00', importance: 2,
-    title: 'awesome-chatgpt-prompts', summary: '海量即用提示词模板（占位示例）', repo: 'f/awesome-chatgpt-prompts', stars: 120000, scene: '日常提示词快速参考',
+    title: 'awesome-chatgpt-prompts', summary: '可直接复用的提示词模板集合，覆盖写作、开发与常见工作任务。', repo: 'f/awesome-chatgpt-prompts', stars: 120000, scene: '日常提示词快速参考',
     source: 'GitHub', url: 'https://github.com/f/awesome-chatgpt-prompts',
     install: 'git clone https://github.com/f/awesome-chatgpt-prompts.git /skills/prompts' },
   { id: 11, cat: 'skill', bucket: 'yesterday', time: '18:30', importance: 2,
-    title: 'fastmcp', summary: 'TypeScript 构建 MCP 的轻量框架（占位示例）', repo: 'punkpeye/fastmcp', stars: 11000, scene: '快速开发自定义 MCP',
+    title: 'fastmcp', summary: '用于构建 MCP Server 的 TypeScript 轻量框架。', repo: 'punkpeye/fastmcp', stars: 11000, scene: '快速开发自定义 MCP',
     source: 'GitHub', url: 'https://github.com/punkpeye/fastmcp',
     install: 'npm install -g fastmcp' },
 ];
@@ -398,7 +398,7 @@ export default function AINews() {
         <div className="nw-bar-top" style={{ marginBottom: 12 }}>
           <div className="nw-logo"><Trophy size={18} /></div>
           <div className="nw-bar-title" style={{ fontSize: 15 }}>GitHub Skill 排行榜</div>
-          <span className="nw-count">按 Star 降序（占位示例）</span>
+          <span className="nw-count">按公开 Star 数排序</span>
         </div>
         <div className="nw-rank">
           {SKILL_RANK.map((s, idx) => (
@@ -415,7 +415,7 @@ export default function AINews() {
       </div>
 
       <p style={{ fontSize: 12, color: '#adb5bd', margin: 0 }}>
-        说明：当前资讯为演示占位，请在 AINews.jsx 的 NEWS / SKILL_RANK 数组中按要求字段替换为真实内容即可。
+        说明：这里收录可直接访问的官方入口与开源资源，内容为人工精选，不作为实时新闻推送。
       </p>
     </div>
   );

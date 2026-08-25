@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  NotebookPen, Link, Lightbulb, BookOpen, Baby, KeyRound, Wrench, CalendarDays, CalendarClock, Bot, Newspaper, UserRound,
+  ArrowLeft, NotebookPen, Link, Lightbulb, BookOpen, Baby, KeyRound, Wrench, CalendarDays, CalendarClock, Bot, Newspaper, UserRound,
 } from 'lucide-react';
 
 /**
@@ -12,7 +12,7 @@ import {
  *    无渐变 / 无光晕 / 无玻璃 / 无弹跳动画
  */
 
-const FULLSCREEN_PATHS = ['/', '/mindmap', '/blog', '/baby-care', '/articles'];
+const FULLSCREEN_PATHS = ['/', '/blog', '/articles'];
 
 const TOOL_META = {
   '/smart-notes': {
@@ -31,7 +31,7 @@ const TOOL_META = {
     label: '宝宝护理', sub: '记录宝宝成长，护理数据可视化', Icon: Baby, accent: '#5B8DEF',
   },
   '/api-keys': {
-    label: 'API 密钥', sub: '统一管理 API Key，安全加密存储', Icon: KeyRound, accent: '#4F46E5',
+    label: 'API 密钥', sub: '明文保存于 Bmob，请勿存放生产密钥', Icon: KeyRound, accent: '#4F46E5',
   },
   '/tools': {
     label: '工具网站集成', sub: '金融与效率工具导航，精选网站一站直达', Icon: Wrench, accent: '#0CA678',
@@ -70,18 +70,16 @@ export default function Layout({ children }) {
   const meta = getMeta(pathname);
 
   if (isFullscreen) {
-    // '/baby-care'：宝宝护理作为独立全屏应用铺满视口，背景浅灰护眼
-    const isBabyCare = pathname === '/baby-care';
     return (
       <div
         style={{
           height: '100vh',
           overflow: 'hidden',
-          background: isBabyCare ? '#F7F8FA' : '#FFFFFF',
+          background: '#FFFFFF',
           color: '#111111',
         }}
       >
-        <div style={{ height: '100%', overflow: 'auto', padding: isBabyCare ? 16 : 0 }}>
+        <div style={{ height: '100%', overflow: 'auto' }}>
           {children}
         </div>
       </div>
@@ -98,6 +96,7 @@ export default function Layout({ children }) {
           return (
             <header className="tool-head">
               <div className="tool-head-left">
+                <a className="tool-back" href="#/" aria-label="返回主页" title="返回主页"><ArrowLeft size={16} /></a>
                 <div className="tool-icon" style={{ color: accent, background: '#fff', border: `1px solid ${accent}33` }}>
                   <Icon size={24} strokeWidth={1.8} />
                 </div>
@@ -108,7 +107,7 @@ export default function Layout({ children }) {
               </div>
               <div className="tool-head-right">
                 <span className="tool-dot" />
-                <span>已连接本地存储</span>
+                <span>数据服务可用</span>
               </div>
             </header>
           );
@@ -323,6 +322,169 @@ export default function Layout({ children }) {
         }
         .tool-content::-webkit-scrollbar-thumb:hover { background: #AAB0BC; background-clip: content-box; }
         .tool-content::-webkit-scrollbar-track { background: transparent; }
+
+        /* ======= Voyra tool surface ======= */
+        .tool-wrap {
+          height: 100%;
+          min-height: 100%;
+          overflow: auto;
+          background-color: #fff;
+          background-image: linear-gradient(rgba(0,0,0,.031) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.031) 1px, transparent 1px);
+          background-size: 32px 32px;
+        }
+        .tool-inner {
+          width: min(100% - 48px, 1080px);
+          height: auto;
+          min-height: 100%;
+          padding: 34px 0 56px;
+          gap: 0;
+        }
+        .tool-head {
+          min-height: 56px;
+          padding: 0 0 18px;
+          border: 0;
+          border-bottom: 1px solid rgba(27,27,27,.13);
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+        }
+        .tool-head-left { gap: 11px; }
+        .tool-back {
+          display: grid;
+          width: 28px;
+          height: 28px;
+          place-items: center;
+          border: 1px solid rgba(27,27,27,.13);
+          border-radius: 6px;
+          color: #666;
+          text-decoration: none;
+          transition: color .18s ease, background .18s ease, transform .18s ease;
+        }
+        .tool-back:hover { color: #1b1b1b; background: #fff9df; transform: translateX(-2px); }
+        .tool-back:focus-visible { outline: 2px solid #1b1b1b; outline-offset: 3px; }
+        .tool-icon {
+          width: 34px;
+          height: 34px;
+          border: 1px solid rgba(168,136,26,.46) !important;
+          border-radius: 7px;
+          background: #fff9e2 !important;
+          color: #9a7515 !important;
+        }
+        .tool-title { color: #1b1b1b; font-size: 20px; font-weight: 760; }
+        .tool-sub { color: #777; font-size: 12px; }
+        .tool-head-right {
+          padding: 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          color: #888;
+          font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .tool-dot { width: 5px; height: 5px; border-radius: 0; background: #a48830; }
+        .tool-content {
+          display: block;
+          flex: 0 0 auto;
+          min-height: 0;
+          overflow: visible;
+          padding: 28px 0 0;
+          border: 0;
+          border-radius: 0;
+          background: transparent;
+          box-shadow: none;
+          color: #1b1b1b;
+          --content-accent: #a48830;
+          --content-accent-soft: rgba(255,224,138,.48);
+        }
+        .tool-content > *:last-child { margin-bottom: 0; }
+        .tool-content :is(input, textarea, select) {
+          border-radius: 6px !important;
+          border-color: rgba(27,27,27,.17) !important;
+          background: rgba(255,255,255,.92) !important;
+          color: #1b1b1b !important;
+        }
+        .tool-content :is(input, textarea, select):focus {
+          border-color: #1b1b1b !important;
+          box-shadow: 0 0 0 3px rgba(255,224,138,.52) !important;
+        }
+        .tool-content :is(.glass, .sn-card, .pl-card, .cs-card, .ag-sec, .ag-card, .ag-skill, .ag-rank-row, .hub-box, .ak-group, .ak-key, .nw-bar, .nw-card, .nw-rank-row, .bookmark-card, .bc-card, .bc-kpi, .bc-sidenav, .pl-sidebar, .pl-empty, .pl-ev, .sn-item, .sn-note, .cs-review, .cs-review-item) {
+          border-color: rgba(27,27,27,.13) !important;
+          border-radius: 8px !important;
+          background: rgba(255,255,255,.9) !important;
+          box-shadow: none !important;
+        }
+        .tool-content :is(.glass, .sn-card, .pl-card, .cs-card, .ag-sec, .hub-box, .ak-group, .nw-bar, .bookmark-card, .bc-card, .bc-sidenav, .pl-sidebar) {
+          box-shadow: 0 10px 25px -28px rgba(20,20,20,.55) !important;
+        }
+        .tool-content :is(.sn-card, .pl-card, .cs-card, .ag-sec, .hub-box, .ak-group, .nw-bar, .bookmark-card, .bc-card, .bc-sidenav, .pl-sidebar):hover {
+          border-color: rgba(27,27,27,.22) !important;
+          box-shadow: 0 16px 30px -28px rgba(20,20,20,.62) !important;
+        }
+        .tool-content :is(.btn-primary, .sn-btn-primary, .pl-btn.primary, .cs-btn.primary, .ag-btn.solid, .nw-btn.solid, .hub-open, .bc-btn-primary) {
+          border-color: #1b1b1b !important;
+          border-radius: 6px !important;
+          background: #1b1b1b !important;
+          color: #fff !important;
+          box-shadow: none !important;
+        }
+        .tool-content :is(.btn-primary, .sn-btn-primary, .pl-btn.primary, .cs-btn.primary, .ag-btn.solid, .nw-btn.solid, .hub-open, .bc-btn-primary):hover:not(:disabled) {
+          border-color: #1b1b1b !important;
+          background: #3a3a3a !important;
+        }
+        .tool-content :is(.btn-default, .sn-btn-ghost, .sn-icobtn, .pl-btn, .cs-btn, .ag-btn, .nw-btn, .ak-act, .pl-action, .bc-btn-secondary) {
+          border-radius: 6px !important;
+          border-color: rgba(27,27,27,.16) !important;
+          background: rgba(255,255,255,.82) !important;
+          color: #555 !important;
+          box-shadow: none !important;
+        }
+        .tool-content :is(.btn-default, .sn-btn-ghost, .sn-icobtn, .pl-btn, .cs-btn, .ag-btn, .nw-btn, .ak-act, .pl-action, .bc-btn-secondary):hover:not(:disabled) {
+          border-color: #a48830 !important;
+          background: #fff9df !important;
+          color: #1b1b1b !important;
+        }
+        .tool-content :is(.sn-tab.active, .sn-type.active, .pl-cat-active, .cat-chip-active, .hub-chip.on, .ag-chip.on, .nw-chip.on, .ak-sel, .cs-chip) {
+          border-color: #e0c35f !important;
+          background: #ffe08a !important;
+          color: #1b1b1b !important;
+          box-shadow: none !important;
+        }
+        .tool-content :is(.sn-tabs, .inline-flex.rounded-full) { border-radius: 7px !important; }
+        .tool-content :is(.cat-chip, .hub-chip, .ag-chip, .nw-chip, .sn-type, .pl-cat, .ag-badge, .ag-area, .nw-badge, .nw-imp, .ak-count-badge, .ak-chip) {
+          border-radius: 999px !important;
+          box-shadow: none !important;
+        }
+        .tool-content :is(.sn-ic, .pl-ico, .cs-h .ico, .ag-ico, .nw-logo, .hub-logo, .ak-key-dot, .bc-title-icon, .bc-nav-icon) {
+          border-radius: 7px !important;
+          background: #fff9df !important;
+          color: #9a7515 !important;
+        }
+        .tool-content :is(.weblinks-page, .learning-hub) {
+          --accent: #1b1b1b !important;
+          --accent-deep: #000 !important;
+          --accent-soft: rgba(255,224,138,.42) !important;
+          --accent-line: rgba(164,136,48,.55) !important;
+          --accent-2: #1b1b1b !important;
+          --accent-3: #a48830 !important;
+          --sel: rgba(255,224,138,.5) !important;
+        }
+        .tool-content .pl-gold { --t-gold: #1b1b1b !important; --t-gold-soft: rgba(255,224,138,.42) !important; --t-gold-line: rgba(164,136,48,.55) !important; }
+        .tool-content .ak-wrap { --ak: #1b1b1b !important; --ak-2: #000 !important; --ak-soft1: rgba(255,224,138,.42) !important; --ak-soft2: rgba(255,224,138,.62) !important; --ak-line: rgba(164,136,48,.55) !important; }
+        .tool-content :is(.pl-gold-bar, .selected-indicator) { background: #ffe08a !important; }
+        .tool-content .bc-nav-item.active { background: #ffe08a !important; color: #1b1b1b !important; }
+        .tool-content :is(.ag-pre, .nw-pre) { border-radius: 0 0 7px 7px !important; background: #1b1b1b !important; }
+        .tool-content table :is(th, td) { border-color: rgba(27,27,27,.13) !important; }
+        .tool-content thead th { background: #fff9df !important; color: #555 !important; }
+        @media (max-width: 720px) {
+          .tool-inner { width: min(100% - 40px, 1080px); padding-top: 24px; padding-bottom: 40px; }
+          .tool-head { align-items: flex-start; }
+          .tool-head-right { display: none; }
+          .tool-back { width: 27px; height: 27px; }
+          .tool-title { font-size: 18px; }
+          .tool-sub { max-width: 280px; white-space: normal; line-height: 1.45; }
+          .tool-content { padding-top: 22px; }
+          .tool-content .flex.items-end.justify-between { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+          .tool-content :is(.search-box, .pl-search, .hub-search, .nw-search, .ag-search) { max-width: 100%; }
+        }
       `}</style>
     </div>
   );

@@ -130,6 +130,15 @@ export default function PromptLibrary() {
     <div className="pl-inner flex gap-5 pb-8">
       <style>{`
         .pl-gold { --t-gold: #D97706; --t-gold-soft: rgba(217,119,6,.10); --t-gold-line: rgba(217,119,6,.28); }
+        @media (max-width: 700px) {
+          .pl-inner { flex-direction: column; gap: 14px; }
+          .pl-inner > aside { width: 100%; }
+          .pl-inner .pl-sidebar { position: static; }
+          .pl-inner > .flex-1 { width: 100%; }
+          .pl-inner .pl-gold > .flex.items-end.justify-between { align-items: flex-start; flex-direction: column; gap: 14px; }
+          .pl-inner .pl-gold > .flex.items-end.justify-between > .flex.items-center { width: 100%; flex-wrap: wrap; }
+          .pl-inner .pl-search { flex: 1 1 180px; width: auto; }
+        }
         /* 左侧分类 */
         .pl-gold .pl-sidebar { background: #fff; border: 1px solid var(--line-soft); border-radius: 14px; padding: 14px 12px; }
         .pl-gold .pl-cat-item { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 9px; font-size: 13px; color: var(--text-2); transition: all .15s ease; }

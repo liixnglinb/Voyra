@@ -16,8 +16,8 @@ const LS_KEY = 'baby-care';
 const HOUR_MS = 36e5;
 
 /* ================= 柔感专业风 · 设计系统 ================= */
-const ACCENT = '#5B8DEF';        // 主色 · 安心蓝
-const ACCENT_SOFT = '#E8F0FF';   // 主色浅背景（导航选中）
+const ACCENT = '#A48830';        // 主色 · Voyra 金色
+const ACCENT_SOFT = '#FFF9DF';   // 主色浅背景（导航选中）
 const BG_PAGE = '#F7F8FA';       // 页面背景
 const CARD = '#FFFFFF';          // 卡片背景
 const TEXT_1 = '#333F51';        // 一级文字
@@ -100,7 +100,7 @@ function RefBar({ label, cur, range, unit }) {
   const [min, max] = range;
   const pct = Math.max(0, Math.min(1, (cur - min) / (max - min || 1)));
   const inRange = cur >= min && cur <= max;
-  const color = inRange ? '#5B8DEF' : cur < min ? '#F59E0B' : '#E85D5D';
+  const color = inRange ? ACCENT : cur < min ? '#F59E0B' : '#E85D5D';
   const mark = Math.round(pct * 100);
   return (
     <div className="mb-5 last:mb-0">

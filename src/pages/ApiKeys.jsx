@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Plus, Eye, EyeOff, X, Save, Copy, Search, ExternalLink, KeyRound, Layers,
-  ShieldCheck, Trash2, Check,
+  ShieldCheck, Trash2, Check, TriangleAlert,
 } from 'lucide-react';
 import COMPANY_LOGOS from '../assets/companyLogos';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -211,6 +211,8 @@ export default function ApiKeys() {
         .ak-url-link:hover{color:var(--ak);}
         .ak-sel{background:var(--ak-soft1)!important;border-color:var(--ak-line)!important;}
         .ak-sel-dot{background:var(--ak)!important;}
+        .ak-storage-warning{display:flex;align-items:flex-start;gap:9px;border:1px solid #e0c35f;border-left:4px solid #ffe08a;border-radius:8px;background:#fff9df;padding:11px 13px;color:#5e542c;font-size:12px;line-height:1.65;}
+        .ak-storage-warning b{color:#1b1b1b;}
       `}</style>
 
       {/* 页面标题 */}
@@ -218,7 +220,7 @@ export default function ApiKeys() {
         <div>
           <span className="ak-eyebrow">Security Center</span>
           <h1 className="title-display text-[22px] tracking-tight mt-1">API 密钥管理</h1>
-          <p className="mt-1.5 text-[var(--text-2)] text-[12.5px]">覆盖全部国内 AI 平台 · 官方图标 · 本地加密保存</p>
+          <p className="mt-1.5 text-[var(--text-2)] text-[12.5px]">统一查看供应商、调用地址与密钥备注</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="search-box w-44">
@@ -245,6 +247,11 @@ export default function ApiKeys() {
             添加密钥
           </button>
         </div>
+      </div>
+
+      <div className="ak-storage-warning" role="note">
+        <TriangleAlert className="h-4 w-4 shrink-0" />
+        <span><b>存储提示：</b>当前为 Bmob 明文存储，尚未实现加密。请不要填写生产环境、有费用或高权限的密钥。</span>
       </div>
 
       {/* 空状态 */}

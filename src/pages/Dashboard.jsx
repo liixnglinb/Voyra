@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarClock,
   CalendarDays, Check, ChevronDown, Code2, Frame, Github,
-  Globe, LayoutGrid, Lightbulb, Link, MousePointer2, NotebookPen,
-  Sparkles, Star, Waves,
+  Globe, GraduationCap, KeyRound, LayoutGrid, Lightbulb, Link, MousePointer2,
+  Newspaper, NotebookPen, Route, Sparkles, Star, Waves, Wrench,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
@@ -16,6 +16,13 @@ const FEATURED = [
   { to: '/agents', no: '03', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'motion' },
   { to: '/planner', no: '04', name: '个人日程', desc: '把课程、假期和自定义事项排到可执行的时间线上。', cta: '打开日程', Icon: CalendarClock, art: 'calendar' },
   { to: '/web-links', no: '05', name: '网页链接', desc: '收藏常用服务，分类整理后从一个界面直接访问。', cta: '整理链接', Icon: Link, art: 'links' },
+  { to: '/schedule', no: '06', name: '个人课表', desc: '将课程、周次和教师信息清晰地排在同一个视图里。', cta: '查看课表', Icon: GraduationCap, art: 'calendar' },
+  { to: '/learning', no: '07', name: '学习资料', desc: '把笔记、代码片段和课程资料积累成可检索的知识库。', cta: '管理资料', Icon: LayoutGrid, art: 'notes' },
+  { to: '/tools', no: '08', name: '工具导航', desc: '按场景筛选 AI、开发、资讯与效率网站，减少日常寻找。', cta: '浏览工具', Icon: Wrench, art: 'links' },
+  { to: '/news', no: '09', name: 'AI 每日情报', desc: '速览 Agent、模型、工具和行业动态，保持信息输入的节奏。', cta: '阅读情报', Icon: Newspaper, art: 'motion' },
+  { to: '/api-keys', no: '10', name: 'API 密钥', desc: '统一记录和查看常用 AI 平台的 API Key 与调用地址。', cta: '管理密钥', Icon: KeyRound, art: 'prompt' },
+  { to: '/mindmap', no: '11', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'motion' },
+  { to: '/baby-care', no: '12', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'notes' },
 ];
 
 const MATHMODEL_SKILL = {

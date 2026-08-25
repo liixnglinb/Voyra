@@ -730,13 +730,13 @@ export default function LearningHub() {
 
   const renderTopBar = () => (
     <div className="flex items-center gap-3.5 animate-slide-up">
-      <div className="h-11 w-11 rounded-[12px] flex items-center justify-center shrink-0" style={{ background: 'rgba(5,150,105,.10)', border: '1px solid rgba(5,150,105,0.18)' }}>
-        <BookOpen className="h-5 w-5 text-[#059669]" strokeWidth={1.6} />
+      <div className="h-11 w-11 rounded-[12px] flex items-center justify-center shrink-0" style={{ background: '#FFF9DF', border: '1px solid rgba(164,136,48,.32)' }}>
+        <BookOpen className="h-5 w-5 text-[#A48830]" strokeWidth={1.6} />
       </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <h1 className="title-display text-[22px] tracking-tight text-[var(--text-1)]">学习资料库</h1>
-          <span className="text-[10.5px] font-medium rounded-full px-2 py-0.5 shrink-0" style={{ background: 'rgba(5,150,105,.10)', color: '#059669' }}>知识卡片墙</span>
+          <span className="text-[10.5px] font-medium rounded-full px-2 py-0.5 shrink-0" style={{ background: '#FFF9DF', color: '#A48830' }}>知识卡片墙</span>
         </div>
         <p className="text-[12.5px] text-[var(--text-3)] mt-0.5">个人知识库 · 学科分类 · 联网搜索 · draw.io 式思维导图</p>
       </div>
@@ -747,23 +747,23 @@ export default function LearningHub() {
     <div className="learning-hub space-y-5 pb-10">
       <style>{`
         .learning-hub {
-          --accent: #059669;
-          --accent-2: #047857;
-          --accent-3: #10b981;
-          --accent-soft: rgba(5, 150, 105, 0.10);
-          --sel: rgba(5, 150, 105, 0.10);
+          --accent: #1b1b1b;
+          --accent-2: #000;
+          --accent-3: #a48830;
+          --accent-soft: rgba(255, 224, 138, 0.42);
+          --sel: rgba(255, 224, 138, 0.42);
         }
-        .learning-hub .btn-primary { background: #059669; color: #fff; }
-        .learning-hub .btn-primary:hover:not(:disabled) { background: #047857; }
-        .learning-hub .btn-primary:active:not(:disabled) { background: #065f46; }
-        .learning-hub .btn:focus-visible { outline-color: rgba(5, 150, 105, 0.5); }
-        .learning-hub .search-box:focus-within { border-color: rgba(5, 150, 105, 0.5); box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12); }
-        .learning-hub .search-box:focus-within svg { color: #059669; }
+        .learning-hub .btn-primary { background: #1b1b1b; color: #fff; }
+        .learning-hub .btn-primary:hover:not(:disabled) { background: #3a3a3a; }
+        .learning-hub .btn-primary:active:not(:disabled) { background: #000; }
+        .learning-hub .btn:focus-visible { outline-color: rgba(164, 136, 48, 0.5); }
+        .learning-hub .search-box:focus-within { border-color: rgba(164, 136, 48, 0.5); box-shadow: 0 0 0 3px rgba(255, 224, 138, 0.52); }
+        .learning-hub .search-box:focus-within svg { color: #a48830; }
         .learning-hub input:focus, .learning-hub textarea:focus, .learning-hub select:focus {
-          border-color: rgba(5, 150, 105, 0.5);
-          box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+          border-color: rgba(164, 136, 48, 0.5);
+          box-shadow: 0 0 0 3px rgba(255, 224, 138, 0.52);
         }
-        .learning-hub ::selection { background: rgba(5, 150, 105, 0.25); }
+        .learning-hub ::selection { background: rgba(255, 224, 138, 0.72); }
       `}</style>
 
       {renderTopBar()}
@@ -774,7 +774,7 @@ export default function LearningHub() {
           <button
             key={k}
             onClick={() => setActiveTab(k)}
-            style={activeTab === k ? { background: '#059669', color: '#fff' } : undefined}
+            style={activeTab === k ? { background: '#1b1b1b', color: '#fff' } : undefined}
             className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-[12.5px] font-medium transition-colors ${activeTab === k ? 'shadow-sm' : 'text-[var(--text-3)] hover:text-[var(--text-1)] hover:bg-[var(--hover)]'}`}
           >
             <I className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -813,9 +813,9 @@ export default function LearningHub() {
           </div>
 
           {/* 联网搜索 */}
-          <div className="rounded-[14px] p-4" style={{ background: 'rgba(5,150,105,.06)', border: '1px solid rgba(5,150,105,0.16)' }}>
+          <div className="rounded-[8px] p-4" style={{ background: '#FFFCF0', border: '1px solid rgba(164,136,48,.28)' }}>
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-[9px] flex items-center justify-center shrink-0" style={{ background: 'rgba(5,150,105,.12)', color: '#059669' }}>
+              <div className="h-8 w-8 rounded-[7px] flex items-center justify-center shrink-0" style={{ background: '#FFF1BD', color: '#A48830' }}>
                 <Globe className="h-4 w-4" strokeWidth={1.6} />
               </div>
               <input
@@ -841,8 +841,8 @@ export default function LearningHub() {
             </div>
           ) : filteredMaterials.length === 0 ? (
             <div className="rounded-[14px] bg-[var(--bg-1)] border border-[var(--line)] py-16 text-center">
-              <div className="h-12 w-12 mx-auto rounded-[14px] flex items-center justify-center mb-3" style={{ background: 'rgba(5,150,105,.10)' }}>
-                <BookOpen className="h-6 w-6 text-[#059669]" strokeWidth={1.5} />
+              <div className="h-12 w-12 mx-auto rounded-[8px] flex items-center justify-center mb-3" style={{ background: '#FFF9DF' }}>
+                <BookOpen className="h-6 w-6 text-[#A48830]" strokeWidth={1.5} />
               </div>
               <p className="text-[14px] font-medium text-[var(--text-1)]">{searchQuery || subjectFilter !== '全部' ? '没有匹配的资料' : '还没有学习资料'}</p>
               <p className="mt-1 text-[12px] text-[var(--text-3)]">点击"添加资料"开始记录你的第一张知识卡片</p>
@@ -854,12 +854,12 @@ export default function LearningHub() {
                 const hasMm = !!mindmaps[m.id];
                 const fmt = m.format || 'text';
                 return (
-                  <div key={m.id} className="relative group cursor-pointer transition-all select-none rounded-[14px] bg-[var(--bg-1)] border border-[var(--line)] hover:border-[#059669]/45 hover:shadow-[var(--elev-1)] animate-slide-up" style={{ animationDelay: `${idx * 0.03}s` }} onDoubleClick={() => setDetailMaterial(m)} title="双击查看详情">
+                  <div key={m.id} className="relative group cursor-pointer transition-all select-none rounded-[8px] bg-[var(--bg-1)] border border-[var(--line)] hover:border-[#A48830]/45 hover:shadow-[var(--elev-1)] animate-slide-up" style={{ animationDelay: `${idx * 0.03}s` }} onDoubleClick={() => setDetailMaterial(m)} title="双击查看详情">
                     {/* 左侧书签脊 */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-[14px] bg-[#059669]" />
+                    <div className="absolute left-0 top-0 bottom-0 w-[5px] rounded-l-[14px] bg-[#FFE08A]" />
                     <div className="pl-4 pr-4 pt-4 pb-3.5">
                       <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <button onClick={(e) => { e.stopPropagation(); openWebSearch(m.title); }} onDoubleClick={(e) => e.stopPropagation()} className="p-1.5 rounded-[6px] bg-[var(--bg-2)] text-[var(--text-3)] hover:text-[#059669]" title="网上搜索该主题">
+                        <button onClick={(e) => { e.stopPropagation(); openWebSearch(m.title); }} onDoubleClick={(e) => e.stopPropagation()} className="p-1.5 rounded-[6px] bg-[var(--bg-2)] text-[var(--text-3)] hover:text-[#A48830]" title="网上搜索该主题">
                           <Globe className="h-3.5 w-3.5" />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); openEditModal(m); }} onDoubleClick={(e) => e.stopPropagation()} className="p-1.5 rounded-[6px] bg-[var(--bg-2)] text-[var(--text-3)] hover:text-[var(--text-1)]" title="编辑">
@@ -871,7 +871,7 @@ export default function LearningHub() {
                       </div>
                       {/* 标题行：文档图标 + 标题 */}
                       <div className="flex items-center gap-2.5 pr-20">
-                        <div className="h-9 w-9 rounded-[10px] flex items-center justify-center shrink-0" style={{ background: 'rgba(5,150,105,.10)', color: '#059669' }}>
+                        <div className="h-9 w-9 rounded-[7px] flex items-center justify-center shrink-0" style={{ background: '#FFF9DF', color: '#A48830' }}>
                           <FileText className="h-4 w-4" strokeWidth={1.6} />
                         </div>
                         <h3 className="text-[14px] font-semibold text-[var(--text-1)] truncate">{m.title}</h3>
@@ -899,7 +899,7 @@ export default function LearningHub() {
                       )}
                       <div className="mt-3 pt-3 border-t border-[var(--line-soft)] flex items-center justify-between pl-1">
                         <span className="text-[10.5px] text-[var(--text-3)]">{formatDate(m.updatedAt || m.createdAt)}</span>
-                        <button onClick={(e) => { e.stopPropagation(); hasMm ? openMindmap(m.id) : generateMindmap(m); }} onDoubleClick={(e) => e.stopPropagation()} className="btn text-xs py-1.5 px-3" style={{ color: '#059669', border: '1px solid rgba(5,150,105,0.25)', background: 'rgba(5,150,105,0.06)' }}>
+                        <button onClick={(e) => { e.stopPropagation(); hasMm ? openMindmap(m.id) : generateMindmap(m); }} onDoubleClick={(e) => e.stopPropagation()} className="btn text-xs py-1.5 px-3" style={{ color: '#1B1B1B', border: '1px solid rgba(164,136,48,.32)', background: '#FFF9DF' }}>
                           <GitBranch className="h-3 w-3" />
                           {hasMm ? '查看导图' : '生成导图'}
                         </button>
@@ -923,7 +923,7 @@ export default function LearningHub() {
                 <button
                   key={k}
                   onClick={() => setMmMode(k)}
-                  style={mmMode === k ? { background: '#059669', color: '#fff' } : undefined}
+                  style={mmMode === k ? { background: '#1b1b1b', color: '#fff' } : undefined}
                   className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[12px] font-medium transition-colors ${mmMode === k ? 'shadow-sm' : 'text-[var(--text-3)] hover:text-[var(--text-1)] hover:bg-[var(--hover)]'}`}
                 >
                   <I className="h-3.5 w-3.5" strokeWidth={1.8} /> {l}
@@ -955,8 +955,8 @@ export default function LearningHub() {
             </div>
           ) : (
             <div className="rounded-[14px] bg-[var(--bg-1)] border border-[var(--line)] py-16 text-center">
-              <div className="h-12 w-12 mx-auto rounded-[14px] flex items-center justify-center mb-3" style={{ background: 'rgba(5,150,105,.10)' }}>
-                <GitBranch className="h-6 w-6 text-[#059669]" strokeWidth={1.5} />
+              <div className="h-12 w-12 mx-auto rounded-[8px] flex items-center justify-center mb-3" style={{ background: '#FFF9DF' }}>
+                <GitBranch className="h-6 w-6 text-[#A48830]" strokeWidth={1.5} />
               </div>
               <p className="text-[14px] font-medium text-[var(--text-1)]">还没有思维导图</p>
               <p className="mt-1 text-[12px] text-[var(--text-3)]">在资料列表点击"生成导图"，或点下方按钮新建</p>
@@ -970,9 +970,9 @@ export default function LearningHub() {
       {/* 添加/编辑资料模态框 */}
       {showModal && (
         <div className="modal-overlay" onClick={() => { if (!formData.title.trim() && !formData.content.trim()) setShowModal(false); }}>
-          <div className="modal-card mx-4 w-full max-w-lg p-5" style={{ borderTop: '3px solid #059669' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card mx-4 w-full max-w-lg p-5" style={{ borderTop: '3px solid #A48830' }} onClick={(e) => e.stopPropagation()}>
             <h2 className="text-[15px] font-semibold mb-4 flex items-center gap-2">
-              <span className="h-3.5 w-[3px] rounded-full bg-[#059669]" />
+              <span className="h-3.5 w-[3px] rounded-full bg-[#FFE08A]" />
               {editingMaterial ? '编辑资料' : '添加资料'}
             </h2>
             <div className="space-y-3">
@@ -1032,12 +1032,12 @@ export default function LearningHub() {
       {/* 资料详情模态框（点击卡片打开，占屏幕大部分区域） */}
       {detailMaterial && (
         <div className="modal-overlay" onClick={() => setDetailMaterial(null)}>
-          <div className="modal-card mx-4 w-full max-w-3xl p-0 overflow-hidden flex flex-col" style={{ maxHeight: '88vh', borderTop: '3px solid #059669' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card mx-4 w-full max-w-3xl p-0 overflow-hidden flex flex-col" style={{ maxHeight: '88vh', borderTop: '3px solid #A48830' }} onClick={(e) => e.stopPropagation()}>
             {/* 头部 */}
             <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3 border-b border-[var(--line-soft)]">
               <div className="min-w-0">
                 <h2 className="text-[17px] font-semibold tracking-tight break-words flex items-center gap-2">
-                  <span className="h-4 w-[3px] rounded-full bg-[#059669] shrink-0" />
+                  <span className="h-4 w-[3px] rounded-full bg-[#FFE08A] shrink-0" />
                   <span className="break-words">{detailMaterial.title}</span>
                 </h2>
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
@@ -1087,9 +1087,9 @@ export default function LearningHub() {
       {/* 节点编辑模态框 */}
       {showNodeModal && (
         <div className="modal-overlay" onClick={() => setShowNodeModal(false)}>
-          <div className="modal-card mx-4 w-full max-w-md p-5" style={{ borderTop: '3px solid #059669' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card mx-4 w-full max-w-md p-5" style={{ borderTop: '3px solid #A48830' }} onClick={(e) => e.stopPropagation()}>
             <h2 className="text-[15px] font-semibold mb-3 flex items-center gap-2">
-              <span className="h-3.5 w-[3px] rounded-full bg-[#059669]" />
+              <span className="h-3.5 w-[3px] rounded-full bg-[#FFE08A]" />
               {nodeModalMode === 'add' ? '添加子节点' : '编辑节点名称'}
             </h2>
             <input type="text" placeholder="节点内容" value={nodeModalText} onChange={(e) => setNodeModalText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleNodeConfirm()} className="w-full" autoFocus />
@@ -1104,10 +1104,10 @@ export default function LearningHub() {
       {/* 节点内容模态框（添加内容：支持文字 / Python / MATLAB 代码） */}
       {noteModalOpen && (
         <div className="modal-overlay" onClick={() => setNoteModalOpen(false)}>
-          <div className="modal-card mx-4 w-full max-w-2xl p-5" style={{ borderTop: '3px solid #059669' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card mx-4 w-full max-w-2xl p-5" style={{ borderTop: '3px solid #A48830' }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-[15px] font-semibold flex items-center gap-2">
-                <span className="h-3.5 w-[3px] rounded-full bg-[#059669]" />
+                <span className="h-3.5 w-[3px] rounded-full bg-[#FFE08A]" />
                 📄 节点内容
               </h2>
               <button onClick={() => setNoteModalOpen(false)} className="p-1.5 rounded-lg text-[var(--text-3)] hover:text-[var(--text-1)] hover:bg-[var(--hover)]">
@@ -1165,9 +1165,9 @@ export default function LearningHub() {
       {/* 导出模态框 */}
       {showExportModal && (
         <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
-          <div className="modal-card mx-4 w-full max-w-lg p-5" style={{ borderTop: '3px solid #059669' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card mx-4 w-full max-w-lg p-5" style={{ borderTop: '3px solid #A48830' }} onClick={(e) => e.stopPropagation()}>
             <h2 className="text-[15px] font-semibold mb-3 flex items-center gap-2">
-              <span className="h-3.5 w-[3px] rounded-full bg-[#059669]" />
+              <span className="h-3.5 w-[3px] rounded-full bg-[#FFE08A]" />
               导出思维导图
             </h2>
             <pre className="w-full p-4 rounded-[8px] bg-[var(--bg-2)] border border-[var(--line)] text-[var(--text-2)] text-[12px] mono whitespace-pre-wrap max-h-80 overflow-auto mb-4" style={{ fontFamily: 'var(--font-mono)' }}>{exportText}</pre>
