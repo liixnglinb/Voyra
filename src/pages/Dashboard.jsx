@@ -452,7 +452,7 @@ export default function Dashboard() {
       .vr-home .vr-scroll-cue { margin-top: 24px; }
       .vr-home .vr-person-stage { position: relative; z-index: 1; align-self: end; width: 282px; height: 699px; min-height: 0; overflow: visible; }
       .vr-home .vr-person-stage::after { content: ""; position: absolute; right: -5%; bottom: 3%; width: 88%; height: 14px; border-radius: 50%; background: rgba(27,27,27,.11); filter: blur(9px); transform: rotate(-4deg); }
-      .vr-home .vr-person-frame { position: absolute; right: 0; bottom: 0; z-index: 1; width: 282px; opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity .34s ease-out, transform .62s cubic-bezier(.16,1,.3,1); will-change: opacity, transform; }
+      .vr-home .vr-person-frame { position: absolute; right: 0; bottom: 0; z-index: 1; width: 282px; opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity .62s ease-out, transform .94s cubic-bezier(.16,1,.3,1); will-change: opacity, transform; }
       .vr-home .vr-person-frame.is-ready { opacity: 1; transform: translate3d(0, 0, 0); }
       .vr-home .vr-person-motion { position: relative; transform: translateY(0) rotate(1deg); transform-origin: 51% 94%; }
       .vr-home .vr-person-frame.is-ready .vr-person-motion { animation: vr-person-breathe 5.4s ease-in-out .72s infinite; }
