@@ -62,7 +62,7 @@ export default function MindMapFrame() {
         ref={iframeRef}
         src={status.url || 'about:blank'}
         title="思维导图"
-        sandbox="allow-scripts allow-same-origin allow-popups"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-downloads"
         style={{
           width: '100%', height: '100%', border: 'none', display: 'block',
           opacity: frameLoaded ? 1 : 0,
