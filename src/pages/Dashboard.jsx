@@ -10,6 +10,7 @@ import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
 
 const FEATURED = [
+  { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
   { to: '/prompts', no: '01', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
   { to: '/agents', no: '02', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
   { to: '/planner', no: '03', name: '个人日程', desc: '把课程、假期和自定义事项排到可执行的时间线上。', cta: '打开日程', Icon: CalendarClock, art: 'planner' },
@@ -173,6 +174,17 @@ function FeatureArt({ type }) {
   const [active, setActive] = useState(0);
   const [checked, setChecked] = useState(false);
 
+  if (type === 'api') {
+    const protocols = ['Chat', 'Responses', 'Claude', 'Gemini'];
+    const endpoints = ['/v1/chat/completions', '/v1/responses', '/v1/messages', '/v1beta/models'];
+    return <div className="vr-art vr-tool-art vr-api-art">
+      <div className="vr-api-tabs" role="tablist" aria-label="API 协议预览">{protocols.map((protocol, index) => <button type="button" key={protocol} role="tab" aria-selected={active === index} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}>{protocol}</button>)}</div>
+      <div className="vr-api-route"><span><i /> 200 OK</span><b>POST</b><code>{endpoints[active]}</code></div>
+      <div className="vr-api-pane"><div><span>REQUEST</span><code>{active === 2 ? 'model: claude-sonnet-4' : active === 3 ? 'model: gemini-2.5-pro' : 'model: gpt-5'}</code></div><div><span>RESPONSE</span><code>stream: connected</code></div></div>
+      <div className="vr-api-metrics"><span><b>142</b> MS</span><span><b>27</b> TOKENS</span><span><b>$0.002</b> COST</span></div>
+    </div>;
+  }
+
   if (type === 'prompts') return <div className="vr-art vr-tool-art vr-prompts-art">
     <div className="vr-preview-top"><Code2 size={15} /><span>Prompt.md</span><b>模板</b></div>
     <div className="vr-prompt-copy"><span>请基于以下资料</span><mark>{['提炼结构', '给出行动项', '保留语气'][active]}</mark><span>输出一份清晰的回答。</span></div>
@@ -228,12 +240,12 @@ function ProductPanel({ openProduct }) {
     const Icon = feature.Icon;
     const openFeature = (event) => {
       if (event.target.closest('button')) return;
-      openProduct(feature.to);
+      openProduct(feature.to, feature.external);
     };
     return (
-      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProduct(feature.to); } }} role="link" tabIndex={0}>
+      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}${feature.art === 'api' ? ' is-api' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProduct(feature.to, feature.external); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{feature.no}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
+        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to, feature.external)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
         <FeatureArt type={feature.art} />
       </article></div>
     );
@@ -334,8 +346,8 @@ export default function Dashboard() {
   }, []);
 
   const go = useCallback((to) => navigate(to), [navigate]);
-  const openProduct = useCallback((to) => {
-    window.open(getToolUrl(to), '_blank', 'noopener,noreferrer');
+  const openProduct = useCallback((target, external = false) => {
+    window.open(external ? target : getToolUrl(target), '_blank', 'noopener,noreferrer');
   }, []);
   const changeTab = useCallback((next, updateHash = true) => {
     setActiveTab(next);
@@ -495,6 +507,27 @@ export default function Dashboard() {
       .vr-home .vr-prompt-copy mark { width: fit-content; padding: 2px 4px; background: #ffe08a; color: #1b1b1b; }
       .vr-home .vr-preview-actions, .vr-home .vr-tool-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
       .vr-home .vr-preview-actions button, .vr-home .vr-tool-filter button { padding: 5px 8px; color: #777; font-size: 10px; }
+      .vr-home .vr-api-art { gap: 10px; padding: 14px; overflow: hidden; border-color: #d4e4ed; background: linear-gradient(145deg, #fbfdff 0%, #eefaf6 100%); color: #24527c; box-shadow: 0 13px 26px rgba(39, 93, 128, .12); transform: rotate(.65deg); }
+      .vr-home .vr-feature.is-reverse .vr-api-art { transform: rotate(-.65deg); }
+      .vr-home .vr-api-tabs { display: flex; gap: 3px; width: fit-content; max-width: 100%; padding: 3px; overflow-x: auto; border: 1px solid #dce9f0; border-radius: 6px; background: rgba(255, 255, 255, .76); scrollbar-width: none; }
+      .vr-home .vr-api-tabs::-webkit-scrollbar { display: none; }
+      .vr-home .vr-api-tabs button { flex: 0 0 auto; border: 0; border-radius: 4px; padding: 4px 7px; color: #5d7180; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-api-tabs button:hover { border-color: transparent; background: #e6f2f8; color: #24527c; }
+      .vr-home .vr-api-tabs button.is-active { border-color: transparent; background: #2589ed; color: #fff; box-shadow: 0 2px 5px rgba(37, 137, 237, .25); }
+      .vr-home .vr-api-route { display: flex; min-width: 0; align-items: center; gap: 6px; padding: 7px 8px; border: 1px solid #dbe8ee; border-radius: 5px; background: rgba(255, 255, 255, .86); font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-api-route span { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; color: #3b9b71; }
+      .vr-home .vr-api-route span i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(59, 155, 113, .12); }
+      .vr-home .vr-api-route b { flex: 0 0 auto; color: #9a60c4; font-weight: 800; }
+      .vr-home .vr-api-route code { min-width: 0; overflow: hidden; color: #527286; text-overflow: ellipsis; white-space: nowrap; }
+      .vr-home .vr-api-pane { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+      .vr-home .vr-api-pane div { display: grid; min-width: 0; gap: 5px; padding: 7px; border: 1px solid #deebf0; border-radius: 5px; background: rgba(248, 252, 253, .94); }
+      .vr-home .vr-api-pane span { color: #8b9fab; font: 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-api-pane code { overflow: hidden; color: #285879; font: 8px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
+      .vr-home .vr-api-metrics { display: flex; align-items: center; justify-content: space-between; gap: 7px; margin-top: auto; padding-top: 2px; color: #77909d; font: 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-api-metrics span { white-space: nowrap; }
+      .vr-home .vr-api-metrics b { color: #24527c; font-weight: 800; }
+      .vr-home .vr-feature-index { pointer-events: none; }
+      .vr-home .vr-feature.is-api .vr-feature-index { right: 24px; left: auto; }
       .vr-home .vr-agent-flow { display: grid; grid-template-columns: 1fr 18px 1fr 18px 1fr; align-items: center; margin: auto 3px 12px; }
       .vr-home .vr-agent-flow button { display: grid; gap: 5px; place-items: center; min-height: 57px; padding: 7px 3px; font-size: 11px; }
       .vr-home .vr-agent-flow button i { color: #999; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
