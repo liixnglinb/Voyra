@@ -124,8 +124,8 @@ const CAT_META = Object.fromEntries(CATEGORIES.map((c) => [c.key, c]));
 
 function fallbackFavicon(name) {
   const ch = (name || '?').trim().charAt(0).toUpperCase();
-  const c = '#1B1B1B';
-  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='${c}'/><text x='16' y='22' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='18' fill='%23FFE08A'>${ch}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#1B1B1B"/><text x="16" y="22" text-anchor="middle" font-family="Arial" font-weight="bold" font-size="18" fill="#FFE08A">${ch}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
 function faviconUrl(url) {

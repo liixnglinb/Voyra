@@ -1,13 +1,13 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, NotebookPen, Link, Lightbulb, BookOpen, Baby, KeyRound, Wrench, CalendarDays, CalendarClock, Bot, Newspaper, UserRound,
+  ArrowLeft, Lightbulb, BookOpen, Baby, Wrench, CalendarDays, CalendarClock, Bot, GitBranch, Newspaper, UserRound,
 } from 'lucide-react';
 
 /**
  * Layout — 页面布局壳（经典简约商务白底风）
  *  - / 首页：全屏（Dashboard 自控）
- *  - /mindmap /leaderboard /blog：全屏 iframe 铺满
+ *  - /blog 和文章页：全屏内容
  *  - 其他工具页：统一"浅灰白背景 + 白卡片页头 + 内容居中容器"外壳
  *    无渐变 / 无光晕 / 无玻璃 / 无弹跳动画
  */
@@ -15,23 +15,17 @@ import {
 const FULLSCREEN_PATHS = ['/', '/blog', '/articles'];
 
 const TOOL_META = {
-  '/smart-notes': {
-    label: '智能笔记', sub: '随手记录灵感，沉淀结构化知识', Icon: NotebookPen, accent: '#7C5CFF',
-  },
-  '/web-links': {
-    label: '网页链接', sub: '收藏与管理常用网页，分类快速访问', Icon: Link, accent: '#0891B2',
-  },
   '/prompts': {
     label: '提示词库', sub: '管理 AI 提示词模板，随用随取', Icon: Lightbulb, accent: '#D97706',
   },
   '/learning': {
     label: '学习资料', sub: '学科笔记与资料，知识体系一目了然', Icon: BookOpen, accent: '#059669',
   },
+  '/mindmap': {
+    label: '思维导图', sub: '把想法展开成可编辑、可保存的结构', Icon: GitBranch, accent: '#A48830',
+  },
   '/baby-care': {
     label: '宝宝护理', sub: '记录宝宝成长，护理数据可视化', Icon: Baby, accent: '#5B8DEF',
-  },
-  '/api-keys': {
-    label: 'API 密钥', sub: '明文保存于 Bmob，请勿存放生产密钥', Icon: KeyRound, accent: '#4F46E5',
   },
   '/tools': {
     label: '工具网站集成', sub: '金融与效率工具导航，精选网站一站直达', Icon: Wrench, accent: '#0CA678',

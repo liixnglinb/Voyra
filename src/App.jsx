@@ -6,11 +6,8 @@ import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import ArticleDetail from './pages/ArticleDetail'
 
-const ApiKeys = lazy(() => import('./pages/ApiKeys'))
-const WebLinks = lazy(() => import('./pages/WebLinks'))
 const PromptLibrary = lazy(() => import('./pages/PromptLibrary'))
 const LearningHub = lazy(() => import('./pages/LearningHub'))
-const SmartNotes = lazy(() => import('./pages/SmartNotes'))
 const MindMap = lazy(() => import('./pages/MindMap'))
 const BabyCare = lazy(() => import('./pages/BabyCare'))
 const Blog = lazy(() => import('./pages/Blog'))
@@ -36,12 +33,9 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/articles/:slug" element={<ArticleDetail />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/api-keys" element={<ApiKeys />} />
-                <Route path="/web-links" element={<WebLinks />} />
                 <Route path="/mindmap" element={<MindMap />} />
                 <Route path="/prompts" element={<PromptLibrary />} />
                 <Route path="/learning" element={<LearningHub />} />
-                <Route path="/smart-notes" element={<SmartNotes />} />
                 <Route path="/baby-care" element={<BabyCare />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/tools" element={<ToolHubs />} />

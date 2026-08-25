@@ -27,7 +27,7 @@ export default function PromptLibrary() {
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [formData, setFormData] = useState({ title: '', category: DEFAULT_CATEGORIES[0], content: '', tags: '' });
   const [copySuccessId, setCopySuccessId] = useState(null);
-  // 删除确认弹窗（与 API 密钥同款深色质感）：{ type: 'prompt', id } | { type: 'category', cat } | null
+  // 删除确认弹窗：{ type: 'prompt', id } | { type: 'category', cat } | null
   const [confirmAction, setConfirmAction] = useState(null);
 
   const [loaded, setLoaded] = useState(false);
@@ -355,7 +355,7 @@ export default function PromptLibrary() {
           </div>
         </div>
       )}
-      {/* 删除确认弹窗（与 API 密钥同款深色质感） */}
+      {/* 删除确认弹窗 */}
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.type === 'category' ? '删除分类' : '删除提示词'}

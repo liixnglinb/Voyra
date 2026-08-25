@@ -2,27 +2,23 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarClock,
-  CalendarDays, Check, ChevronDown, Code2, Frame, Github,
-  Globe, GraduationCap, KeyRound, LayoutGrid, Lightbulb, Link, MousePointer2,
-  Newspaper, NotebookPen, Route, Sparkles, Star, Waves, Wrench,
+  ArrowUpRight, Bot, CalendarClock, CalendarDays, Check, ChevronDown, Code2, Github,
+  Globe, GraduationCap, LayoutGrid, Lightbulb, ListTree,
+  Newspaper, NotebookPen, Route, Sparkles, Star, Wrench,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
 
 const FEATURED = [
-  { to: '/smart-notes', no: '01', name: '智能笔记', desc: '随手记录灵感，把零散内容整理成可继续推进的笔记。', cta: '打开笔记', Icon: NotebookPen, art: 'notes' },
-  { to: '/prompts', no: '02', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompt' },
-  { to: '/agents', no: '03', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'motion' },
-  { to: '/planner', no: '04', name: '个人日程', desc: '把课程、假期和自定义事项排到可执行的时间线上。', cta: '打开日程', Icon: CalendarClock, art: 'calendar' },
-  { to: '/web-links', no: '05', name: '网页链接', desc: '收藏常用服务，分类整理后从一个界面直接访问。', cta: '整理链接', Icon: Link, art: 'links' },
-  { to: '/schedule', no: '06', name: '个人课表', desc: '将课程、周次和教师信息清晰地排在同一个视图里。', cta: '查看课表', Icon: GraduationCap, art: 'calendar' },
-  { to: '/learning', no: '07', name: '学习资料', desc: '把笔记、代码片段和课程资料积累成可检索的知识库。', cta: '管理资料', Icon: LayoutGrid, art: 'notes' },
-  { to: '/tools', no: '08', name: '工具导航', desc: '按场景筛选 AI、开发、资讯与效率网站，减少日常寻找。', cta: '浏览工具', Icon: Wrench, art: 'links' },
-  { to: '/news', no: '09', name: 'AI 每日情报', desc: '速览 Agent、模型、工具和行业动态，保持信息输入的节奏。', cta: '阅读情报', Icon: Newspaper, art: 'motion' },
-  { to: '/api-keys', no: '10', name: 'API 密钥', desc: '统一记录和查看常用 AI 平台的 API Key 与调用地址。', cta: '管理密钥', Icon: KeyRound, art: 'prompt' },
-  { to: '/mindmap', no: '11', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'motion' },
-  { to: '/baby-care', no: '12', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'notes' },
+  { to: '/prompts', no: '01', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
+  { to: '/agents', no: '02', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
+  { to: '/planner', no: '03', name: '个人日程', desc: '把课程、假期和自定义事项排到可执行的时间线上。', cta: '打开日程', Icon: CalendarClock, art: 'planner' },
+  { to: '/schedule', no: '04', name: '个人课表', desc: '将课程、周次和教师信息清晰地排在同一个视图里。', cta: '查看课表', Icon: GraduationCap, art: 'schedule' },
+  { to: '/learning', no: '05', name: '学习资料', desc: '把笔记、代码片段和课程资料积累成可检索的知识库。', cta: '管理资料', Icon: LayoutGrid, art: 'learning' },
+  { to: '/tools', no: '06', name: '工具导航', desc: '按场景筛选 AI、开发、资讯与效率网站，减少日常寻找。', cta: '浏览工具', Icon: Wrench, art: 'tools' },
+  { to: '/news', no: '07', name: 'AI 每日情报', desc: '速览 Agent、模型、工具和行业动态，保持信息输入的节奏。', cta: '阅读情报', Icon: Newspaper, art: 'news' },
+  { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
+  { to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
 ];
 
 const MATHMODEL_SKILL = {
@@ -44,8 +40,6 @@ const CONTACTS = [
 ];
 
 const TABS = [['products', '产品'], ['skills', 'Skills'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']];
-const MOTION_SCENES = [['hover', '悬停', MousePointer2], ['spring', '弹性', Waves], ['blur', '毛玻璃', Frame]];
-
 function getTabFromHash() {
   const query = window.location.hash.split('?')[1] || '';
   const tab = new URLSearchParams(query).get('tab');
@@ -142,75 +136,76 @@ function updateSpotlight(event) {
   card.style.setProperty('--spot-y', `${event.clientY - bounds.top}px`);
 }
 
-function FeatureArt({ type, motionMode, onMotionMode, springVersion, onReplay, blurOn, onBlur }) {
-  if (type === 'notes') return (
-    <div className="vr-art vr-note-art" aria-hidden="true">
-      <div className="vr-note-toolbar"><span /><span /><span /></div>
-      <div className="vr-note-title">今天的想法</div><div className="vr-note-line wide" /><div className="vr-note-line" /><div className="vr-note-line short" />
-      <div className="vr-note-chip"><Check size={13} /> 已整理</div>
-    </div>
-  );
-
-  if (type === 'prompt') return (
-    <div className="vr-art vr-prompt-art" aria-hidden="true">
-      <div className="vr-code-top"><Code2 size={15} /><span>Prompt.md</span><i /></div>
-      <p>请基于以下内容</p><p><mark>提炼结构</mark> 并给出行动项</p><p>保留原有语气与重点</p>
-      <div className="vr-code-status"><span>3 条规则</span><b>ready</b></div>
-    </div>
-  );
-
-  if (type === 'calendar') return (
-    <div className="vr-art vr-calendar-art" aria-hidden="true">
-      <div className="vr-calendar-head"><CalendarDays size={15} /><strong>八月</strong><span>2026</span></div>
-      <div className="vr-days">{['一', '二', '三', '四', '五', '六', '日'].map((day) => <i key={day}>{day}</i>)}</div>
-      <div className="vr-date-grid">{Array.from({ length: 28 }, (_, index) => <span className={index === 14 || index === 17 || index === 22 ? 'is-marked' : ''} key={index}>{index + 1}</span>)}</div>
-      <div className="vr-calendar-event">15:00 项目复盘</div>
-    </div>
-  );
-
-  if (type === 'links') return (
-    <div className="vr-art vr-link-art" aria-hidden="true">
-      <div className="vr-browser-bar"><span /><span /><span /><b>voyra.link</b></div>
-      {['工作台', '学习资料', 'AI 资源'].map((item, index) => <div className="vr-link-row" key={item}><i>{index + 1}</i><span>{item}</span><ArrowUpRight size={14} /></div>)}
-    </div>
-  );
-
-  const SceneIcon = MOTION_SCENES.find(([id]) => id === motionMode)?.[2] || MousePointer2;
-  const currentIndex = MOTION_SCENES.findIndex(([id]) => id === motionMode);
-  const selectPrevious = () => onMotionMode(MOTION_SCENES[(currentIndex + 2) % MOTION_SCENES.length][0]);
-  const selectNext = () => onMotionMode(MOTION_SCENES[(currentIndex + 1) % MOTION_SCENES.length][0]);
-  return (
-    <div className={`vr-art vr-motion-art scene-${motionMode}`} aria-label="交互展示">
-      <div className="vr-motion-title"><SceneIcon size={16} /><span>Interaction Lab</span></div>
-      <div className="vr-motion-stage" key={`${motionMode}-${springVersion}`}>
-        {motionMode === 'hover' && <button className="vr-hover-sample">悬停我 <span>↗</span></button>}
-        {motionMode === 'spring' && <button className="vr-spring-sample" onClick={onReplay}>重新播放</button>}
-        {motionMode === 'blur' && <div className={`vr-glass-sample${blurOn ? ' is-blurred' : ''}`}><div className="vr-glass-copy"><b>工作台</b><span>backdrop filter</span></div><button onClick={onBlur}>{blurOn ? 'blur: on' : 'blur: off'}</button></div>}
-      </div>
-      <div className="vr-motion-controls">
-        <button className="vr-control-arrow" onClick={selectPrevious} aria-label="上一个演示"><ArrowLeft size={15} /></button>
-        {MOTION_SCENES.map(([id, label]) => <button key={id} className={`vr-control-dot${motionMode === id ? ' is-active' : ''}`} onClick={() => onMotionMode(id)} aria-label={`切换到${label}`} />)}
-        <button className="vr-control-arrow" onClick={selectNext} aria-label="下一个演示"><ArrowRight size={15} /></button>
-      </div>
-    </div>
-  );
+function getToolUrl(path) {
+  return `${window.location.origin}${window.location.pathname}#${path}`;
 }
 
-function ProductPanel({ go }) {
-  const [motionMode, setMotionMode] = useState('hover');
-  const [springVersion, setSpringVersion] = useState(0);
-  const [blurOn, setBlurOn] = useState(true);
+function FeatureArt({ type }) {
+  const [active, setActive] = useState(0);
+  const [checked, setChecked] = useState(false);
+
+  if (type === 'prompts') return <div className="vr-art vr-tool-art vr-prompts-art">
+    <div className="vr-preview-top"><Code2 size={15} /><span>Prompt.md</span><b>模板</b></div>
+    <div className="vr-prompt-copy"><span>请基于以下资料</span><mark>{['提炼结构', '给出行动项', '保留语气'][active]}</mark><span>输出一份清晰的回答。</span></div>
+    <div className="vr-preview-actions">{['结构', '行动', '语气'].map((item, index) => <button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)} key={item}>{item}</button>)}</div>
+  </div>;
+
+  if (type === 'agents') return <div className="vr-art vr-tool-art vr-agents-art">
+    <div className="vr-preview-top"><Bot size={15} /><span>工作流</span><b>{active + 1}/3</b></div>
+    <div className="vr-agent-flow">{['检索', '分析', '交付'].map((item, index) => <React.Fragment key={item}><button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''}><i>{String(index + 1).padStart(2, '0')}</i>{item}</button>{index < 2 && <span />}</React.Fragment>)}</div>
+    <p>当前节点：{['收集资料', '整理判断', '输出结果'][active]}</p>
+  </div>;
+
+  if (type === 'planner') return <div className="vr-art vr-tool-art vr-planner-art">
+    <div className="vr-preview-top"><CalendarClock size={15} /><span>今天 / 08.25</span><b>03 项</b></div>
+    {['课程资料整理', '项目复盘', '晚间阅读'].map((item, index) => <button className={`vr-agenda-row${active === index ? ' is-active' : ''}`} onClick={() => setActive(index)} key={item}><i>{index === active ? <Check size={11} /> : ''}</i><span>{item}</span><em>{['09:30', '15:00', '20:30'][index]}</em></button>)}
+  </div>;
+
+  if (type === 'schedule') return <div className="vr-art vr-tool-art vr-schedule-art">
+    <div className="vr-preview-top"><CalendarDays size={15} /><span>第 1 周</span><b>课程表</b></div>
+    <div className="vr-week-grid">{['一', '二', '三', '四', '五'].map((day, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={day}><b>周{day}</b><span>{['数学建模', '算法设计', '英语', '数据结构', '自习'][index]}</span></button>)}</div>
+  </div>;
+
+  if (type === 'learning') return <div className="vr-art vr-tool-art vr-learning-art">
+    <div className="vr-preview-top"><LayoutGrid size={15} /><span>资料库</span><b>24 条</b></div>
+    <div className="vr-material-stack">{['论文精读', '课程笔记', '代码片段'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}><i>{String(index + 1).padStart(2, '0')}</i><span>{item}</span><em>{['PDF', 'MD', 'JS'][index]}</em></button>)}</div>
+  </div>;
+
+  if (type === 'tools') return <div className="vr-art vr-tool-art vr-tools-art">
+    <div className="vr-preview-top"><Wrench size={15} /><span>工具导航</span><b>{['AI', '开发', '效率'][active]}</b></div>
+    <div className="vr-tool-filter">{['AI', '开发', '效率'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}>{item}</button>)}</div>
+    <div className="vr-tool-list">{[['ChatGPT', 'Figma', 'Notion'], ['GitHub', 'Vercel', 'Raycast'], ['Todoist', 'Linear', 'Readwise']][active].map((item) => <span key={item}>{item}<ArrowUpRight size={12} /></span>)}</div>
+  </div>;
+
+  if (type === 'news') return <div className="vr-art vr-tool-art vr-news-art">
+    <div className="vr-preview-top"><Newspaper size={15} /><span>今日精选</span><b>更新</b></div>
+    {['新模型发布：多模态能力升级', 'Agent 开发工具的实践', '开源社区本周观察'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}><i>{String(index + 1).padStart(2, '0')}</i><span>{item}</span></button>)}
+  </div>;
+
+  if (type === 'mindmap') return <div className="vr-art vr-tool-art vr-mindmap-art">
+    <div className="vr-preview-top"><ListTree size={15} /><span>项目规划</span><b>导图</b></div>
+    <div className="vr-map-stage"><button className="vr-map-root" onClick={() => setActive(0)}>Voyra</button>{['内容', '产品', '迭代'].map((item, index) => <button className={`vr-map-node n${index}${active === index + 1 ? ' is-active' : ''}`} onClick={() => setActive(index + 1)} key={item}>{item}</button>)}</div>
+  </div>;
+
+  return <div className="vr-art vr-tool-art vr-care-art">
+    <div className="vr-preview-top"><Sparkles size={15} /><span>今日护理</span><b>{checked ? '已记录' : '待记录'}</b></div>
+    <div className="vr-care-stats"><span><b>02</b> 喂养</span><span><b>03</b> 睡眠</span><span><b>01</b> 护理</span></div>
+    <button className={`vr-care-check${checked ? ' is-active' : ''}`} onClick={() => setChecked((value) => !value)}>{checked ? <Check size={14} /> : '+'}{checked ? ' 今日记录完成' : ' 标记一条护理记录'}</button>
+  </div>;
+}
+
+function ProductPanel({ openProduct }) {
   return <div className="vr-product-list">{FEATURED.map((feature, index) => {
     const Icon = feature.Icon;
     const openFeature = (event) => {
       if (event.target.closest('button')) return;
-      go(feature.to);
+      openProduct(feature.to);
     };
     return (
-      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); go(feature.to); } }} role="link" tabIndex={0}>
+      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProduct(feature.to); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{feature.no}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{feature.desc}</p><button className="vr-arrow-link" onClick={() => go(feature.to)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
-        <FeatureArt type={feature.art} motionMode={motionMode} onMotionMode={setMotionMode} springVersion={springVersion} onReplay={() => setSpringVersion((version) => version + 1)} blurOn={blurOn} onBlur={() => setBlurOn((value) => !value)} />
+        <div className="vr-feature-copy"><span className="vr-feature-index">{feature.no}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
+        <FeatureArt type={feature.art} />
       </article></div>
     );
   })}</div>;
@@ -223,6 +218,7 @@ function SkillsPanel() {
       <span className="vr-spotlight" aria-hidden="true" />
       <span className="vr-mathmodel-top"><strong>{MATHMODEL_SKILL.name}</strong><span className="vr-mathmodel-meta"><Star size={16} fill="currentColor" /> GitHub</span><span className="vr-mathmodel-open"><ArrowUpRight size={17} /></span></span>
       <span className="vr-mathmodel-tagline">{MATHMODEL_SKILL.tagline}</span>
+      <span className="vr-model-steps" aria-label="十阶段工作流"><i className="is-active">建模</i><i>求解</i><i>检验</i><i>论文</i><b>10</b></span>
       <span className="vr-text-figure" aria-hidden="true"><i className="vr-figure-head">题</i><i className="vr-figure-arm vr-figure-arm-left">数</i><i className="vr-figure-body">建<br />模</i><i className="vr-figure-arm vr-figure-arm-right">据</i><i className="vr-figure-leg vr-figure-leg-left">求</i><i className="vr-figure-leg vr-figure-leg-right">解</i></span>
     </a>
   </section>;
@@ -296,6 +292,9 @@ export default function Dashboard() {
   }, []);
 
   const go = useCallback((to) => navigate(to), [navigate]);
+  const openProduct = useCallback((to) => {
+    window.open(getToolUrl(to), '_blank', 'noopener,noreferrer');
+  }, []);
   const changeTab = useCallback((next, updateHash = true) => {
     setActiveTab(next);
     if (updateHash) {
@@ -305,12 +304,12 @@ export default function Dashboard() {
     }
   }, []);
   const panels = useMemo(() => ({
-    products: <ProductPanel go={go} />,
+    products: <ProductPanel openProduct={openProduct} />,
     skills: <SkillsPanel />,
     articles: <ArticlesPanel go={go} />,
     me: <AboutPanel />,
     contact: <ContactPanel />,
-  }), [go]);
+  }), [go, openProduct]);
 
   useEffect(() => {
     const syncTabFromHash = () => {
@@ -436,6 +435,60 @@ export default function Dashboard() {
         .vr-home .vr-person-stage::after { right: -8%; bottom: 6%; width: 100%; height: 10px; }
         .vr-home .vr-person-frame { right: 0; width: 100%; }
       }
+    `}</style>
+    <style>{`
+      .vr-home .vr-tool-art { display: flex; min-width: 0; flex-direction: column; padding: 16px; color: #4f4f4f; font-size: 11px; transform: rotate(-1deg); }
+      .vr-home .vr-feature.is-reverse .vr-tool-art { transform: rotate(1deg); }
+      .vr-home .vr-preview-top { display: flex; align-items: center; gap: 7px; padding-bottom: 10px; border-bottom: 1px solid #e9e9e9; color: #666; font-size: 11px; font-weight: 700; }
+      .vr-home .vr-preview-top b { margin-left: auto; color: #a48830; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
+      .vr-home .vr-tool-art button { border: 1px solid transparent; border-radius: 5px; background: transparent; color: inherit; transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease; }
+      .vr-home .vr-tool-art button:hover { border-color: rgba(27,27,27,.18); background: #fff; transform: translateY(-1px); }
+      .vr-home .vr-tool-art button.is-active { border-color: #e0c35f; background: #ffe08a; color: #1b1b1b; }
+      .vr-home .vr-prompt-copy { display: grid; gap: 8px; padding: 18px 3px 13px; color: #5f5f5f; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; line-height: 1.35; }
+      .vr-home .vr-prompt-copy mark { width: fit-content; padding: 2px 4px; background: #ffe08a; color: #1b1b1b; }
+      .vr-home .vr-preview-actions, .vr-home .vr-tool-filter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+      .vr-home .vr-preview-actions button, .vr-home .vr-tool-filter button { padding: 5px 8px; color: #777; font-size: 10px; }
+      .vr-home .vr-agent-flow { display: grid; grid-template-columns: 1fr 18px 1fr 18px 1fr; align-items: center; margin: auto 3px 12px; }
+      .vr-home .vr-agent-flow button { display: grid; gap: 5px; place-items: center; min-height: 57px; padding: 7px 3px; font-size: 11px; }
+      .vr-home .vr-agent-flow button i { color: #999; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-agent-flow span { height: 1px; background: #d5d5d5; }
+      .vr-home .vr-agents-art p { margin: 0; color: #858585; font-size: 10px; }
+      .vr-home .vr-agenda-row { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 8px; padding: 9px 2px; border-radius: 0 !important; border-width: 0 0 1px !important; border-color: #ececec !important; text-align: left; }
+      .vr-home .vr-agenda-row:last-child { border-bottom: 0 !important; }
+      .vr-home .vr-agenda-row i { display: grid; width: 15px; height: 15px; place-items: center; border: 1px solid #d9d9d9; border-radius: 3px; font-style: normal; }
+      .vr-home .vr-agenda-row em { color: #999; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 16px 0 auto; }
+      .vr-home .vr-week-grid button { display: grid; min-height: 88px; align-content: space-between; gap: 9px; padding: 7px; text-align: left; }
+      .vr-home .vr-week-grid b { color: #a0a0a0; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-week-grid span { display: block; overflow: hidden; color: #666; font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+      .vr-home .vr-material-stack { display: grid; gap: 7px; margin-top: 12px; }
+      .vr-home .vr-material-stack button { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 8px; padding: 8px; text-align: left; }
+      .vr-home .vr-material-stack i, .vr-home .vr-news-art i { color: #999; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-material-stack em { color: #999; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-tool-list { display: grid; gap: 7px; margin-top: 12px; }
+      .vr-home .vr-tool-list span { display: flex; align-items: center; justify-content: space-between; padding: 5px 2px; border-bottom: 1px solid #ececec; color: #666; font-size: 11px; }
+      .vr-home .vr-tool-list svg { color: #999; }
+      .vr-home .vr-news-art button { display: grid; grid-template-columns: 20px 1fr; align-items: center; gap: 7px; padding: 9px 4px; border-radius: 0 !important; border-width: 0 0 1px !important; border-color: #ececec !important; text-align: left; font-size: 10px; }
+      .vr-home .vr-news-art button:last-child { border-bottom: 0 !important; }
+      .vr-home .vr-map-stage { position: relative; flex: 1; min-height: 128px; margin-top: 8px; }
+      .vr-home .vr-map-stage::before, .vr-home .vr-map-stage::after { content: ""; position: absolute; left: 48%; width: 1px; height: 52px; background: #d7d7d7; transform-origin: top; }
+      .vr-home .vr-map-stage::before { top: 43px; transform: rotate(-43deg); }.vr-home .vr-map-stage::after { top: 43px; transform: rotate(43deg); }
+      .vr-home .vr-map-root, .vr-home .vr-map-node { position: absolute; z-index: 1; padding: 6px 9px !important; font-size: 10px; }
+      .vr-home .vr-map-root { top: 27px; left: 50%; transform: translateX(-50%); border-color: #d7d7d7 !important; background: #fff !important; color: #1b1b1b !important; font-weight: 700; }
+      .vr-home .vr-map-root:hover { transform: translateX(-50%) translateY(-1px) !important; }
+      .vr-home .vr-map-node { bottom: 19px; }.vr-home .vr-map-node.n0 { left: 4%; }.vr-home .vr-map-node.n1 { left: 50%; transform: translateX(-50%); }.vr-home .vr-map-node.n2 { right: 4%; }
+      .vr-home .vr-map-node.n1:hover { transform: translateX(-50%) translateY(-1px) !important; }
+      .vr-home .vr-care-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: auto 0 13px; }
+      .vr-home .vr-care-stats span { display: grid; gap: 4px; padding: 8px; border: 1px solid #e5e5e5; border-radius: 5px; color: #999; font-size: 9px; }
+      .vr-home .vr-care-stats b { color: #444; font: 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-care-check { display: inline-flex; width: fit-content; align-items: center; gap: 5px; padding: 6px 9px; font-size: 10px; }
+      .vr-home .vr-care-check.is-active { border-color: #e0c35f; background: #ffe08a; color: #1b1b1b; }
+      .vr-home .vr-model-steps { position: absolute; bottom: 24px; left: 26px; display: grid; grid-template-columns: repeat(4, 1fr) 30px; align-items: center; width: min(51%, 365px); border-top: 1px solid #dedede; padding-top: 11px; }
+      .vr-home .vr-model-steps i { position: relative; color: #8a8a8a; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-model-steps i::before { content: ""; position: absolute; top: -14px; left: 0; width: 6px; height: 6px; border: 1px solid #b7b7b7; border-radius: 50%; background: #fff; }
+      .vr-home .vr-model-steps i.is-active { color: #1b1b1b; font-weight: 700; }.vr-home .vr-model-steps i.is-active::before { border-color: #a48830; background: #ffe08a; }
+      .vr-home .vr-model-steps b { justify-self: end; color: #a48830; font: 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; }.vr-home .vr-model-steps { bottom: 19px; left: 22px; width: 53%; }.vr-home .vr-model-steps i { font-size: 8px; }.vr-home .vr-model-steps b { font-size: 14px; } }
     `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
