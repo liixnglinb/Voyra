@@ -91,6 +91,336 @@
 html, body, #root { height: 100%; }
 html { font-size: 16px; }
 
+::view-transition-group(article-cover) {
+  animation-duration: .65s;
+  animation-timing-function: cubic-bezier(.19, 1, .22, 1);
+}
+
+::view-transition-old(article-cover),
+::view-transition-new(article-cover) {
+  animation-duration: .65s;
+  animation-timing-function: cubic-bezier(.19, 1, .22, 1);
+}
+
+/* Article cards and the matching reading view share this cover during navigation. */
+.vr-home .vr-article-card {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid rgba(27, 27, 27, .11);
+  background: rgba(255, 255, 255, .9);
+  color: #1b1b1b;
+}
+
+.vr-home .vr-article-card:is(:hover, :focus-visible) {
+  border-color: #d5d5d5;
+  box-shadow: 0 3px 6px #0000000a, 0 26px 48px -18px #0000002e;
+  transform: translateY(-3px);
+}
+
+.vr-article-cover {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(27, 27, 27, .1);
+  color: #1b1b1b;
+  isolation: isolate;
+}
+
+.vr-article-cover-workspace { background: #f6f0d9; }
+.vr-article-cover-paths { background: #e8f1ee; }
+.vr-article-cover-ideas { background: #f5ebe5; }
+.vr-article-cover-library { background: #eceff7; }
+
+.vr-article-cover::before,
+.vr-article-cover::after {
+  position: absolute;
+  z-index: -1;
+  content: "";
+  border: 1px solid rgba(27, 27, 27, .24);
+}
+
+.vr-article-cover::before {
+  top: 17%;
+  right: 11%;
+  width: 38%;
+  height: 50%;
+  transform: rotate(7deg);
+}
+
+.vr-article-cover::after {
+  bottom: -26%;
+  left: 16%;
+  width: 48%;
+  height: 58%;
+  transform: rotate(-14deg);
+}
+
+.vr-article-cover-kicker {
+  position: absolute;
+  top: 12%;
+  left: 9%;
+  color: rgba(27, 27, 27, .62);
+  font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.vr-article-cover-number {
+  position: absolute;
+  right: 10%;
+  bottom: 4%;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(27, 27, 27, .48);
+  font: 800 clamp(68px, 9vw, 116px) / .8 Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.vr-article-cover-shape,
+.vr-article-cover-line {
+  position: absolute;
+  display: block;
+  border: 1px solid rgba(27, 27, 27, .52);
+}
+
+.vr-article-cover-shape-a {
+  top: 34%;
+  left: 18%;
+  width: 16%;
+  aspect-ratio: 1;
+  background: rgba(255, 255, 255, .45);
+  transform: rotate(-9deg);
+}
+
+.vr-article-cover-shape-b {
+  top: 21%;
+  left: 39%;
+  width: 18%;
+  aspect-ratio: 1;
+  background: #1b1b1b;
+  transform: rotate(12deg);
+}
+
+.vr-article-cover-line-a {
+  top: 66%;
+  left: 12%;
+  width: 51%;
+  transform: rotate(-25deg);
+}
+
+.vr-article-cover-line-b {
+  top: 41%;
+  right: 14%;
+  width: 25%;
+  transform: rotate(58deg);
+}
+
+.vr-article-cover-paths .vr-article-cover-shape-a,
+.vr-article-cover-library .vr-article-cover-shape-b { border-radius: 50%; }
+
+.vr-article-cover-ideas .vr-article-cover-shape-b { background: #e7d46d; }
+.vr-article-cover-library .vr-article-cover-shape-a { background: #c9d5ec; }
+
+.vr-home .vr-article-cover {
+  transition: transform .35s cubic-bezier(.19, 1, .22, 1);
+}
+
+.vr-home .vr-article-card:is(:hover, :focus-visible) .vr-article-cover { transform: scale(1.04); }
+
+.vr-home .vr-article-info {
+  position: relative;
+  display: block;
+  min-height: 218px;
+  padding: 22px 24px 50px;
+}
+
+.vr-home .vr-article-date {
+  display: block;
+  color: #999;
+  font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.vr-home .vr-article-title {
+  display: inline;
+  margin: 15px 0 0;
+  color: #1b1b1b;
+  font-size: 22px;
+  font-weight: 760;
+  line-height: 1.42;
+  background-image: linear-gradient(#ffe08a, #ffe08a);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0 42%;
+  transition: background-size .34s cubic-bezier(.19, 1, .22, 1);
+}
+
+.vr-home .vr-article-card:is(:hover, :focus-visible) .vr-article-title { background-size: 100% 42%; }
+
+.vr-home .vr-article-desc {
+  display: block;
+  margin-top: 13px;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.vr-home .vr-article-open {
+  position: absolute;
+  bottom: 19px;
+  left: 24px;
+  display: inline-flex;
+  gap: 5px;
+  color: #777;
+  font-size: 12px;
+  transition: color .2s ease, transform .2s ease;
+}
+
+.vr-home .vr-article-card:is(:hover, :focus-visible) .vr-article-open {
+  color: #1b1b1b;
+  transform: translateX(3px);
+}
+
+.vr-article-page {
+  min-height: 100%;
+  overflow: hidden;
+  color: #1b1b1b;
+  background-color: #fff;
+  background-image: linear-gradient(rgba(0, 0, 0, .031) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 0, 0, .031) 1px, transparent 1px);
+  background-size: 32px 32px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.vr-article-page-inner {
+  width: min(100% - 48px, 756px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 40px 0 42px;
+}
+
+.vr-article-page-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #666;
+  font: 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.vr-article-back,
+.vr-article-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color .2s ease, transform .2s ease;
+}
+
+.vr-article-back:hover,
+.vr-article-github:hover {
+  color: #1b1b1b;
+}
+
+.vr-article-back:hover { transform: translateX(-3px); }
+.vr-article-github:hover { transform: translateX(3px); }
+.vr-article-back:focus-visible,
+.vr-article-github:focus-visible { outline: 2px solid #1b1b1b; outline-offset: 4px; }
+
+.vr-article-content { padding: 74px 0 66px; }
+
+.vr-article-detail-cover-wrap {
+  overflow: hidden;
+  border: 1px solid rgba(27, 27, 27, .11);
+  border-radius: 8px;
+  box-shadow: 0 16px 36px -28px rgba(0, 0, 0, .35);
+}
+
+.vr-article-detail-cover {
+  border: 0;
+}
+
+.vr-article-detail-date {
+  margin: 52px 0 0;
+  color: #888;
+  font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.vr-article-content h1 {
+  max-width: 720px;
+  margin: 18px 0 0;
+  font-size: 54px;
+  font-weight: 780;
+  line-height: 1.12;
+}
+
+.vr-article-detail-lead {
+  max-width: 608px;
+  margin: 28px 0 0;
+  color: #5c5c5c;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.vr-article-detail-rule {
+  width: 54px;
+  height: 8px;
+  margin: 52px 0 0;
+  background: #ffe08a;
+}
+
+.vr-article-detail-body {
+  max-width: 608px;
+  margin-top: 46px;
+}
+
+.vr-article-detail-body section + section { margin-top: 42px; }
+
+.vr-article-detail-body h2 {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.25;
+}
+
+.vr-article-detail-body p {
+  margin: 15px 0 0;
+  color: #555;
+  font-size: 16px;
+  line-height: 1.95;
+}
+
+.vr-article-page-footer {
+  color: #999;
+  font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@media (max-width: 720px) {
+  .vr-home .vr-article-info { min-height: 194px; padding: 20px 20px 47px; }
+  .vr-home .vr-article-title { font-size: 21px; }
+  .vr-home .vr-article-open { bottom: 18px; left: 20px; }
+  .vr-article-page-inner { width: min(100% - 40px, 756px); padding-top: 24px; }
+  .vr-article-page-top { font-size: 11px; }
+  .vr-article-content { padding: 52px 0 48px; }
+  .vr-article-detail-date { margin-top: 34px; }
+  .vr-article-content h1 { font-size: 38px; }
+  .vr-article-detail-lead { margin-top: 22px; font-size: 16px; }
+  .vr-article-detail-rule { margin-top: 38px; }
+  .vr-article-detail-body { margin-top: 34px; }
+  .vr-article-detail-body section + section { margin-top: 34px; }
+  .vr-article-detail-body h2 { font-size: 23px; }
+  .vr-article-detail-body p { font-size: 15px; line-height: 1.85; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vr-home .vr-article-card,
+  .vr-home .vr-article-title,
+  .vr-home .vr-article-open,
+  .vr-article-back,
+  .vr-article-github { transition-duration: .01ms !important; }
+}
+
 body {
   margin: 0;
   font-family: var(--font-sans);

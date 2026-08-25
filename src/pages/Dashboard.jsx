@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarClock,
@@ -6,6 +7,8 @@ import {
   Globe, LayoutGrid, Lightbulb, Link, MousePointer2, NotebookPen,
   Sparkles, Star, Waves,
 } from 'lucide-react';
+import ArticleCover from '../components/ArticleCover';
+import { ARTICLES } from '../data/articles';
 
 const FEATURED = [
   { to: '/smart-notes', no: '01', name: '智能笔记', desc: '随手记录灵感，把零散内容整理成可继续推进的笔记。', cta: '打开笔记', Icon: NotebookPen, art: 'notes' },
@@ -20,13 +23,6 @@ const MATHMODEL_SKILL = {
   name: '数学建模 Skill',
   tagline: '国赛（CUMCM）数学建模十阶段工作流',
 };
-
-const ARTICLES = [
-  { date: '2026.08.24', title: '把个人工具站做成能每天使用的工作台', desc: '从一个工具入口开始，把记录、安排和资料整理成连续的个人工作流。' },
-  { date: '2026.08.18', title: '给日常任务留下一条可复用的路径', desc: '当模板、链接和笔记相互连接，重复操作会变得越来越少。' },
-  { date: '2026.08.12', title: '从灵感到执行：一个轻量的整理方法', desc: '不追求复杂系统，只让眼前的内容在需要时能够被快速找到。' },
-  { date: '2026.08.06', title: '如何为 AI 工具建立自己的资源库', desc: '把平台、提示词和使用经验收进同一个可维护的个人目录。' },
-];
 
 const EXPERIENCES = [
   { state: '现在', name: 'Voyra 个人站', desc: '云端一站式创作与效率平台，聚合常用工具与 AI 资源。', Icon: NotebookPen },
@@ -226,8 +222,24 @@ function SkillsPanel() {
 }
 
 function ArticlesPanel({ go }) {
-  return <div className="vr-article-grid">{ARTICLES.map((article, index) => <div className="vr-roll-wrap vr-panel-stagger" data-roll key={article.title}><button className="vr-article-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.24)}s` }} onPointerMove={updateSpotlight} onClick={() => go('/blog')}>
-    <span className="vr-spotlight" aria-hidden="true" /><span className="vr-article-index">{String(index + 1).padStart(2, '0')}</span><span className="vr-article-date">{article.date}</span><strong>{article.title}</strong><span className="vr-article-desc">{article.desc}</span><span className="vr-article-open">阅读 <ArrowUpRight size={16} /></span>
+  const openArticle = (article, event) => {
+    const navigateToArticle = () => flushSync(() => go(`/articles/${article.slug}`));
+    const supportsTransition = 'startViewTransition' in document
+      && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+
+    if (!supportsTransition) {
+      navigateToArticle();
+      return;
+    }
+
+    const cover = event.currentTarget.querySelector('.vr-article-cover');
+    cover?.style.setProperty('view-transition-name', 'article-cover');
+    const transition = document.startViewTransition(navigateToArticle);
+    transition.finished.finally(() => cover?.style.removeProperty('view-transition-name'));
+  };
+
+  return <div className="vr-article-grid">{ARTICLES.map((article, index) => <div className="vr-roll-wrap vr-panel-stagger" data-roll key={article.slug}><button className="vr-article-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.24)}s` }} onPointerMove={updateSpotlight} onClick={(event) => openArticle(article, event)}>
+    <span className="vr-spotlight" aria-hidden="true" /><ArticleCover article={article} index={index} /><span className="vr-article-info"><span className="vr-article-date">{article.date}</span><strong className="vr-article-title">{article.title}</strong><span className="vr-article-desc">{article.desc}</span><span className="vr-article-open">阅读 <ArrowUpRight size={16} /></span></span>
   </button></div>)}<button className="vr-all-link" onClick={() => go('/blog')}>全部文章 <ArrowUpRight size={17} /></button></div>;
 }
 

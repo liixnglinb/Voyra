@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
+import ArticleDetail from './pages/ArticleDetail'
 
 const ApiKeys = lazy(() => import('./pages/ApiKeys'))
 const WebLinks = lazy(() => import('./pages/WebLinks'))
@@ -33,6 +34,7 @@ function App() {
             >
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/articles/:slug" element={<ArticleDetail />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/api-keys" element={<ApiKeys />} />
                 <Route path="/web-links" element={<WebLinks />} />
