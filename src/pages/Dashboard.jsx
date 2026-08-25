@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, ArrowUpRight, Bot, CalendarClock,
   CalendarDays, Check, ChevronDown, Code2, Frame, Github,
@@ -41,6 +42,12 @@ const CONTACTS = [
 
 const TABS = [['products', '产品'], ['skills', 'Skills'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']];
 const MOTION_SCENES = [['hover', '悬停', MousePointer2], ['spring', '弹性', Waves], ['blur', '毛玻璃', Frame]];
+
+function getTabFromHash() {
+  const query = window.location.hash.split('?')[1] || '';
+  const tab = new URLSearchParams(query).get('tab');
+  return TABS.some(([id]) => id === tab) ? tab : 'products';
+}
 
 function useReveal(rootRef, activeTab) {
   useEffect(() => {
@@ -161,8 +168,12 @@ function ProductPanel({ go }) {
   const [blurOn, setBlurOn] = useState(true);
   return <div className="vr-product-list">{FEATURED.map((feature, index) => {
     const Icon = feature.Icon;
+    const openFeature = (event) => {
+      if (event.target.closest('button')) return;
+      go(feature.to);
+    };
     return (
-      <div className="vr-roll-wrap" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight}>
+      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); go(feature.to); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
         <div className="vr-feature-copy"><span className="vr-feature-index">{feature.no}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{feature.desc}</p><button className="vr-arrow-link" onClick={() => go(feature.to)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
         <FeatureArt type={feature.art} motionMode={motionMode} onMotionMode={setMotionMode} springVersion={springVersion} onReplay={() => setSpringVersion((version) => version + 1)} blurOn={blurOn} onBlur={() => setBlurOn((value) => !value)} />
@@ -172,7 +183,7 @@ function ProductPanel({ go }) {
 }
 
 function SkillsPanel() {
-  return <section className="vr-skill-group vr-solo-skill" data-roll>
+  return <section className="vr-skill-group vr-solo-skill vr-panel-stagger" data-roll>
     <div className="vr-group-label"><span>我的 Skills</span><b>01</b></div>
     <a className="vr-mathmodel-card vr-card" data-reveal href={MATHMODEL_SKILL.href} target="_blank" rel="noreferrer" onPointerMove={updateSpotlight}>
       <span className="vr-spotlight" aria-hidden="true" />
@@ -184,7 +195,7 @@ function SkillsPanel() {
 }
 
 function ArticlesPanel({ go }) {
-  return <div className="vr-article-grid">{ARTICLES.map((article, index) => <div className="vr-roll-wrap" data-roll key={article.title}><button className="vr-article-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.24)}s` }} onPointerMove={updateSpotlight} onClick={() => go('/blog')}>
+  return <div className="vr-article-grid">{ARTICLES.map((article, index) => <div className="vr-roll-wrap vr-panel-stagger" data-roll key={article.title}><button className="vr-article-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.24)}s` }} onPointerMove={updateSpotlight} onClick={() => go('/blog')}>
     <span className="vr-spotlight" aria-hidden="true" /><span className="vr-article-index">{String(index + 1).padStart(2, '0')}</span><span className="vr-article-date">{article.date}</span><strong>{article.title}</strong><span className="vr-article-desc">{article.desc}</span><span className="vr-article-open">阅读 <ArrowUpRight size={16} /></span>
   </button></div>)}<button className="vr-all-link" onClick={() => go('/blog')}>全部文章 <ArrowUpRight size={17} /></button></div>;
 }
@@ -199,6 +210,11 @@ function AboutPanel() {
   </div>;
 }
 
+function TabReel({ activeTab }) {
+  const number = String(TABS.findIndex(([id]) => id === activeTab) + 1).padStart(2, '0');
+  return <span className="vr-tab-reel" aria-hidden="true">{number.split('').map((digit, index) => <span className="vr-tab-reel-digit" key={`${activeTab}-${index}`} style={{ '--reel-delay': `${index * 0.1}s` }}>{digit}</span>)}</span>;
+}
+
 function ContactPanel() {
   return <section className="vr-contact-panel"><div className="vr-contact-head" data-reveal><span>联系 / ELSEWHERE</span><b>保持交流</b></div><div className="vr-contact-list">{CONTACTS.map((contact, index) => {
     const Icon = contact.Icon;
@@ -207,9 +223,11 @@ function ContactPanel() {
 }
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('products');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(getTabFromHash);
   const [progress, setProgress] = useState(0);
   const rootRef = useRef(null);
+  const panelRefs = useRef({});
   useReveal(rootRef, activeTab);
   useScrollRoll(rootRef, activeTab);
 
@@ -226,15 +244,43 @@ export default function Dashboard() {
     return () => scroller.removeEventListener('scroll', updateProgress);
   }, []);
 
-  const go = useCallback((to) => window.open(`#${to}`, '_blank', 'noopener,noreferrer'), []);
-  const changeTab = useCallback((next) => setActiveTab(next), []);
-  const panel = useMemo(() => {
-    if (activeTab === 'skills') return <SkillsPanel />;
-    if (activeTab === 'articles') return <ArticlesPanel go={go} />;
-    if (activeTab === 'me') return <AboutPanel />;
-    if (activeTab === 'contact') return <ContactPanel />;
-    return <ProductPanel go={go} />;
-  }, [activeTab, go]);
+  const go = useCallback((to) => navigate(to), [navigate]);
+  const changeTab = useCallback((next, updateHash = true) => {
+    setActiveTab(next);
+    if (updateHash) {
+      const url = new URL(window.location.href);
+      url.hash = `/?tab=${next}`;
+      window.history.replaceState(window.history.state, '', url);
+    }
+  }, []);
+  const panels = useMemo(() => ({
+    products: <ProductPanel go={go} />,
+    skills: <SkillsPanel />,
+    articles: <ArticlesPanel go={go} />,
+    me: <AboutPanel />,
+    contact: <ContactPanel />,
+  }), [go]);
+
+  useEffect(() => {
+    const syncTabFromHash = () => {
+      changeTab(getTabFromHash(), false);
+    };
+    window.addEventListener('hashchange', syncTabFromHash);
+    window.addEventListener('popstate', syncTabFromHash);
+    return () => {
+      window.removeEventListener('hashchange', syncTabFromHash);
+      window.removeEventListener('popstate', syncTabFromHash);
+    };
+  }, [changeTab]);
+
+  useEffect(() => {
+    const panel = panelRefs.current[activeTab];
+    if (!panel) return undefined;
+    panel.classList.remove('vr-panel-enter');
+    void panel.offsetWidth;
+    panel.classList.add('vr-panel-enter');
+    return undefined;
+  }, [activeTab]);
 
   return <div className="vr-home" ref={rootRef}>
     <style>{`
@@ -249,6 +295,17 @@ export default function Dashboard() {
       .vr-home .vr-ambient-right { right: -27vmax; bottom: -27vmax; animation: vr-ambient-right 34s ease-in-out infinite; }
       @keyframes vr-ambient-left { 0%, 100% { transform: translate3d(0, 0, 0) scale(.84); } 50% { transform: translate3d(15vmax, 12vmax, 0) scale(1.08); } }
       @keyframes vr-ambient-right { 0%, 100% { transform: translate3d(0, 0, 0) scale(.8); } 50% { transform: translate3d(-13vmax, -11vmax, 0) scale(1.06); } }
+      .vr-home .vr-tab-zone::after { display: none; }
+      .vr-home .vr-tab-reel { position: absolute; z-index: 0; top: -5px; right: 4px; display: flex; color: transparent; -webkit-text-stroke: 1px rgba(27,27,27,.09); font-size: 190px; font-weight: 800; line-height: 1; perspective: 700px; pointer-events: none; }
+      .vr-home .vr-tab-reel-digit { display: block; overflow: hidden; }
+      .vr-home .vr-tab-reel-digit { animation: vr-tab-reel-in 1.15s cubic-bezier(.19,1,.22,1) var(--reel-delay) both; transform-origin: 50% 100%; }
+      @keyframes vr-tab-reel-in { from { opacity: 0; transform: translateY(115%) rotateX(-42deg); } to { opacity: 1; transform: translateY(0) rotateX(0); } }
+      .vr-home .vr-panel { position: relative; min-height: 520px; padding: 42px 0 110px; animation: none; }.vr-home .vr-panel[hidden] { display: none; }
+      .vr-home .vr-panel.vr-panel-enter { animation: vr-panel-reference-in .9s cubic-bezier(.19,1,.22,1) both; }
+      @keyframes vr-panel-reference-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+      .vr-home .vr-panel-enter .vr-panel-stagger { animation: vr-panel-stagger-in .9s cubic-bezier(.19,1,.22,1) var(--panel-delay, .05s) backwards; }
+      .vr-home .vr-panel-enter .vr-panel-stagger:nth-child(2) { --panel-delay: .13s; }.vr-home .vr-panel-enter .vr-panel-stagger:nth-child(3) { --panel-delay: .21s; }.vr-home .vr-panel-enter .vr-panel-stagger:nth-child(4) { --panel-delay: .29s; }.vr-home .vr-panel-enter .vr-panel-stagger:nth-child(5) { --panel-delay: .37s; }
+      @keyframes vr-panel-stagger-in { from { opacity: 0; } to { opacity: var(--roll-opacity, 1); } }
       .vr-home [data-roll] { --roll-y: 0px; --roll-angle: 0deg; --roll-opacity: 1; min-width: 0; opacity: var(--roll-opacity); transform: perspective(900px) translate3d(0, var(--roll-y), 0) rotateX(var(--roll-angle)); transform-origin: 50% 50%; transform-style: preserve-3d; transition: opacity .18s linear; will-change: transform, opacity; }
       .vr-home .vr-roll-wrap > .vr-feature, .vr-home .vr-roll-wrap > .vr-article-card { width: 100%; height: 100%; }
       .vr-home [data-reveal] { opacity: 0; filter: blur(7px); transform: perspective(900px) translate3d(0, 42px, 0) rotateX(-7deg); transform-origin: 50% 100%; transition: opacity .9s cubic-bezier(.19,1,.22,1) var(--reveal-delay, 0s), transform .95s cubic-bezier(.19,1,.22,1) var(--reveal-delay, 0s), filter .72s ease var(--reveal-delay, 0s); will-change: opacity, transform, filter; }
@@ -292,7 +349,7 @@ export default function Dashboard() {
     <div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
-    <main><section className="vr-hero-shell"><div className="vr-hero"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div></section><section className="vr-stage vr-tab-zone" aria-label="内容分类"><div className="vr-tabs" role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button key={id} role="tab" aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panel" role="tabpanel" aria-label={TABS.find(([id]) => id === activeTab)?.[1]} key={activeTab}>{panel}</div></section></main>
+    <main><section className="vr-hero-shell"><div className="vr-hero"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
     <footer className="vr-footer">© 2026 Voyra®</footer>
   </div>;
 }
