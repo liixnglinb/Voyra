@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
-import electronAPI from './api'
+import electronAPI from './browser-api'
 
 // 云端版本：用 HTTP 实现的 electronAPI 注入全局，页面代码无需改动
 window.electronAPI = electronAPI
