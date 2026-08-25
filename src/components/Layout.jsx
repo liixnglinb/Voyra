@@ -64,6 +64,7 @@ export default function Layout({ children }) {
   );
   const meta = getMeta(pathname);
   const isWideWorkspace = WIDE_WORKSPACE_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'));
+  const isPromptWorkspace = pathname === '/prompts';
 
   if (isFullscreen) {
     return (
@@ -84,10 +85,10 @@ export default function Layout({ children }) {
 
   // ===== 工具页：统一外壳（简约商务白底） =====
   return (
-    <div className="tool-wrap">
-      <div className={`tool-inner${isWideWorkspace ? ' tool-inner-wide' : ''}`}>
+    <div className={`tool-wrap${isPromptWorkspace ? ' tool-wrap-prompt' : ''}`}>
+      <div className={`tool-inner${isWideWorkspace ? ' tool-inner-wide' : ''}${isPromptWorkspace ? ' tool-inner-prompt' : ''}`}>
         {/* 页头：白卡片 */}
-        {meta && (() => {
+        {!isPromptWorkspace && meta && (() => {
           const { label, sub, Icon, accent } = meta;
           return (
             <header className="tool-head">
@@ -110,7 +111,7 @@ export default function Layout({ children }) {
         })()}
 
         {/* 内容区：浅底白卡片 */}
-        <div className="tool-content">
+        <div className={`tool-content${isPromptWorkspace ? ' tool-content-prompt' : ''}`}>
           {children}
         </div>
       </div>
@@ -395,6 +396,11 @@ export default function Layout({ children }) {
           --content-accent: #a48830;
           --content-accent-soft: rgba(255,224,138,.48);
         }
+        .tool-inner.tool-inner-prompt {
+          width: min(100% - 48px, 1080px);
+          padding-top: 40px;
+        }
+        .tool-content.tool-content-prompt { padding-top: 0; }
         .tool-content > *:last-child { margin-bottom: 0; }
         .tool-content :is(input, textarea, select) {
           border-radius: 6px !important;
@@ -477,6 +483,7 @@ export default function Layout({ children }) {
         @media (max-width: 720px) {
           .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 40px, 1080px); padding-top: 24px; padding-bottom: 40px; }
           .tool-head { align-items: flex-start; }
+          .tool-inner.tool-inner-prompt { width: min(100% - 40px, 1080px); padding-top: 24px; }
           .tool-head-right { display: none; }
           .tool-back { width: 27px; height: 27px; }
           .tool-title { font-size: 18px; }
