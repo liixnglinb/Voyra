@@ -5,8 +5,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node build-tools/build-mindmap.mjs",
     "dev": "vite",
+    "prebuild": "node build-tools/build-mindmap.mjs",
     "build": "vite build",
+    "prepreview": "node build-tools/build-mindmap.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
