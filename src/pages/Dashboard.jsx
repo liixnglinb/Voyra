@@ -27,6 +27,35 @@ const MATHMODEL_SKILL = {
   tagline: '国赛（CUMCM）数学建模十阶段工作流',
 };
 
+const HERO_LAYERS = [
+  '/hero/voyra-person-skin-v3.webp',
+  '/hero/voyra-person-body-v2.webp',
+  '/hero/voyra-person-hair-v2.webp',
+  '/hero/voyra-person-collar-v2.webp',
+];
+
+function preloadHeroLayer(src) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      resolve();
+    };
+    image.addEventListener('load', () => {
+      if (image.decode) image.decode().catch(() => undefined).finally(finish);
+      else finish();
+    }, { once: true });
+    image.addEventListener('error', finish, { once: true });
+    image.src = src;
+    if (image.complete) {
+      if (image.decode) image.decode().catch(() => undefined).finally(finish);
+      else finish();
+    }
+  });
+}
+
 const EXPERIENCES = [
   { state: '现在', name: 'Voyra 个人站', desc: '云端一站式创作与效率平台，聚合常用工具与 AI 资源。', Icon: NotebookPen },
   { state: '基建', name: 'Cloudflare Pages', desc: 'GitHub 推送后自动构建，自定义域名稳定访问。', Icon: Globe },
@@ -274,11 +303,22 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(getTabFromHash);
   const [progress, setProgress] = useState(0);
+  const [personReady, setPersonReady] = useState(false);
   const rootRef = useRef(null);
   const panelRefs = useRef({});
   useNativeSmoothScroll(rootRef);
   useReveal(rootRef, activeTab);
   useScrollRoll(rootRef, activeTab);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(HERO_LAYERS.map(preloadHeroLayer)).then(() => {
+      requestAnimationFrame(() => {
+        if (!cancelled) setPersonReady(true);
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -412,17 +452,20 @@ export default function Dashboard() {
       .vr-home .vr-scroll-cue { margin-top: 24px; }
       .vr-home .vr-person-stage { position: relative; z-index: 1; align-self: end; width: 282px; height: 699px; min-height: 0; overflow: visible; }
       .vr-home .vr-person-stage::after { content: ""; position: absolute; right: -5%; bottom: 3%; width: 88%; height: 14px; border-radius: 50%; background: rgba(27,27,27,.11); filter: blur(9px); transform: rotate(-4deg); }
-      .vr-home .vr-person-frame { position: absolute; right: 0; bottom: 0; z-index: 1; width: 282px; clip-path: inset(100% 0 0); animation: vr-person-enter 1.5s cubic-bezier(.19,1,.22,1) .24s forwards; }
-      .vr-home .vr-person-motion { position: relative; transform: translateY(0) rotate(1deg); transform-origin: 51% 94%; animation: vr-person-breathe 5.4s ease-in-out 1.7s infinite; }
+      .vr-home .vr-person-frame { position: absolute; right: 0; bottom: 0; z-index: 1; width: 282px; opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity .34s ease-out, transform .62s cubic-bezier(.16,1,.3,1); will-change: opacity, transform; }
+      .vr-home .vr-person-frame.is-ready { opacity: 1; transform: translate3d(0, 0, 0); }
+      .vr-home .vr-person-motion { position: relative; transform: translateY(0) rotate(1deg); transform-origin: 51% 94%; }
+      .vr-home .vr-person-frame.is-ready .vr-person-motion { animation: vr-person-breathe 5.4s ease-in-out .72s infinite; }
       .vr-home .vr-person-motion img { width: 100%; height: auto; }
       .vr-home .vr-person-skin, .vr-home .vr-person-hair, .vr-home .vr-person-collar { position: absolute; inset: 0; display: block; pointer-events: none; }
       .vr-home .vr-person-skin { z-index: 0; }
       .vr-home .vr-person-body { position: relative; z-index: 1; display: block; filter: drop-shadow(0 14px 18px rgba(0,0,0,.09)); }
       .vr-home .vr-person-hair { z-index: 2; }
       .vr-home .vr-person-collar { z-index: 3; }
-      .vr-home .vr-person-hair { transform-origin: 49% 8%; animation: vr-hair-sway 6.8s ease-in-out 1.3s infinite; }
-      .vr-home .vr-person-collar { transform-origin: 50% 20%; animation: vr-collar-sway 5.4s ease-in-out 1.7s infinite; }
-      @keyframes vr-person-enter { to { clip-path: inset(0); } }
+      .vr-home .vr-person-hair { transform-origin: 49% 8%; }
+      .vr-home .vr-person-collar { transform-origin: 50% 20%; }
+      .vr-home .vr-person-frame.is-ready .vr-person-hair { animation: vr-hair-sway 6.8s ease-in-out .72s infinite; }
+      .vr-home .vr-person-frame.is-ready .vr-person-collar { animation: vr-collar-sway 5.4s ease-in-out .72s infinite; }
       @keyframes vr-person-breathe { 0%, 100% { transform: translateY(0) rotate(1deg); } 50% { transform: translateY(-5px) rotate(.55deg); } }
       @keyframes vr-hair-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(1px) rotate(.65deg); } }
       @keyframes vr-collar-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(-.8px) rotate(-.45deg); } }
@@ -492,7 +535,7 @@ export default function Dashboard() {
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
-    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className="vr-person-frame"><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
+    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
     <footer className="vr-footer" data-roll>© 2026 Voyra®</footer>
   </div>;
 }
