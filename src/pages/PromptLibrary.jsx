@@ -261,7 +261,9 @@ export default function PromptLibrary() {
       .prompt-library * { box-sizing: border-box; }
       .prompt-library button, .prompt-library input, .prompt-library select, .prompt-library textarea { font: inherit; }
       .prompt-library button { cursor: pointer; }
-      .prompt-library button:focus-visible, .prompt-library input:focus-visible, .prompt-library select:focus-visible, .prompt-library textarea:focus-visible { outline: 2px solid var(--prompt-ink); outline-offset: 3px; }
+      .prompt-library button:focus-visible, .prompt-library a:focus-visible { outline: 1px solid var(--prompt-ink); outline-offset: 2px; }
+      .tool-content-prompt .prompt-library :is(input, select, textarea):focus { border-color: rgba(27,27,27,.28) !important; background: #fff !important; box-shadow: none !important; outline: none; }
+      .tool-content-prompt .prompt-library :is(input, select, textarea):focus-visible { outline: none; }
       .prompt-topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 24px; border-bottom: 1px solid var(--prompt-line); }
       .prompt-topline-left { display: inline-flex; align-items: center; gap: 11px; min-width: 0; }
       .prompt-back { display: inline-grid; width: 28px; height: 28px; place-items: center; border: 1px solid var(--prompt-line); border-radius: 6px; color: #666; background: rgba(255,255,255,.66); transition: color .18s ease, background .18s ease, transform .18s ease; }
@@ -284,8 +286,8 @@ export default function PromptLibrary() {
       .prompt-button-danger { border-color: #b64b50; background: #b64b50; color: #fff; }
       .prompt-button-danger:hover { border-color: #963940; background: #963940; color: #fff; }
       .prompt-search-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px; align-items: center; }
-      .prompt-search { display: flex; height: 54px; align-items: center; gap: 11px; padding: 0 15px; border: 1px solid var(--prompt-line); border-radius: 8px; background: var(--prompt-paper); box-shadow: 0 11px 25px -30px rgba(0,0,0,.6); transition: border-color .2s ease, box-shadow .2s ease; }
-      .prompt-search:focus-within { border-color: #a48830; box-shadow: 0 0 0 4px rgba(255,224,138,.48); }
+      .prompt-search { display: flex; height: 54px; align-items: center; gap: 11px; padding: 0 15px; border: 1px solid var(--prompt-line); border-radius: 8px; background: var(--prompt-paper); box-shadow: 0 11px 25px -30px rgba(0,0,0,.6); transition: border-color .12s ease; }
+      .prompt-search:focus-within { border-color: rgba(27,27,27,.28); box-shadow: none; }
       .prompt-search svg { flex: 0 0 auto; color: #888; }
       .prompt-search input { width: 100%; min-width: 0; border: 0 !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; color: var(--prompt-ink); font-size: 15px; }
       .prompt-search input::placeholder { color: #a0a0a0; }
@@ -337,7 +339,7 @@ export default function PromptLibrary() {
       .prompt-dialog label { display: grid; gap: 8px; margin-top: 15px; color: #5e5e5e; font-size: 12px; font-weight: 700; }
       .prompt-dialog label input, .prompt-dialog label select, .prompt-dialog label textarea { width: 100%; border: 1px solid var(--prompt-line) !important; border-radius: 6px !important; padding: 10px 11px !important; background: #fff !important; color: var(--prompt-ink); box-shadow: none !important; font-weight: 400; }
       .prompt-dialog label textarea { resize: vertical; font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; }
-      .prompt-dialog label :is(input,select,textarea):focus { border-color: #a48830 !important; box-shadow: 0 0 0 3px rgba(255,224,138,.48) !important; }
+      .tool-content-prompt .prompt-dialog label :is(input,select,textarea):focus { border-color: rgba(27,27,27,.28) !important; box-shadow: none !important; }
       .prompt-dialog footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 24px; }
       .prompt-category-dialog { width: min(100%, 410px); }
       .prompt-delete-dialog { width: min(100%, 410px); }
