@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Lightbulb, BookOpen, Baby, Wrench, CalendarRange, Bot, GitBranch, Newspaper, UserRound,
+  ArrowLeft, Lightbulb, BookOpen, Baby, Wrench, CalendarRange, Bot, GitBranch, Newspaper, Sparkles, UserRound,
 } from 'lucide-react';
 
 /**
@@ -13,7 +13,7 @@ import {
  */
 
 const FULLSCREEN_PATHS = ['/', '/blog', '/articles', '/mindmap', '/agents'];
-const WIDE_WORKSPACE_PATHS = ['/mindmap', '/timetable', '/learning', '/baby-care'];
+const WIDE_WORKSPACE_PATHS = ['/mindmap', '/timetable', '/learning', '/baby-care', '/skills'];
 
 const TOOL_META = {
   '/prompts': {
@@ -36,6 +36,9 @@ const TOOL_META = {
   },
   '/agents': {
     label: 'AI Agent & Skill', sub: '主流 Agent 聚合与高分 Skill 资源', Icon: Bot, accent: '#7C5CFF',
+  },
+  '/skills': {
+    label: 'Skill 热榜', sub: 'GitHub 优质 Skill · 每周热点 · 星数排行，每日自动刷新', Icon: Sparkles, accent: '#D4A930',
   },
   '/news': {
     label: 'AI 每日情报站', sub: 'Agent · 模型 · 工具 · 行业 · Skill 一站式速览', Icon: Newspaper, accent: '#3B5BFF',
@@ -335,8 +338,8 @@ export default function Layout({ children }) {
           gap: 0;
         }
         .tool-inner.tool-inner-wide {
-          width: min(100% - 48px, 1400px);
-          max-width: 1400px;
+          width: min(100% - 48px, 1480px);
+          max-width: 1480px;
         }
         .tool-head {
           min-height: 56px;

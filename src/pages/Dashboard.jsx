@@ -14,7 +14,7 @@ const FEATURED = [
   { to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
   { to: '/prompts', no: '03', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
   { to: '/agents', no: '04', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
-  { to: '/learning', no: '05', name: '学习资料', desc: '把笔记、代码片段和课程资料积累成可检索的知识库。', cta: '管理资料', Icon: LayoutGrid, art: 'learning' },
+  { to: '/skills', no: '05', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
   { to: '/tools', no: '06', name: '工具导航', desc: '按场景筛选 AI、开发、资讯与效率网站，减少日常寻找。', cta: '浏览工具', Icon: Wrench, art: 'tools' },
   { to: '/news', no: '07', name: 'AI 每日情报', desc: '速览 Agent、模型、工具和行业动态，保持信息输入的节奏。', cta: '阅读情报', Icon: Newspaper, art: 'news' },
   { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
@@ -204,6 +204,15 @@ function FeatureArt({ type }) {
       <div className="vr-preview-top"><CalendarRange size={15} /><span>第 3 周 · 课程 + 日程</span><b>2 合 1</b></div>
       <div className="vr-week-strip">{days.map((d, i) => <button key={d} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><b>周{d}</b><span>{courses[i]}</span></button>)}</div>
       <div className="vr-day-line"><i>{active === 1 ? <Check size={11} /> : ''}</i><span>{plans[active]}</span><em>日程</em></div>
+    </div>;
+  }
+
+  if (type === 'skills') {
+    const rows = [['anthropics/skills', '44.2k'], ['obra/superpowers', '17.9k'], ['fastmcp', '11.6k']];
+    return <div className="vr-art vr-tool-art vr-skills-art">
+      <div className="vr-preview-top"><Sparkles size={15} /><span>GitHub Skill 热榜</span><b>每日更新</b></div>
+      <div className="vr-skill-rank">{rows.map((r, i) => <button key={r[0]} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><i>{String(i + 1).padStart(2, '0')}</i><span>{r[0]}</span><em>{r[1]}</em></button>)}</div>
+      <div className="vr-skill-foot"><Star size={11} />优质精选 · 每周热点</div>
     </div>;
   }
 
@@ -570,6 +579,12 @@ export default function Dashboard() {
       .vr-home .vr-day-line { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid #ececec; color: #555; font-size: 10.5px; }
       .vr-home .vr-day-line i { display: grid; width: 15px; height: 15px; flex: 0 0 15px; place-items: center; border: 1px solid #d9d9d9; border-radius: 3px; color: #1b1b1b; font-style: normal; }
       .vr-home .vr-day-line em { margin-left: auto; color: #999; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-skill-rank { display: grid; gap: 5px; margin-top: 12px; }
+      .vr-home .vr-skill-rank button { display: grid; grid-template-columns: 20px 1fr auto; align-items: center; gap: 7px; padding: 7px 8px; text-align: left; }
+      .vr-home .vr-skill-rank i { color: #c9a53f; font: 800 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-skill-rank span { overflow: hidden; color: #555; font-size: 10.5px; text-overflow: ellipsis; white-space: nowrap; }
+      .vr-home .vr-skill-rank em { color: #a48830; font: 700 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-skill-foot { display: flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 9px; border-top: 1px solid #ececec; color: #999; font-size: 9.5px; }
       @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; } }
     `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>

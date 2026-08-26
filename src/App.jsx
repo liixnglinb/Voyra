@@ -13,6 +13,7 @@ const BabyCare = lazy(() => import('./pages/BabyCare'))
 const Blog = lazy(() => import('./pages/Blog'))
 const ToolHubs = lazy(() => import('./pages/ToolHubs'))
 const ScheduleHub = lazy(() => import('./pages/ScheduleHub'))
+const SkillHub = lazy(() => import('./pages/SkillHub'))
 const AgentSkills = lazy(() => import('./pages/AgentSkills'))
 const AINews = lazy(() => import('./pages/AINews'))
 
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/schedule" element={<Navigate to="/timetable?tab=courses" replace />} />
                 <Route path="/planner" element={<Navigate to="/timetable?tab=planner" replace />} />
                 <Route path="/agents" element={<AgentSkills />} />
+                <Route path="/skills" element={<SkillHub />} />
                 <Route path="/news" element={<AINews />} />
 
                 {/* 未知路径重定向回首页，避免空白页 */}
