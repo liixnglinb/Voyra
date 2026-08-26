@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Github,
-  Globe, LayoutGrid, Lightbulb, ListTree,
+  Globe, LayoutGrid, Lightbulb, ListTree, Shapes,
   Newspaper, NotebookPen, Route, Sparkles, Star, Wrench,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
@@ -19,6 +19,7 @@ const FEATURED = [
   { to: '/news', no: '07', name: 'AI 每日情报', desc: '速览 Agent、模型、工具和行业动态，保持信息输入的节奏。', cta: '阅读情报', Icon: Newspaper, art: 'news' },
   { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
   { to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
+  { to: '/uikit', no: '10', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
 ];
 
 const MATHMODEL_SKILL = {
@@ -236,6 +237,15 @@ function FeatureArt({ type }) {
     <div className="vr-preview-top"><ListTree size={15} /><span>项目规划</span><b>导图</b></div>
     <div className="vr-map-stage"><button className="vr-map-root" onClick={() => setActive(0)}>Voyra</button>{['内容', '产品', '迭代'].map((item, index) => <button className={`vr-map-node n${index}${active === index + 1 ? ' is-active' : ''}`} onClick={() => setActive(index + 1)} key={item}>{item}</button>)}</div>
   </div>;
+
+  if (type === 'uikit') {
+    const rows = [['变形胶囊导航', 'Morphing Navbar'], ['状态开关', 'Toggle Switch'], ['分页控件', 'Pagination']];
+    return <div className="vr-art vr-tool-art vr-uikit-art">
+      <div className="vr-preview-top"><Shapes size={15} /><span>UI 组件图鉴</span><b>11 组件</b></div>
+      <div className="vr-uikit-list">{rows.map((r, i) => <button key={r[0]} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><span>{r[0]}</span><em>{r[1]}</em></button>)}</div>
+      <div className="vr-uikit-foot">点击卡片 · 展开原理</div>
+    </div>;
+  }
 
   return <div className="vr-art vr-tool-art vr-care-art">
     <div className="vr-preview-top"><Sparkles size={15} /><span>今日护理</span><b>{checked ? '已记录' : '待记录'}</b></div>
@@ -585,6 +595,11 @@ export default function Dashboard() {
       .vr-home .vr-skill-rank span { overflow: hidden; color: #555; font-size: 10.5px; text-overflow: ellipsis; white-space: nowrap; }
       .vr-home .vr-skill-rank em { color: #a48830; font: 700 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
       .vr-home .vr-skill-foot { display: flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 9px; border-top: 1px solid #ececec; color: #999; font-size: 9.5px; }
+      .vr-home .vr-uikit-list { display: grid; gap: 5px; margin-top: 12px; }
+      .vr-home .vr-uikit-list button { display: flex; align-items: center; justify-content: space-between; gap: 7px; padding: 8px 9px; border-radius: 6px; text-align: left; }
+      .vr-home .vr-uikit-list span { color: #555; font-size: 10.5px; font-weight: 650; }
+      .vr-home .vr-uikit-list em { color: #a0a0a0; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
+      .vr-home .vr-uikit-foot { margin-top: auto; padding-top: 9px; border-top: 1px solid #ececec; color: #999; font-size: 9.5px; }
       @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; } }
     `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
