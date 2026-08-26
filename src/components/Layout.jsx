@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Lightbulb, BookOpen, Baby, Wrench, CalendarRange, Bot, GitBranch, Newspaper, Sparkles, UserRound,
+  ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, GitBranch, Sparkles, UserRound,
 } from 'lucide-react';
 
 /**
@@ -28,9 +28,6 @@ const TOOL_META = {
   '/baby-care': {
     label: '宝宝护理', sub: '记录宝宝成长，护理数据可视化', Icon: Baby, accent: '#5B8DEF',
   },
-  '/tools': {
-    label: '工具网站集成', sub: '金融与效率工具导航，精选网站一站直达', Icon: Wrench, accent: '#0CA678',
-  },
   '/timetable': {
     label: '日程中心', sub: '课程表与日历日程二合一，每周课程与每日安排一站管理', Icon: CalendarRange, accent: '#0EA5E9',
   },
@@ -39,9 +36,6 @@ const TOOL_META = {
   },
   '/skills': {
     label: 'Skill 热榜', sub: 'GitHub 优质 Skill · 每周热点 · 星数排行，每日自动刷新', Icon: Sparkles, accent: '#D4A930',
-  },
-  '/news': {
-    label: 'AI 每日情报站', sub: 'Agent · 模型 · 工具 · 行业 · Skill 一站式速览', Icon: Newspaper, accent: '#3B5BFF',
   },
   '/profile': {
     label: '个人中心', sub: '账号信息 · 修改昵称密码', Icon: UserRound, accent: '#7C5CFF',

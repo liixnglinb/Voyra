@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Github,
   Globe, LayoutGrid, Lightbulb, ListTree, Shapes,
-  Newspaper, NotebookPen, Route, Sparkles, Star, Wrench,
+  NotebookPen, Route, Sparkles, Star,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
@@ -15,9 +15,7 @@ const FEATURED = [
   { to: '/prompts', no: '03', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
   { to: '/agents', no: '04', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
   { to: '/skills', no: '05', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
-  { to: '/tools', no: '06', name: '工具导航', desc: '按场景筛选 AI、开发、资讯与效率网站，减少日常寻找。', cta: '浏览工具', Icon: Wrench, art: 'tools' },
-  { to: '/news', no: '07', name: 'AI 每日情报', desc: '速览 Agent、模型、工具和行业动态，保持信息输入的节奏。', cta: '阅读情报', Icon: Newspaper, art: 'news' },
-  { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
+  { to: '/mindmap', no: '06', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
   { to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
   { to: '/uikit', no: '10', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
 ];
@@ -220,17 +218,6 @@ function FeatureArt({ type }) {
   if (type === 'learning') return <div className="vr-art vr-tool-art vr-learning-art">
     <div className="vr-preview-top"><LayoutGrid size={15} /><span>资料库</span><b>24 条</b></div>
     <div className="vr-material-stack">{['论文精读', '课程笔记', '代码片段'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}><i>{String(index + 1).padStart(2, '0')}</i><span>{item}</span><em>{['PDF', 'MD', 'JS'][index]}</em></button>)}</div>
-  </div>;
-
-  if (type === 'tools') return <div className="vr-art vr-tool-art vr-tools-art">
-    <div className="vr-preview-top"><Wrench size={15} /><span>工具导航</span><b>{['AI', '开发', '效率'][active]}</b></div>
-    <div className="vr-tool-filter">{['AI', '开发', '效率'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}>{item}</button>)}</div>
-    <div className="vr-tool-list">{[['ChatGPT', 'Figma', 'Notion'], ['GitHub', 'Vercel', 'Raycast'], ['Todoist', 'Linear', 'Readwise']][active].map((item) => <span key={item}>{item}<ArrowUpRight size={12} /></span>)}</div>
-  </div>;
-
-  if (type === 'news') return <div className="vr-art vr-tool-art vr-news-art">
-    <div className="vr-preview-top"><Newspaper size={15} /><span>今日精选</span><b>更新</b></div>
-    {['新模型发布：多模态能力升级', 'Agent 开发工具的实践', '开源社区本周观察'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}><i>{String(index + 1).padStart(2, '0')}</i><span>{item}</span></button>)}
   </div>;
 
   if (type === 'mindmap') return <div className="vr-art vr-tool-art vr-mindmap-art">
