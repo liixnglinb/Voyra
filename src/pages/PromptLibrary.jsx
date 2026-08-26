@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft, Check, Copy, Download, FolderPlus, Import, Pencil, Plus, Search, Star, Trash2, X, Cloud, CloudOff,
+  ArrowLeft, Check, Copy, Download, FolderPlus, Import, Lock, LockOpen, Pencil, Plus, Search, Star, Trash2, X, Cloud, CloudOff,
 } from 'lucide-react';
 import {
   PROMPT_CATEGORIES, PROMPT_CATEGORY_META, PROMPT_PRESETS,
@@ -14,6 +14,18 @@ const LEGACY_KEYS = {
   prompts: 'voyra.prompt-library.prompts',
   categories: 'voyra.prompt-library.categories',
 };
+
+/* ============ 管理员解锁（访客只读） ============
+   密码不明文入库：只存 djb2 哈希。改密码请告诉我新密码重新生成，
+   或自己在 Node 里算：var s='新密码',h=5381;for(var i=0;i<s.length;i++){h=((h*33)+s.charCodeAt(i))|0}console.log(h) */
+const ADMIN_PASSWORD_HASH = -1461714399;
+const ADMIN_SESSION_KEY = 'voyra.prompt-library.admin';
+
+function djb2(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h * 33) + str.charCodeAt(i)) | 0;
+  return h;
+}
 
 const EMPTY_STATE = { custom: [], favorites: [], categories: [] };
 
@@ -121,18 +133,18 @@ function IconButton({ label, children, className = '', ...props }) {
   return <button type="button" className={`pl-icon-btn ${className}`} aria-label={label} title={label} {...props}>{children}</button>;
 }
 
-function PromptCard({ prompt, color, copiedId, onCopy, onToggleFavorite, onEdit, onDelete }) {
+function PromptCard({ prompt, color, admin, copiedId, onCopy, onToggleFavorite, onEdit, onDelete }) {
   const preview = prompt.content.length > 150 ? `${prompt.content.slice(0, 150)}…` : prompt.content;
   return <article className="pl-card">
     <header className="pl-card-top">
       <h2>{prompt.title}{prompt.titleEn && <em style={{ color }}>{prompt.titleEn}</em>}</h2>
-      <IconButton
+      {admin && <IconButton
         label={prompt.favorite ? '取消收藏' : '收藏'}
         className={`pl-star${prompt.favorite ? ' is-fav' : ''}`}
         onClick={() => onToggleFavorite(prompt.id)}
       >
         <Star size={17} fill={prompt.favorite ? 'currentColor' : 'none'} />
-      </IconButton>
+      </IconButton>}
     </header>
     {prompt.summary && <p className="pl-card-quote"><i>"</i>{prompt.summary}</p>}
     <pre className="pl-card-preview">{preview}</pre>
@@ -142,7 +154,7 @@ function PromptCard({ prompt, color, copiedId, onCopy, onToggleFavorite, onEdit,
         <button type="button" className={`pl-copy-btn${copiedId === prompt.id ? ' is-copied' : ''}`} onClick={() => onCopy(prompt)}>
           {copiedId === prompt.id ? <Check size={14} /> : <Copy size={14} />}{copiedId === prompt.id ? '已复制' : '复制'}
         </button>
-        {!prompt.builtin && <>
+        {admin && !prompt.builtin && <>
           <IconButton label="编辑提示词" onClick={() => onEdit(prompt)}><Pencil size={14} /></IconButton>
           <IconButton label="删除提示词" className="is-danger" onClick={() => onDelete(prompt)}><Trash2 size={14} /></IconButton>
         </>}
@@ -212,6 +224,11 @@ export default function PromptLibrary() {
   const [draft, setDraft] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [toast, setToast] = useState('');
+  const [admin, setAdmin] = useState(() => {
+    try { return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1'; } catch { return false; }
+  });
+  const [pwDialog, setPwDialog] = useState(false);
+  const [pwInput, setPwInput] = useState('');
 
   /* 首次加载：云端 → 本地镜像 → 旧数据一次性迁移 */
   useEffect(() => {
@@ -258,6 +275,25 @@ export default function PromptLibrary() {
     const next = typeof updater === 'function' ? updater(stateRef.current) : updater;
     stateRef.current = next;
     setUserState(next);
+  };
+
+  const unlockAdmin = () => {
+    if (djb2(pwInput) === ADMIN_PASSWORD_HASH) {
+      try { sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); } catch { /* ignore */ }
+      setAdmin(true);
+      setPwDialog(false);
+      setPwInput('');
+      setToast('已解锁管理功能');
+    } else {
+      setPwInput('');
+      setToast('密码错误');
+    }
+  };
+
+  const lockAdmin = () => {
+    try { sessionStorage.removeItem(ADMIN_SESSION_KEY); } catch { /* ignore */ }
+    setAdmin(false);
+    setToast('已退出管理模式');
   };
 
   const allPrompts = useMemo(() => [...PROMPT_PRESETS, ...userState.custom], [userState.custom]);
@@ -480,6 +516,9 @@ export default function PromptLibrary() {
       .pl-icon-btn { display:inline-grid; width:30px; height:30px; flex:0 0 30px; place-items:center; border:1px solid transparent; border-radius:7px; padding:0; color:#888; background:transparent; transition:border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease; }
       .pl-icon-btn:hover { border-color:var(--line); background:#fff; color:var(--ink); transform:translateY(-1px); }
       .pl-icon-btn.is-danger:hover { border-color:rgba(182,75,80,.34); color:#b64b50; }
+      .pl-lock { border-color:var(--line); background:#fff; color:#999; }
+      .pl-lock:hover { color:var(--ink); background:var(--soft); }
+      .pl-lock.is-on { border-color:rgba(164,136,48,.5); background:var(--soft); color:var(--gold); }
 
       /* ===== 分类 chips ===== */
       .pl-chips { display:flex; gap:8px; align-items:center; padding:1px 0 14px; overflow-x:auto; scrollbar-width:none; }
@@ -596,6 +635,14 @@ export default function PromptLibrary() {
           </span>
         </div>
         <div className="pl-topbar-right">
+          <IconButton
+            label={admin ? '退出管理模式' : '管理员解锁'}
+            title={admin ? '退出管理模式' : '管理员解锁'}
+            className={`pl-lock${admin ? ' is-on' : ''}`}
+            onClick={() => (admin ? lockAdmin() : setPwDialog(true))}
+          >
+            {admin ? <LockOpen size={14} /> : <Lock size={14} />}
+          </IconButton>
           <label className="pl-search">
             <Search size={16} />
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索提示词：试试「代码审查」「旅行攻略」…" aria-label="搜索提示词" />
@@ -603,7 +650,7 @@ export default function PromptLibrary() {
               ? <IconButton label="清空搜索" onClick={() => setSearch('')}><X size={15} /></IconButton>
               : null}
           </label>
-          <button type="button" className="pl-btn pl-btn-solid" onClick={openNewPrompt}><Plus size={16} />新建提示词</button>
+          {admin && <button type="button" className="pl-btn pl-btn-solid" onClick={openNewPrompt}><Plus size={16} />新建提示词</button>}
         </div>
       </header>
       <nav className="pl-chips" aria-label="提示词分类">
@@ -613,7 +660,7 @@ export default function PromptLibrary() {
             {category} <b>{catCount(category)}</b>
           </button>
         ))}
-        <button type="button" className="pl-chip-add" title="新建分类" aria-label="新建分类" onClick={() => setDialog('category')}><Plus size={15} /></button>
+        {admin && <button type="button" className="pl-chip-add" title="新建分类" aria-label="新建分类" onClick={() => setDialog('category')}><Plus size={15} /></button>}
       </nav>
     </div>
 
@@ -623,12 +670,12 @@ export default function PromptLibrary() {
           <div className="pl-side-label">SUBCATEGORY</div>
           {renderSubButtons('pl-side-item')}
         </>}
-        <div className="pl-side-foot">
+        {admin && <div className="pl-side-foot">
           <button type="button" className="pl-btn" onClick={openNewPrompt}><Plus size={14} />新建提示词</button>
           <button type="button" className="pl-btn" onClick={() => fileInputRef.current?.click()}><Import size={14} />导入 JSON</button>
           <button type="button" className="pl-btn" onClick={exportPrompts}><Download size={14} />导出我的数据</button>
           <button type="button" className="pl-btn" onClick={() => setDialog('category')}><FolderPlus size={14} />新建分类</button>
-        </div>
+        </div>}
       </aside>
 
       <main className="pl-main">
@@ -647,8 +694,8 @@ export default function PromptLibrary() {
             <div className="pl-empty-inner">
               <div className="pl-empty-icon"><Plus size={21} /></div>
               <h2>{searching ? '没有匹配的提示词' : '这个分类还没有条目'}</h2>
-              <p>{searching ? '换一个关键词试试' : '点击右上角「新建提示词」添加第一条'}</p>
-              {!searching && <button type="button" className="pl-btn pl-btn-solid" onClick={openNewPrompt}><Plus size={15} />新建提示词</button>}
+              <p>{searching ? '换一个关键词试试' : admin ? '点击右上角「新建提示词」添加第一条' : '该分类下暂时还没有提示词'}</p>
+              {!searching && admin && <button type="button" className="pl-btn pl-btn-solid" onClick={openNewPrompt}><Plus size={15} />新建提示词</button>}
             </div>
           </section>
         ) : (
@@ -658,6 +705,7 @@ export default function PromptLibrary() {
                 key={prompt.id}
                 prompt={{ ...prompt, favorite: userState.favorites.includes(prompt.id) }}
                 color={colorFor(prompt)}
+                admin={admin}
                 copiedId={copiedId}
                 onCopy={copyPrompt}
                 onToggleFavorite={toggleFavorite}
@@ -684,5 +732,17 @@ export default function PromptLibrary() {
     )}
     {dialog === 'category' && <CategoryDialog onClose={() => setDialog(null)} onSave={addCategory} />}
     {dialog === 'delete' && draft && <DeleteDialog prompt={draft} onClose={() => setDialog(null)} onConfirm={deletePrompt} />}
+    {pwDialog && (
+      <div className="pl-scrim" role="presentation" onMouseDown={() => setPwDialog(false)}>
+        <form className="pl-dialog pl-dialog-slim" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); unlockAdmin(); }}>
+          <header><div><span>ADMIN</span><h2>管理员解锁</h2></div><IconButton label="关闭" onClick={() => { setPwDialog(false); setPwInput(''); }}><X size={18} /></IconButton></header>
+          <label>管理密码<input autoFocus type="password" value={pwInput} onChange={(event) => setPwInput(event.target.value)} placeholder="输入管理密码" /></label>
+          <footer>
+            <button type="button" className="pl-btn pl-btn-quiet" onClick={() => { setPwDialog(false); setPwInput(''); }}>取消</button>
+            <button className="pl-btn pl-btn-solid" disabled={!pwInput}>解锁</button>
+          </footer>
+        </form>
+      </div>
+    )}
   </div>;
 }
