@@ -397,7 +397,7 @@ export default function Layout({ children }) {
           --content-accent-soft: rgba(255,224,138,.48);
         }
         .tool-inner.tool-inner-prompt {
-          width: min(100% - 48px, 1080px);
+          width: min(100% - 48px, 1280px);
           padding-top: 40px;
         }
         .tool-content.tool-content-prompt { padding-top: 0; }
