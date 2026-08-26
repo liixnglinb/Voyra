@@ -63,7 +63,7 @@ const EXPERIENCES = [
 
 const CONTACTS = [
   { no: '01', label: 'GitHub', value: '@liixnglinb', href: 'https://github.com/liixnglinb', Icon: Github },
-  { no: '02', label: 'Email', value: 'hello@lxlrwxs.top', href: 'mailto:hello@lxlrwxs.top', Icon: Sparkles },
+  { no: '02', label: 'Email', value: 'lixingli1024@qq.com', href: 'mailto:lixingli1024@qq.com', Icon: Sparkles },
   { no: '03', label: '网站', value: 'lxlrwxs.top', href: 'https://lxlrwxs.top', Icon: Globe },
 ];
 
