@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Lightbulb, BookOpen, Baby, Wrench, CalendarDays, CalendarClock, Bot, GitBranch, Newspaper, UserRound,
+  ArrowLeft, Lightbulb, BookOpen, Baby, Wrench, CalendarRange, Bot, GitBranch, Newspaper, UserRound,
 } from 'lucide-react';
 
 /**
@@ -12,8 +12,8 @@ import {
  *    无渐变 / 无光晕 / 无玻璃 / 无弹跳动画
  */
 
-const FULLSCREEN_PATHS = ['/', '/blog', '/articles', '/mindmap'];
-const WIDE_WORKSPACE_PATHS = ['/mindmap', '/planner', '/schedule', '/learning', '/baby-care'];
+const FULLSCREEN_PATHS = ['/', '/blog', '/articles', '/mindmap', '/agents'];
+const WIDE_WORKSPACE_PATHS = ['/mindmap', '/timetable', '/learning', '/baby-care'];
 
 const TOOL_META = {
   '/prompts': {
@@ -31,11 +31,8 @@ const TOOL_META = {
   '/tools': {
     label: '工具网站集成', sub: '金融与效率工具导航，精选网站一站直达', Icon: Wrench, accent: '#0CA678',
   },
-  '/schedule': {
-    label: '个人课表', sub: '课程安排一目了然，按周自动同步更新', Icon: CalendarDays, accent: '#6366F1',
-  },
-  '/planner': {
-    label: '个人日程', sub: '日历假期与自定义日程，精准到点', Icon: CalendarClock, accent: '#0EA5E9',
+  '/timetable': {
+    label: '日程中心', sub: '课程表与日历日程二合一，每周课程与每日安排一站管理', Icon: CalendarRange, accent: '#0EA5E9',
   },
   '/agents': {
     label: 'AI Agent & Skill', sub: '主流 Agent 聚合与高分 Skill 资源', Icon: Bot, accent: '#7C5CFF',
@@ -67,13 +64,14 @@ export default function Layout({ children }) {
   const isPromptWorkspace = pathname === '/prompts';
 
   if (isFullscreen) {
+    const isDarkPage = pathname.startsWith('/agents');
     return (
       <div
         style={{
           height: '100vh',
-          overflow: 'hidden',
-          background: '#FFFFFF',
-          color: '#111111',
+          overflow: 'auto',
+          background: isDarkPage ? '#04060e' : '#FFFFFF',
+          color: isDarkPage ? '#e5e7eb' : '#111111',
         }}
       >
         <div style={{ height: '100%', overflow: 'auto' }}>

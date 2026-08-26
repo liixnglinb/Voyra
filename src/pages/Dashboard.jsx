@@ -2,8 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowUpRight, Bot, CalendarClock, CalendarDays, Check, ChevronDown, Code2, Github,
-  Globe, GraduationCap, LayoutGrid, Lightbulb, ListTree,
+  ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Github,
+  Globe, LayoutGrid, Lightbulb, ListTree,
   Newspaper, NotebookPen, Route, Sparkles, Star, Wrench,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
@@ -11,10 +11,9 @@ import { ARTICLES } from '../data/articles';
 
 const FEATURED = [
   { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
-  { to: '/prompts', no: '01', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
-  { to: '/agents', no: '02', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
-  { to: '/planner', no: '03', name: '个人日程', desc: '把课程、假期和自定义事项排到可执行的时间线上。', cta: '打开日程', Icon: CalendarClock, art: 'planner' },
-  { to: '/schedule', no: '04', name: '个人课表', desc: '将课程、周次和教师信息清晰地排在同一个视图里。', cta: '查看课表', Icon: GraduationCap, art: 'schedule' },
+  { to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
+  { to: '/prompts', no: '03', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
+  { to: '/agents', no: '04', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
   { to: '/learning', no: '05', name: '学习资料', desc: '把笔记、代码片段和课程资料积累成可检索的知识库。', cta: '管理资料', Icon: LayoutGrid, art: 'learning' },
   { to: '/tools', no: '06', name: '工具导航', desc: '按场景筛选 AI、开发、资讯与效率网站，减少日常寻找。', cta: '浏览工具', Icon: Wrench, art: 'tools' },
   { to: '/news', no: '07', name: 'AI 每日情报', desc: '速览 Agent、模型、工具和行业动态，保持信息输入的节奏。', cta: '阅读情报', Icon: Newspaper, art: 'news' },
@@ -197,15 +196,16 @@ function FeatureArt({ type }) {
     <p>当前节点：{['收集资料', '整理判断', '输出结果'][active]}</p>
   </div>;
 
-  if (type === 'planner') return <div className="vr-art vr-tool-art vr-planner-art">
-    <div className="vr-preview-top"><CalendarClock size={15} /><span>今天 / 08.25</span><b>03 项</b></div>
-    {['课程资料整理', '项目复盘', '晚间阅读'].map((item, index) => <button className={`vr-agenda-row${active === index ? ' is-active' : ''}`} onClick={() => setActive(index)} key={item}><i>{index === active ? <Check size={11} /> : ''}</i><span>{item}</span><em>{['09:30', '15:00', '20:30'][index]}</em></button>)}
-  </div>;
-
-  if (type === 'schedule') return <div className="vr-art vr-tool-art vr-schedule-art">
-    <div className="vr-preview-top"><CalendarDays size={15} /><span>第 1 周</span><b>课程表</b></div>
-    <div className="vr-week-grid">{['一', '二', '三', '四', '五'].map((day, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={day}><b>周{day}</b><span>{['数学建模', '算法设计', '英语', '数据结构', '自习'][index]}</span></button>)}</div>
-  </div>;
+  if (type === 'timetable') {
+    const days = ['一', '二', '三', '四', '五'];
+    const courses = ['高数', '算法', '英语', '数据结构', '自习'];
+    const plans = ['09:30 课程资料整理', '15:00 项目复盘', '20:30 晚间阅读', '12:00 图书馆还书', '18:00 篮球局'];
+    return <div className="vr-art vr-tool-art vr-timetable-art">
+      <div className="vr-preview-top"><CalendarRange size={15} /><span>第 3 周 · 课程 + 日程</span><b>2 合 1</b></div>
+      <div className="vr-week-strip">{days.map((d, i) => <button key={d} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><b>周{d}</b><span>{courses[i]}</span></button>)}</div>
+      <div className="vr-day-line"><i>{active === 1 ? <Check size={11} /> : ''}</i><span>{plans[active]}</span><em>日程</em></div>
+    </div>;
+  }
 
   if (type === 'learning') return <div className="vr-art vr-tool-art vr-learning-art">
     <div className="vr-preview-top"><LayoutGrid size={15} /><span>资料库</span><b>24 条</b></div>
@@ -563,6 +563,13 @@ export default function Dashboard() {
       .vr-home .vr-care-stats b { color: #444; font: 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
       .vr-home .vr-care-check { display: inline-flex; width: fit-content; align-items: center; gap: 5px; padding: 6px 9px; font-size: 10px; }
       .vr-home .vr-care-check.is-active { border-color: #e0c35f; background: #ffe08a; color: #1b1b1b; }
+      .vr-home .vr-week-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 14px; }
+      .vr-home .vr-week-strip button { display: grid; gap: 4px; min-height: 64px; align-content: center; justify-items: center; padding: 6px 4px; }
+      .vr-home .vr-week-strip b { color: #a0a0a0; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-week-strip span { color: #666; font-size: 10px; }
+      .vr-home .vr-day-line { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 10px; border-top: 1px solid #ececec; color: #555; font-size: 10.5px; }
+      .vr-home .vr-day-line i { display: grid; width: 15px; height: 15px; flex: 0 0 15px; place-items: center; border: 1px solid #d9d9d9; border-radius: 3px; color: #1b1b1b; font-style: normal; }
+      .vr-home .vr-day-line em { margin-left: auto; color: #999; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
       @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; } }
     `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>

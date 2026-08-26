@@ -12,8 +12,7 @@ const MindMap = lazy(() => import('./pages/MindMap'))
 const BabyCare = lazy(() => import('./pages/BabyCare'))
 const Blog = lazy(() => import('./pages/Blog'))
 const ToolHubs = lazy(() => import('./pages/ToolHubs'))
-const ClassSchedule = lazy(() => import('./pages/ClassSchedule'))
-const Planner = lazy(() => import('./pages/Planner'))
+const ScheduleHub = lazy(() => import('./pages/ScheduleHub'))
 const AgentSkills = lazy(() => import('./pages/AgentSkills'))
 const AINews = lazy(() => import('./pages/AINews'))
 
@@ -39,8 +38,9 @@ function App() {
                 <Route path="/baby-care" element={<BabyCare />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/tools" element={<ToolHubs />} />
-                <Route path="/schedule" element={<ClassSchedule />} />
-                <Route path="/planner" element={<Planner />} />
+                <Route path="/timetable" element={<ScheduleHub />} />
+                <Route path="/schedule" element={<Navigate to="/timetable?tab=courses" replace />} />
+                <Route path="/planner" element={<Navigate to="/timetable?tab=planner" replace />} />
                 <Route path="/agents" element={<AgentSkills />} />
                 <Route path="/news" element={<AINews />} />
 
