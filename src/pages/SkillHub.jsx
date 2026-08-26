@@ -11,16 +11,24 @@ import {
    - 优质精选：人工策展，含一键复制安装命令
    ============================================================ */
 
-const CACHE_KEY = 'voyra.skills-hot';
+const HOT_CACHE_KEY = 'voyra.skills-hot-v2';
 const RANK_BASE = [
   { repo: 'anthropics/skills', base: 44200, desc: 'Anthropic 官方技能库：docx · pptx · xlsx · pdf 与编写规范', area: '官方' },
-  { repo: 'obra/superpowers', base: 17900, desc: '为 Claude Code 注入系统化技能、TDD 与调试工作流', area: '工作流' },
+  { repo: 'x1xhlol/system-prompts-and-models-of-ai-tools', base: 52000, desc: '主流 AI 工具系统提示词大合集，逆向工程参考宝库', area: '提示词' },
   { repo: 'modelcontextprotocol/servers', base: 41000, desc: 'MCP 官方服务器参考实现，Skill 生态的工具底座', area: 'MCP' },
-  { repo: 'wshobson/agents', base: 9600, desc: '高质量领域 Subagent 集合，覆盖开发/数据/运维', area: 'Subagent' },
-  { repo: 'contains-studio/agents', base: 8200, desc: '设计与内容向 Agent 技能合集，即装即用', area: '创作' },
-  { repo: 'iannuttall/claude-agents', base: 5400, desc: 'Claude Agent 配置范例与最佳实践', area: '范例' },
-  { repo: 'hesreallyhim/awesome-claude-code', base: 12800, desc: 'Claude Code 生态资源总目录（命令/技能/工具）', area: '目录' },
+  { repo: 'anthropics/claude-code', base: 28000, desc: 'Claude Code 官方 CLI，Skill 的运行环境与宿主', area: '官方' },
+  { repo: 'obra/superpowers', base: 17900, desc: '为 Claude Code 注入系统化技能、TDD 与调试工作流', area: '工作流' },
+  { repo: 'punkpeye/awesome-mcp-servers', base: 14000, desc: '社区维护的 MCP 服务器精选大目录', area: 'MCP' },
   { repo: 'punkpeye/fastmcp', base: 11600, desc: 'TypeScript 快速构建 MCP Server 的轻量框架', area: '框架' },
+  { repo: 'hesreallyhim/awesome-claude-code', base: 12800, desc: 'Claude Code 生态资源总目录（命令/技能/工具）', area: '目录' },
+  { repo: 'wshobson/agents', base: 9600, desc: '高质量领域 Subagent 集合，覆盖开发/数据/运维', area: 'Subagent' },
+  { repo: 'VoltAgent/awesome-claude-code-subagents', base: 9200, desc: '100+ 现成 Claude Subagent 目录，按领域分类', area: 'Subagent' },
+  { repo: 'contains-studio/agents', base: 8200, desc: '设计与内容向 Agent 技能合集，即装即用', area: '创作' },
+  { repo: 'github/awesome-copilot', base: 6800, desc: 'GitHub 官方 Copilot Agent 指令、聊天模式与技能集', area: '官方' },
+  { repo: 'wshobson/commands', base: 6000, desc: 'Claude Code 斜杠命令工作流集，一键调用最佳实践', area: '工作流' },
+  { repo: 'davila7/claude-code-templates', base: 5500, desc: 'Claude Code 项目模板速启集：Agent、命令、MCP 配置', area: '模板' },
+  { repo: 'iannuttall/claude-agents', base: 5400, desc: 'Claude Agent 配置范例与最佳实践', area: '范例' },
+  { repo: 'e2b-dev/awesome-mcp-servers', base: 4600, desc: '按应用场景分类的 MCP 服务器目录（E2B 维护）', area: 'MCP' },
 ];
 
 const CURATED = [
@@ -42,9 +50,35 @@ const CURATED = [
   { repo: 'punkpeye/fastmcp', name: 'FastMCP 框架', area: '框架', stars: 11600,
     desc: '用 TypeScript 几行代码构建自己的 MCP Server，把私有工具变成 Agent 可调用的技能。',
     install: 'npm install fastmcp' },
+  { repo: 'x1xhlol/system-prompts-and-models-of-ai-tools', name: '系统提示词宝库', area: '提示词', stars: 52000,
+    desc: '收录主流 AI 工具（Cursor、v0、Devin 等）泄露的系统提示词原文，写高质量 Skill 的最佳参考。',
+    install: 'https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools' },
+  { repo: 'anthropics/claude-code', name: 'Claude Code CLI', area: '官方', stars: 28000,
+    desc: 'Anthropic 官方命令行 Agent：Skill 的宿主环境，支持自定义技能、斜杠命令与 MCP 接入。',
+    install: 'npm install -g @anthropic-ai/claude-code' },
+  { repo: 'VoltAgent/awesome-claude-code-subagents', name: 'Subagent 大目录', area: 'Subagent', stars: 9200,
+    desc: '100+ 现成 Claude Subagent 按领域分类：前端、后端、测试、DevOps、数据、AI 工程等。',
+    install: 'npx skills add VoltAgent/awesome-claude-code-subagents' },
+  { repo: 'hesreallyhim/awesome-claude-code', name: '生态资源总目录', area: '目录', stars: 12800,
+    desc: 'Claude Code 生态一站式清单：技能、命令、工具、代理与教程，找资源先看这里。',
+    install: 'https://github.com/hesreallyhim/awesome-claude-code' },
+  { repo: 'github/awesome-copilot', name: 'Copilot 指令集', area: '官方', stars: 6800,
+    desc: 'GitHub 官方维护的 Copilot Agent 指令、聊天模式与集合，思路同样适用于其他 Agent 技能体系。',
+    install: 'https://github.com/github/awesome-copilot' },
+  { repo: 'wshobson/commands', name: '斜杠命令工作流', area: '工作流', stars: 6000,
+    desc: '为 Claude Code 设计的斜杠命令库：把常见开发流程固化成一条命令调用。',
+    install: 'npx skills add wshobson/commands' },
+  { repo: 'davila7/claude-code-templates', name: '项目模板速启', area: '模板', stars: 5500,
+    desc: '一键生成带 Agent、命令、MCP 配置的 Claude Code 项目脚手架，新项目冷启动利器。',
+    install: 'npx claude-code-templates' },
+  { repo: 'punkpeye/awesome-mcp-servers', name: 'MCP 服务器目录', area: 'MCP', stars: 14000,
+    desc: '社区最活跃的 MCP Server 精选列表：文件、数据库、浏览器、搜索等能力按类索引。',
+    install: 'https://github.com/punkpeye/awesome-mcp-servers' },
+  { repo: 'e2b-dev/awesome-mcp-servers', name: '场景化 MCP 目录', area: 'MCP', stars: 4600,
+    desc: 'E2B 团队按应用场景分类的 MCP 服务器目录，配简短中文导读更易上手。',
+    install: 'https://github.com/e2b-dev/awesome-mcp-servers' },
 ];
 
-const HOT_CACHE_KEY = 'voyra.skills-hot';
 const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 function readCache() {
@@ -60,10 +94,31 @@ async function fetchJson(url) {
   return res.json();
 }
 
+/* 热点仓库中文名映射：命中显示中文简介，未命中回退中文模板 */
+const ZH_DESC = {
+  'anthropics/skills': 'Anthropic 官方技能库：办公文档与编写规范',
+  'obra/superpowers': '系统化技能注入：TDD、调试与头脑风暴工作流',
+  'modelcontextprotocol/servers': 'MCP 官方服务器参考实现合集',
+  'wshobson/agents': '领域专家 Subagent 集合，覆盖开发/数据/运维',
+  'contains-studio/agents': '设计与内容创作向 Agent 技能合集',
+  'punkpeye/fastmcp': 'TypeScript 快速构建 MCP Server 框架',
+  'hesreallyhim/awesome-claude-code': 'Claude Code 生态资源总目录',
+  'x1xhlol/system-prompts-and-models-of-ai-tools': '主流 AI 工具系统提示词大合集',
+  'VoltAgent/awesome-claude-code-subagents': '100+ 现成 Claude Subagent 目录',
+  'github/awesome-copilot': 'GitHub 官方 Copilot Agent 指令集',
+  'davila7/claude-code-templates': 'Claude Code 项目模板速启集',
+  'wshobson/commands': 'Claude Code 斜杠命令工作流集',
+  'punkpeye/awesome-mcp-servers': '社区 MCP 服务器精选大目录',
+  'e2b-dev/awesome-mcp-servers': '按场景分类的 MCP 服务器目录',
+  'anthropics/claude-code': 'Claude Code 官方 CLI 本体',
+  'iannuttall/claude-agents': 'Claude Agent 配置范例集',
+};
+const zhDesc = (it) => ZH_DESC[it.repo] || `Skill 相关开源项目 · ${it.lang || '多语言'} · 近 7 天活跃更新`;
+
 async function fetchWeeklyHot(since) {
   const urls = [
-    `https://api.github.com/search/repositories?q=claude+skill+pushed:%3E${since}&sort=stars&order=desc&per_page=10`,
-    `https://api.github.com/search/repositories?q=agent+skills+pushed:%3E${since}&sort=stars&order=desc&per_page=10`,
+    `https://api.github.com/search/repositories?q=claude+skill+pushed:%3E${since}&sort=stars&order=desc&per_page=12`,
+    `https://api.github.com/search/repositories?q=agent+skills+pushed:%3E${since}&sort=stars&order=desc&per_page=12`,
   ];
   const settled = await Promise.allSettled(urls.map((u) => fetchJson(u)));
   const seen = new Set();
@@ -75,7 +130,7 @@ async function fetchWeeklyHot(since) {
       seen.add(it.full_name);
       items.push({
         repo: it.full_name,
-        desc: it.description || '（暂无描述）',
+        desc: it.description || '',
         stars: it.stargazers_count || 0,
         lang: it.language || '',
         pushedAt: it.pushed_at || '',
@@ -84,7 +139,7 @@ async function fetchWeeklyHot(since) {
     }
   }
   items.sort((a, b) => b.stars - a.stars);
-  return items.slice(0, 12);
+  return items.slice(0, 16);
 }
 
 async function fetchRankStars() {
@@ -121,7 +176,7 @@ function HotCard({ item, index }) {
   return <a className="sk-hot" href={item.url} target="_blank" rel="noreferrer">
     <span className="sk-hot-rank">{String(index + 1).padStart(2, '0')}</span>
     <span className="sk-hot-repo">{item.repo}<ArrowUpRight size={14} /></span>
-    <span className="sk-hot-desc">{item.desc}</span>
+    <span className="sk-hot-desc">{zhDesc(item)}</span>
     <span className="sk-hot-meta">
       <b><Star size={12} />{formatStars(item.stars)}</b>
       {item.lang && <em>{item.lang}</em>}
@@ -143,6 +198,7 @@ export default function SkillHub() {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [copied, setCopied] = useState('');
+  const [activeSec, setActiveSec] = useState('sec-hot');
   const lastRefreshRef = useRef(0);
 
   const load = async (force = false) => {
@@ -202,6 +258,17 @@ export default function SkillHub() {
       ? <span className="sk-status is-error">实时数据获取失败，已展示缓存 / 精选数据</span>
       : <span className="sk-status is-ok"><i />每日自动刷新 · {updatedAt ? `今天 ${new Date(updatedAt).toTimeString().slice(0, 5)} 已更新` : '已就绪'}</span>;
 
+  const jumpTo = (id) => {
+    setActiveSec(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const JUMPS = [
+    { id: 'sec-hot', label: '每周热点', Icon: Flame, count: hotFiltered.length },
+    { id: 'sec-rank', label: '星数排行', Icon: Trophy, count: rankFiltered.length },
+    { id: 'sec-cur', label: '优质精选', Icon: Sparkles, count: curatedFiltered.length },
+  ];
+
   return <div className="sk-page">
     <style>{`
       .sk-page { --ink:#1b1b1b; --line:rgba(27,27,27,.12); --gold:#a48830; --hl:#ffe08a; --soft:#fff9df;
@@ -235,6 +302,21 @@ export default function SkillHub() {
       .sk-refresh { display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 14px; border:1px solid var(--line); border-radius:99px; background:#fff; color:#555; font-size:12.5px; font-weight:650; transition:border-color .16s ease, color .16s ease, transform .16s ease; }
       .sk-refresh:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); transform:translateY(-1px); }
       .sk-refresh:disabled { opacity:.5; cursor:not-allowed; }
+
+      /* ===== 锚点导航条 ===== */
+      .sk-jump { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+        padding:11px 0; margin-bottom:-14px;
+        background:linear-gradient(180deg, rgba(247,247,245,.97) 82%, transparent); }
+      .sk-jump-btn { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line); border-radius:99px;
+        padding:9px 16px; background:#fff; color:#666; font-size:13px; font-weight:650;
+        transition:border-color .16s ease, color .16s ease, background .16s ease, transform .16s ease; }
+      .sk-jump-btn svg { color:#a0a0a0; transition:color .16s ease; }
+      .sk-jump-btn b { color:#b5b5b5; font:600 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .sk-jump-btn:hover { border-color:var(--gold); color:var(--ink); transform:translateY(-1px); }
+      .sk-jump-btn:hover svg { color:var(--gold); }
+      .sk-jump-btn.is-active { border-color:rgba(164,136,48,.55); background:var(--hl); color:var(--ink); }
+      .sk-jump-btn.is-active svg { color:var(--gold); }
+      .sk-jump-hint { margin-left:auto; color:#adb5bd; font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
 
       /* ===== Section 头 ===== */
       .sk-sec-head { display:flex; align-items:center; gap:11px; margin-bottom:16px; }
@@ -341,7 +423,16 @@ export default function SkillHub() {
       </div>
     </div>
 
-    <section>
+    <div className="sk-jump" role="tablist" aria-label="板块导航">
+      {JUMPS.map(({ id, label, Icon, count }) => (
+        <button key={id} type="button" className={`sk-jump-btn${activeSec === id ? ' is-active' : ''}`} onClick={() => jumpTo(id)}>
+          <Icon size={14} />{label} <b>{count}</b>
+        </button>
+      ))}
+      <span className="sk-jump-hint">点击直达 · 无需滚动翻找</span>
+    </div>
+
+    <section id="sec-hot" style={{ scrollMarginTop: 8 }}>
       <SectionHead icon={Flame} title="每周热点" en="WEEKLY HOT · PUSHED IN 7 DAYS" right={<span className="sk-sec-count">{hotFiltered.length} 个仓库</span>} />
       {status === 'loading' ? (
         <div className="sk-hot-grid"><Skeletons n={6} /></div>
@@ -353,29 +444,7 @@ export default function SkillHub() {
       <p className="sk-note">数据来自 GitHub 官方 API：近 7 天有更新的 skill 相关仓库按星数排序；每天首次访问自动刷新并缓存，全天复用。</p>
     </section>
 
-    <section>
-      <SectionHead icon={Sparkles} title="优质 Skill 精选" en="CURATED PICKS" right={<span className="sk-sec-count">{curatedFiltered.length} 个</span>} />
-      <div className="sk-cur-grid">
-        {curatedFiltered.map((c) => (
-          <article key={c.repo} className="sk-cur">
-            <div className="sk-cur-top">
-              <span className="sk-cur-area">{c.area}</span>
-              <span className="sk-cur-name">{c.name}</span>
-              <span className="sk-cur-stars"><Star size={12} />{formatStars(c.stars)}</span>
-            </div>
-            <p className="sk-cur-desc" style={{ margin: 0 }}>{c.desc}</p>
-            <div className="sk-cur-install">
-              <code>{c.install}</code>
-              <button type="button" className={`sk-cur-copy${copied === c.repo ? ' is-copied' : ''}`} onClick={() => copyInstall(c.install, c.repo)}>
-                {copied === c.repo ? <Check size={12} /> : <Copy size={12} />}{copied === c.repo ? '已复制' : '复制'}
-              </button>
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-
-    <section>
+    <section id="sec-rank" style={{ scrollMarginTop: 8 }}>
       <SectionHead icon={Trophy} title="GitHub 星数排行榜" en="ALL-TIME STARS" right={<span className="sk-sec-count">{rankFiltered.length} 个</span>} />
       <div className="sk-rank-list">
         {rankFiltered.map((r, i) => (
@@ -395,6 +464,28 @@ export default function SkillHub() {
         ))}
       </div>
       <p className="sk-note">星数为每天自动拉取的 GitHub 实时值（LIVE 标记），拉取失败时回退到收录基准值。</p>
+    </section>
+
+    <section id="sec-cur" style={{ scrollMarginTop: 8 }}>
+      <SectionHead icon={Sparkles} title="优质 Skill 精选" en="CURATED PICKS" right={<span className="sk-sec-count">{curatedFiltered.length} 个</span>} />
+      <div className="sk-cur-grid">
+        {curatedFiltered.map((c) => (
+          <article key={c.repo} className="sk-cur">
+            <div className="sk-cur-top">
+              <span className="sk-cur-area">{c.area}</span>
+              <span className="sk-cur-name">{c.name}</span>
+              <span className="sk-cur-stars"><Star size={12} />{formatStars(c.stars)}</span>
+            </div>
+            <p className="sk-cur-desc" style={{ margin: 0 }}>{c.desc}</p>
+            <div className="sk-cur-install">
+              <code>{c.install}</code>
+              <button type="button" className={`sk-cur-copy${copied === c.repo ? ' is-copied' : ''}`} onClick={() => copyInstall(c.install, c.repo)}>
+                {copied === c.repo ? <Check size={12} /> : <Copy size={12} />}{copied === c.repo ? '已复制' : '复制'}
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
   </div>;
 }
