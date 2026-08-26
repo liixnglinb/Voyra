@@ -76,7 +76,7 @@ const reTitle = /【\s*([^【】\n]+)\s*】/;
 const reWeekday = /(?:星期|周)([一二三四五六日天])/;
 const reNight = /晚自习\s*(\d)?/;
 const rePeriod = /(?:第)?\s*(\d{1,2})\s*[-~至到—–]\s*(\d{1,2})\s*节|(?:第)?\s*(\d{1,2})\s*节/;
-const reWeek = /(?:第)?\s*(\d{1,2})\s*[-~至到—–]\s*(\d{1,2})\s*周|第\s*(\d{1,2})\s*周/;
+const reWeek = /(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~至到—–]\s*(?:第)?\s*(\d{1,2})\s*周|第\s*(\d{1,2})\s*周/;
 const reOddEven = /[（(](单|双)周?[)）]|(单|双)周/;
 const reTeacher = /(?:授课老师|老师|教师)[:：]\s*([^\n,，;；]+)/;
 
@@ -234,7 +234,7 @@ export default function ClassSchedule() {
         .cs-grid .per { background:#FBFBFC;color:#7b7f89;font-size:11.5px;width:86px;text-align:center;padding:5px;line-height:1.5; }
         .cs-grid .per b { display:block;font-size:12.5px;color:#212529; }
         .cs-grid td.empty { background:#FCFCFD; }
-        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:9px;display:flex;flex-direction:column;justify-content:center;min-height:52px; }
+        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:14px 10px;display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:68px; }
         .cs-cell .n { font-size:13px;font-weight:700;color:${ACCENT};line-height:1.3; }
         .cs-cell .t { font-size:11px;color:#7b7f89;margin-top:3px; }
         .cs-cell.night { background:rgba(99,102,241,.06);border-style:dashed; }
@@ -256,7 +256,7 @@ export default function ClassSchedule() {
           <div className="sp" />
           <div className="cs-row">
             <button className="cs-btn" onClick={() => goWeek(-1)}><ChevronLeft size={15} />上一周</button>
-            <input type="number" min={1} max={MAX_WEEK} value={currentWeek} onChange={(e) => setWeekInput(e.target.value)} className="cs-input" style={{ width: 68 }} />
+            <input type="number" min={1} max={MAX_WEEK} value={currentWeek} onChange={(e) => setWeekInput(e.target.value)} className="cs-input no-spin" style={{ width: 68 }} />
             <button className="cs-btn" onClick={() => goWeek(1)}>下一周<ChevronRight size={15} /></button>
             <button className="cs-btn" onClick={() => setShowSettings((v) => !v)}><RefreshCw size={14} />周次设置</button>
           </div>

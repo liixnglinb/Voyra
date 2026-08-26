@@ -3,6 +3,7 @@ import {
   CalendarDays, ChevronLeft, ChevronRight, Plus, Trash2, Check,
   GraduationCap, Sun, FlaskConical, Star, PartyPopper, CalendarPlus,
 } from 'lucide-react';
+import DateTimePicker from '../components/DateTimePicker';
 
 /* ============================================================
    个人日程表 · Planner
@@ -266,7 +267,7 @@ export default function Planner() {
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <div>
                   <div className="pl-label">几点</div>
-                  <input type="time" value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="pl-input" />
+                  <DateTimePicker mode="time" value={form.time} onChange={(v) => setForm({ ...form, time: v })} width="8.5rem" />
                 </div>
                 <div style={{ flex: 1, minWidth: 160 }}>
                   <div className="pl-label">具体事项</div>

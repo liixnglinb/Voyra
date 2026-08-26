@@ -17,9 +17,15 @@ import { Calendar, Clock } from 'lucide-react';
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
-/** 解析 value（YYYY-MM-DD 或 YYYY-MM-DDTHH:MM）到 {y,m,d,h,min} */
+/** 解析 value（YYYY-MM-DD / YYYY-MM-DDTHH:MM / HH:MM）到 {y,m,d,h,min} */
 function parseValue(v) {
   const str = String(v || '');
+  const tm = str.match(/^(\d{1,2}):(\d{2})$/);
+  if (tm) {
+    const base = new Date();
+    base.setHours(Math.min(23, +tm[1]), Math.min(59, +tm[2]), 0, 0);
+    return { y: base.getFullYear(), m: base.getMonth() + 1, d: base.getDate(), h: base.getHours(), min: base.getMinutes() };
+  }
   const dt = new Date(str);
   const base = !Number.isNaN(dt.getTime()) ? dt : new Date();
   return {
@@ -180,6 +186,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
   onRef.current = onChange;
 
   const isDate = mode === 'date';
+  const isTime = mode === 'time';
 
   const years = useMemo(() => {
     const now = new Date().getFullYear();
@@ -195,7 +202,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
     if (!el) return;
     const r = el.getBoundingClientRect();
     setDraft(normalizeDraft(parseValue(value)));
-    const cols = isDate ? 3 : 5;
+    const cols = isDate ? 3 : isTime ? 2 : 5;
     const estW = cols * 58 + 40;
     const estH = 5 * 40 + 62;
     // 优先在上方展开，空间不足才转向下方
@@ -213,7 +220,9 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
     const d = normalizeDraft(draft);
     const base = isDate
       ? `${d.y}-${pad(d.m)}-${pad(d.d)}`
-      : `${d.y}-${pad(d.m)}-${pad(d.d)}T${pad(d.h)}:${pad(d.min)}`;
+      : isTime
+        ? `${pad(d.h)}:${pad(d.min)}`
+        : `${d.y}-${pad(d.m)}-${pad(d.d)}T${pad(d.h)}:${pad(d.min)}`;
     onRef.current?.(base);
     setOpen(false);
   };
@@ -237,7 +246,9 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
   const cur = parseValue(value);
   const display = isDate
     ? `${cur.y}-${pad(cur.m)}-${pad(cur.d)}`
-    : `${cur.m}/${cur.d} ${pad(cur.h)}:${pad(cur.min)}`;
+    : isTime
+      ? `${pad(cur.h)}:${pad(cur.min)}`
+      : `${cur.m}/${cur.d} ${pad(cur.h)}:${pad(cur.min)}`;
 
   return (
     <div ref={wrapRef} className="relative inline-block" style={{ width }}>
@@ -286,44 +297,22 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
           <div className="mb-2 flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-semibold" style={{ color: 'var(--text-3)' }}>
             {isDate
               ? <><Calendar className="h-3 w-3" style={{ color: 'var(--accent)' }} strokeWidth={1.8} />选择日期</>
-              : <><Clock className="h-3 w-3" style={{ color: 'var(--accent)' }} strokeWidth={1.8} />选择日期与时间</>}
+              : isTime
+                ? <><Clock className="h-3 w-3" style={{ color: 'var(--accent)' }} strokeWidth={1.8} />选择时间</>
+                : <><Clock className="h-3 w-3" style={{ color: 'var(--accent)' }} strokeWidth={1.8} />选择日期与时间</>}
           </div>
 
           <div
             className="flex items-center justify-center"
             style={{ background: '#F5F7FA', borderRadius: 12, border: '1px solid #E0E6ED', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '4px 8px' }}
           >
-            <WheelColumn
-              values={years}
-              selected={draft.y}
-              onSelect={(y) => setDraft((d) => normalizeDraft({ ...d, y, d: Math.min(d.d, daysInMonth(y, d.m)) }))}
-            />
-            <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>/</span>
-            <WheelColumn
-              values={months}
-              selected={draft.m}
-              onSelect={(m) => setDraft((d) => ({ ...d, m, d: Math.min(d.d, daysInMonth(d.y, m)) }))}
-              padZero
-              narrow
-            />
-            <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>/</span>
-            <WheelColumn
-              values={days}
-              selected={draft.d}
-              onSelect={(d) => setDraft((x) => ({ ...x, d }))}
-              padZero
-              narrow
-            />
-
-            {!isDate && (
+            {isTime ? (
               <>
-                <span className="text-[15px] font-semibold mx-1" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>·</span>
                 <WheelColumn
                   values={hours}
                   selected={draft.h}
                   onSelect={(h) => setDraft((x) => ({ ...x, h }))}
                   padZero
-                  narrow
                 />
                 <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>:</span>
                 <WheelColumn
@@ -333,6 +322,51 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
                   padZero
                   narrow
                 />
+              </>
+            ) : (
+              <>
+                <WheelColumn
+                  values={years}
+                  selected={draft.y}
+                  onSelect={(y) => setDraft((d) => normalizeDraft({ ...d, y, d: Math.min(d.d, daysInMonth(y, d.m)) }))}
+                />
+                <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>/</span>
+                <WheelColumn
+                  values={months}
+                  selected={draft.m}
+                  onSelect={(m) => setDraft((d) => ({ ...d, m, d: Math.min(d.d, daysInMonth(d.y, m)) }))}
+                  padZero
+                  narrow
+                />
+                <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>/</span>
+                <WheelColumn
+                  values={days}
+                  selected={draft.d}
+                  onSelect={(d) => setDraft((x) => ({ ...x, d }))}
+                  padZero
+                  narrow
+                />
+
+                {!isDate && (
+                  <>
+                    <span className="text-[15px] font-semibold mx-1" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>·</span>
+                    <WheelColumn
+                      values={hours}
+                      selected={draft.h}
+                      onSelect={(h) => setDraft((x) => ({ ...x, h }))}
+                      padZero
+                      narrow
+                    />
+                    <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>:</span>
+                    <WheelColumn
+                      values={minutes}
+                      selected={draft.min}
+                      onSelect={(min) => setDraft((x) => ({ ...x, min }))}
+                      padZero
+                      narrow
+                    />
+                  </>
+                )}
               </>
             )}
           </div>

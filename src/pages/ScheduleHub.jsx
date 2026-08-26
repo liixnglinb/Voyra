@@ -109,10 +109,10 @@ export default function ScheduleHub() {
       .shub-mode-copy { display:grid; gap:2px; min-width:0; }
       .shub-mode-copy b { font-size:13.5px; font-weight:750; color:#1b1b1b; }
       .shub-mode-copy i { overflow:hidden; color:#999; font-size:11px; font-style:normal; text-overflow:ellipsis; white-space:nowrap; }
-      .shub-mode.is-active { border-color:#1b1b1b; background:#1b1b1b; color:#fff; box-shadow:0 10px 22px -16px rgba(20,20,20,.7); }
-      .shub-mode.is-active svg { color:#ffe08a; }
-      .shub-mode.is-active .shub-mode-copy b { color:#fff; }
-      .shub-mode.is-active .shub-mode-copy i { color:rgba(255,255,255,.62); }
+      .shub-mode.is-active { border-color:#1b1b1b !important; background:#1b1b1b !important; color:#fff !important; box-shadow:0 10px 22px -16px rgba(20,20,20,.7) !important; }
+      .shub-mode.is-active svg { color:#ffe08a !important; }
+      .shub-mode.is-active .shub-mode-copy b { color:#fff !important; }
+      .shub-mode.is-active .shub-mode-copy i { color:rgba(255,255,255,.62) !important; }
 
       /* ===== 统一内容面板 ===== */
       .shub-panel { border:1px solid rgba(27,27,27,.1); border-radius:16px; background:rgba(255,255,255,.72);
@@ -150,8 +150,7 @@ export default function ScheduleHub() {
           <button
             key={id}
             type="button"
-            role="tab"
-            aria-selected={tab === id}
+            aria-pressed={tab === id}
             className={`shub-mode${tab === id ? ' is-active' : ''}`}
             onClick={() => changeTab(id)}
           >
