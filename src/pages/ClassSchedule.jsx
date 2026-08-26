@@ -234,7 +234,7 @@ export default function ClassSchedule() {
         .cs-grid .per { background:#FBFBFC;color:#7b7f89;font-size:11.5px;width:86px;text-align:center;padding:5px;line-height:1.5; }
         .cs-grid .per b { display:block;font-size:12.5px;color:#212529; }
         .cs-grid td.empty { background:#FCFCFD; }
-        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:14px 10px;display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:68px; }
+        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:18px 10px;display:flex;flex-direction:column;justify-content:center;gap:5px;min-height:80px; }
         .cs-cell .n { font-size:13px;font-weight:700;color:${ACCENT};line-height:1.3; }
         .cs-cell .t { font-size:11px;color:#7b7f89;margin-top:3px; }
         .cs-cell.night { background:rgba(99,102,241,.06);border-style:dashed; }

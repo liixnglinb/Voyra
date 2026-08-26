@@ -13,7 +13,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "chart.js": "^4.5.1",
     "hydrogen-js-sdk": "^3.0.2",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.441.0",

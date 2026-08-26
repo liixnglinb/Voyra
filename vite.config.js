@@ -10,6 +10,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'lucide': ['lucide-react'],
+          'vendor': ['react', 'react-dom', 'react-router-dom'],
         },
       },
     },
