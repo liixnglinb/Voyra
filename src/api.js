@@ -4,10 +4,11 @@
    接口签名与原 electronAPI 一致，页面代码无需改动。
    ============================================================ */
 import Bmob, { currentUserId, USER_TABLE } from './lib/bmob';
+import { currentUid } from './lib/auth';
 
 async function requireUid() {
-  // 去掉登录门禁后，先用固定本地 ID 隔离数据，后续要上线可恢复真实用户体系
-  const uid = currentUserId();
+  // 登录体系：数据按登录账号隔离；未登录时回退本地 ID
+  const uid = currentUid() || currentUserId();
   return uid || 'local-user';
 }
 

@@ -3,6 +3,7 @@ import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
 } from 'lucide-react';
+import { useAuth } from '../components/AuthGate';
 
 /* ============================================================
    个人课表 · ClassSchedule
@@ -13,6 +14,8 @@ import {
    ============================================================ */
 
 const LS_KEY = 'ClassScheduleData';
+import { userKey } from '../lib/auth';
+const LS_READ = () => userKey(LS_KEY);
 const ACCENT = '#A48830';
 const ACCENT_SOFT = '#FFF9DF';
 const ACCENT_LINE = 'rgba(164,136,48,.42)';
@@ -134,6 +137,7 @@ function inWeek(c, w) {
 }
 
 export default function ClassSchedule() {
+  const { guard } = useAuth();
   const [courses, setCourses] = useState([]);
   const [settings, setSettings] = useState({ startDate: '', overrideWeek: null });
   const [showSettings, setShowSettings] = useState(false);
@@ -148,16 +152,17 @@ export default function ClassSchedule() {
 
   useEffect(() => {
     try {
-      const raw = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      const raw = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
       if (raw) { setCourses(raw.courses || []); setSettings(raw.settings || { startDate: '', overrideWeek: null }); }
     } catch { /* ignore */ }
   }, []);
 
   const persist = (nextCourses, nextSettings) => {
+    if (!guard()) return;
     const c = nextCourses ?? courses;
     const s = nextSettings ?? settings;
     setCourses(c); setSettings(s);
-    try { localStorage.setItem(LS_KEY, JSON.stringify({ courses: c, settings: s })); } catch { /* ignore */ }
+    try { localStorage.setItem(LS_READ(), JSON.stringify({ courses: c, settings: s })); } catch { /* ignore */ }
   };
 
   const autoWeek = useMemo(() => {

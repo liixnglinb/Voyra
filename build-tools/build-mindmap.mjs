@@ -1,22 +1,7 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { transform } from 'esbuild';
+import { writeFile } from 'node:fs/promises';
 
 const root = new URL('../public/mindmap-app/', import.meta.url);
 
-async function minify(sourceName, outputName, loader) {
-  const source = await readFile(new URL(sourceName, root), 'utf8');
-  const result = await transform(source, {
-    loader,
-    charset: 'utf8',
-    legalComments: 'none',
-    minify: true,
-    target: 'es2020',
-  });
-  await writeFile(new URL(outputName, root), result.code, 'utf8');
-}
-
-await Promise.all([
-  minify('mindmap.css', 'mindmap.min.css', 'css'),
-  minify('mindmap-bridge.js', 'mindmap-bridge.min.js', 'js'),
-  minify('mindmap-app.js', 'mindmap-app.min.js', 'js'),
-]);
+/* 源文件（mindmap.css / mindmap-app.js / mindmap-bridge.js）已从 public 移除，
+   min 版为最终产物，直接跳过压缩步骤以加速构建。 */
+await writeFile(new URL('.minify-skipped', root), 'min versions are pre-built; sources removed 2026-08-26', 'utf8');

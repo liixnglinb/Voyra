@@ -7,36 +7,38 @@ import {
 } from 'lucide-react';
 import DateTimePicker from '../components/DateTimePicker';
 import TrendChart from '../components/TrendChart';
+import { useAuth } from '../components/AuthGate';
 import {
   ProfilePage, MomPage, BabyDailyPage, DiaperPage, FeedPage, ImportPanel, importPaperData,
 } from './babycare-modules';
 
-/* ================= 常量（还原自 release10 安装包） ================= */
+/* ================= 设计系统 · 奶油暖调 ================= */
 const LS_KEY = 'baby-care';
 const HOUR_MS = 36e5;
 
-/* ================= 柔感专业风 · 设计系统 ================= */
-const ACCENT = '#A48830';        // 主色 · Voyra 金色
-const ACCENT_SOFT = '#FFF9DF';   // 主色浅背景（导航选中）
-const BG_PAGE = '#F7F8FA';       // 页面背景
-const CARD = '#FFFFFF';          // 卡片背景
-const TEXT_1 = '#333F51';        // 一级文字
-const TEXT_2 = '#86909C';        // 二级文字
-const LINE = '#E5E6EB';          // 分割线/边框
+const ACCENT = '#E8835E';        // 主色 · 柔珊瑚
+const ACCENT_DEEP = '#D96C43';   // 主色深（hover）
+const ACCENT_SOFT = '#FDEEE7';   // 主色浅背景
+const BG_PAGE = '#FAF6F0';       // 页面奶油底
+const CARD = '#FFFFFF';
+const INK = '#40382E';           // 一级文字 · 暖炭
+const TEXT_2 = '#97897A';        // 二级文字 · 暖灰
+const TEXT_4 = '#C4BAA9';
+const LINE = '#EFE7DA';
 
 const TYPES = {
-  milk:     { name: '喂奶', icon: Milk,        color: '#FFD8A8' },
-  poop:     { name: '排便', icon: Droplets,    color: '#B7E4C7' },
-  pee:      { name: '排尿', icon: Droplets,    color: '#B7E4C7' },
-  sleep:    { name: '睡眠', icon: Moon,        color: '#C7D2FE' },
-  temp:     { name: '体温', icon: Thermometer, color: '#F8B4B4' },
-  weight:   { name: '体重', icon: Scale,       color: '#D9C7F0' },
-  jaundice: { name: '黄疸', icon: Sun,         color: '#FFF0C2' },
-  care:     { name: '护理', icon: HeartPulse,  color: '#BFE3EF' },
-  cry:      { name: '哭闹', icon: Frown,       color: '#F0C7C7' },
+  milk:     { name: '喂奶', icon: Milk,        color: '#F0A94E' },
+  poop:     { name: '排便', icon: Droplets,    color: '#96C483' },
+  pee:      { name: '排尿', icon: Droplets,    color: '#83C0BA' },
+  sleep:    { name: '睡眠', icon: Moon,        color: '#9BA6DF' },
+  temp:     { name: '体温', icon: Thermometer, color: '#ED8F86' },
+  weight:   { name: '体重', icon: Scale,       color: '#BB9BD8' },
+  jaundice: { name: '黄疸', icon: Sun,         color: '#E8C24A' },
+  care:     { name: '护理', icon: HeartPulse,  color: '#79B7CE' },
+  cry:      { name: '哭闹', icon: Frown,       color: '#E29B9B' },
 };
 
-/* 各记录类型 · 填写提示（填充添加记录页右侧） */
+/* 各记录类型 · 填写提示 */
 const TYPE_HELP = {
   milk:    '记录喂奶方式与奶量，系统将据此结合月龄与出生体重预测下次喂奶时间。',
   poop:    '观察并记录大便性状与颜色，异常标记便于日后就医参考。',
@@ -51,56 +53,35 @@ const TYPE_HELP = {
 
 const DEFAULT_SETTINGS = { name: '宝宝', birth: '', weight: '', height: '' };
 
-/* 从「宝宝档案」导出宝宝基础信息（出生信息统一以档案为准，供预测/导入/奶量使用） */
 function babyInfoFrom(profile) {
-  const p = profile || {};
+  if (!profile) return DEFAULT_SETTINGS;
   return {
-    name: p.name || '宝宝',
-    birth: p.birthTime || '',
-    weight: p.birthWeight || '',
-    height: p.height || '',
+    name: profile.name || '宝宝',
+    birth: profile.birthTime || '',
+    weight: profile.birthWeight || '',
+    height: profile.height || '',
   };
 }
-/* 仅迁移一次：把旧的系统设置数据补进档案（档案信息优先，缺失字段才用旧值补齐） */
 function migrateSettingsToProfile(profile, oldSettings) {
-  const o = oldSettings || {};
-  const p = profile
-    ? { ...profile }
-    : { id: '', name: '', gender: '', birthTime: '', admitTime: '', birthWeight: '', height: '', assessment: {} };
-  let changed = false;
-  if (!p.birthTime && o.birth) { p.birthTime = o.birth; changed = true; }
-  if (!p.birthWeight && o.weight) { p.birthWeight = o.weight; changed = true; }
-  if (!p.height && o.height) { p.height = o.height; changed = true; }
-  if (!p.name && o.name) { p.name = o.name; changed = true; }
-  return { profile: p, changed };
+  if (!oldSettings || profile) return { profile, changed: false };
+  const p = {
+    name: oldSettings.name || '', gender: '', birthTime: oldSettings.birth || '',
+    admitTime: '', birthWeight: oldSettings.weight || '', height: oldSettings.height || '',
+    assessment: {},
+  };
+  return { profile: p, changed: true };
 }
 
-/* KPI 卡片（柔感专业风，模块级组件避免每次渲染重建） */
-function KpiCard({ type, label, value, sub, color, onClick }) {
-  const Icon = TYPES[type].icon;
-  return (
-    <button onClick={onClick} className="bc-kpi group">
-      <div className="bc-kpi-icon" style={{ background: `${color}33`, color }}>
-        <Icon className="h-5 w-5" strokeWidth={1.9} />
-      </div>
-      <div className="min-w-0">
-        <div className="bc-kpi-label">{label}</div>
-        <div className="bc-kpi-value">{value}</div>
-        <div className="bc-kpi-sub">{sub}</div>
-      </div>
-    </button>
-  );
-}
-
+/* ================= 记录类型映射 / 工具 ================= */
 const SHAPE_MAP = { unknown: '不知道', normal: '正常', meconium: '胎便', gold: '金黄糊状', paste: '膏状', watery: '稀水样', hard: '干硬', egg: '蛋花汤' };
 const COLOR_MAP = { unknown: '不知道', blackgreen: '黑绿', gold: '金黄', yellowgreen: '黄绿', green: '绿色', gray: '灰色', red: '红色' };
+const pad = (n) => String(n).padStart(2, '0');
 
-/* 月龄参考对比 · 进度条（展示当前值在参考区间内的位置） */
 function RefBar({ label, cur, range, unit }) {
   const [min, max] = range;
   const pct = Math.max(0, Math.min(1, (cur - min) / (max - min || 1)));
   const inRange = cur >= min && cur <= max;
-  const color = inRange ? ACCENT : cur < min ? '#F59E0B' : '#E85D5D';
+  const color = inRange ? ACCENT : cur < min ? '#E8B84B' : '#E06A5A';
   const mark = Math.round(pct * 100);
   return (
     <div className="mb-5 last:mb-0">
@@ -111,7 +92,7 @@ function RefBar({ label, cur, range, unit }) {
           <span className="text-[var(--text-4)] font-normal ml-1.5">参考 {min}~{max}{unit}</span>
         </span>
       </div>
-      <div className="relative h-2 rounded-full bg-[#EFF1F5]">
+      <div className="relative h-2 rounded-full bg-[#F3EDE3]">
         <div className="absolute left-0 top-0 h-full rounded-full" style={{ width: `${mark}%`, background: color }} />
         <div className="absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 rounded-full border-2 bg-white shadow-sm" style={{ left: `calc(${mark}% - 7px)`, borderColor: color }} />
       </div>
@@ -122,7 +103,7 @@ function RefBar({ label, cur, range, unit }) {
   );
 }
 
-/* ================= 文字一键导入 · 解析逻辑 ================= */
+/* ================= 文字导入 · 解析逻辑（保持原算法） ================= */
 const KW = {
   milk:    ['喂奶', '母乳', '奶粉', '吃奶', '喝奶', '奶'],
   poop:    ['大便', '便便', '排便', '办便', '拉'],
@@ -135,34 +116,26 @@ const KW = {
   cry:     ['哭闹', '大哭', '哭'],
 };
 
-/* 从一行文字中解析时间（支持 3点 / 3点15 / 14:30 / 下午3点 / 昨天 / 凌晨 等） */
 function parseTime(line, now) {
   const n = new Date(now);
-  let hour = -1, minute = 0, dayShift = 0;
+  let h = null, m = 0;
   const hm = line.match(/(\d{1,2})\s*[：:]\s*(\d{1,2})/);
-  if (hm) { hour = +hm[1]; minute = +hm[2]; }
+  if (hm) { h = +hm[1]; m = +hm[2]; }
   else {
     const t = line.match(/(\d{1,2})\s*点(?:\s*(\d{1,2})\s*分?)?/);
-    if (t) { hour = +t[1]; minute = +(t[2] || 0); }
+    if (t) { h = +t[1]; m = t[2] ? +t[2] : 0; }
   }
-  if (/前天/.test(line)) dayShift = -2;
-  else if (/昨天|昨日/.test(line)) dayShift = -1;
-
-  if (hour === -1) {
-    hour = n.getHours(); minute = n.getMinutes();
-  } else {
-    if (/凌晨|深夜|半夜|凌晨/.test(line) && hour >= 12 && hour < 24) hour -= 12;
-    if (/中午/.test(line)) hour = 12;
-    if (/下午|傍晚/.test(line) && hour >= 0 && hour < 12) hour += 12;
-    if (/晚上|夜晚|夜里|晚间/.test(line) && hour >= 0 && hour < 12) hour += 12;
-  }
-  const d = new Date(n);
-  d.setDate(d.getDate() + dayShift);
-  d.setHours(hour, minute, 0, 0);
-  return d.toISOString();
+  if (/下午|晚上|夜里/.test(line) && h != null && h < 12) h += 12;
+  if (/凌晨/.test(line) && h === 12) h = 0;
+  if (h == null) { h = n.getHours(); m = n.getMinutes(); }
+  let d;
+  if (/昨天/.test(line)) { d = new Date(n); d.setDate(d.getDate() - 1); }
+  else if (/前天/.test(line)) { d = new Date(n); d.setDate(d.getDate() - 2); }
+  else d = n;
+  const out = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m, 0, 0);
+  return out.toISOString();
 }
 
-/* 根据类型与一行文字构建记录对象 */
 function buildRecord(type, line, now) {
   const rec = { id: Date.now() + Math.floor(Math.random() * 1e5), type, time: parseTime(line, now) };
   switch (type) {
@@ -229,7 +202,6 @@ function buildRecord(type, line, now) {
   return rec;
 }
 
-/* 解析一行是否为"日期/天数"分组标题：返回 { kind:'gregorian'|'index'|'none', date?, n? } */
 function parseDayHeader(seg) {
   let m = seg.match(/(\d{4})\s*[-/年.]\s*(\d{1,2})\s*[-/月.]\s*(\d{1,2})\s*[日号]?/);
   if (m) {
@@ -247,7 +219,6 @@ function parseDayHeader(seg) {
   return { kind: 'none' };
 }
 
-/* "第N天"按出生日期换算：返回 Date / null */
 function dayIndexToDate(n, birth) {
   if (!birth) return null;
   const b = new Date(birth);
@@ -257,11 +228,10 @@ function dayIndexToDate(n, birth) {
   return d;
 }
 
-/* 整段文字解析：支持"第N天/日期"大标题分组，其下记录沿用该日期 */
 function parseText(text, now, birth) {
   const segments = text.split(/[\n;；。]+/).map((s) => s.trim()).filter(Boolean);
   const out = [];
-  let dayRef = null; // 最近一组分组标题的日期（Date | null）
+  let dayRef = null;
   for (const seg of segments) {
     const h = parseDayHeader(seg);
     if (h.kind === 'gregorian') dayRef = h.date;
@@ -273,7 +243,7 @@ function parseText(text, now, birth) {
     for (const [t, kws] of Object.entries(KW)) {
       if (kws.some((k) => seg.includes(k))) { type = t; break; }
     }
-    if (!type) continue; // 分组标题行（无类型关键词）只更新日期，不生成记录
+    if (!type) continue;
     const rec = buildRecord(type, seg, now);
     if (dayRef) {
       const t = new Date(rec.time);
@@ -286,7 +256,6 @@ function parseText(text, now, birth) {
   return out;
 }
 
-/* ================= 文字一键导入 · UI 组件 ================= */
 const AI_PROMPT = `请识别图片中的宝宝护理记录，并严格按下面的纯文本格式输出，便于程序自动导入。不要输出任何解释、序号、项目符号或表头，也不要合并两条记录到一行。
 
 一、日期标题（有则单独一行，放在所在记录的前面）：
@@ -306,6 +275,7 @@ const AI_PROMPT = `请识别图片中的宝宝护理记录，并严格按下面�
 三、时间写法支持：14:30、8点15、下午3点、上午9点、凌晨5点、昨天。
 图片里没有的信息不要编造，不要补全。请直接分行输出全部记录文本。`;
 
+/* ================= 文字一键导入 UI ================= */
 function TextImport({ onImport, birth }) {
   const [text, setText] = useState('');
   const [open, setOpen] = useState(true);
@@ -316,20 +286,20 @@ function TextImport({ onImport, birth }) {
       await navigator.clipboard.writeText(AI_PROMPT);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
-    } catch { /* 剪贴板不可用时静默 */ }
+    } catch { /* ignore */ }
   };
   const parsed = useMemo(() => parseText(text, new Date().toISOString(), birth), [text, birth]);
 
   return (
-    <div className="bc-card bc-card-hover p-5">
+    <div className="bc-card p-5">
       <div className="flex items-center justify-between mb-3">
-        <span className="flex items-center gap-2 text-[16px] font-medium text-[#333F51]">
-          <span className="bc-title-icon" style={{ background: `${ACCENT}26`, color: ACCENT }}>
+        <span className="flex items-center gap-2 text-[15px] font-semibold" style={{ color: INK }}>
+          <span className="bc-title-icon" style={{ background: `${ACCENT}1F`, color: ACCENT }}>
             <Wand2 className="h-4 w-4" strokeWidth={1.8} />
           </span>
           文字一键导入
         </span>
-        <button type="button" onClick={() => setOpen((v) => !v)} className="text-[12px] text-[#86909C] hover:text-[#333F51] transition-colors">
+        <button type="button" onClick={() => setOpen((v) => !v)} className="text-[12px] hover:opacity-70 transition-opacity" style={{ color: TEXT_2 }}>
           {open ? '收起' : '展开'}
         </button>
       </div>
@@ -340,42 +310,34 @@ function TextImport({ onImport, birth }) {
             onChange={(e) => setText(e.target.value)}
             rows={3}
             placeholder={'粘贴一段文字，自动识别后一键导入，例如：\n第10天\n上午9点 喂奶120ml\n中午喂奶120ml 排便正常\n8点睡2小时'}
-            className="w-full resize-none p-3 rounded-[8px] border border-[#E5E6EB] text-[12.5px] text-[#333F51] placeholder:text-[#B4B8C0] bg-[#FBFBFD] focus:border-[#5B8DEF] focus:outline-none transition-colors"
+            className="bc-input w-full resize-none"
           />
-          <p className="mt-2 text-[11px] leading-relaxed text-[#86909C]">
+          <p className="mt-2 text-[11px] leading-relaxed" style={{ color: TEXT_2 }}>
             支持「第N天 / 出生第N天 / 7月10日」大标题，其下记录自动沿用该日期；重复的记录导入时会自动去重。
           </p>
           <div className="mt-2 flex items-center gap-2">
-            <span className="text-[11px] text-[#86909C]">已识别 {parsed.length} 条记录</span>
+            <span className="text-[11px]" style={{ color: TEXT_2 }}>已识别 {parsed.length} 条记录</span>
             <span className="flex-1" />
-            <button
-              type="button"
-              onClick={() => setShowAI((v) => !v)}
-              className="inline-flex items-center gap-1 text-[11px] text-[#5B8DEF] hover:text-[#4a7ee0] transition-colors"
-            >
+            <button type="button" onClick={() => setShowAI((v) => !v)} className="inline-flex items-center gap-1 text-[11px] transition-opacity hover:opacity-70" style={{ color: ACCENT }}>
               <Sparkles className="h-3.5 w-3.5" />AI 提示词
             </button>
-            <button
-              type="button"
-              onClick={copyPrompt}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-[6px] text-[11px] font-medium text-[#5B8DEF] border border-[#C6D9F6] bg-white hover:bg-[#EEF4FF] transition-colors"
-            >
+            <button type="button" onClick={copyPrompt} className="bc-chip-btn">
               {copied ? <Check className="h-3.5 w-3.5" /> : <ClipboardPlus className="h-3.5 w-3.5" />}
               {copied ? '已复制' : '复制'}
             </button>
           </div>
 
           {showAI && (
-            <div className="mt-2 rounded-[8px] border border-[#E5E6EB] bg-[#FBFBFD] p-3 text-[11.5px] leading-relaxed text-[#5A6474] whitespace-pre-wrap">
+            <div className="mt-2 rounded-[10px] border p-3 text-[11.5px] leading-relaxed whitespace-pre-wrap" style={{ borderColor: LINE, background: '#FDFBF7', color: '#6B6257' }}>
               {AI_PROMPT}
             </div>
           )}
           <div className="mt-1.5 space-y-1 max-h-[140px] overflow-y-auto pr-1">
             {parsed.map((r, i) => (
-              <div key={i} className="flex items-center gap-2 text-[12px] p-1.5 rounded-md bg-[#F7F8FA]">
+              <div key={i} className="flex items-center gap-2 text-[12px] p-1.5 rounded-md bg-[#FBF7F0]">
                 <span className="px-1.5 rounded shrink-0" style={{ background: `${TYPES[r.type].color}22`, color: TYPES[r.type].color }}>{TYPES[r.type].name}</span>
-                <span className="text-[var(--text-3)] tabular-nums shrink-0">{formatDateTime(r.time)}</span>
-                <span className="truncate text-[var(--text-1)]">{summarize(r) || '记录'}</span>
+                <span className="tabular-nums shrink-0" style={{ color: TEXT_2 }}>{formatDateTime(r.time)}</span>
+                <span className="truncate" style={{ color: INK }}>{summarize(r) || '记录'}</span>
               </div>
             ))}
           </div>
@@ -388,17 +350,13 @@ function TextImport({ onImport, birth }) {
   );
 }
 
-/* ================= 工具函数 ================= */
-const pad = (n) => String(n).padStart(2, '0');
-
-/* 生成记录的规范化去重键：时间精确到分钟、字段排序、数组排序，忽略 id */
+/* ================= 工具函数（保持原算法） ================= */
 function normKey(rec) {
   if (!rec) return '';
   const t = new Date(rec.time);
-  const p2 = (n) => String(n).padStart(2, '0');
   const timeKey = Number.isNaN(t.getTime())
     ? String(rec.time)
-    : `${t.getFullYear()}-${p2(t.getMonth() + 1)}-${p2(t.getDate())}T${p2(t.getHours())}:${p2(t.getMinutes())}`;
+    : `${t.getFullYear()}-${pad(t.getMonth() + 1)}-${pad(t.getDate())}T${pad(t.getHours())}:${pad(t.getMinutes())}`;
   const stable = {};
   Object.keys(rec).sort().forEach((k) => {
     if (k === 'id' || rec[k] === undefined || rec[k] === null) return;
@@ -407,17 +365,12 @@ function normKey(rec) {
   });
   return timeKey + JSON.stringify(stable);
 }
-
 function isToday(s) {
   const t = new Date(s), e = new Date();
   return t.getFullYear() === e.getFullYear() && t.getMonth() === e.getMonth() && t.getDate() === e.getDate();
 }
-function withinDays(s, t) {
-  return new Date(s).getTime() >= Date.now() - t * 864e5;
-}
-function ageDaysPlus(s) {
-  return s ? Math.floor((Date.now() - new Date(s).getTime()) / 864e5) + 1 : 0;
-}
+function withinDays(s, t) { return new Date(s).getTime() >= Date.now() - t * 864e5; }
+function ageDaysPlus(s) { return s ? Math.floor((Date.now() - new Date(s).getTime()) / 864e5) + 1 : 0; }
 function median(arr) {
   if (!arr.length) return null;
   const t = [...arr].sort((a, b) => a - b), e = Math.floor(t.length / 2);
@@ -460,9 +413,7 @@ function predictInterval(records, type, ts) {
   const u = Math.min(Math.max(1.5 * l, c), h);
   return { gap: a, lo: Math.max(30 * 6e4, a - u), hi: a + u };
 }
-function ageDays(s) {
-  return s ? Math.floor((Date.now() - new Date(s).getTime()) / 864e5) : null;
-}
+function ageDays(s) { return s ? Math.floor((Date.now() - new Date(s).getTime()) / 864e5) : null; }
 function refTable(days) {
   const t = days ?? 30;
   let e, i, n, o, a;
@@ -604,8 +555,8 @@ function SectionHeader({ icon: Icon, title, right, accent }) {
   const c = accent || ACCENT;
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h3 className="flex items-center gap-2 text-[16px] font-medium text-[#333F51]">
-        <span className="bc-title-icon" style={{ background: `${c}26`, color: c }}>
+      <h3 className="flex items-center gap-2 text-[15px] font-bold" style={{ color: INK }}>
+        <span className="bc-title-icon" style={{ background: `${c}1C`, color: c }}>
           <Icon className="h-4 w-4" strokeWidth={1.8} />
         </span>
         {title}
@@ -614,8 +565,6 @@ function SectionHeader({ icon: Icon, title, right, accent }) {
     </div>
   );
 }
-
-/* 图表单位徽标 */
 function UnitTag({ color, children }) {
   return (
     <span className="px-2 py-0.5 rounded-[6px] text-[11px] font-medium tabular-nums" style={{ background: `${color}22`, color }}>
@@ -623,26 +572,42 @@ function UnitTag({ color, children }) {
     </span>
   );
 }
-
-/* 周期汇总 · 迷你 KPI 数字卡（浅色底 + 主题色数值，层次清晰） */
 function KpiMini({ color, bg, value, label, unit }) {
   return (
-    <div className="rounded-[10px] px-4 py-3.5 border" style={{ background: bg, borderColor: `${color}33` }}>
-      <div className="text-[26px] font-semibold leading-none tabular-nums" style={{ color }}>
+    <div className="rounded-[12px] px-4 py-3.5 border" style={{ background: bg, borderColor: `${color}30` }}>
+      <div className="text-[26px] font-bold leading-none tabular-nums" style={{ color }}>
         {value}
-        <span className="text-[12px] font-normal text-[var(--text-2)] ml-1">{unit}</span>
+        <span className="text-[12px] font-normal ml-1 opacity-70">{unit}</span>
       </div>
-      <div className="text-[12px] text-[var(--text-2)] mt-2">{label}</div>
+      <div className="text-[12px] mt-2 opacity-80" style={{ color: TEXT_2 }}>{label}</div>
+    </div>
+  );
+}
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="mb-1.5 block text-[12px] font-medium" style={{ color: TEXT_2 }}>{label}</label>
+      {children}
     </div>
   );
 }
 
-function Field({ label, children }) {
+/* 今日 KPI 渐变卡 */
+function KpiCard({ type, label, value, sub, color, onClick }) {
+  const Icon = TYPES[type].icon;
   return (
-    <div>
-      <label className="mb-1.5 block text-[12px] text-[var(--text-2)] font-medium">{label}</label>
-      {children}
-    </div>
+    <button onClick={onClick} className="bc-kpi group">
+      <div className="flex items-start justify-between w-full">
+        <div className="min-w-0">
+          <div className="bc-kpi-label">{label}</div>
+          <div className="bc-kpi-value">{value}</div>
+          <div className="bc-kpi-sub">{sub}</div>
+        </div>
+        <span className="bc-kpi-icon group-hover:scale-110" style={{ background: `${color}26`, color }}>
+          <Icon className="h-5 w-5" strokeWidth={1.9} />
+        </span>
+      </div>
+    </button>
   );
 }
 
@@ -665,7 +630,6 @@ function QuickModal({ type, onClose, onSave, settings }) {
     if (type === 'sleep') { _.duration = amount; }
     onSave(_);
   };
-
   const onToggle = (item) => setAbnormal((D) => {
     const k = new Set(D);
     if (item === '正常') return new Set();
@@ -673,31 +637,28 @@ function QuickModal({ type, onClose, onSave, settings }) {
     return k;
   });
 
-  const chip = (active) => `px-3 py-1.5 rounded-[8px] text-[12px] font-medium border cursor-pointer transition-all ${
-    active ? 'bg-[var(--sel)] text-[var(--text-1)] border-[var(--line-hair)]' : 'bg-[var(--bg-2)] text-[var(--text-2)] border-[var(--line)] hover:bg-[var(--hover)] hover:text-[var(--text-1)]'
+  const chip = (active) => `px-3 py-1.5 rounded-full text-[12px] font-medium border cursor-pointer transition-all ${
+    active ? 'bc-chip-on' : 'bc-chip-off'
   }`;
-  const labelCls = 'mb-1.5 block text-[12px] text-[var(--text-2)] font-medium';
+  const labelCls = 'mb-1.5 block text-[12px] font-medium';
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card mx-4 w-full max-w-md p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-[9px]"
-                  style={{ background: `${info.color}22`, color: info.color }}>
+            <span className="flex h-8 w-8 items-center justify-center rounded-[10px]" style={{ background: `${info.color}22`, color: info.color }}>
               <info.icon className="h-4 w-4" strokeWidth={1.8} />
             </span>
-            <h2 className="text-[15px] font-semibold">{info.name}记录</h2>
+            <h2 className="text-[15px] font-bold" style={{ color: INK }}>{info.name}记录</h2>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-[var(--text-3)] hover:text-[var(--text-1)] hover:bg-[var(--hover)] transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors hover:bg-[#F5EFE6]" style={{ color: TEXT_2 }}>
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="space-y-4">
-          <Field label="时间">
-            <DateTimePicker value={time} onChange={setTime} />
-          </Field>
+          <Field label="时间"><DateTimePicker value={time} onChange={setTime} /></Field>
 
           {type === 'milk' && (
             <>
@@ -709,7 +670,7 @@ function QuickModal({ type, onClose, onSave, settings }) {
                 </div>
               </Field>
               <Field label="奶量 (ml)">
-                <input type="number" placeholder="自动预测" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full no-spin" min="0" />
+                <input type="number" placeholder="自动预测" value={amount} onChange={(e) => setAmount(e.target.value)} className="bc-input w-full no-spin" min="0" />
               </Field>
             </>
           )}
@@ -754,7 +715,7 @@ function QuickModal({ type, onClose, onSave, settings }) {
 
           {type === 'sleep' && (
             <Field label="睡眠时长 (小时)">
-              <input type="number" placeholder="1" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full no-spin" min="0" step="0.5" />
+              <input type="number" placeholder="1" value={amount} onChange={(e) => setAmount(e.target.value)} className="bc-input w-full no-spin" min="0" step="0.5" />
             </Field>
           )}
         </div>
@@ -775,12 +736,11 @@ function RecordPage({ records, settings, onAdd, onImport }) {
   const [careType, setCareType] = useState('cord');
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
-  const chip = (active) => `px-3 py-1.5 rounded-[8px] text-[12px] font-medium border cursor-pointer transition-all ${
-    active ? 'bg-[var(--sel)] text-[var(--text-1)] border-[var(--line-hair)]' : 'bg-[var(--bg-2)] text-[var(--text-2)] border-[var(--line)] hover:bg-[var(--hover)] hover:text-[var(--text-1)]'
+  const chip = (active) => `px-3 py-1.5 rounded-full text-[12px] font-medium border cursor-pointer transition-all ${
+    active ? 'bc-chip-on' : 'bc-chip-off'
   }`;
   const typeKeys = Object.keys(TYPES);
   const now = nowISO();
-  // 当前类型最近同类记录（填充右侧栏）
   const recent = records
     .filter((r) => r.type === type)
     .sort((a, b) => new Date(b.time) - new Date(a.time))
@@ -810,13 +770,8 @@ function RecordPage({ records, settings, onAdd, onImport }) {
       <button
         key={key}
         onClick={() => setType(key)}
-        className="flex items-center justify-center gap-2 px-4 py-2 rounded-[9px] text-[13px] font-medium transition-all cursor-pointer whitespace-nowrap"
-        style={{
-          color: active ? ACCENT : '#5A6474',
-          background: active ? '#FFF6EC' : '#F1F3F7',
-          border: active ? `1px solid ${ACCENT}66` : '1px solid #E5E6EB',
-          boxShadow: 'none',
-        }}
+        className={`bc-type-tab ${active ? 'on' : ''}`}
+        style={active ? { color: TYPES[key].color, borderColor: `${TYPES[key].color}66`, background: `${TYPES[key].color}14` } : undefined}
       >
         <Icon className="h-4 w-4 shrink-0" strokeWidth={1.9} style={{ color: TYPES[key].color }} />
         {TYPES[key].name}
@@ -826,222 +781,215 @@ function RecordPage({ records, settings, onAdd, onImport }) {
   };
 
   return (
-    <div className="space-y-5 animate-fade-in">
-      {/* 顶部：9 个记录分类标签，保持单行不换行 */}
-      <div className="bc-card flex items-center gap-2.5 flex-nowrap">
+    <div className="space-y-4 animate-fade-in">
+      {/* 类型选择 */}
+      <div className="bc-card flex items-center gap-2 flex-nowrap overflow-x-auto">
         {typeKeys.map(typeTab)}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-      <div className="bc-card bc-card-hover p-5 relative overflow-hidden lg:col-span-2 flex flex-col">
-        {/* 顶部类型色条：识别当前记录类型 */}
-        <div className="absolute top-0 left-0 right-0 h-1" style={{ background: TYPES[type].color }} />
-        <SectionHeader icon={TYPES[type].icon} title={`记录${TYPES[type].name}`} accent={TYPES[type].color} right={
-          <span className="bc-chip" style={{ background: `${TYPES[type].color}22`, color: TYPES[type].color }}>
-            共 {Object.keys(TYPES).length} 种类型
-          </span>
-        } />
-        <div className="space-y-5">
-          <Field label="时间">
-            <DateTimePicker value={form.time || now} onChange={(v) => set('time', v)} width="14rem" />
-          </Field>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+        {/* 左侧表单 */}
+        <div className="bc-card p-5 relative overflow-hidden lg:col-span-2 flex flex-col">
+          <div className="absolute top-0 left-0 right-0 h-1" style={{ background: TYPES[type].color }} />
+          <SectionHeader icon={TYPES[type].icon} title={`记录${TYPES[type].name}`} accent={TYPES[type].color} right={
+            <span className="bc-chip-static" style={{ background: `${TYPES[type].color}1C`, color: TYPES[type].color }}>
+              共 {Object.keys(TYPES).length} 种类型
+            </span>
+          } />
+          <div className="space-y-5">
+            <Field label="时间">
+              <DateTimePicker value={form.time || now} onChange={(v) => set('time', v)} width="14rem" />
+            </Field>
 
-          {type === 'milk' && (
-            <>
-              <Field label="喂养方式">
-                <div className="flex gap-2 flex-wrap">
-                  {[['breast', '亲喂母乳'], ['bottle', '瓶喂母乳'], ['formula', '配方奶粉']].map(([v, l]) => (
-                    <button key={v} onClick={() => set('kind', v)} className={chip(form.kind === v)}>{l}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="奶量 (ml)">
-                <input type="number" value={form.amount || ''} onChange={(e) => set('amount', e.target.value)} placeholder="自动预测" className="w-full no-spin" min="0" />
-              </Field>
-            </>
-          )}
+            {type === 'milk' && (
+              <>
+                <Field label="喂养方式">
+                  <div className="flex gap-2 flex-wrap">
+                    {[['breast', '亲喂母乳'], ['bottle', '瓶喂母乳'], ['formula', '配方奶粉']].map(([v, l]) => (
+                      <button key={v} onClick={() => set('kind', v)} className={chip(form.kind === v)}>{l}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="奶量 (ml)">
+                  <input type="number" value={form.amount || ''} onChange={(e) => set('amount', e.target.value)} placeholder="自动预测" className="bc-input w-full no-spin" min="0" />
+                </Field>
+              </>
+            )}
 
-          {type === 'poop' && (
-            <>
-              <Field label="性状">
-                <div className="flex gap-2 flex-wrap">
-                  {[['normal', '正常'], ['unknown', '不知道'], ['meconium', '胎便'], ['gold', '金黄糊状'], ['paste', '膏状'], ['watery', '稀水样'], ['hard', '干硬'], ['egg', '蛋花汤']].map(([v, l]) => (
-                    <button key={v} onClick={() => set('shape', v)} className={chip(form.shape === v)}>{l}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="颜色">
-                <div className="flex gap-2 flex-wrap">
-                  {[['gold', '金黄'], ['blackgreen', '黑绿'], ['yellowgreen', '黄绿'], ['green', '绿色'], ['gray', '灰色'], ['red', '红色'], ['unknown', '不知道']].map(([v, l]) => (
-                    <button key={v} onClick={() => set('color', v)} className={chip(form.color === v)}>{l}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="异常标记">
-                <div className="flex gap-2 flex-wrap">
-                  {['正常', '带血丝', '带粘液', '泡沫多', '奶瓣多'].map((v) => (
-                    <button key={v} onClick={() => set('abnormal', toggle(form.abnormal, v))} className={chip((form.abnormal || []).includes(v))}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-            </>
-          )}
+            {type === 'poop' && (
+              <>
+                <Field label="性状">
+                  <div className="flex gap-2 flex-wrap">
+                    {[['normal', '正常'], ['unknown', '不知道'], ['meconium', '胎便'], ['gold', '金黄糊状'], ['paste', '膏状'], ['watery', '稀水样'], ['hard', '干硬'], ['egg', '蛋花汤']].map(([v, l]) => (
+                      <button key={v} onClick={() => set('shape', v)} className={chip(form.shape === v)}>{l}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="颜色">
+                  <div className="flex gap-2 flex-wrap">
+                    {[['gold', '金黄'], ['blackgreen', '黑绿'], ['yellowgreen', '黄绿'], ['green', '绿色'], ['gray', '灰色'], ['red', '红色'], ['unknown', '不知道']].map(([v, l]) => (
+                      <button key={v} onClick={() => set('color', v)} className={chip(form.color === v)}>{l}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="异常">
+                  <div className="flex gap-2 flex-wrap">
+                    {['正常', '带血丝', '带粘液', '泡沫多'].map((v) => (
+                      <button key={v} onClick={() => set('abnormal', toggle(form.abnormal, v))} className={chip((form.abnormal || []).includes(v))}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+              </>
+            )}
 
-          {type === 'pee' && (
-            <>
-              <Field label="尿量">
-                <div className="flex gap-2 flex-wrap">
-                  {['正常', '少量', '中等', '大量'].map((v) => (
-                    <button key={v} onClick={() => set('uamount', v)} className={chip(form.uamount === v)}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="颜色">
-                <div className="flex gap-2 flex-wrap">
-                  {['正常', '清亮', '深黄', '偏红'].map((v) => (
-                    <button key={v} onClick={() => set('color', v)} className={chip(form.color === v)}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-            </>
-          )}
+            {type === 'pee' && (
+              <>
+                <Field label="尿量">
+                  <div className="flex gap-2 flex-wrap">
+                    {['正常', '少量', '中等', '大量'].map((v) => (
+                      <button key={v} onClick={() => set('uamount', v)} className={chip(form.uamount === v)}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="颜色">
+                  <div className="flex gap-2 flex-wrap">
+                    {['正常', '清亮', '深黄', '偏红'].map((v) => (
+                      <button key={v} onClick={() => set('color', v)} className={chip(form.color === v)}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+              </>
+            )}
 
-          {type === 'sleep' && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="开始时间（选填）"><DateTimePicker value={form.time || ''} onChange={(v) => set('time', v)} /></Field>
-                <Field label="结束时间（选填）"><DateTimePicker value={form.endTime || ''} onChange={(v) => set('endTime', v)} /></Field>
-              </div>
-              <Field label="睡眠时长 (小时)">
-                <input type="number" value={form.duration || ''} onChange={(e) => set('duration', e.target.value)} placeholder="自动计算" className="w-full no-spin" min="0" step="0.5" />
-              </Field>
-              <Field label="睡眠质量">
-                <div className="flex gap-2 flex-wrap">
-                  {['安稳', '易醒', '哭闹'].map((v) => (
-                    <button key={v} onClick={() => set('quality', v)} className={chip(form.quality === v)}>{v}</button>
-                  ))}
+            {type === 'sleep' && (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="开始时间（选填）"><DateTimePicker value={form.time || ''} onChange={(v) => set('time', v)} /></Field>
+                  <Field label="结束时间（选填）"><DateTimePicker value={form.endTime || ''} onChange={(v) => set('endTime', v)} /></Field>
                 </div>
-              </Field>
-            </>
-          )}
+                <Field label="睡眠时长 (小时)">
+                  <input type="number" value={form.duration || ''} onChange={(e) => set('duration', e.target.value)} placeholder="自动计算" className="bc-input w-full no-spin" min="0" step="0.5" />
+                </Field>
+                <Field label="睡眠质量">
+                  <div className="flex gap-2 flex-wrap">
+                    {['安稳', '易醒', '哭闹'].map((v) => (
+                      <button key={v} onClick={() => set('quality', v)} className={chip(form.quality === v)}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+              </>
+            )}
 
-          {type === 'temp' && (
-            <>
-              <Field label="体温 (℃)"><input type="number" value={form.value || ''} onChange={(e) => set('value', e.target.value)} placeholder="36.5" className="w-full no-spin" min="33" max="43" step="0.1" /></Field>
-              <Field label="测量部位">
-                <div className="flex gap-2 flex-wrap">
-                  {['腋温', '额温', '肛温'].map((v) => (
-                    <button key={v} onClick={() => set('site', v)} className={chip(form.site === v)}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-            </>
-          )}
+            {type === 'temp' && (
+              <>
+                <Field label="体温 (℃)"><input type="number" value={form.value || ''} onChange={(e) => set('value', e.target.value)} placeholder="36.5" className="bc-input w-full no-spin" min="33" max="43" step="0.1" /></Field>
+                <Field label="测量部位">
+                  <div className="flex gap-2 flex-wrap">
+                    {['腋温', '额温', '肛温'].map((v) => (
+                      <button key={v} onClick={() => set('site', v)} className={chip(form.site === v)}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+              </>
+            )}
 
-          {type === 'weight' && (
-            <Field label="体重 (kg)"><input type="number" value={form.value || ''} onChange={(e) => set('value', e.target.value)} placeholder="3.20" className="w-full no-spin" min="0" step="0.01" /></Field>
-          )}
+            {type === 'weight' && (
+              <Field label="体重 (kg)"><input type="number" value={form.value || ''} onChange={(e) => set('value', e.target.value)} placeholder="3.20" className="bc-input w-full no-spin" min="0" step="0.01" /></Field>
+            )}
 
-          {type === 'jaundice' && (
-            <>
-              <Field label="经皮黄疸值 (mg/dL)"><input type="number" value={form.value || ''} onChange={(e) => set('value', e.target.value)} placeholder="8.0" className="w-full no-spin" min="0" step="0.1" /></Field>
-              <Field label="测量部位">
-                <div className="flex gap-2 flex-wrap">
-                  {['额头', '胸部', '腹部', '腿部'].map((v) => (
-                    <button key={v} onClick={() => set('site', v)} className={chip(form.site === v)}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-            </>
-          )}
+            {type === 'jaundice' && (
+              <>
+                <Field label="经皮黄疸值 (mg/dL)"><input type="number" value={form.value || ''} onChange={(e) => set('value', e.target.value)} placeholder="8.0" className="bc-input w-full no-spin" min="0" step="0.1" /></Field>
+                <Field label="测量部位">
+                  <div className="flex gap-2 flex-wrap">
+                    {['额头', '胸部', '腹部', '腿部'].map((v) => (
+                      <button key={v} onClick={() => set('site', v)} className={chip(form.site === v)}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+              </>
+            )}
 
-          {type === 'care' && (
-            <>
-              <Field label="护理类型">
-                <div className="flex gap-2 flex-wrap">
-                  {[['cord', '脐带护理'], ['touch', '抚触/排气操'], ['bath', '洗澡'], ['medicine', '用药'], ['event', '异常事件']].map(([v, l]) => (
-                    <button key={v} onClick={() => setCareType(v)} className={chip(careType === v)}>{l}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="时长 (分钟)"><input type="number" value={form.duration || ''} onChange={(e) => set('duration', e.target.value)} className="w-full no-spin" min="0" /></Field>
-              <Field label="详情"><input type="text" value={form.detail || ''} onChange={(e) => set('detail', e.target.value)} placeholder="如：脐部干燥无异常" className="w-full" /></Field>
-            </>
-          )}
+            {type === 'care' && (
+              <>
+                <Field label="护理类型">
+                  <div className="flex gap-2 flex-wrap">
+                    {[['cord', '脐带护理'], ['touch', '抚触/排气操'], ['bath', '洗澡'], ['medicine', '用药'], ['event', '异常事件']].map(([v, l]) => (
+                      <button key={v} onClick={() => setCareType(v)} className={chip(careType === v)}>{l}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="时长 (分钟)"><input type="number" value={form.duration || ''} onChange={(e) => set('duration', e.target.value)} className="bc-input w-full no-spin" min="0" /></Field>
+                <Field label="详情"><input type="text" value={form.detail || ''} onChange={(e) => set('detail', e.target.value)} placeholder="如：脐部干燥无异常" className="bc-input w-full" /></Field>
+              </>
+            )}
 
-          {type === 'cry' && (
-            <>
-              <Field label="哭闹时长 (分钟)"><input type="number" value={form.duration || ''} onChange={(e) => set('duration', e.target.value)} className="w-full no-spin" min="0" /></Field>
-              <Field label="可能原因">
-                <div className="flex gap-2 flex-wrap">
-                  {['饿了', '尿湿', '肠胀气', '困倦', '要抱抱', '不明原因'].map((v) => (
-                    <button key={v} onClick={() => set('cause', toggle(form.cause, v))} className={chip((form.cause || []).includes(v))}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="程度">
-                <div className="flex gap-2 flex-wrap">
-                  {['轻度', '中等', '剧烈'].map((v) => (
-                    <button key={v} onClick={() => set('level', v)} className={chip(form.level === v)}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-              <Field label="安抚方式">
-                <div className="flex gap-2 flex-wrap">
-                  {['喂奶', '拍嗝', '抱哄', '萝卜蹲', '白噪音'].map((v) => (
-                    <button key={v} onClick={() => set('soothe', v)} className={chip(form.soothe === v)}>{v}</button>
-                  ))}
-                </div>
-              </Field>
-            </>
-          )}
+            {type === 'cry' && (
+              <>
+                <Field label="哭闹时长 (分钟)"><input type="number" value={form.duration || ''} onChange={(e) => set('duration', e.target.value)} className="bc-input w-full no-spin" min="0" /></Field>
+                <Field label="可能原因">
+                  <div className="flex gap-2 flex-wrap">
+                    {['饿了', '尿湿', '肠胀气', '困倦', '要抱抱', '不明原因'].map((v) => (
+                      <button key={v} onClick={() => set('cause', toggle(form.cause, v))} className={chip((form.cause || []).includes(v))}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="程度">
+                  <div className="flex gap-2 flex-wrap">
+                    {['轻度', '中等', '剧烈'].map((v) => (
+                      <button key={v} onClick={() => set('level', v)} className={chip(form.level === v)}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+                <Field label="安抚方式">
+                  <div className="flex gap-2 flex-wrap">
+                    {['喂奶', '拍嗝', '抱哄', '萝卜蹲', '白噪音'].map((v) => (
+                      <button key={v} onClick={() => set('soothe', v)} className={chip(form.soothe === v)}>{v}</button>
+                    ))}
+                  </div>
+                </Field>
+              </>
+            )}
 
-          <Field label="备注"><input type="text" value={form.note || ''} onChange={(e) => set('note', e.target.value)} placeholder="备注" className="w-full" /></Field>
-        </div>
-      </div>
-
-      {/* 右侧信息栏：填满右侧空白 */}
-      <div className="space-y-4 lg:col-span-1 flex flex-col">
-        {/* 文字一键导入 */}
-        <TextImport onImport={onImport} birth={settings.birth} />
-
-        {/* 填写提示 */}
-        <div className="bc-card bc-card-hover p-5">
-          <SectionHeader icon={Info} title="填写提示" accent={TYPES[type].color} />
-          <p className="text-[13px] leading-relaxed text-[var(--text-2)]">{TYPE_HELP[type]}</p>
-          <div className="mt-3 pt-3 border-t border-[#E5E6EB] flex items-center gap-2 text-[12px] text-[var(--text-3)]">
-            <span className="w-2 h-2 rounded-full" style={{ background: TYPES[type].color }} />
-            当前类型：{TYPES[type].name}
+            <Field label="备注"><input type="text" value={form.note || ''} onChange={(e) => set('note', e.target.value)} placeholder="备注" className="bc-input w-full" /></Field>
           </div>
         </div>
 
-        {/* 最近同类记录 */}
-        <div className="bc-card bc-card-hover p-5">
-          <SectionHeader icon={Clock} title="最近同类记录" right={<span className="text-[12px] text-[#86909C]">{recent.length} 条</span>} />
-          {recent.length ? (
-            <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
-              {recent.map((r) => (
-                <div key={r.id} className="flex items-center gap-2 p-2 rounded-lg bg-[#F7F8FA] border-l-[3px]" style={{ borderColor: TYPES[type].color }}>
-                  <span className="text-[11px] text-[var(--text-3)] tabular-nums w-11 shrink-0 font-mono">{formatTime(r.time)}</span>
-                  <span className="text-[12px] text-[var(--text-1)] truncate">{summarize(r)}</span>
-                </div>
-              ))}
+        {/* 右侧信息栏 */}
+        <div className="space-y-4 lg:col-span-1 flex flex-col">
+          <TextImport onImport={onImport} birth={settings.birth} />
+
+          <div className="bc-card p-5">
+            <SectionHeader icon={Info} title="填写提示" accent={TYPES[type].color} />
+            <p className="text-[13px] leading-relaxed" style={{ color: TEXT_2 }}>{TYPE_HELP[type]}</p>
+            <div className="mt-3 pt-3 border-t flex items-center gap-2 text-[12px]" style={{ borderColor: LINE, color: TEXT_4 }}>
+              <span className="w-2 h-2 rounded-full" style={{ background: TYPES[type].color }} />
+              当前类型：{TYPES[type].name}
             </div>
-          ) : (
-            <div className="py-6 text-center text-[var(--text-3)] text-sm">还没有同类记录</div>
-          )}
+          </div>
+
+          <div className="bc-card p-5 flex-1">
+            <SectionHeader icon={Clock} title="最近同类记录" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{recent.length} 条</span>} />
+            {recent.length ? (
+              <div className="space-y-1.5 max-h-[240px] overflow-y-auto pr-1">
+                {recent.map((r) => (
+                  <div key={r.id} className="flex items-center gap-2 p-2 rounded-lg border-l-[3px]" style={{ background: '#FBF7F0', borderColor: TYPES[type].color }}>
+                    <span className="text-[11px] tabular-nums w-11 shrink-0 font-mono" style={{ color: TEXT_2 }}>{formatTime(r.time)}</span>
+                    <span className="text-[12px] truncate" style={{ color: INK }}>{summarize(r)}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center text-sm" style={{ color: TEXT_4 }}>还没有同类记录</div>
+            )}
+          </div>
         </div>
       </div>
-      </div>
 
-      {/* 底部通栏保存操作栏（横跨全部内容宽度） */}
+      {/* 底部保存栏 */}
       <div className="bc-card flex items-center justify-between gap-3">
-        <span className="text-[12px] text-[#86909C]">填写完成后点击保存，数据将同步到本机</span>
-        <button
-          onClick={submit}
-          className="bc-btn-primary shrink-0"
-          style={{ minWidth: 120, boxShadow: '0 4px 12px rgba(91,141,239,.28)' }}
-        >
+        <span className="text-[12px]" style={{ color: TEXT_2 }}>填写完成后点击保存，数据将同步到云端</span>
+        <button onClick={submit} className="bc-btn-primary shrink-0" style={{ minWidth: 120 }}>
           <Check className="h-4 w-4" />保存记录
         </button>
       </div>
@@ -1051,13 +999,13 @@ function RecordPage({ records, settings, onAdd, onImport }) {
 
 /* ================= 主页面 ================= */
 export default function BabyCare() {
+  const { guard } = useAuth();
   const [page, setPage] = useState('home');
   const [records, setRecords] = useState([]);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [loaded, setLoaded] = useState(false);
   const [toast, setToast] = useState(null);
   const [quickType, setQuickType] = useState(null);
-  const [activeForm, setActiveForm] = useState('');
   const [historyType, setHistoryType] = useState('');
   const [historyFrom, setHistoryFrom] = useState('');
   const [historyTo, setHistoryTo] = useState('');
@@ -1068,7 +1016,6 @@ export default function BabyCare() {
   const [diaper, setDiaper] = useState([]);
   const [feed, setFeed] = useState([]);
   const toastRef = useRef(null);
-  // 统一数据快照（localStorage 持久化，避免各实体互相覆盖）
   const dataRef = useRef({ records: [], settings: DEFAULT_SETTINGS, profile: null, momDaily: [], babyDaily: [], diaper: [], feed: [] });
 
   const showToast = (msg) => {
@@ -1084,7 +1031,6 @@ export default function BabyCare() {
         const d = { ...dataRef.current, ...M };
         dataRef.current = d;
         if (Array.isArray(M.records)) {
-          // 自动清理历史重复记录（时间精确到分钟 + 内容一致）
           const seen = new Set();
           const deduped = M.records.filter((r) => {
             const k = normKey(r);
@@ -1098,7 +1044,6 @@ export default function BabyCare() {
             window.electronAPI?.saveData(LS_KEY, dataRef.current);
           }
         }
-        // 宝宝信息以「宝宝档案」为准；旧系统设置数据迁移一次补进档案
         const mig = migrateSettingsToProfile(M.profile || null, M.settings);
         if (mig.changed) {
           dataRef.current = { ...dataRef.current, profile: mig.profile, settings: undefined };
@@ -1115,7 +1060,6 @@ export default function BabyCare() {
       .finally(() => setLoaded(true));
   }, []);
 
-  // 统一存盘：以 dataRef 为唯一真源写入 localStorage
   const save = useCallback((rec, set) => {
     const next = { ...dataRef.current };
     if (rec) { next.records = rec; setRecords(rec); }
@@ -1124,7 +1068,6 @@ export default function BabyCare() {
     window.electronAPI?.saveData(LS_KEY, next);
   }, []);
 
-  // 更新任意实体并持久化
   const updateEntities = (patch) => {
     const next = { ...dataRef.current, ...patch };
     dataRef.current = next;
@@ -1137,27 +1080,29 @@ export default function BabyCare() {
   };
 
   const addRecord = (rec) => {
+    if (!guard()) return;
     const M = [...records, rec];
     save(M);
     setQuickType(null);
     showToast('已保存');
   };
   const removeRecord = (id) => {
+    if (!guard()) return;
     const M = records.filter((A) => A.id !== id);
     save(M);
     showToast('已删除');
   };
-  // 删除指定日期的全部记录（历史记录页「全部删除」）
   const removeRecordsByDate = (dateStr) => {
+    if (!guard()) return;
     const ids = records.filter((r) => String(r.time).slice(0, 10) === dateStr).map((r) => r.id);
     const idSet = new Set(ids);
     const M = records.filter((r) => !idSet.has(r.id));
     save(M);
     showToast(`已删除 ${ids.length} 条记录`);
   };
-  // 文字一键导入：合并并自动去重（时间精确到分钟 + 内容字段完全一致视为重复）
   const importRecords = (list) => {
     if (!Array.isArray(list) || !list.length) return;
+    if (!guard()) return;
     const seen = new Set(records.map(normKey));
     const fresh = [];
     const batch = new Set();
@@ -1174,21 +1119,22 @@ export default function BabyCare() {
   };
 
   /* ---- 母婴台账 handlers ---- */
-  // 档案保存后，同步刷新宝宝的出生信息（预测/导入/奶量统一读取）
   const saveProfile = (p) => {
+    if (!guard()) return;
     updateEntities({ profile: p });
     setSettings(babyInfoFrom(p));
     showToast('档案已保存');
   };
-  const addMom = (r) => { updateEntities({ momDaily: [...momDaily, r] }); showToast('妈妈记录已保存'); };
-  const delMom = (id) => { updateEntities({ momDaily: momDaily.filter((x) => x.id !== id) }); showToast('已删除'); };
-  const addBaby = (r) => { updateEntities({ babyDaily: [...babyDaily, r] }); showToast('宝宝记录已保存'); };
-  const delBaby = (id) => { updateEntities({ babyDaily: babyDaily.filter((x) => x.id !== id) }); showToast('已删除'); };
-  const addDiaper = (r) => { updateEntities({ diaper: [...diaper, r] }); showToast('已保存换尿布记录'); };
-  const delDiaper = (id) => { updateEntities({ diaper: diaper.filter((x) => x.id !== id) }); showToast('已删除'); };
-  const addFeed = (r) => { updateEntities({ feed: [...feed, r] }); showToast('已保存进食记录'); };
-  const delFeed = (id) => { updateEntities({ feed: feed.filter((x) => x.id !== id) }); showToast('已删除'); };
+  const addMom = (r) => { if (!guard()) return; updateEntities({ momDaily: [...momDaily, r] }); showToast('妈妈记录已保存'); };
+  const delMom = (id) => { if (!guard()) return; updateEntities({ momDaily: momDaily.filter((x) => x.id !== id) }); showToast('已删除'); };
+  const addBaby = (r) => { if (!guard()) return; updateEntities({ babyDaily: [...babyDaily, r] }); showToast('宝宝记录已保存'); };
+  const delBaby = (id) => { if (!guard()) return; updateEntities({ babyDaily: babyDaily.filter((x) => x.id !== id) }); showToast('已删除'); };
+  const addDiaper = (r) => { if (!guard()) return; updateEntities({ diaper: [...diaper, r] }); showToast('已保存换尿布记录'); };
+  const delDiaper = (id) => { if (!guard()) return; updateEntities({ diaper: diaper.filter((x) => x.id !== id) }); showToast('已删除'); };
+  const addFeed = (r) => { if (!guard()) return; updateEntities({ feed: [...feed, r] }); showToast('已保存进食记录'); };
+  const delFeed = (id) => { if (!guard()) return; updateEntities({ feed: feed.filter((x) => x.id !== id) }); showToast('已删除'); };
   const doImport = () => {
+    if (!guard()) return;
     const { profile: p, momDaily: m, babyDaily: b, diaper: d, feed: f } = importPaperData();
     updateEntities({
       profile: profile || p,
@@ -1210,24 +1156,22 @@ export default function BabyCare() {
   const sleepTotal = kSleep.reduce((s, r) => s + (+r.duration || 0), 0);
   const nightSleep = kSleep.filter((r) => !isDay(r.time)).reduce((s, r) => s + (+r.duration || 0), 0);
 
-  /* KPI 卡片（渐变卡）在模块级定义 */
-
   const NAV = [
-  { group: '日常', items: [
-    { id: 'home',     label: '今日首页', icon: Baby },
-    { id: 'record',   label: '添加记录', icon: ClipboardPlus },
-    { id: 'trend',    label: '趋势统计', icon: BarChart3 },
-    { id: 'predict',  label: '预测提醒', icon: Sparkles },
-    { id: 'history',  label: '历史记录', icon: History },
-  ] },
-  { group: '母婴台账', items: [
-    { id: 'profile',  label: '宝宝档案', icon: UserRound },
-    { id: 'mom',      label: '妈妈护理', icon: Heart },
-    { id: 'baby',     label: '宝宝每日', icon: Sun },
-    { id: 'diaper',   label: '换尿布', icon: Droplets },
-    { id: 'feed',     label: '进食记录', icon: Sparkles },
-  ] },
-];
+    { group: '日常', items: [
+      { id: 'home',     label: '今日首页', icon: Baby },
+      { id: 'record',   label: '添加记录', icon: ClipboardPlus },
+      { id: 'trend',    label: '趋势统计', icon: BarChart3 },
+      { id: 'predict',  label: '预测提醒', icon: Sparkles },
+      { id: 'history',  label: '历史记录', icon: History },
+    ] },
+    { group: '母婴台账', items: [
+      { id: 'profile',  label: '宝宝档案', icon: UserRound },
+      { id: 'mom',      label: '妈妈护理', icon: Heart },
+      { id: 'baby',     label: '宝宝每日', icon: Sun },
+      { id: 'diaper',   label: '换尿布', icon: Droplets },
+      { id: 'feed',     label: '进食记录', icon: Sparkles },
+    ] },
+  ];
 
   const milkTrend = useMemo(() => {
     const y = {};
@@ -1241,7 +1185,6 @@ export default function BabyCare() {
     return Object.values(y);
   }, [records]);
 
-  // 近 7 天的具体日期标签（图例横轴，由旧到新）
   const trendLabels = useMemo(() => {
     const out = [];
     for (let M = 6; M >= 0; M--) {
@@ -1290,7 +1233,6 @@ export default function BabyCare() {
     return historyType ? list.filter((M) => M.type === historyType) : list;
   }, [records, historyFrom, historyTo, historyType]);
 
-  // 历史记录按日期分组（倒序），供「全部删除」一键清空当天
   const historyGroups = useMemo(() => {
     const m = new Map();
     for (const r of historyList) {
@@ -1311,20 +1253,19 @@ export default function BabyCare() {
   const timeline = useMemo(() => today.slice().sort((y, M) => new Date(y.time) - new Date(M.time)), [today]);
   const ref = useMemo(() => (settings.birth ? refTable(ageDays(settings.birth)) : null), [settings.birth]);
 
-  /* 预测条目渲染：有 v 显示值，否则 tag 徽章 */
   const renderPredItem = (y) => y.v
-    ? <span className="text-[13px] font-medium text-[var(--text-1)] tabular-nums">{y.v}</span>
-    : <span className={`px-2 py-0.5 rounded-full text-[11px] ${y.lv === 'danger' ? 'bg-[var(--danger-soft)] text-[var(--danger)]' : 'bg-[rgba(245,158,11,0.18)] text-[var(--warn)]'}`}>{y.tag}</span>;
+    ? <span className="text-[13px] font-semibold tabular-nums" style={{ color: INK }}>{y.v}</span>
+    : <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${y.lv === 'danger' ? 'bg-[var(--danger-soft)] text-[var(--danger)]' : 'bg-[rgba(232,180,75,0.18)] text-[#C08A1E]'}`}>{y.tag}</span>;
 
   const PredRow = (y, M) => (
-    <div key={y.n} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-[var(--bg-2)] border border-[var(--line)] hover:bg-[var(--bg-3)] hover:border-[var(--line-hover)] transition-all">
+    <div key={y.n} className="flex items-center justify-between gap-3 p-3 rounded-[12px] bg-[#FBF7F0] hover:bg-[#F7F0E4] transition-colors">
       <div className="min-w-0">
-        <div className="flex items-center gap-2 text-[13px] font-semibold">
+        <div className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: INK }}>
           {y.n}
           {y.lv === 'danger' && <span className="status-dot err" />}
           {y.lv === 'warn' && <span className="status-dot warn" />}
         </div>
-        <div className="text-[11px] text-[var(--text-3)] truncate">{y.s}</div>
+        <div className="text-[11px] truncate" style={{ color: TEXT_4 }}>{y.s}</div>
       </div>
       {M(y)}
     </div>
@@ -1332,223 +1273,222 @@ export default function BabyCare() {
 
   return (
     <div className="bc-layout">
-      {/* ===== 柔感专业风主题样式（中性边框 + 安心蓝点缀） ===== */}
       <style>{`
-        /* ===== 柔感专业风 · 设计系统变量 ===== */
+        /* ===== 奶油暖调设计系统 ===== */
         .bc-layout {
           display: flex;
-          gap: 20px;
-          align-items: flex-start;
+          flex-direction: column;
+          gap: 18px;
           min-height: 100%;
           width: 100%;
-          max-width: 1560px;
-          margin: 0 auto;
           box-sizing: border-box;
           font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
-          color: ${TEXT_1};
-          /* 覆盖全局选中态为安心蓝，统一柔感专业风 */
-          --sel: rgba(91, 141, 239, 0.14);
+          color: ${INK};
+          --sel: rgba(232, 131, 94, 0.13);
         }
 
-        /* ===== 左侧固定竖导航（220px，白底+右侧分割线） ===== */
-        .bc-sidenav {
-          width: 220px;
-          flex-shrink: 0;
-          background: #fff;
-          border: 1px solid ${LINE};
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-          padding: 18px 12px;
-          position: sticky;
-          top: 0;
-          box-sizing: border-box;
+        /* ===== 顶栏：品牌问候 ===== */
+        .bc-topbar {
+          display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
         }
-        .bc-nav-greet {
-          text-align: center;
-          padding: 6px 4px 16px;
-          border-bottom: 1px solid ${LINE};
-          margin-bottom: 12px;
-        }
-        .bc-nav-icon {
-          width: 46px; height: 46px; margin: 0 auto 10px;
-          border-radius: 12px;
+        .bc-avatar {
+          width: 52px; height: 52px; border-radius: 18px;
           display: flex; align-items: center; justify-content: center;
-          background: ${ACCENT_SOFT}; color: ${ACCENT};
+          background: linear-gradient(135deg, ${ACCENT}, #F2AE8C);
+          color: #fff; box-shadow: 0 6px 16px -6px rgba(232,131,94,.55);
         }
-        .bc-nav-name { font-size: 16px; font-weight: 600; color: ${TEXT_1}; }
-        .bc-nav-sub { font-size: 12px; color: ${TEXT_2}; margin-top: 4px; }
-        .bc-nav { display: flex; flex-direction: column; gap: 4px; }
+        .bc-hello { min-width: 0; }
+        .bc-hello b { display:block; font-size: 19px; font-weight: 800; letter-spacing: -.01em; color: ${INK}; }
+        .bc-hello span { display:inline-flex; align-items:center; gap:6px; margin-top: 3px; font-size: 12px; color: ${TEXT_2}; }
+        .bc-day-pill {
+          margin-left: auto;
+          padding: 8px 16px; border-radius: 999px;
+          background: linear-gradient(120deg, ${ACCENT}1C, ${ACCENT}0D);
+          border: 1px solid ${ACCENT}33;
+          color: ${ACCENT_DEEP}; font-size: 13px; font-weight: 700;
+          white-space: nowrap;
+        }
+
+        /* ===== 顶部横向导航（吸顶） ===== */
+        .bc-nav {
+          position: sticky; top: 0; z-index: 30;
+          display: flex; gap: 6px; align-items: center;
+          flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+          padding: 7px;
+          background: rgba(255,253,249,.92);
+          backdrop-filter: blur(12px);
+          border: 1px solid ${LINE};
+          border-radius: 16px;
+          box-shadow: 0 2px 12px rgba(90,74,54,.05);
+        }
+        .bc-nav::-webkit-scrollbar { display:none; }
+        .bc-nav-sep { width: 1px; height: 18px; background: ${LINE}; margin: 0 4px; flex-shrink: 0; }
         .bc-nav-item {
-          display: flex; align-items: center; gap: 10px;
-          width: 100%; height: 48px; padding: 0 14px;
-          border: 0; background: transparent;
-          border-radius: 8px; cursor: pointer;
-          font-size: 14px; font-weight: 400; color: ${TEXT_2};
-          text-align: left; font-family: inherit;
-          transition: background .18s ease, color .18s ease;
+          display: inline-flex; align-items: center; gap: 7px;
+          padding: 8px 15px; border-radius: 11px;
+          border: 1px solid transparent; background: transparent;
+          font-size: 13px; font-weight: 600; color: ${TEXT_2};
+          cursor: pointer; white-space: nowrap; font-family: inherit;
+          transition: background .16s ease, color .16s ease;
         }
-        .bc-nav-item:hover { background: #F2F4F7; color: ${TEXT_1}; }
-        .bc-nav-item.active { background: ${ACCENT_SOFT}; color: ${ACCENT}; font-weight: 600; }
-        .bc-nav-ic { width: 18px; height: 18px; flex-shrink: 0; }
-        .bc-nav-group { display: flex; flex-direction: column; gap: 2px; }
-        .bc-nav-group-title { padding: 10px 14px 4px; font-size: 11px; font-weight: 600; color: #A8ADB6; letter-spacing: .04em; }
-        .bc-nav-group + .bc-nav-group { margin-top: 10px; border-top: 1px solid ${LINE}; padding-top: 8px; }
-
-        .bc-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
-        .bc-page-title { font-size: 20px; font-weight: 600; color: ${TEXT_1}; }
-        @media (max-width: 820px) {
-          .bc-layout { flex-direction: column; }
-          .bc-sidenav { width: 100%; position: static; }
-          .bc-nav { flex-direction: row; flex-wrap: wrap; }
-          .bc-nav-greet { display: none; }
-          .bc-nav-item { flex: 1; justify-content: center; }
+        .bc-nav-item:hover { background: rgba(232,131,94,.08); color: ${INK}; }
+        .bc-nav-item.active {
+          background: linear-gradient(120deg, ${ACCENT}, #F2A583);
+          color: #fff; box-shadow: 0 4px 12px -4px rgba(232,131,94,.5);
         }
+        .bc-nav-ic { width: 15px; height: 15px; flex-shrink: 0; }
 
-        /* ===== 卡片：12px 圆角 + 轻阴影 + 内边距 20px ===== */
+        /* ===== 卡片 ===== */
         .bc-card {
           background: ${CARD};
           border: 1px solid ${LINE};
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+          border-radius: 18px;
+          box-shadow: 0 2px 10px rgba(112,90,60,.04);
           padding: 20px;
           box-sizing: border-box;
         }
-        .bc-card-hover { transition: border-color .2s ease, box-shadow .2s ease; }
-        .bc-card-hover:hover { border-color: ${ACCENT}55; box-shadow: 0 4px 14px rgba(91,141,239,.10); }
-
-        /* ===== KPI 卡片 ===== */
-        .bc-kpi {
-          display: flex; flex-direction: column; justify-content: space-between;
-          text-align: left; height: 100%;
-          background: ${CARD}; border: 1px solid ${LINE}; border-radius: 12px;
-          padding: 20px; cursor: pointer; min-height: 120px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-          transition: border-color .2s ease, box-shadow .2s ease;
-        }
-        .bc-kpi:hover { border-color: ${ACCENT}88; box-shadow: 0 6px 18px rgba(91,141,239,.12); }
-        .bc-kpi-icon {
-          width: 42px; height: 42px; border-radius: 10px;
-          display: flex; align-items: center; justify-content: center;
-          margin-bottom: 12px;
-        }
-        .bc-kpi-label { font-size: 12px; font-weight: 400; color: ${TEXT_2}; }
-        .bc-kpi-value { font-size: 26px; font-weight: 600; color: ${TEXT_1}; font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 2px; }
-        .bc-kpi-sub { font-size: 12px; color: ${TEXT_2}; margin-top: 6px; }
-
-        /* ===== 区块标题 ===== */
         .bc-title-icon {
           display: flex; align-items: center; justify-content: center;
-          height: 26px; width: 26px; border-radius: 8px;
-        }
-        .bc-section-title { font-size: 16px; font-weight: 500; color: ${TEXT_1}; }
-
-        /* ===== 主按钮（实心安心蓝） ===== */
-        .bc-btn-primary {
-          display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-          padding: 10px 20px; border-radius: 8px;
-          background: ${ACCENT}; color: #fff; font-size: 14px; font-weight: 500;
-          border: 0; cursor: pointer;
-          transition: background .2s ease, opacity .2s ease;
-        }
-        .bc-btn-primary:hover { background: #4a7ee0; }
-        .bc-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-
-        /* ===== 次要按钮（轮廓） ===== */
-        .bc-btn-secondary {
-          display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-          padding: 10px 20px; border-radius: 8px;
-          background: #fff; color: ${ACCENT}; font-size: 14px; font-weight: 500;
-          border: 1px solid ${ACCENT}66; cursor: pointer;
-          transition: background .2s ease, border-color .2s ease;
-        }
-        .bc-btn-secondary:hover { background: ${ACCENT_SOFT}; border-color: ${ACCENT}; }
-        .bc-btn-secondary:disabled { opacity: .5; cursor: not-allowed; }
-
-        /* ===== 表单控件（柔感统一：圆角8px，聚焦柔和蓝描边） ===== */
-        input[type=text], input[type=password], input[type=time], input[type=number],
-        input[type=date], input[type=search], textarea, select {
-          border-radius: 8px;
-          background: #FBFBFD;
-          transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
-        }
-        input:hover, textarea:hover, select:hover {
-          border-color: ${ACCENT}66;
-          background: #FDFDFE;
-        }
-        input:focus, textarea:focus, select:focus {
-          border-color: ${ACCENT};
-          background: #FFFFFF;
-          box-shadow: 0 0 0 3px rgba(91,141,239,.13);
+          height: 27px; width: 27px; border-radius: 9px;
         }
 
-        /* ===== 记录类型标签 ===== */
+        /* ===== KPI 卡 ===== */
+        .bc-kpi {
+          display: flex; align-items: center; text-align: left;
+          height: 100%; width: 100%;
+          background: ${CARD}; border: 1px solid ${LINE}; border-radius: 18px;
+          padding: 18px; cursor: pointer; min-height: 108px;
+          transition: transform .22s cubic-bezier(.16,1,.3,1), border-color .2s ease, box-shadow .2s ease;
+          font-family: inherit;
+        }
+        .bc-kpi:hover {
+          transform: translateY(-3px);
+          border-color: color-mix(in srgb, var(--kpi-c, ${ACCENT}) 42%, transparent);
+          box-shadow: 0 12px 26px -12px color-mix(in srgb, var(--kpi-c, ${ACCENT}) 34%, transparent);
+        }
+        .bc-kpi:hover .bc-kpi-value { color: var(--kpi-c, ${ACCENT}); }
+        .bc-kpi-label { font-size: 12px; color: ${TEXT_2}; }
+        .bc-kpi-value { font-size: 27px; font-weight: 800; color: ${INK}; font-variant-numeric: tabular-nums; line-height: 1.15; margin-top: 3px; transition: color .2s ease; }
+        .bc-kpi-sub { font-size: 11.5px; color: ${TEXT_4}; margin-top: 5px; max-width: 150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .bc-kpi-icon {
+          width: 44px; height: 44px; border-radius: 14px;
+          display: flex; align-items: center; justify-content: center;
+          flex-shrink: 0; margin-left: 10px;
+          transition: transform .22s cubic-bezier(.16,1,.3,1);
+        }
+
+        /* ===== 快捷记录格 ===== */
         .bc-quick {
           display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-          padding: 14px 8px; border-radius: 10px;
-          background: #fff; border: 1px solid ${LINE};
-          cursor: pointer; text-align: center;
-          transition: border-color .2s ease, background .2s ease;
+          padding: 14px 6px; border-radius: 16px;
+          background: #FDFAF5; border: 1px solid ${LINE};
+          cursor: pointer; text-align: center; font-family: inherit;
+          transition: transform .2s cubic-bezier(.16,1,.3,1), border-color .2s ease, background .2s ease;
         }
-        .bc-quick:hover { border-color: ${ACCENT}88; background: ${ACCENT_SOFT}; }
+        .bc-quick:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--qc, ${ACCENT}) 45%, transparent); background: #fff; }
         .bc-quick-icon {
-          width: 44px; height: 44px; border-radius: 12px;
+          width: 44px; height: 44px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
-          background: ${ACCENT_SOFT}; color: ${ACCENT};
+          background: color-mix(in srgb, var(--qc, ${ACCENT}) 15%, #fff);
+          color: var(--qc, ${ACCENT});
         }
-        .bc-quick-name { font-size: 12px; font-weight: 500; color: ${TEXT_1}; }
+        .bc-quick-name { font-size: 12px; font-weight: 600; color: ${INK}; }
 
-        /* ===== 统计卡 ===== */
-        .bc-stat {
-          background: #fff; border: 1px solid ${LINE};
-          border-radius: 10px; padding: 10px 12px;
+        /* ===== 按钮 ===== */
+        .bc-btn-primary {
+          display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+          padding: 10px 20px; border-radius: 999px;
+          background: linear-gradient(120deg, ${ACCENT}, #F09B72); color: #fff;
+          font-size: 14px; font-weight: 600; border: 0; cursor: pointer;
+          box-shadow: 0 6px 16px -6px rgba(232,131,94,.5);
+          transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+          font-family: inherit;
         }
-        .bc-sel {
-          background: ${ACCENT_SOFT} !important; color: ${ACCENT} !important;
-          border-color: ${ACCENT}88 !important;
+        .bc-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 9px 20px -6px rgba(232,131,94,.55); }
+        .bc-btn-primary:active { transform: translateY(0); }
+        .bc-btn-primary:disabled { opacity: .45; cursor: not-allowed; transform:none; box-shadow:none; }
+
+        .bc-chip-btn {
+          display: inline-flex; align-items: center; gap: 4px;
+          padding: 4px 10px; border-radius: 999px;
+          font-size: 11px; font-weight: 600; color: ${ACCENT_DEEP};
+          border: 1px solid ${ACCENT}44; background: #fff;
+          cursor: pointer; transition: background .16s ease; font-family: inherit;
         }
-        .bc-chip {
-          display: inline-flex; align-items: center; gap: 5px;
-          padding: 4px 12px; border-radius: 999px;
-          font-size: 12px; font-weight: 500;
+        .bc-chip-btn:hover { background: ${ACCENT_SOFT}; }
+        .bc-chip-static {
+          display:inline-flex; align-items:center; padding: 3px 10px;
+          border-radius: 999px; font-size: 11px; font-weight: 600;
         }
-        .bc-row:hover { background: ${ACCENT_SOFT}; }
+        .bc-chip-on {
+          background: ${ACCENT_SOFT} !important; color: ${ACCENT_DEEP} !important;
+          border-color: ${ACCENT}77 !important;
+        }
+        .bc-chip-off {
+          background: #FBF7F0 !important; color: ${TEXT_2} !important;
+          border-color: ${LINE} !important;
+        }
+        .bc-chip-off:hover { color: ${INK} !important; border-color: ${TEXT_4} !important; }
+
+        /* ===== 输入控件 ===== */
+        .bc-input {
+          padding: 9px 13px; border-radius: 12px;
+          border: 1px solid ${LINE}; background: #FDFAF5;
+          font-size: 13px; color: ${INK}; outline: none;
+          transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+          font-family: inherit;
+        }
+        .bc-input::placeholder { color: ${TEXT_4}; }
+        .bc-input:focus {
+          border-color: ${ACCENT};
+          background: #fff;
+          box-shadow: 0 0 0 3.5px rgba(232,131,94,.13);
+        }
+        input.bc-input:hover { border-color: ${ACCENT}66; }
+
+        /* ===== 时间轴 ===== */
+        .bc-tl-row { position: relative; }
+        .bc-tl-dot { position:absolute; left: 47px; top: 50%; transform: translate(-50%,-50%); width: 9px; height: 9px; border-radius:50%; }
+
+        @media (max-width: 720px) {
+          .bc-day-pill { width:100%; text-align:center; margin-left:0; }
+          .bc-kpi-sub { display:none; }
+        }
       `}</style>
 
-      {/* ===== 左侧竖列导航 ===== */}
-      <aside className="bc-sidenav">
-        <div className="bc-nav-greet">
-          <div className="bc-nav-icon">
-            <Baby className="h-6 w-6" strokeWidth={1.8} />
-          </div>
-          <div className="bc-nav-name">{settings.name || '宝宝'}</div>
-          <div className="bc-nav-sub">出生第 {ageDaysPlus(settings.birth)} 天</div>
+      {/* ===== 顶栏问候 ===== */}
+      <header className="bc-topbar animate-fade-in">
+        <span className="bc-avatar"><Baby className="h-7 w-7" strokeWidth={1.7} /></span>
+        <div className="bc-hello">
+          <b>{settings.name || '宝宝'}的护理手册</b>
+          <span>每一天的成长都值得被温柔记录</span>
         </div>
-        <nav className="bc-nav">
-          {NAV.map(({ group, items }) => (
-            <div key={group} className="bc-nav-group">
-              <div className="bc-nav-group-title">{group}</div>
-              {items.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setPage(id)}
-                  className={`bc-nav-item ${page === id ? 'active' : ''}`}
-                >
-                  <Icon className="bc-nav-ic" strokeWidth={1.7} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-          ))}
-        </nav>
-      </aside>
+        <span className="bc-day-pill">出生第 {ageDaysPlus(settings.birth)} 天</span>
+      </header>
 
-      {/* ===== 右侧内容区 ===== */}
-      <main className="bc-main">
+      {/* ===== 顶部导航 ===== */}
+      <nav className="bc-nav animate-fade-in">
+        {NAV.map(({ group, items }, gi) => (
+          <React.Fragment key={group}>
+            {gi > 0 && <span className="bc-nav-sep" />}
+            {items.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setPage(id)}
+                className={`bc-nav-item ${page === id ? 'active' : ''}`}
+              >
+                <Icon className="bc-nav-ic" strokeWidth={1.8} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </React.Fragment>
+        ))}
+      </nav>
 
       {/* ===== 今日首页 ===== */}
       {page === 'home' && (
-        <div className="space-y-5 animate-fade-in">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             <KpiCard type="milk"  label="今日喂奶" value={`${kMilk.length} 次`} sub={`共 ${kMilk.reduce((y, M) => y + (+M.amount || 0), 0)}ml`} color={TYPES.milk.color} onClick={() => setQuickType('milk')} />
             <KpiCard type="poop"  label="今日排便" value={`${kPoop.length} 次`} sub={kPoop.length ? summarize(kPoop[kPoop.length - 1]) : '—'} color={TYPES.poop.color} onClick={() => setQuickType('poop')} />
             <KpiCard type="pee"   label="今日排尿" value={`${kPee.length} 片`} sub="—" color={TYPES.pee.color} onClick={() => setQuickType('pee')} />
@@ -1556,24 +1496,14 @@ export default function BabyCare() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch">
-            <div className="bc-card bc-card-hover lg:col-span-3 flex flex-col">
-              <SectionHeader
-                icon={Zap}
-                title="快捷记录"
-                right={<span className="text-[12px] text-[#86909C]">{Object.keys(TYPES).length} 项</span>}
-              />
-              <div className="grid grid-cols-3 gap-3 mt-2">
+            <div className="bc-card lg:col-span-3 flex flex-col">
+              <SectionHeader icon={Zap} title="快捷记录" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{Object.keys(TYPES).length} 项</span>} />
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-2">
                 {Object.keys(TYPES).map((y) => {
                   const Icon = TYPES[y].icon;
                   return (
-                    <button
-                      key={y}
-                      onClick={() => setQuickType(y)}
-                      className="bc-quick"
-                    >
-                      <span className="bc-quick-icon" style={{ background: `${TYPES[y].color}66` }}>
-                        <Icon className="h-5 w-5" strokeWidth={1.8} />
-                      </span>
+                    <button key={y} onClick={() => setQuickType(y)} className="bc-quick" style={{ '--qc': TYPES[y].color }}>
+                      <span className="bc-quick-icon"><Icon className="h-5 w-5" strokeWidth={1.8} /></span>
                       <span className="bc-quick-name">{TYPES[y].name}</span>
                     </button>
                   );
@@ -1581,40 +1511,33 @@ export default function BabyCare() {
               </div>
             </div>
 
-            <div className="bc-card bc-card-hover lg:col-span-2 flex flex-col">
-              <SectionHeader
-                icon={Sparkles}
-                title="智能预测"
-                right={<span className="text-[12px] text-[#86909C]">{predictions.length} 条</span>}
-              />
+            <div className="bc-card lg:col-span-2 flex flex-col">
+              <SectionHeader icon={Sparkles} title="智能预测" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{predictions.length} 条</span>} />
               <div className="space-y-2 mt-2 flex-1">
                 {predictions.slice(0, 4).map((y) => PredRow(y, renderPredItem))}
-                {predictions.length === 0 && <div className="py-8 text-center text-[#86909C] text-sm">记录后自动生成预测</div>}
+                {predictions.length === 0 && <div className="py-8 text-center text-sm" style={{ color: TEXT_4 }}>记录后自动生成预测</div>}
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
-            <div className="bc-card bc-card-hover lg:col-span-1 flex flex-col">
-              <SectionHeader icon={Clock} title="今日作息时间轴" right={<span className="text-[12px] text-[#86909C]">{timeline.length} 条</span>} />
+            <div className="bc-card flex flex-col">
+              <SectionHeader icon={Clock} title="今日作息时间轴" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{timeline.length} 条</span>} />
               <div className="flex-1 min-h-0 mt-2 overflow-y-auto pr-1 space-y-1.5">
                 {timeline.map((y) => (
-                  <div key={y.id} className="bc-row flex items-center gap-2.5 p-2.5 rounded-lg bg-[#f8f9fa] border-l-[3px] hover:bg-[#f1f3f5] transition-colors" style={{ borderColor: TYPES[y.type].color }}>
-                    <span className="text-[11px] text-[var(--text-3)] tabular-nums w-11 shrink-0 font-mono">{formatTime(y.time)}</span>
-                    <span className="h-6 w-6 rounded-md flex items-center justify-center shrink-0" style={{ background: `${TYPES[y.type].color}22`, color: TYPES[y.type].color }}>
-                      {(() => {
-                        const Icon = TYPES[y.type].icon;
-                        return <Icon className="h-3.5 w-3.5" />;
-                      })()}
+                  <div key={y.id} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#FBF7F0] hover:bg-[#F7F0E4] transition-colors">
+                    <span className="text-[11px] tabular-nums w-11 shrink-0 font-mono" style={{ color: TEXT_2 }}>{formatTime(y.time)}</span>
+                    <span className="h-6 w-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TYPES[y.type].color}22`, color: TYPES[y.type].color }}>
+                      {(() => { const Icon = TYPES[y.type].icon; return <Icon className="h-3.5 w-3.5" />; })()}
                     </span>
-                    <span className="text-[12.5px] text-[var(--text-1)] truncate">{summarize(y)}</span>
+                    <span className="text-[12.5px] truncate" style={{ color: INK }}>{summarize(y)}</span>
                   </div>
                 ))}
-                {timeline.length === 0 && <div className="py-8 text-center text-[var(--text-3)] text-sm">今天还没有记录</div>}
+                {timeline.length === 0 && <div className="py-8 text-center text-sm" style={{ color: TEXT_4 }}>今天还没有记录</div>}
               </div>
             </div>
 
-            <div className="bc-card bc-card-hover lg:col-span-1 flex flex-col">
+            <div className="bc-card lg:col-span-1 flex flex-col">
               <SectionHeader icon={TrendingUp} title="近 7 天奶量趋势" />
               <div className="flex-1 min-h-[240px] mt-2">
                 <TrendChart data={milkTrend} color={ACCENT} unit="ml" fill />
@@ -1627,13 +1550,10 @@ export default function BabyCare() {
       {/* ===== 添加记录 ===== */}
       {page === 'record' && <RecordPage records={records} settings={settings} onAdd={addRecord} onImport={importRecords} />}
 
-      {/* ===== 母婴台账：宝宝档案 / 妈妈护理 / 宝宝每日 / 换尿布 / 进食记录 ===== */}
+      {/* ===== 宝宝档案（含纸质数据导入） ===== */}
       {page === 'profile' && (
         <div className="space-y-4 animate-fade-in">
-          <ImportPanel
-            onImport={doImport}
-            hasData={!!(momDaily.length || babyDaily.length || diaper.length || feed.length || records.length)}
-          />
+          <ImportPanel onImport={doImport} hasData={!!(momDaily.length || babyDaily.length || diaper.length || feed.length || records.length)} />
           <ProfilePage profile={profile} onSave={saveProfile} />
         </div>
       )}
@@ -1644,31 +1564,29 @@ export default function BabyCare() {
 
       {/* ===== 趋势统计 ===== */}
       {page === 'trend' && (
-        <div className="space-y-5 animate-fade-in">
-          {/* 上方：三张趋势图卡片横向等宽排列 */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <div className="bc-card bc-card-hover p-5">
+        <div className="space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="bc-card p-5">
               <SectionHeader icon={TrendingUp} title="每日总奶量" right={<UnitTag color={ACCENT}>ml</UnitTag>} />
               <TrendChart data={milkTrend} labels={trendLabels} color={ACCENT} unit="ml" height={210} />
             </div>
-            <div className="bc-card bc-card-hover p-5">
-              <SectionHeader icon={Moon} title="每日睡眠时长" right={<UnitTag color="#C7D2FE">h</UnitTag>} />
-              <TrendChart data={sleepTrend} labels={trendLabels} color="#C7D2FE" unit="h" height={210} />
+            <div className="bc-card p-5">
+              <SectionHeader icon={Moon} title="每日睡眠时长" right={<UnitTag color={TYPES.sleep.color}>h</UnitTag>} />
+              <TrendChart data={sleepTrend} labels={trendLabels} color={TYPES.sleep.color} unit="h" height={210} />
             </div>
-            <div className="bc-card bc-card-hover p-5">
-              <SectionHeader icon={Droplets} title="每日排便次数" right={<UnitTag color="#B7E4C7">次</UnitTag>} />
-              <TrendChart data={typeCountTrend('poop')} labels={trendLabels} color="#B7E4C7" unit="次" height={210} />
+            <div className="bc-card p-5">
+              <SectionHeader icon={Droplets} title="每日排便次数" right={<UnitTag color={TYPES.poop.color}>次</UnitTag>} />
+              <TrendChart data={typeCountTrend('poop')} labels={trendLabels} color={TYPES.poop.color} unit="次" height={210} />
             </div>
           </div>
 
-          {/* 下方：周期数据汇总区（四色区分，层次清晰） */}
-          <div className="bc-card bc-card-hover p-5">
-            <SectionHeader icon={BarChart3} title="周期数据汇总" right={<span className="text-[12px] text-[#86909C]">今日</span>} />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <KpiMini color="#5B8DEF" bg="#EEF4FF" value={kMilk.length} label="今日喂奶" unit="次" />
-              <KpiMini color="#40B57D" bg="#EAF6F1" value={kPoop.length} label="今日排便" unit="次" />
-              <KpiMini color="#0CA678" bg="#E7F7F2" value={kPee.length} label="今日排尿" unit="片" />
-              <KpiMini color="#7048E8" bg="#F0ECFC" value={sleepTotal.toFixed(1)} label="今日睡眠" unit="h" />
+          <div className="bc-card p-5">
+            <SectionHeader icon={BarChart3} title="周期数据汇总" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>今日</span>} />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <KpiMini color="#E8835E" bg="#FDEEE7" value={kMilk.length} label="今日喂奶" unit="次" />
+              <KpiMini color="#7CA85F" bg="#EFF5E8" value={kPoop.length} label="今日排便" unit="次" />
+              <KpiMini color="#4FA39C" bg="#E6F2F1" value={kPee.length} label="今日排尿" unit="片" />
+              <KpiMini color="#7B87CE" bg="#ECEDF8" value={sleepTotal.toFixed(1)} label="今日睡眠" unit="h" />
             </div>
           </div>
         </div>
@@ -1677,15 +1595,15 @@ export default function BabyCare() {
       {/* ===== 预测提醒 ===== */}
       {page === 'predict' && (
         <div className="space-y-4 animate-fade-in">
-          <div className="bc-card bc-card-hover p-5">
-            <SectionHeader icon={Sparkles} title="喂养 / 护理预测" right={<span className="text-[12px] text-[#86909C]">{predictions.length} 条</span>} />
+          <div className="bc-card p-5">
+            <SectionHeader icon={Sparkles} title="喂养 / 护理预测" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{predictions.length} 条</span>} />
             <div className="space-y-2">
               {predictions.map((y) => PredRow(y, renderPredItem))}
-              {predictions.length === 0 && <div className="py-8 text-center text-[var(--text-3)] text-sm">记录越多，预测越准</div>}
+              {predictions.length === 0 && <div className="py-8 text-center text-sm" style={{ color: TEXT_4 }}>记录越多，预测越准</div>}
             </div>
           </div>
 
-          <div className="bc-card bc-card-hover p-5">
+          <div className="bc-card p-5">
             <SectionHeader icon={Scale} title="月龄参考对比" />
             {ref ? (
               <div>
@@ -1695,27 +1613,26 @@ export default function BabyCare() {
                 <RefBar label="每日排尿" cur={kPee.length} range={ref.pee} unit="片" />
               </div>
             ) : (
-              <div className="py-6 text-center text-[var(--text-3)] text-sm">先在「宝宝档案」填写宝宝出生日期</div>
+              <div className="py-6 text-center text-sm" style={{ color: TEXT_4 }}>先在「宝宝档案」填写宝宝出生日期</div>
             )}
           </div>
 
-          {/* 预测规则说明 · 折叠面板（默认收起） */}
-          <div className="bc-card bc-card-hover p-0 overflow-hidden">
+          <div className="bc-card overflow-hidden" style={{ padding: 0 }}>
             <button
               type="button"
               onClick={() => setShowRules((v) => !v)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#F7F8FA] transition-colors cursor-pointer"
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-[#FBF7F0] transition-colors cursor-pointer"
             >
-              <span className="flex items-center gap-2 text-[16px] font-medium text-[#333F51]">
-                <span className="bc-title-icon" style={{ background: `${ACCENT}26`, color: ACCENT }}>
+              <span className="flex items-center gap-2 text-[15px] font-semibold" style={{ color: INK }}>
+                <span className="bc-title-icon" style={{ background: `${ACCENT}1F`, color: ACCENT }}>
                   <Info className="h-4 w-4" strokeWidth={1.8} />
                 </span>
                 预测规则说明
               </span>
-              <span className="text-[#86909C] text-[13px] transition-transform duration-200" style={{ transform: showRules ? 'rotate(180deg)' : 'none' }}>▾</span>
+              <span className="text-[13px] transition-transform duration-200" style={{ color: TEXT_2, transform: showRules ? 'rotate(180deg)' : 'none' }}>▾</span>
             </button>
             {showRules && (
-              <div className="px-5 pb-5 space-y-2 text-[12px] text-[var(--text-2)]">
+              <div className="px-5 pb-5 space-y-2 text-[12px]" style={{ color: TEXT_2 }}>
                 {[
                   ['喂奶预测', '昼夜加权 EWMA + 月龄参考区间校正，白天与夜间分别建模。'],
                   ['排便预警', '0-7天超12h、8-28天超24h、满月后超48h未排便即提醒。'],
@@ -1725,10 +1642,10 @@ export default function BabyCare() {
                 ].map(([y, M]) => (
                   <div key={y} className="flex gap-2.5 items-start">
                     <span className="h-1.5 w-1.5 rounded-full mt-1.5 shrink-0" style={{ background: ACCENT }} />
-                    <p><b className="text-[var(--text-1)] font-semibold">{y}</b>：{M}</p>
+                    <p><b className="font-semibold" style={{ color: INK }}>{y}</b>：{M}</p>
                   </div>
                 ))}
-                <p className="text-[var(--text-3)] pt-1 border-t border-[#E5E6EB] mt-2">所有预测仅供参考，不能替代医生判断。</p>
+                <p className="pt-1 border-t mt-2" style={{ color: TEXT_4, borderColor: LINE }}>所有预测仅供参考，不能替代医生判断。</p>
               </div>
             )}
           </div>
@@ -1737,20 +1654,20 @@ export default function BabyCare() {
 
       {/* ===== 历史记录 ===== */}
       {page === 'history' && (
-        <div className="bc-card bc-card-hover animate-fade-in">
+        <div className="bc-card animate-fade-in">
           <SectionHeader
             icon={History}
             title="历史记录"
-            right={<span className="text-[12px] text-[#86909C]">{historyList.length} 条</span>}
+            right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{historyList.length} 条</span>}
           />
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <DateTimePicker mode="date" value={historyFrom} onChange={setHistoryFrom} width="10.5rem" />
-            <span className="text-[var(--text-3)] text-[12px]">至</span>
+            <span className="text-[12px]" style={{ color: TEXT_2 }}>至</span>
             <DateTimePicker mode="date" value={historyTo} onChange={setHistoryTo} width="10.5rem" />
             <div className="flex gap-1 flex-wrap ml-1">
-              <button onClick={() => setHistoryType('')} className={`px-2.5 py-1 rounded-lg text-[12px] transition-colors ${historyType === '' ? 'bc-sel' : 'text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--hover)]'}`}>全部</button>
+              <button onClick={() => setHistoryType('')} className={`px-2.5 py-1 rounded-full text-[12px] transition-colors ${historyType === '' ? 'bc-chip-on' : 'bc-chip-off'}`}>全部</button>
               {Object.keys(TYPES).map((y) => (
-                <button key={y} onClick={() => setHistoryType(y)} className={`px-2.5 py-1 rounded-lg text-[12px] transition-colors ${historyType === y ? 'bc-sel' : 'text-[var(--text-2)] hover:text-[var(--text-1)] hover:bg-[var(--hover)]'}`}>{TYPES[y].name}</button>
+                <button key={y} onClick={() => setHistoryType(y)} className={`px-2.5 py-1 rounded-full text-[12px] transition-colors ${historyType === y ? 'bc-chip-on' : 'bc-chip-off'}`}>{TYPES[y].name}</button>
               ))}
             </div>
             <button className="bc-btn-primary ml-1" style={{ padding: '8px 16px' }}>
@@ -1758,39 +1675,40 @@ export default function BabyCare() {
             </button>
           </div>
 
-          <div className="overflow-y-auto max-h-[60vh] rounded-xl border border-[#E5E6EB]">
+          <div className="overflow-y-auto max-h-[60vh] rounded-[14px] border" style={{ borderColor: LINE }}>
             {historyGroups.length === 0 && (
-              <div className="py-12 text-center text-[var(--text-3)]">没有符合条件的记录</div>
+              <div className="py-12 text-center text-sm" style={{ color: TEXT_4 }}>没有符合条件的记录</div>
             )}
             {historyGroups.map((g) => (
-              <div key={g.date} className="border-b border-[#EDEFF3] last:border-b-0">
-                {/* 日期分组标题 + 全部删除 */}
-                <div className="flex items-center justify-between gap-3 px-4 py-2.5" style={{ background: '#F7F8FA' }}>
+              <div key={g.date} className="border-b last:border-b-0" style={{ borderColor: '#F5EFE6' }}>
+                <div className="flex items-center justify-between gap-3 px-4 py-2.5" style={{ background: '#FBF7F0' }}>
                   <span className="flex items-center gap-3">
-                    <span className="text-[13px] font-semibold text-[#333F51]">{dayTitle(g.date)}</span>
-                    <span className="text-[11px] text-[#86909C]">{g.items.length} 条</span>
+                    <span className="text-[13px] font-bold" style={{ color: INK }}>{dayTitle(g.date)}</span>
+                    <span className="text-[11px]" style={{ color: TEXT_2 }}>{g.items.length} 条</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => removeRecordsByDate(g.date)}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[7px] text-[12px] font-medium text-[#86909C] border border-[#E5E6EB] bg-white hover:text-[#E5484D] hover:border-[#F3C1C4] hover:bg-[#FDF3F3] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium border bg-white transition-colors hover:text-[var(--danger)] hover:border-[#F3C1C4] hover:bg-[#FDF3F3]"
+                    style={{ color: TEXT_2, borderColor: LINE }}
                   >
                     <Trash2 className="h-3.5 w-3.5" />全部删除
                   </button>
                 </div>
-                {/* 该日期下的每条记录：hover 即现删除按钮 */}
                 {g.items.map((y) => (
                   <div
                     key={y.id}
-                    className="group flex items-center gap-3 px-4 py-2.5 border-t border-[#F1F3F6] hover:bg-[#FAFBFC] transition-colors"
+                    className="group flex items-center gap-3 px-4 py-2.5 border-t hover:bg-[#FBF7F0] transition-colors"
+                    style={{ borderColor: '#F5EFE6' }}
                   >
-                    <span className="text-[12px] text-[var(--text-2)] tabular-nums font-mono shrink-0">{formatDateTime(y.time)}</span>
+                    <span className="text-[12px] tabular-nums font-mono shrink-0" style={{ color: TEXT_2 }}>{formatDateTime(y.time)}</span>
                     <span className="px-2 py-0.5 rounded-full text-[11px] font-medium shrink-0" style={{ background: `${TYPES[y.type].color}22`, color: TYPES[y.type].color }}>{TYPES[y.type].name}</span>
-                    <span className="flex-1 min-w-0 text-[12.5px] text-[var(--text-1)] truncate">{summarize(y)}</span>
+                    <span className="flex-1 min-w-0 text-[12.5px] truncate" style={{ color: INK }}>{summarize(y)}</span>
                     <button
                       type="button"
                       onClick={() => removeRecord(y.id)}
-                      className="shrink-0 p-1.5 rounded-lg text-[var(--text-4)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors lg:opacity-0 lg:group-hover:opacity-100"
+                      className="shrink-0 p-1.5 rounded-lg hover:text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors lg:opacity-0 lg:group-hover:opacity-100"
+                      style={{ color: TEXT_4 }}
                       title="删除"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -1808,8 +1726,6 @@ export default function BabyCare() {
 
       {/* Toast */}
       {toast && <div className="toast toast-success">{toast}</div>}
-
-      </main>
     </div>
   );
 }

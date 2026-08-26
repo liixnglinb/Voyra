@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
+import AuthGate from './components/AuthGate'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import ArticleDetail from './pages/ArticleDetail'
@@ -32,12 +33,12 @@ function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/articles/:slug" element={<ArticleDetail />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/mindmap" element={<MindMap />} />
+                <Route path="/mindmap" element={<AuthGate><MindMap /></AuthGate>} />
                 <Route path="/prompts" element={<PromptLibrary />} />
                 <Route path="/learning" element={<LearningHub />} />
-                <Route path="/baby-care" element={<BabyCare />} />
+                <Route path="/baby-care" element={<AuthGate><BabyCare /></AuthGate>} />
                 <Route path="/blog" element={<Blog />} />
-                <Route path="/timetable" element={<ScheduleHub />} />
+                <Route path="/timetable" element={<AuthGate><ScheduleHub /></AuthGate>} />
                 <Route path="/schedule" element={<Navigate to="/timetable?tab=courses" replace />} />
                 <Route path="/planner" element={<Navigate to="/timetable?tab=planner" replace />} />
                 <Route path="/agents" element={<AgentSkills />} />

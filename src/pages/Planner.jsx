@@ -4,6 +4,7 @@ import {
   GraduationCap, Sun, FlaskConical, Star, PartyPopper, CalendarPlus,
 } from 'lucide-react';
 import DateTimePicker from '../components/DateTimePicker';
+import { useAuth } from '../components/AuthGate';
 
 /* ============================================================
    个人日程表 · Planner
@@ -13,6 +14,8 @@ import DateTimePicker from '../components/DateTimePicker';
    ============================================================ */
 
 const LS_KEY = 'PlannerData';
+import { userKey } from '../lib/auth';
+const LS_READ = () => userKey(LS_KEY);
 const ACCENT = '#A48830';
 const ACCENT_SOFT = '#FFF9DF';
 const ACCENT_LINE = 'rgba(164,136,48,.42)';
@@ -57,6 +60,7 @@ function holidayName(date) {
 }
 
 export default function Planner() {
+  const { guard } = useAuth();
   const today = new Date();
   const [view, setView] = useState({ y: today.getFullYear(), m: today.getMonth() + 1 });
   const [selected, setSelected] = useState(fmt(today));
@@ -72,15 +76,16 @@ export default function Planner() {
 
   useEffect(() => {
     try {
-      const raw = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      const raw = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
       if (raw && Array.isArray(raw)) setEvents(raw);
     } catch { /* ignore */ }
     setLoaded(true);
   }, []);
 
   const persist = (next) => {
+    if (!guard()) return;
     setEvents(next);
-    try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+    try { localStorage.setItem(LS_READ(), JSON.stringify(next)); } catch { /* ignore */ }
   };
 
   const byDate = useMemo(() => {

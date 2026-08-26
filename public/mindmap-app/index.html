@@ -298,6 +298,24 @@
   </section>
 </div>
 
+<script>
+/* 按登录账号隔离本地存储：所有 localStorage 读写自动加账号前缀 */
+(function () {
+  var uid = null;
+  try {
+    var s = JSON.parse(localStorage.getItem('voyra_session_v1') || 'null');
+    if (s && s.uid && Date.now() < s.expiresAt) uid = s.uid;
+  } catch (e) {}
+  if (!uid) return;
+  var P = uid + '__';
+  var _get = localStorage.getItem.bind(localStorage);
+  var _set = localStorage.setItem.bind(localStorage);
+  var _rem = localStorage.removeItem.bind(localStorage);
+  localStorage.getItem = function (k) { return _get(P + k); };
+  localStorage.setItem = function (k, v) { return _set(P + k, v); };
+  localStorage.removeItem = function (k) { return _rem(P + k); };
+})();
+</script>
 <script defer src="./mindmap-bridge.min.js"></script>
 <script defer src="./mindmap-app.min.js"></script>
 </body>
