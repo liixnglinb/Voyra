@@ -1,4 +1,4 @@
-﻿# dependencies
+# dependencies
 node_modules
 
 # build output
@@ -21,7 +21,7 @@ dist-ssr
 
 # old desktop-app artifacts (not part of web/main)
 build
-data
+/data
 dev
 electron
 scripts
