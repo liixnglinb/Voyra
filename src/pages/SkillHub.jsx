@@ -11,7 +11,7 @@ import {
    - 优质精选：人工策展，含一键复制安装命令
    ============================================================ */
 
-const HOT_CACHE_KEY = 'voyra.skills-hot-v2';
+const HOT_CACHE_KEY = 'voyra.skills-hot-v3';
 const RANK_BASE = [
   { repo: 'anthropics/skills', base: 44200, desc: 'Anthropic 官方技能库：docx · pptx · xlsx · pdf 与编写规范', area: '官方' },
   { repo: 'x1xhlol/system-prompts-and-models-of-ai-tools', base: 52000, desc: '主流 AI 工具系统提示词大合集，逆向工程参考宝库', area: '提示词' },
@@ -29,6 +29,15 @@ const RANK_BASE = [
   { repo: 'davila7/claude-code-templates', base: 5500, desc: 'Claude Code 项目模板速启集：Agent、命令、MCP 配置', area: '模板' },
   { repo: 'iannuttall/claude-agents', base: 5400, desc: 'Claude Agent 配置范例与最佳实践', area: '范例' },
   { repo: 'e2b-dev/awesome-mcp-servers', base: 4600, desc: '按应用场景分类的 MCP 服务器目录（E2B 维护）', area: 'MCP' },
+  { repo: 'browser-use/browser-use', base: 42000, desc: '浏览器自动化 Agent：让 AI 真实操作网页，可接入 Skill', area: '自动化' },
+  { repo: 'microsoft/autogen', base: 34000, desc: '微软多智能体协作框架，Agent 编排的经典方案', area: 'Agent' },
+  { repo: 'All-Hands-AI/OpenHands', base: 30000, desc: '开源 AI 软件工程师平台，端到端 Agent 开发', area: 'Agent' },
+  { repo: 'crewAIInc/crewAI', base: 25000, desc: '角色扮演式多 Agent 协作框架，任务拆解与协作', area: 'Agent' },
+  { repo: 'langchain-ai/langgraph', base: 12000, desc: 'LangChain 官方有状态 Agent 编排框架', area: 'Agent' },
+  { repo: 'anthropics/claude-cookbooks', base: 10000, desc: 'Anthropic 官方 Claude 用例与集成示例（含 Skill 用法）', area: '官方' },
+  { repo: 'e2b-dev/e2b', base: 8000, desc: 'AI 应用云端代码执行沙箱，让 Agent 安全跑代码', area: '沙箱' },
+  { repo: 'dair-ai/Prompt-Engineering-Guide', base: 49000, desc: '提示词工程权威指南，Skill 编写的理论底座', area: '提示词' },
+  { repo: 'stanfordnlp/dspy', base: 17000, desc: '斯坦福提示词自动优化框架，程序化调优 Skill 输出', area: '提示词' },
 ];
 
 const CURATED = [
@@ -77,6 +86,21 @@ const CURATED = [
   { repo: 'e2b-dev/awesome-mcp-servers', name: '场景化 MCP 目录', area: 'MCP', stars: 4600,
     desc: 'E2B 团队按应用场景分类的 MCP 服务器目录，配简短中文导读更易上手。',
     install: 'https://github.com/e2b-dev/awesome-mcp-servers' },
+  { repo: 'browser-use/browser-use', name: '浏览器自动化', area: '自动化', stars: 42000,
+    desc: '让 AI 通过 Skill 真实操作浏览器：填表、点击、抓取、多步骤任务，前端自动化的标配。',
+    install: 'pip install browser-use' },
+  { repo: 'crewAIInc/crewAI', name: '多智能体协作', area: 'Agent', stars: 25000,
+    desc: '把任务拆给不同角色的 Agent 并行协作，产出复杂工作流；Skill 可与 crew 组合使用。',
+    install: 'pip install crewai' },
+  { repo: 'All-Hands-AI/OpenHands', name: 'AI 软件工程师', area: 'Agent', stars: 30000,
+    desc: '开源的端到端 AI 编程平台，自动完成编码、测试与修复，可用作技能实验台。',
+    install: 'docker run -it --rm -p 3000:3000 ghcr.io/all-hands-ai/openhands' },
+  { repo: 'anthropics/claude-cookbooks', name: '官方用例集', area: '官方', stars: 10000,
+    desc: 'Anthropic 官方维护的 Claude 集成示例：工具调用、Agent 循环与 Skill 写法，边抄边学。',
+    install: 'https://github.com/anthropics/claude-cookbooks' },
+  { repo: 'langchain-ai/langgraph', name: 'Agent 编排框架', area: 'Agent', stars: 12000,
+    desc: '把多步 Agent 流程建模成状态图：分支、循环、暂停恢复，复杂任务编排的工程化方案。',
+    install: 'pip install langgraph' },
 ];
 
 const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -112,13 +136,23 @@ const ZH_DESC = {
   'e2b-dev/awesome-mcp-servers': '按场景分类的 MCP 服务器目录',
   'anthropics/claude-code': 'Claude Code 官方 CLI 本体',
   'iannuttall/claude-agents': 'Claude Agent 配置范例集',
+  'browser-use/browser-use': '浏览器自动化 Agent：让 AI 真实操作网页',
+  'microsoft/autogen': '微软多智能体协作框架',
+  'All-Hands-AI/OpenHands': '开源 AI 软件工程师平台',
+  'crewAIInc/crewAI': '角色扮演式多 Agent 协作框架',
+  'langchain-ai/langgraph': 'LangChain 有状态 Agent 编排框架',
+  'anthropics/claude-cookbooks': 'Anthropic 官方 Claude 集成用例集',
+  'e2b-dev/e2b': 'AI 应用云端代码执行沙箱',
+  'dair-ai/Prompt-Engineering-Guide': '提示词工程权威指南',
+  'stanfordnlp/dspy': '斯坦福提示词自动优化框架',
 };
 const zhDesc = (it) => ZH_DESC[it.repo] || `Skill 相关开源项目 · ${it.lang || '多语言'} · 近 7 天活跃更新`;
 
 async function fetchWeeklyHot(since) {
   const urls = [
-    `https://api.github.com/search/repositories?q=claude+skill+pushed:%3E${since}&sort=stars&order=desc&per_page=12`,
-    `https://api.github.com/search/repositories?q=agent+skills+pushed:%3E${since}&sort=stars&order=desc&per_page=12`,
+    `https://api.github.com/search/repositories?q=claude+skill+pushed:%3E${since}&sort=stars&order=desc&per_page=20`,
+    `https://api.github.com/search/repositories?q=agent+skills+pushed:%3E${since}&sort=stars&order=desc&per_page=20`,
+    `https://api.github.com/search/repositories?q=mcp+server+pushed:%3E${since}&sort=stars&order=desc&per_page=20`,
   ];
   const settled = await Promise.allSettled(urls.map((u) => fetchJson(u)));
   const seen = new Set();
@@ -139,7 +173,7 @@ async function fetchWeeklyHot(since) {
     }
   }
   items.sort((a, b) => b.stars - a.stars);
-  return items.slice(0, 16);
+  return items.slice(0, 20);
 }
 
 async function fetchRankStars() {
@@ -198,7 +232,7 @@ export default function SkillHub() {
   const [refreshing, setRefreshing] = useState(false);
   const [query, setQuery] = useState('');
   const [copied, setCopied] = useState('');
-  const [activeSec, setActiveSec] = useState('sec-hot');
+  const [tab, setTab] = useState('hot');
   const lastRefreshRef = useRef(0);
 
   const load = async (force = false) => {
@@ -258,15 +292,10 @@ export default function SkillHub() {
       ? <span className="sk-status is-error">实时数据获取失败，已展示缓存 / 精选数据</span>
       : <span className="sk-status is-ok"><i />每日自动刷新 · {updatedAt ? `今天 ${new Date(updatedAt).toTimeString().slice(0, 5)} 已更新` : '已就绪'}</span>;
 
-  const jumpTo = (id) => {
-    setActiveSec(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const JUMPS = [
-    { id: 'sec-hot', label: '每周热点', Icon: Flame, count: hotFiltered.length },
-    { id: 'sec-rank', label: '星数排行', Icon: Trophy, count: rankFiltered.length },
-    { id: 'sec-cur', label: '优质精选', Icon: Sparkles, count: curatedFiltered.length },
+  const TABS = [
+    { key: 'hot', label: '每周热点', en: 'WEEKLY HOT', Icon: Flame, count: hotFiltered.length },
+    { key: 'cur', label: '优质精选', en: 'CURATED', Icon: Sparkles, count: curatedFiltered.length },
+    { key: 'rank', label: '星数排行', en: 'ALL-TIME', Icon: Trophy, count: rankFiltered.length },
   ];
 
   return <div className="sk-page">
@@ -303,20 +332,25 @@ export default function SkillHub() {
       .sk-refresh:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); transform:translateY(-1px); }
       .sk-refresh:disabled { opacity:.5; cursor:not-allowed; }
 
-      /* ===== 锚点导航条 ===== */
-      .sk-jump { position:sticky; top:0; z-index:30; display:flex; align-items:center; gap:7px; flex-wrap:wrap;
+      /* ===== 三大板块 Tab 栏 ===== */
+      .sk-tabs { position:sticky; top:0; z-index:30; display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
         padding:11px 0; margin-bottom:-14px;
         background:linear-gradient(180deg, rgba(247,247,245,.97) 82%, transparent); }
-      .sk-jump-btn { display:inline-flex; align-items:center; gap:7px; border:1px solid var(--line); border-radius:99px;
-        padding:9px 16px; background:#fff; color:#666; font-size:13px; font-weight:650;
-        transition:border-color .16s ease, color .16s ease, background .16s ease, transform .16s ease; }
-      .sk-jump-btn svg { color:#a0a0a0; transition:color .16s ease; }
-      .sk-jump-btn b { color:#b5b5b5; font:600 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
-      .sk-jump-btn:hover { border-color:var(--gold); color:var(--ink); transform:translateY(-1px); }
-      .sk-jump-btn:hover svg { color:var(--gold); }
-      .sk-jump-btn.is-active { border-color:rgba(164,136,48,.55); background:var(--hl); color:var(--ink); }
-      .sk-jump-btn.is-active svg { color:var(--gold); }
-      .sk-jump-hint { margin-left:auto; color:#adb5bd; font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .sk-tab { display:flex; align-items:center; gap:11px; border:1px solid var(--line); border-radius:13px;
+        padding:15px 18px; background:#fff; color:#666; text-align:left;
+        transition:border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
+      .sk-tab-ico { display:grid; width:38px; height:38px; flex:0 0 38px; place-items:center; border-radius:10px;
+        background:#f1f3f5; color:#777; transition:background .16s ease, color .16s ease; }
+      .sk-tab-copy { display:grid; gap:2px; min-width:0; }
+      .sk-tab-copy b { font-size:15px; font-weight:760; color:inherit; }
+      .sk-tab-copy span { color:#a0a0a0; font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.06em; }
+      .sk-tab-count { margin-left:auto; flex:0 0 auto; padding:3px 10px; border-radius:99px; background:#f1f3f5; color:#777;
+        font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; transition:background .16s ease, color .16s ease; }
+      .sk-tab:hover { border-color:rgba(164,136,48,.5); transform:translateY(-1px); }
+      .sk-tab.is-active { border-color:rgba(164,136,48,.6); background:var(--soft); color:var(--ink);
+        box-shadow:0 10px 22px -16px rgba(164,136,48,.55); }
+      .sk-tab.is-active .sk-tab-ico { background:var(--hl); color:var(--gold); }
+      .sk-tab.is-active .sk-tab-count { background:var(--hl); color:#8a6d1c; }
 
       /* ===== Section 头 ===== */
       .sk-sec-head { display:flex; align-items:center; gap:11px; margin-bottom:16px; }
@@ -398,6 +432,9 @@ export default function SkillHub() {
         .sk-search { flex:1; }
         .sk-rank-row { grid-template-columns:34px minmax(0,1fr) auto; }
         .sk-rank-stars { display:none; }
+        .sk-tabs { grid-template-columns:1fr; gap:7px; }
+        .sk-tab { padding:11px 14px; }
+        .sk-tab-ico { width:32px; height:32px; flex-basis:32px; }
       }
       @media (prefers-reduced-motion:reduce) { .sk-page *, .sk-page *::before, .sk-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>
@@ -423,16 +460,17 @@ export default function SkillHub() {
       </div>
     </div>
 
-    <div className="sk-jump" role="tablist" aria-label="板块导航">
-      {JUMPS.map(({ id, label, Icon, count }) => (
-        <button key={id} type="button" className={`sk-jump-btn${activeSec === id ? ' is-active' : ''}`} onClick={() => jumpTo(id)}>
-          <Icon size={14} />{label} <b>{count}</b>
+    <div className="sk-tabs" role="tablist" aria-label="Skill 三大板块">
+      {TABS.map(({ key, label, en, Icon, count }) => (
+        <button key={key} type="button" role="tab" aria-selected={tab === key} className={`sk-tab${tab === key ? ' is-active' : ''}`} onClick={() => setTab(key)}>
+          <span className="sk-tab-ico"><Icon size={19} strokeWidth={1.9} /></span>
+          <span className="sk-tab-copy"><b>{label}</b><span>{en}</span></span>
+          <span className="sk-tab-count">{count}</span>
         </button>
       ))}
-      <span className="sk-jump-hint">点击直达 · 无需滚动翻找</span>
     </div>
 
-    <section id="sec-hot" style={{ scrollMarginTop: 8 }}>
+    {tab === 'hot' && <section>
       <SectionHead icon={Flame} title="每周热点" en="WEEKLY HOT · PUSHED IN 7 DAYS" right={<span className="sk-sec-count">{hotFiltered.length} 个仓库</span>} />
       {status === 'loading' ? (
         <div className="sk-hot-grid"><Skeletons n={6} /></div>
@@ -441,32 +479,10 @@ export default function SkillHub() {
       ) : (
         <div className="sk-hot-grid">{hotFiltered.map((item, i) => <HotCard key={item.repo} item={item} index={i} />)}</div>
       )}
-      <p className="sk-note">数据来自 GitHub 官方 API：近 7 天有更新的 skill 相关仓库按星数排序；每天首次访问自动刷新并缓存，全天复用。</p>
-    </section>
+      <p className="sk-note">数据来自 GitHub 官方 API：近 7 天有更新的 skill / agent / mcp 相关仓库按星数排序；每天首次访问自动刷新并缓存，全天复用。</p>
+    </section>}
 
-    <section id="sec-rank" style={{ scrollMarginTop: 8 }}>
-      <SectionHead icon={Trophy} title="GitHub 星数排行榜" en="ALL-TIME STARS" right={<span className="sk-sec-count">{rankFiltered.length} 个</span>} />
-      <div className="sk-rank-list">
-        {rankFiltered.map((r, i) => (
-          <div key={r.repo} className="sk-rank-row">
-            <span className="sk-rank-no">{i + 1}</span>
-            <div className="sk-rank-main">
-              <span className="sk-rank-repo">{r.repo}{r.live && <span className="sk-rank-live">LIVE</span>}</span>
-              <span className="sk-rank-desc">{r.desc}</span>
-            </div>
-            <div className="sk-rank-bar">
-              <span className="sk-rank-bar-track"><span className="sk-rank-bar-fill" style={{ width: `${Math.max(4, (r.stars / maxRankStars) * 100)}%` }} /></span>
-              <span className="sk-rank-bar-num">{formatStars(r.stars)} STARS</span>
-            </div>
-            <span className="sk-rank-stars"><Star size={13} />{formatStars(r.stars)}</span>
-            <a className="sk-rank-link" href={`https://github.com/${r.repo}`} target="_blank" rel="noreferrer" aria-label={`打开 ${r.repo}`}><ArrowUpRight size={15} /></a>
-          </div>
-        ))}
-      </div>
-      <p className="sk-note">星数为每天自动拉取的 GitHub 实时值（LIVE 标记），拉取失败时回退到收录基准值。</p>
-    </section>
-
-    <section id="sec-cur" style={{ scrollMarginTop: 8 }}>
+    {tab === 'cur' && <section>
       <SectionHead icon={Sparkles} title="优质 Skill 精选" en="CURATED PICKS" right={<span className="sk-sec-count">{curatedFiltered.length} 个</span>} />
       <div className="sk-cur-grid">
         {curatedFiltered.map((c) => (
@@ -486,6 +502,28 @@ export default function SkillHub() {
           </article>
         ))}
       </div>
-    </section>
+    </section>}
+
+    {tab === 'rank' && <section>
+      <SectionHead icon={Trophy} title="GitHub 星数排行榜" en="ALL-TIME STARS" right={<span className="sk-sec-count">{rankFiltered.length} 个</span>} />
+      <div className="sk-rank-list">
+        {rankFiltered.map((r, i) => (
+          <div key={r.repo} className="sk-rank-row">
+            <span className="sk-rank-no">{i + 1}</span>
+            <div className="sk-rank-main">
+              <span className="sk-rank-repo">{r.repo}{r.live && <span className="sk-rank-live">LIVE</span>}</span>
+              <span className="sk-rank-desc">{r.desc}</span>
+            </div>
+            <div className="sk-rank-bar">
+              <span className="sk-rank-bar-track"><span className="sk-rank-bar-fill" style={{ width: `${Math.max(4, (r.stars / maxRankStars) * 100)}%` }} /></span>
+              <span className="sk-rank-bar-num">{formatStars(r.stars)} STARS</span>
+            </div>
+            <span className="sk-rank-stars"><Star size={13} />{formatStars(r.stars)}</span>
+            <a className="sk-rank-link" href={`https://github.com/${r.repo}`} target="_blank" rel="noreferrer" aria-label={`打开 ${r.repo}`}><ArrowUpRight size={15} /></a>
+          </div>
+        ))}
+      </div>
+      <p className="sk-note">星数为每天自动拉取的 GitHub 实时值（LIVE 标记），拉取失败时回退到收录基准值。</p>
+    </section>}
   </div>;
 }
