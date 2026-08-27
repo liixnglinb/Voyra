@@ -40,18 +40,20 @@ function preloadHeroLayer(src) {
     const finish = () => {
       if (settled) return;
       settled = true;
+      clearTimeout(timer);
       resolve();
     };
-    image.addEventListener('load', () => {
-      if (image.decode) image.decode().catch(() => undefined).finally(finish);
-      else finish();
-    }, { once: true });
+    // 图片请求停滞时兜底：单张最多等 3 秒，不能让人物永远不出现
+    const timer = setTimeout(finish, 3000);
+    const done = () => {
+      // decode 仅用于首帧平滑，自身也可能挂起，限时 1.5 秒
+      const decoding = image.decode ? image.decode().catch(() => undefined) : Promise.resolve();
+      Promise.race([decoding, new Promise((resolve) => setTimeout(resolve, 1500))]).then(finish, finish);
+    };
+    image.addEventListener('load', done, { once: true });
     image.addEventListener('error', finish, { once: true });
     image.src = src;
-    if (image.complete) {
-      if (image.decode) image.decode().catch(() => undefined).finally(finish);
-      else finish();
-    }
+    if (image.complete) done();
   });
 }
 
@@ -330,12 +332,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all(HERO_LAYERS.map(preloadHeroLayer)).then(() => {
-      requestAnimationFrame(() => {
-        if (!cancelled) setPersonReady(true);
-      });
-    });
-    return () => { cancelled = true; };
+    const show = () => { if (!cancelled) setPersonReady(true); };
+    Promise.all(HERO_LAYERS.map(preloadHeroLayer)).then(show);
+    // 保底：任何情况下（请求停滞/后台标签页等）人物最迟 3.5 秒出现，不依赖 rAF
+    const failsafe = setTimeout(show, 3500);
+    return () => { cancelled = true; clearTimeout(failsafe); };
   }, []);
 
   useEffect(() => {
