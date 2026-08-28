@@ -65,7 +65,7 @@ const EXPERIENCES = [
 
 const CONTACTS = [
   { no: '01', label: 'GitHub', value: '@liixnglinb', href: 'https://github.com/liixnglinb', Icon: Github },
-  { no: '02', label: 'Email', value: 'lixingli1024@qq.com', href: 'mailto:lixingli1024@qq.com', Icon: Sparkles },
+  { no: '02', label: 'Email', value: 'lixingli1024@qq.com', copy: true, Icon: Sparkles },
   { no: '03', label: '网站', value: 'lxlrwxs.top', href: 'https://lxlrwxs.top', Icon: Globe },
 ];
 
@@ -313,9 +313,34 @@ function TabReel({ activeTab }) {
 }
 
 function ContactPanel() {
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef(null);
+  const copyEmail = async () => {
+    const email = 'lixingli1024@qq.com';
+    try { await navigator.clipboard.writeText(email); } catch {
+      const ta = document.createElement('textarea');
+      ta.value = email;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopied(false), 2000);
+  };
   return <section className="vr-contact-panel" data-roll><div className="vr-contact-head" data-reveal><span>联系 / ELSEWHERE</span><b>保持交流</b></div><div className="vr-contact-list">{CONTACTS.map((contact, index) => {
     const Icon = contact.Icon;
-    return <a href={contact.href} className="vr-contact-row" data-reveal style={{ '--reveal-delay': `${index * 0.08}s` }} target="_blank" rel="noreferrer" key={contact.label}><span>{contact.no}</span><Icon size={19} strokeWidth={1.6} /><strong>{contact.label}</strong><em>{contact.value}</em><ArrowUpRight size={18} /></a>;
+    const reveal = { '--reveal-delay': `${index * 0.08}s` };
+    const feedback = contact.copy && copied;
+    const inner = <React.Fragment><span>{contact.no}</span><Icon size={19} strokeWidth={1.6} /><strong>{contact.label}</strong><em>{feedback ? '已复制，可直接粘贴' : contact.value}</em>{feedback ? <Check size={18} /> : <ArrowUpRight size={18} />}</React.Fragment>;
+    return contact.copy ? (
+      <button type="button" className="vr-contact-row" data-reveal style={reveal} key={contact.label} onClick={copyEmail} title="点击复制邮箱">{inner}</button>
+    ) : (
+      <a href={contact.href} className="vr-contact-row" data-reveal style={reveal} target="_blank" rel="noreferrer" key={contact.label}>{inner}</a>
+    );
   })}</div></section>;
 }
 
@@ -436,6 +461,7 @@ export default function Dashboard() {
       .vr-home .vr-scroll-cue { margin-top: 34px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
       .vr-home .vr-tab { font-size: 48px; font-weight: 760; line-height: 1; }
       .vr-home .vr-arrow-link, .vr-home .vr-all-link { font-size: 14px; }
+      .vr-home button.vr-contact-row { appearance: none; border: 0; border-bottom: 1px solid var(--line); background: transparent; font: inherit; width: 100%; text-align: left; cursor: pointer; }
       .vr-home .vr-solo-skill { max-width: 756px; }
       .vr-home .vr-mathmodel-card { display: block; min-height: 344px; padding: 27px; color: var(--ink); text-decoration: none; }
       .vr-home .vr-mathmodel-card > *:not(.vr-spotlight):not(.vr-mathmodel-watermark) { position: relative; z-index: 1; }

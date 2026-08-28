@@ -41,10 +41,6 @@ dist-verify
 dist-build/
 vite.config.js.timestamp-*
 
-# Generated browser assets for the standalone mindmap
-/public/mindmap-app/*.min.css
-/public/mindmap-app/*.min.js
-
 # browser verification artifacts
 .playwright-cli/
 output/playwright/
