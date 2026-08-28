@@ -7,12 +7,12 @@ import {
 /**
  * Layout — 页面布局壳（经典简约商务白底风）
  *  - / 首页：全屏（Dashboard 自控）
- *  - /blog 和文章页：全屏内容
+ *  - 文章页：全屏内容
  *  - 其他工具页：统一"浅灰白背景 + 白卡片页头 + 内容居中容器"外壳
  *    无渐变 / 无光晕 / 无玻璃 / 无弹跳动画
  */
 
-const FULLSCREEN_PATHS = ['/', '/blog', '/articles', '/mindmap', '/agents', '/uikit'];
+const FULLSCREEN_PATHS = ['/', '/articles', '/mindmap', '/agents', '/uikit'];
 const WIDE_WORKSPACE_PATHS = ['/mindmap', '/timetable', '/learning', '/baby-care', '/skills'];
 
 const TOOL_META = {

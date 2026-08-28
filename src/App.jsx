@@ -10,7 +10,6 @@ const PromptLibrary = lazy(() => import('./pages/PromptLibrary'))
 const LearningHub = lazy(() => import('./pages/LearningHub'))
 const MindMap = lazy(() => import('./pages/MindMap'))
 const BabyCare = lazy(() => import('./pages/BabyCare'))
-const Blog = lazy(() => import('./pages/Blog'))
 const ScheduleHub = lazy(() => import('./pages/ScheduleHub'))
 const SkillHub = lazy(() => import('./pages/SkillHub'))
 const UIKit = lazy(() => import('./pages/UIKit'))
@@ -35,7 +34,6 @@ function App() {
                 <Route path="/prompts" element={<PromptLibrary />} />
                 <Route path="/learning" element={<LearningHub />} />
                 <Route path="/baby-care" element={<AuthGate><BabyCare /></AuthGate>} />
-                <Route path="/blog" element={<Blog />} />
                 <Route path="/timetable" element={<AuthGate><ScheduleHub /></AuthGate>} />
                 <Route path="/schedule" element={<Navigate to="/timetable?tab=courses" replace />} />
                 <Route path="/planner" element={<Navigate to="/timetable?tab=planner" replace />} />

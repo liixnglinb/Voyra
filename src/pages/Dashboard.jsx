@@ -294,7 +294,7 @@ function ArticlesPanel({ go }) {
 
   return <div className="vr-article-grid">{ARTICLES.map((article, index) => <div className="vr-roll-wrap vr-panel-stagger" data-roll key={article.slug}><button className="vr-article-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.24)}s` }} onPointerMove={updateSpotlight} onClick={(event) => openArticle(article, event)}>
     <span className="vr-spotlight" aria-hidden="true" /><ArticleCover article={article} index={index} /><span className="vr-article-info"><span className="vr-article-date">{article.date}</span><strong className="vr-article-title">{article.title}</strong><span className="vr-article-desc">{article.desc}</span><span className="vr-article-open">阅读 <ArrowUpRight size={16} /></span></span>
-  </button></div>)}<button className="vr-all-link" onClick={() => go('/blog')}>全部文章 <ArrowUpRight size={17} /></button></div>;
+  </button></div>)}</div>;
 }
 
 function AboutPanel() {
