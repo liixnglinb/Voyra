@@ -4,7 +4,6 @@ import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
 import AuthGate from './components/AuthGate'
 import Dashboard from './pages/Dashboard'
-import Profile from './pages/Profile'
 import ArticleDetail from './pages/ArticleDetail'
 
 const PromptLibrary = lazy(() => import('./pages/PromptLibrary'))
@@ -32,7 +31,6 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/articles/:slug" element={<ArticleDetail />} />
-                <Route path="/profile" element={<Profile />} />
                 <Route path="/mindmap" element={<AuthGate><MindMap /></AuthGate>} />
                 <Route path="/prompts" element={<PromptLibrary />} />
                 <Route path="/learning" element={<LearningHub />} />

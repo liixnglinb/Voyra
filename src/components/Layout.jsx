@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, GitBranch, Sparkles, UserRound,
+  ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, GitBranch, Sparkles,
 } from 'lucide-react';
 
 /**
@@ -36,9 +36,6 @@ const TOOL_META = {
   },
   '/skills': {
     label: 'Skill 热榜', sub: 'GitHub 优质 Skill · 每周热点 · 星数排行，每日自动刷新', Icon: Sparkles, accent: '#D4A930',
-  },
-  '/profile': {
-    label: '个人中心', sub: '账号信息 · 修改昵称密码', Icon: UserRound, accent: '#7C5CFF',
   },
 };
 
