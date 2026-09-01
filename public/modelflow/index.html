@@ -59,6 +59,7 @@ img{display:block;max-width:100%}
 
 /* ============ Hero（tabbit：副标题在上、大标题在下、产品预览） ============ */
 .hero{position:relative;padding:64px 24px 0;overflow:hidden;
+  perspective:2000px;perspective-origin:50% 28%;-webkit-perspective:2000px;
   background:
     radial-gradient(60% 50% at 18% 85%,rgba(140,170,255,.16),transparent 70%),
     radial-gradient(55% 48% at 82% 88%,rgba(120,210,200,.14),transparent 70%),
@@ -739,12 +740,15 @@ function applyParallax(){
   if (!preview) return;
   const vh = window.innerHeight;
   const r = preview.getBoundingClientRect();
-  // 预览顶部从视口底部(vh)移动到视口上部(-h*0.25)的过程中，位移从 +30px 平缓回到 -6px
+  // translateY 视差：+30px → -6px 线性跟随
   const span = vh + r.height * 0.25;
-  let p = (vh - r.top) / span;                 // 0（刚进入）→ 1（滚过）
+  let p = (vh - r.top) / span;
   p = Math.min(1, Math.max(0, p));
-  const ty = 30 - p * 36;                       // +30px → -6px，线性同步跟随
-  preview.style.transform = `translate3d(0,${ty.toFixed(2)}px,0)`;
+  const ty = 30 - p * 36;
+  // rotateX 斜→平（对齐 tabbit：scrollY 0→340px 对应 30°→0°，线性）
+  const scrollP = Math.min(1, window.scrollY / 340);
+  const rx = 30 - scrollP * 30;
+  preview.style.transform = `rotateX(${rx.toFixed(2)}deg) translate3d(0,${ty.toFixed(2)}px,0)`;
 }
 function onFrame(){
   applyRise();
