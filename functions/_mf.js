@@ -169,14 +169,16 @@ export async function signCosUrl(env, key, expiresSeconds = 300) {
   const region = "ap-guangzhou";
   const host = `${bucket}.cos.${region}.myqcloud.com`;
   const nowSec = Math.floor(Date.now() / 1000);
+  // 开始时间提前 60 秒，处理时钟偏移（与腾讯云 Python SDK 一致）
+  const startSec = nowSec - 60;
   const endSec = nowSec + expiresSeconds;
-  const signTime = `${nowSec};${endSec}`;
+  const signTime = `${startSec};${endSec}`;
   const uriPath = "/" + key.split("/").map(encodeURIComponent).join("/");
 
-  // GET 下载预签名：只签 host 头，不签查询参数（与腾讯云 Python SDK 一致）
+  // GET 下载预签名：只签 host 头，不签查询参数（与 Python SDK 一致）
   const headers = { "host": host };
   const headerList = Object.keys(headers).sort().join(";");
-  const urlParamList = ""; // 空：查询参数不参与签名
+  const urlParamList = "";
   const headerString = Object.keys(headers).sort().map(k => `${encodeURIComponent(k)}=${encodeURIComponent(headers[k])}`).join("&");
 
   // HttpString = method\nuri\n(空 query)\nheaders\n
@@ -186,14 +188,13 @@ export async function signCosUrl(env, key, expiresSeconds = 300) {
   // StringToSign = algorithm\nsign-time\nsha1(httpString)\n
   const stringToSign = `sha1\n${signTime}\n${httpStringHash}\n`;
 
-  // SignKey = HMAC-SHA1(SecretKey, "q-sign-algorithm=sha1&q-ak=...&q-sign-time=...")
-  const signKeyMsg = `q-sign-algorithm=sha1&q-ak=${secretId}&q-sign-time=${signTime}`;
-  const signKey = await hmacSha1Hex(secretKey, signKeyMsg);
+  // SignKey = HMAC-SHA1(SecretKey, sign_time) —— 注意：只用 sign_time，不是完整消息（与 Python SDK 一致）
+  const signKey = await hmacSha1Hex(secretKey, signTime);
 
   // Signature = HMAC-SHA1(SignKey, StringToSign)
   const signature = await hmacSha1Hex(signKey, stringToSign);
 
-  // 最终 URL（查询参数不参与签名，但仍需放在 URL 里）
+  // 最终 URL
   const q = `q-sign-algorithm=sha1&q-ak=${encodeURIComponent(secretId)}&q-sign-time=${encodeURIComponent(signTime)}&q-key-time=${encodeURIComponent(signTime)}&q-header-list=${headerList}&q-url-param-list=${urlParamList}`;
   return `https://${host}${uriPath}?${q}&q-signature=${signature}`;
 }
