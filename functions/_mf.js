@@ -173,27 +173,14 @@ export async function signCosUrl(env, key, expiresSeconds = 300) {
   const signTime = `${nowSec};${endSec}`;
   const uriPath = "/" + key.split("/").map(encodeURIComponent).join("/");
 
-  // 基础签名参数
-  const baseParams = {
-    "q-ak": secretId,
-    "q-key-time": signTime,
-    "q-sign-algorithm": "sha1",
-    "q-sign-time": signTime,
-  };
-  // 参与签名的 HTTP 头（只签 host）
+  // GET 下载预签名：只签 host 头，不签查询参数（与腾讯云 Python SDK 一致）
   const headers = { "host": host };
   const headerList = Object.keys(headers).sort().join(";");
-  // q-url-param-list 包含所有查询参数 key（含 q-header-list / q-url-param-list 自身）
-  const urlParamList = Object.keys({ ...baseParams, "q-header-list": "", "q-url-param-list": "" }).sort().join(";");
-
-  // 完整查询参数（q-header-list / q-url-param-list 也参与签名）
-  const allParams = { ...baseParams, "q-header-list": headerList, "q-url-param-list": urlParamList };
-  const sortedKeys = Object.keys(allParams).sort();
-  const queryString = sortedKeys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(allParams[k])}`).join("&");
+  const urlParamList = ""; // 空：查询参数不参与签名
   const headerString = Object.keys(headers).sort().map(k => `${encodeURIComponent(k)}=${encodeURIComponent(headers[k])}`).join("&");
 
-  // HttpString = method\nuri\nquery\nheaders\n
-  const httpString = `get\n${uriPath}\n${queryString}\n${headerString}\n`;
+  // HttpString = method\nuri\n(空 query)\nheaders\n
+  const httpString = `get\n${uriPath}\n\n${headerString}\n`;
   const httpStringHash = await sha1Hex(httpString);
 
   // StringToSign = algorithm\nsign-time\nsha1(httpString)\n
@@ -206,5 +193,7 @@ export async function signCosUrl(env, key, expiresSeconds = 300) {
   // Signature = HMAC-SHA1(SignKey, StringToSign)
   const signature = await hmacSha1Hex(signKey, stringToSign);
 
-  return `https://${host}${uriPath}?${queryString}&q-signature=${signature}`;
+  // 最终 URL（查询参数不参与签名，但仍需放在 URL 里）
+  const q = `q-sign-algorithm=sha1&q-ak=${encodeURIComponent(secretId)}&q-sign-time=${encodeURIComponent(signTime)}&q-key-time=${encodeURIComponent(signTime)}&q-header-list=${headerList}&q-url-param-list=${urlParamList}`;
+  return `https://${host}${uriPath}?${q}&q-signature=${signature}`;
 }
