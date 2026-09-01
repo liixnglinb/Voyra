@@ -1,9 +1,10 @@
 // POST /modelflow/api/admin/unbind {code}  解绑机器（换设备/换码前用）
-import { ensure, requireAdmin, json, preflight, readBody } from "../../../_mf.js";
+import { guardDB, ensure, requireAdmin, json, preflight, readBody } from "../../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
 export async function onRequestPost({ request, env }) {
+  const g = guardDB(env); if (g) return g;
   await ensure(env.DB);
   const guard = await requireAdmin(request, env);
   if (!guard.ok) return guard.response;

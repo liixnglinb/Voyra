@@ -1,10 +1,11 @@
 // POST /modelflow/api/activate  {code, mid}
 // 软件激活：一码一机 + 一机一码；管理员码不限机不绑定。与旧 VPS 行为一致。
-import { ensure, tokenFor, now, json, preflight, readBody } from "../../_mf.js";
+import { guardDB, ensure, tokenFor, now, json, preflight, readBody } from "../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
 export async function onRequestPost({ request, env }) {
+  const g = guardDB(env); if (g) return g;
   await ensure(env.DB);
   const d = await readBody(request);
   const code = (d.code || "").trim().toUpperCase();

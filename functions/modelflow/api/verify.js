@@ -1,10 +1,11 @@
 // POST /modelflow/api/verify  {code}
 // 下载门禁的服务端校验（存在且未吊销即可）。下载页默认用前端哈希，此接口备用。
-import { ensure, json, preflight, readBody } from "../../_mf.js";
+import { guardDB, ensure, json, preflight, readBody } from "../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
 export async function onRequestPost({ request, env }) {
+  const g = guardDB(env); if (g) return g;
   await ensure(env.DB);
   const d = await readBody(request);
   const code = (d.code || "").trim().toUpperCase();

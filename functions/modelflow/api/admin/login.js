@@ -1,9 +1,10 @@
 // POST /modelflow/api/admin/login {pass}
-import { ensure, checkAdmin, json, preflight, readBody } from "../../../_mf.js";
+import { guardDB, ensure, checkAdmin, json, preflight, readBody } from "../../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
 export async function onRequestPost({ request, env }) {
+  const g = guardDB(env); if (g) return g;
   await ensure(env.DB);
   const d = await readBody(request);
   const r = await checkAdmin(env, (d.pass || "").trim());

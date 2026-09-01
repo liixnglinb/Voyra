@@ -59,6 +59,18 @@ export async function readBody(request) {
   try { return await request.json(); } catch (e) { return {}; }
 }
 
+// D1 未绑定时的友好拦截：返回 503 提示，而不是让 Worker 抛异常
+export function guardDB(env) {
+  if (!env || !env.DB) {
+    return json({
+      ok: false,
+      setup: true,
+      msg: "后台尚未启用：请在 Cloudflare 控制台为 voyra 项目绑定 D1 数据库（绑定变量名填 DB）后刷新重试",
+    }, 503);
+  }
+  return null;
+}
+
 // 首次运行自动建表 + 播种 5 个授权码（幂等）
 export async function ensure(db) {
   if (!db) throw new Error("D1 binding 'DB' 未配置");

@@ -1,5 +1,5 @@
 // POST /modelflow/api/admin/gen {n, note, is_admin}  生成授权码
-import { ensure, requireAdmin, ALPHABET, now, json, preflight, readBody } from "../../../_mf.js";
+import { guardDB, ensure, requireAdmin, ALPHABET, now, json, preflight, readBody } from "../../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
@@ -12,6 +12,7 @@ function genCode() {
 }
 
 export async function onRequestPost({ request, env }) {
+  const g = guardDB(env); if (g) return g;
   await ensure(env.DB);
   const guard = await requireAdmin(request, env);
   if (!guard.ok) return guard.response;

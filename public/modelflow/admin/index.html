@@ -186,9 +186,16 @@ tr:hover td{background:#fafcff}
     if(d.setup){
       mode="setup";
       $("#authTitle").textContent="初始化管理后台";
+      $("#pass2").classList.remove("hidden");
+      if(r.status===503){
+        // D1 尚未绑定：给出明确指引，禁止提交
+        $("#authDesc").textContent="数据库尚未就绪。请先在 Cloudflare 控制台为 voyra 项目绑定 D1 数据库（绑定变量名填 DB），保存后刷新本页继续。";
+        $("#authBtn").disabled=true;
+        $("#authHint").textContent="绑定入口：Cloudflare 控制台 → Workers & Pages → voyra → 设置 → Functions → D1 数据库绑定。";
+        return;
+      }
       $("#authDesc").textContent="首次使用，请设置一个管理密码（至少 6 位），用于管理全部授权码。";
       $("#authBtn").textContent="设置并进入";
-      $("#pass2").classList.remove("hidden");
       $("#authHint").textContent="密码以 SHA-256 存储在 Cloudflare D1，仓库与网页均不保存明文。";
     }
   }
