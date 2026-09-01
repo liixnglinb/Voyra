@@ -44,3 +44,8 @@ vite.config.js.timestamp-*
 # browser verification artifacts
 .playwright-cli/
 output/playwright/
+
+# local wrangler dev only (prod uses Git integration + console D1 binding)
+wrangler.toml
+.wrangler/
+output/

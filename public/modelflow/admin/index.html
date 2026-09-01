@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ModelFlow 授权管理后台</title>
+<link rel="icon" type="image/png" href="../favicon-48.png">
+<style>
+:root{
+  --ink:#101319;--ink-2:#1d2129;--mut:#667085;--mut-2:#98a2b3;
+  --blue:#1b7ce3;--blue-hi:#2c96fb;--blue-lo:#0d68cf;--blue-soft:#eaf3fe;--blue-line:rgba(27,124,227,.2);
+  --line:#e9ebf0;--line-2:#dfe3ea;--bg:#f6f8fb;--ok:#16a34a;--danger:#e5484d;
+  --r:14px;--pill:999px;
+  --zh:"PingFang SC","MiSans","Microsoft YaHei UI",-apple-system,"Segoe UI",sans-serif;
+  --en:"Montserrat",Consolas,var(--zh);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--zh);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none}
+input{font-family:inherit}
+a{color:var(--blue);text-decoration:none}
+.en,code,.mono{font-family:var(--en)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1040px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:12px}
+.top img{width:32px;height:32px;border-radius:8px}
+.top b{font-size:16px;font-weight:800}
+.top .tag{font-size:12px;color:var(--mut);background:#fff;border:1px solid var(--line);border-radius:var(--pill);padding:3px 10px}
+.top .sp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 18px;border-radius:var(--pill);font-size:14px;font-weight:600;color:#fff;
+  background:linear-gradient(180deg,var(--blue-hi),var(--blue-lo));box-shadow:0 6px 14px -6px rgba(13,104,207,.55);transition:.2s;white-space:nowrap}
+.btn:hover{filter:brightness(1.05);transform:translateY(-1px)}
+.btn.ghost{background:#fff;color:var(--ink-2);border:1.5px solid var(--line-2);box-shadow:none}
+.btn.ghost:hover{border-color:var(--blue);color:var(--blue)}
+.btn.danger{background:#fff;color:var(--danger);border:1.5px solid #f3c2c4;box-shadow:none}
+.btn.danger:hover{background:#fef2f2}
+.btn.sm{height:32px;padding:0 13px;font-size:12.5px}
+
+.page{padding:30px 0 70px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:22px;margin-bottom:18px;box-shadow:0 2px 10px -6px rgba(16,40,80,.08)}
+.card h2{font-size:16px;font-weight:800;margin-bottom:4px}
+.card .sub{font-size:13px;color:var(--mut);margin-bottom:18px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12.5px;color:var(--mut);font-weight:600}
+.inp{height:40px;border:1.5px solid var(--line-2);border-radius:10px;padding:0 13px;font-size:14px;outline:none;transition:.2s;background:#fafbfd}
+.inp:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(44,150,251,.12)}
+.inp.num{width:84px}.inp.note{width:220px}
+.check{display:inline-flex;align-items:center;gap:7px;font-size:14px;cursor:pointer;user-select:none}
+.check input{width:16px;height:16px;accent-color:var(--blue)}
+
+/* 登录 */
+.auth{max-width:400px;margin:70px auto}
+.auth .logo{width:60px;height:60px;border-radius:16px;margin-bottom:18px}
+.auth h1{font-size:23px;font-weight:800;margin-bottom:8px}
+.auth p{font-size:14px;color:var(--mut);margin-bottom:20px;line-height:1.7}
+.auth .inp{width:100%;height:48px;margin-bottom:12px}
+.auth .btn{width:100%;height:48px;justify-content:center;font-size:15px}
+.err{color:var(--danger);font-size:13px;font-weight:600;min-height:18px;margin-bottom:8px}
+.hint{font-size:12.5px;color:var(--mut-2);margin-top:14px;line-height:1.7}
+
+/* 统计 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.stat .n{font-family:var(--en);font-size:28px;font-weight:800;line-height:1}
+.stat .l{font-size:12.5px;color:var(--mut);margin-top:7px}
+.stat.b .n{color:var(--blue)}.stat.g .n{color:var(--ok)}.stat.r .n{color:var(--danger)}.stat.o .n{color:#d97d1f}
+
+/* 表格 */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:12px;color:var(--mut);font-weight:700;padding:10px 10px;border-bottom:1.5px solid var(--line);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:#fafcff}
+.code-pill{font-family:var(--en);font-weight:700;letter-spacing:1px;background:var(--blue-soft);color:var(--blue-lo);padding:3px 9px;border-radius:7px;font-size:13px}
+.mid{font-family:var(--en);font-size:12px;color:var(--mut)}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:var(--pill);border:1px solid var(--line-2);color:var(--mut)}
+.badge.admin{background:#f1ecff;color:#6d4de0;border-color:#e0d8ff}
+.badge.ok{background:#eafaf0;color:var(--ok);border-color:#cdeed8}
+.badge.rev{background:#fef2f2;color:var(--danger);border-color:#f6d4d5}
+.badge.free{background:#f4f6f9;color:var(--mut)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.empty{text-align:center;color:var(--mut-2);padding:40px 0;font-size:14px}
+.genout{margin-top:14px;background:#0f1826;color:#cfe0ff;border-radius:10px;padding:14px 16px;font-family:var(--en);font-size:15px;letter-spacing:1px;line-height:2;display:none}
+.genout.show{display:block}
+.genout b{color:#7db4ff}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#101319;color:#fff;padding:11px 20px;border-radius:var(--pill);font-size:14px;opacity:0;transition:.25s;z-index:99;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.muted{color:var(--mut);font-size:12.5px}
+.hidden{display:none!important}
+@media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}.inp.note{width:100%}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="top-in">
+    <img src="../logo-64.png" alt="">
+    <b>ModelFlow 授权管理</b>
+    <span class="tag">Cloudflare D1</span>
+    <span class="sp"></span>
+    <a class="btn ghost sm" href="../" target="_blank">下载页 ↗</a>
+    <button class="btn ghost sm" id="btnChangePw">改密码</button>
+    <button class="btn ghost sm" id="btnLogout">退出</button>
+  </div>
+</div>
+
+<!-- 登录 / 初始化 -->
+<div class="wrap page">
+  <div class="auth" id="authBox">
+    <img class="logo" src="../logo-256.png" alt="">
+    <h1 id="authTitle">管理后台</h1>
+    <p id="authDesc">输入管理密码进入。密码用于生成、解绑与吊销授权码。</p>
+    <input class="inp" id="pass" type="password" placeholder="管理密码" autocomplete="current-password">
+    <input class="inp hidden" id="pass2" type="password" placeholder="再次输入管理密码">
+    <div class="err" id="authErr"></div>
+    <button class="btn" id="authBtn">进入后台</button>
+    <div class="hint" id="authHint"></div>
+  </div>
+
+  <!-- 主界面 -->
+  <div id="main" class="hidden">
+    <div class="stats">
+      <div class="stat"><div class="n" id="stTotal">0</div><div class="l">授权码总数</div></div>
+      <div class="stat g"><div class="n" id="stBound">0</div><div class="l">已绑定机器</div></div>
+      <div class="stat o"><div class="n" id="stFree">0</div><div class="l">未使用</div></div>
+      <div class="stat r"><div class="n" id="stRev">0</div><div class="l">已吊销</div></div>
+    </div>
+
+    <div class="card">
+      <h2>生成授权码</h2>
+      <div class="sub">授权码为 5 位（已去除易混字符 I/O/0/1）。普通码一码一机，管理员码不限机器。</div>
+      <div class="row">
+        <div class="field"><label>数量</label><input class="inp num" id="genN" type="number" value="5" min="1" max="100"></div>
+        <div class="field"><label>备注（发给谁/用途）</label><input class="inp note" id="genNote" placeholder="例如：张三-国赛"></div>
+        <label class="check" style="margin-top:20px"><input type="checkbox" id="genAdmin">管理员码</label>
+        <button class="btn" style="margin-top:20px" id="btnGen">生成</button>
+      </div>
+      <div class="genout" id="genOut"></div>
+    </div>
+
+    <div class="card">
+      <h2>授权码列表</h2>
+      <div class="sub">一码一机 + 一机一码；用户换设备/换码前先在此「解绑」，吊销即时生效。</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>授权码</th><th>备注</th><th>类型</th><th>绑定机器</th><th>绑定时间</th><th>状态</th><th>操作</th>
+          </tr></thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var API = "/modelflow/api/admin";
+  var pass = "";
+  try { pass = localStorage.getItem("mf_admin_pass") || ""; } catch(e){}
+
+  var $ = function(s){ return document.querySelector(s); };
+  function toast(msg){ var t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},2200); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
+
+  async function call(path, body, method){
+    var opt = { method: method||"POST", headers:{ "Content-Type":"application/json", "X-Admin-Pass":pass } };
+    if(body) opt.body = JSON.stringify(body);
+    var r = await fetch(API+path, opt);
+    var data; try{ data=await r.json(); }catch(e){ data={ok:false,msg:"服务器错误"}; }
+    if(r.status===403){ logout(data.msg||"登录已失效"); throw new Error("forbidden"); }
+    return data;
+  }
+
+  /* ---------- 登录 / 初始化 ---------- */
+  var mode = "login"; // login | setup
+  async function detect(){
+    // 用一次 login 探测是否已初始化（错误密码：返回 setup=true 即未初始化）
+    var r = await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pass:"__probe__"})});
+    var d = await r.json().catch(()=>({}));
+    if(d.setup){
+      mode="setup";
+      $("#authTitle").textContent="初始化管理后台";
+      $("#authDesc").textContent="首次使用，请设置一个管理密码（至少 6 位），用于管理全部授权码。";
+      $("#authBtn").textContent="设置并进入";
+      $("#pass2").classList.remove("hidden");
+      $("#authHint").textContent="密码以 SHA-256 存储在 Cloudflare D1，仓库与网页均不保存明文。";
+    }
+  }
+
+  async function submitAuth(){
+    var p = $("#pass").value;
+    $("#authErr").textContent="";
+    if(mode==="setup"){
+      var p2=$("#pass2").value;
+      if(p.length<6){ $("#authErr").textContent="密码至少 6 位"; return; }
+      if(p!==p2){ $("#authErr").textContent="两次输入不一致"; return; }
+      var sr = await fetch(API+"/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pass:p})});
+      var sd = await sr.json().catch(()=>({}));
+      if(!sd.ok){ $("#authErr").textContent=sd.msg||"初始化失败"; return; }
+      pass=p; localStorage.setItem("mf_admin_pass",pass); enter();
+    }else{
+      if(!p){ $("#authErr").textContent="请输入管理密码"; return; }
+      pass=p;
+      try{
+        await call("/codes",null,"GET");
+        localStorage.setItem("mf_admin_pass",pass); enter();
+      }catch(e){ if(e.message!=="forbidden"){ $("#authErr").textContent="无法连接服务，请确认 Functions 与 D1 已配置"; } else { $("#authErr").textContent="管理密码错误"; pass=""; } }
+    }
+  }
+
+  function enter(){ $("#authBox").classList.add("hidden"); $("#main").classList.remove("hidden"); refresh(); }
+  function logout(msg){
+    pass=""; localStorage.removeItem("mf_admin_pass");
+    $("#main").classList.add("hidden"); $("#authBox").classList.remove("hidden");
+    if(msg) $("#authErr").textContent=msg;
+  }
+  $("#btnLogout").addEventListener("click",function(){ logout(""); });
+  $("#authBtn").addEventListener("click",submitAuth);
+  $("#pass").addEventListener("keydown",function(e){ if(e.key==="Enter") (mode==="login"?$("#pass2").classList.contains("hidden")?submitAuth():$("#pass2").focus():submitAuth()); });
+  $("#pass2").addEventListener("keydown",function(e){ if(e.key==="Enter") submitAuth(); });
+
+  /* ---------- 改密码 ---------- */
+  $("#btnChangePw").addEventListener("click",async function(){
+    if($("#main").classList.contains("hidden")) return;
+    var np=prompt("输入新的管理密码（至少 6 位）：");
+    if(np==null) return; np=np.trim();
+    if(np.length<6){ toast("密码至少 6 位"); return; }
+    var d=await call("/resetpass",{pass:np});
+    if(d.ok){ pass=np; localStorage.setItem("mf_admin_pass",pass); toast("密码已更新"); } else toast(d.msg||"失败");
+  });
+
+  /* ---------- 生成 ---------- */
+  $("#btnGen").addEventListener("click",async function(){
+    var n=parseInt($("#genN").value,10)||1, note=$("#genNote").value, isAdmin=$("#genAdmin").checked;
+    var d=await call("/gen",{n:n,note:note,is_admin:isAdmin});
+    if(!d.ok){ toast(d.msg||"生成失败"); return; }
+    var box=$("#genOut");
+    box.classList.add("show");
+    box.innerHTML="已生成 "+d.codes.length+" 个（点击可复制）：<br>"+d.codes.map(function(c){return "<b>"+c+"</b>"}).join("　");
+    box.style.cursor="pointer"; box.onclick=function(){ navigator.clipboard&&navigator.clipboard.writeText(d.codes.join("\n")); toast("已复制"); };
+    $("#genNote").value=""; refresh();
+  });
+
+  /* ---------- 列表 ---------- */
+  async function refresh(){
+    var d; try{ d=await call("/codes",null,"GET"); }catch(e){ return; }
+    var list=d.codes||[], tb=$("#tb");
+    var bound=0,free=0,rev=0;
+    list.forEach(function(c){ if(c.revoked)rev++; else if(c.bound_mid)bound++; else free++; });
+    $("#stTotal").textContent=list.length;$("#stBound").textContent=bound;$("#stFree").textContent=free;$("#stRev").textContent=rev;
+    if(!list.length){ tb.innerHTML='<tr><td colspan="7" class="empty">暂无授权码</td></tr>'; return; }
+    tb.innerHTML=list.map(function(c){
+      var type=c.is_admin?'<span class="badge admin">管理员</span>':'普通';
+      var mid=c.bound_mid?'<span class="mid">'+esc(c.bound_mid.slice(0,12))+'…</span>':'<span class="muted">未绑定</span>';
+      var stat=c.revoked?'<span class="badge rev">已吊销</span>':(c.bound_mid?'<span class="badge ok">已激活</span>':'<span class="badge free">未使用</span>');
+      var acts='<div class="acts">';
+      if(c.bound_mid) acts+='<button class="btn ghost sm" data-act="unbind" data-code="'+c.code+'">解绑</button>';
+      acts+='<button class="btn danger sm" data-act="revoke" data-code="'+c.code+'" data-to="'+(c.revoked?0:1)+'">'+(c.revoked?'恢复':'吊销')+'</button>';
+      acts+='</div>';
+      return '<tr><td><span class="code-pill">'+c.code+'</span></td><td>'+esc(c.note||'—')+'</td><td>'+type+'</td><td>'+mid+'</td><td class="muted">'+esc(c.bound_at||'—')+'</td><td>'+stat+'</td><td>'+acts+'</td></tr>';
+    }).join("");
+    tb.querySelectorAll("button[data-act]").forEach(function(b){
+      b.addEventListener("click",async function(){
+        var act=b.dataset.act,code=b.dataset.code;
+        if(act==="unbind"){ if(!confirm("解绑 "+code+" ？解绑后该码可在新机器激活。")) return; var d=await call("/unbind",{code:code}); if(d.ok){toast("已解绑");refresh();} }
+        if(act==="revoke"){ var to=parseInt(b.dataset.to,10); if(!confirm((to?"吊销":"恢复")+" "+code+" ？")) return; var d2=await call("/revoke",{code:code,revoked:!!to}); if(d2.ok){toast(to?"已吊销":"已恢复");refresh();} }
+      });
+    });
+  }
+
+  /* ---------- 启动 ---------- */
+  detect().then(function(){
+    if(pass){ // 尝试用已存密码直接进
+      fetch(API+"/codes",{headers:{"X-Admin-Pass":pass}}).then(function(r){ if(r.ok) enter(); });
+    }
+  });
+})();
+</script>
+</body>
+</html>
