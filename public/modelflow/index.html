@@ -119,7 +119,7 @@ img{display:block;max-width:100%}
 .pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#3b82f6;animation:breathe 1.3s ease-in-out infinite}
 @keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(59,130,246,.4)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(59,130,246,0)}}
 /* 工作区 */
-.pv-work{padding:16px 18px 0}
+.pv-work{max-width:1080px;margin:0 auto;padding:22px 28px 0}
 .pv-job-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .pv-job-title{font-size:14.5px;font-weight:700;color:#1b1b1b}
 .pv-job-id{font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0}
@@ -132,7 +132,7 @@ img{display:block;max-width:100%}
 .pv-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shimmer 2.4s infinite}
 .pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#7c5cff}
 /* 双栏 */
-.pv-cols{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+.pv-cols{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
 /* 左：步骤列表 */
 .pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:8px}
 .pv-ss{position:relative;display:flex;align-items:flex-start;gap:9px;padding:8px 8px}
@@ -149,18 +149,18 @@ img{display:block;max-width:100%}
 .pv-ss.run{background:linear-gradient(90deg,#f3f0ff,transparent 85%);border-radius:8px}
 /* 右：输出 + 图表 + 产物 */
 .pv-right{display:flex;flex-direction:column;gap:14px;min-width:0}
-.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:13px 15px}
+.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:16px 18px}
 .pv-card-t{font-size:12px;font-weight:700;color:#1b1b1b;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .pv-card-t .cnt{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0;font-weight:500}
 /* 日志 */
-.pv-log{background:#fbfbfd;border:1px solid #f0f0f3;border-radius:9px;padding:11px 13px;font-family:Consolas,monospace;font-size:10.5px;line-height:1.95;color:#6c757d}
+.pv-log{background:#fbfbfd;border:1px solid #f0f0f3;border-radius:9px;padding:13px 16px;font-family:Consolas,monospace;font-size:11.5px;line-height:2.05;color:#6c757d}
 .pv-log .tag{display:inline-block;min-width:44px;font-weight:700}
 .pv-log .ok{color:#16a34a}.pv-log .run{color:#7c5cff}.pv-log .info{color:#3b82f6}.pv-log .mut{color:#b4b8c0}
 .pv-caret{display:inline-block;width:6px;height:12px;background:#7c5cff;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 /* 审稿分数曲线 */
 .pv-score{display:flex;align-items:flex-end;gap:14px}
-.pv-score svg{flex:1;height:74px}
+.pv-score svg{flex:1;height:96px;max-width:100%}
 .pv-score-note{font-size:10px;color:#8a8f99;line-height:1.6;max-width:118px}
 .pv-score-note b{display:block;font-size:15px;color:#7c5cff;font-family:Consolas,monospace}
 /* 产物文件 */
@@ -445,7 +445,7 @@ img{display:block;max-width:100%}
                 <div class="pv-card">
                   <div class="pv-card-t">审稿分数曲线<span class="cnt">轮次 → 分数</span></div>
                   <div class="pv-score">
-                    <svg viewBox="0 0 320 80" preserveAspectRatio="none">
+                    <svg viewBox="0 0 320 100" preserveAspectRatio="xMidYMid meet">
                       <line x1="28" y1="14" x2="306" y2="14" stroke="#eeeef2" stroke-dasharray="3 4"/>
                       <line x1="28" y1="40" x2="306" y2="40" stroke="#eeeef2" stroke-dasharray="3 4"/>
                       <line x1="28" y1="66" x2="306" y2="66" stroke="#eeeef2" stroke-dasharray="3 4"/>
