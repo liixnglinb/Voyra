@@ -173,18 +173,23 @@ export async function signCosUrl(env, key, expiresSeconds = 300) {
   const signTime = `${nowSec};${endSec}`;
   const uriPath = "/" + key.split("/").map(encodeURIComponent).join("/");
 
-  // 参与签名的查询参数（按字典序）
-  const queryParams = {
+  // 基础签名参数
+  const baseParams = {
     "q-ak": secretId,
     "q-key-time": signTime,
     "q-sign-algorithm": "sha1",
     "q-sign-time": signTime,
   };
-  const sortedKeys = Object.keys(queryParams).sort();
-  const queryString = sortedKeys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(queryParams[k])}`).join("&");
-
-  // 参与签名的 HTTP 头（按字典序，只签 host）
+  // 参与签名的 HTTP 头（只签 host）
   const headers = { "host": host };
+  const headerList = Object.keys(headers).sort().join(";");
+  // q-url-param-list 包含所有查询参数 key（含 q-header-list / q-url-param-list 自身）
+  const urlParamList = Object.keys({ ...baseParams, "q-header-list": "", "q-url-param-list": "" }).sort().join(";");
+
+  // 完整查询参数（q-header-list / q-url-param-list 也参与签名）
+  const allParams = { ...baseParams, "q-header-list": headerList, "q-url-param-list": urlParamList };
+  const sortedKeys = Object.keys(allParams).sort();
+  const queryString = sortedKeys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(allParams[k])}`).join("&");
   const headerString = Object.keys(headers).sort().map(k => `${encodeURIComponent(k)}=${encodeURIComponent(headers[k])}`).join("&");
 
   // HttpString = method\nuri\nquery\nheaders\n
@@ -201,8 +206,5 @@ export async function signCosUrl(env, key, expiresSeconds = 300) {
   // Signature = HMAC-SHA1(SignKey, StringToSign)
   const signature = await hmacSha1Hex(signKey, stringToSign);
 
-  const headerList = Object.keys(headers).sort().join(";");
-  const urlParamList = sortedKeys.join(";");
-
-  return `https://${host}${uriPath}?${queryString}&q-header-list=${headerList}&q-url-param-list=${urlParamList}&q-signature=${signature}`;
+  return `https://${host}${uriPath}?${queryString}&q-signature=${signature}`;
 }
