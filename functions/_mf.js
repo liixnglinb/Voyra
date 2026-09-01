@@ -3,6 +3,10 @@
 //
 // D1 绑定：Pages 项目 → Settings → Functions → D1 bindings，变量名必须为 DB
 // 表结构见 migrations/0001_mflic.sql（首次可由本库 ensure() 自动建表）。
+//
+// 环境变量（Pages → Settings → Environment variables）：
+//   COS_SECRET_ID / COS_SECRET_KEY — 腾讯云 COS 密钥，用于生成预签名下载 URL
+//   （未配置时 verify 返回 ok 但不带 download_url，前端回退到 manifest.url）
 
 // 与桌面端 app/licensing.py 保持一致的 HMAC 密钥（客户端内置同值，仅用于离线令牌校验）
 export const SECRET = "1adee14c497b3b976a3beb1aa602744a8a54b04782e2b2526ccb0800924b9af3";
@@ -20,6 +24,16 @@ export async function sha256Hex(str) {
 export async function hmacHex(keyStr, msgStr) {
   const key = await crypto.subtle.importKey(
     "raw", enc.encode(keyStr), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(msgStr));
+  return bufToHex(sig);
+}
+// SHA-1 / HMAC-SHA1（腾讯云 COS 预签名算法要求，Cloudflare Workers 支持 SHA-1）
+export async function sha1Hex(str) {
+  return bufToHex(await crypto.subtle.digest("SHA-1", enc.encode(String(str))));
+}
+export async function hmacSha1Hex(keyStr, msgStr) {
+  const key = await crypto.subtle.importKey(
+    "raw", enc.encode(keyStr), { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(msgStr));
   return bufToHex(sig);
 }
@@ -74,12 +88,16 @@ export function guardDB(env) {
 // 首次运行自动建表 + 播种 5 个授权码（幂等）
 export async function ensure(db) {
   if (!db) throw new Error("D1 binding 'DB' 未配置");
-  db.batch([
+  await db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS codes(
       code TEXT PRIMARY KEY, note TEXT DEFAULT '', is_admin INTEGER DEFAULT 0,
       bound_mid TEXT DEFAULT '', bound_at TEXT DEFAULT '',
       revoked INTEGER DEFAULT 0, created_at TEXT)`),
     db.prepare(`CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT)`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS rate_limit(
+      ip TEXT NOT NULL, action TEXT NOT NULL, count INTEGER DEFAULT 0,
+      window_start INTEGER DEFAULT 0, banned_until INTEGER DEFAULT 0,
+      PRIMARY KEY (ip, action))`),
   ]);
   const t = now();
   for (const code of SEED_CODES) {
@@ -101,4 +119,90 @@ export async function requireAdmin(request, env) {
   const r = await checkAdmin(env, pass);
   if (!r.ok) return { ok: false, response: json({ ok: false, msg: r.reason === "not_setup" ? "管理后台尚未初始化" : "管理密码错误" }, 403) };
   return { ok: true };
+}
+
+// ========== 客户端 IP + 速率限制（防爆破） ==========
+
+export function getClientIP(request) {
+  return request.headers.get("CF-Connecting-IP") ||
+    (request.headers.get("X-Forwarded-For") || "").split(",")[0].trim() ||
+    "unknown";
+}
+
+// 同一 IP 在 windowSeconds 内超过 maxAttempts 次则封禁 banSeconds
+// action 用于区分不同接口（verify / activate / admin_login）
+export async function checkRateLimit(db, ip, action, maxAttempts, windowSeconds, banSeconds) {
+  const nowSec = Math.floor(Date.now() / 1000);
+  let row = await db.prepare("SELECT * FROM rate_limit WHERE ip=? AND action=?").bind(ip, action).first();
+  if (!row) {
+    await db.prepare("INSERT OR IGNORE INTO rate_limit(ip,action,count,window_start,banned_until) VALUES(?,?,1,?,0)")
+      .bind(ip, action, nowSec).run();
+    return { allowed: true };
+  }
+  if (row.banned_until > nowSec) {
+    return { allowed: false, retryAfter: row.banned_until - nowSec };
+  }
+  if (nowSec - row.window_start > windowSeconds) {
+    await db.prepare("UPDATE rate_limit SET count=1, window_start=?, banned_until=0 WHERE ip=? AND action=?")
+      .bind(nowSec, ip, action).run();
+    return { allowed: true };
+  }
+  if (row.count >= maxAttempts) {
+    await db.prepare("UPDATE rate_limit SET banned_until=? WHERE ip=? AND action=?")
+      .bind(nowSec + banSeconds, ip, action).run();
+    return { allowed: false, retryAfter: banSeconds };
+  }
+  await db.prepare("UPDATE rate_limit SET count=count+1 WHERE ip=? AND action=?").bind(ip, action).run();
+  return { allowed: true };
+}
+
+// ========== 腾讯云 COS 预签名下载 URL ==========
+
+// 生成 GET 请求的预签名 URL（默认 5 分钟有效）。
+// COS 桶设为私有后，只有通过此接口拿到签名 URL 才能下载 exe。
+// 需要环境变量 COS_SECRET_ID / COS_SECRET_KEY；未配置时返回 null。
+export async function signCosUrl(env, key, expiresSeconds = 300) {
+  const secretId = env.COS_SECRET_ID;
+  const secretKey = env.COS_SECRET_KEY;
+  if (!secretId || !secretKey) return null;
+  const bucket = "modelflow-1447874637";
+  const region = "ap-guangzhou";
+  const host = `${bucket}.cos.${region}.myqcloud.com`;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const endSec = nowSec + expiresSeconds;
+  const signTime = `${nowSec};${endSec}`;
+  const uriPath = "/" + key.split("/").map(encodeURIComponent).join("/");
+
+  // 参与签名的查询参数（按字典序）
+  const queryParams = {
+    "q-ak": secretId,
+    "q-key-time": signTime,
+    "q-sign-algorithm": "sha1",
+    "q-sign-time": signTime,
+  };
+  const sortedKeys = Object.keys(queryParams).sort();
+  const queryString = sortedKeys.map(k => `${encodeURIComponent(k)}=${encodeURIComponent(queryParams[k])}`).join("&");
+
+  // 参与签名的 HTTP 头（按字典序，只签 host）
+  const headers = { "host": host };
+  const headerString = Object.keys(headers).sort().map(k => `${encodeURIComponent(k)}=${encodeURIComponent(headers[k])}`).join("&");
+
+  // HttpString = method\nuri\nquery\nheaders\n
+  const httpString = `get\n${uriPath}\n${queryString}\n${headerString}\n`;
+  const httpStringHash = await sha1Hex(httpString);
+
+  // StringToSign = algorithm\nsign-time\nsha1(httpString)\n
+  const stringToSign = `sha1\n${signTime}\n${httpStringHash}\n`;
+
+  // SignKey = HMAC-SHA1(SecretKey, "q-sign-algorithm=sha1&q-ak=...&q-sign-time=...")
+  const signKeyMsg = `q-sign-algorithm=sha1&q-ak=${secretId}&q-sign-time=${signTime}`;
+  const signKey = await hmacSha1Hex(secretKey, signKeyMsg);
+
+  // Signature = HMAC-SHA1(SignKey, StringToSign)
+  const signature = await hmacSha1Hex(signKey, stringToSign);
+
+  const headerList = Object.keys(headers).sort().join(";");
+  const urlParamList = sortedKeys.join(";");
+
+  return `https://${host}${uriPath}?${queryString}&q-header-list=${headerList}&q-url-param-list=${urlParamList}&q-signature=${signature}`;
 }

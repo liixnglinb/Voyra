@@ -1,12 +1,21 @@
 // POST /modelflow/api/activate  {code, mid}
 // 软件激活：一码一机 + 一机一码；管理员码不限机不绑定。与旧 VPS 行为一致。
-import { guardDB, ensure, tokenFor, now, json, preflight, readBody } from "../../_mf.js";
+// 防爆破：同一 IP 每分钟最多 5 次，超过封禁 10 分钟。
+import { guardDB, ensure, tokenFor, now, json, preflight, readBody, getClientIP, checkRateLimit } from "../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
 export async function onRequestPost({ request, env }) {
   const g = guardDB(env); if (g) return g;
   await ensure(env.DB);
+
+  // 防爆破：速率限制
+  const ip = getClientIP(request);
+  const rl = await checkRateLimit(env.DB, ip, "activate", 5, 60, 600);
+  if (!rl.allowed) {
+    return json({ ok: false, msg: `尝试过于频繁，请 ${rl.retryAfter} 秒后再试` }, 429);
+  }
+
   const d = await readBody(request);
   const code = (d.code || "").trim().toUpperCase();
   const mid = (d.mid || "").trim();
