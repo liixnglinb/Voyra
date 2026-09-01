@@ -594,13 +594,6 @@ footer a:hover{color:var(--blue)}
   "use strict";
   var COS_BASE = "https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com";
   var FALLBACK = {version:"0.7.4", url: COS_BASE + "/ModelFlow-0.7.4-setup.exe"};
-  var CODE_HASHES = [
-    "f16050577cb48a4dbfe204bd85707fababee57efdea41924203c611fbfd84f2a",
-    "8c1fc9d6258c0f708ec4a11781e1c0989710e3394f001edb9a6b63e3c6187e82",
-    "2f38f758087690c5a126054e33505e5c304bc03cfc908c4a73d872e15615e625",
-    "a9b24e75fb3b269f28c4f142aeae0d183c3b9afdf7fd66f7cc8dd185dc7cb211",
-    "37dad18470c2d63a9aeeb6f3c0ff1899ffa96f2ddf07db010a1caaad035a8350"
-  ];
   var manifest = FALLBACK;
 
   function fillVersion(v){ document.querySelectorAll(".ver").forEach(function(e){ e.textContent = v; }); }
@@ -633,14 +626,19 @@ footer a:hover{color:var(--blue)}
   input.addEventListener("input", function(){ input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g,""); errEl.textContent=""; });
 
   function resetSheet(){ gateForm.style.display="block"; input.value=""; errEl.textContent=""; }
+  // 后端校验授权码（与管理后台 D1 同步，管理员新生成的码也能下载）
+  async function checkCode(code){
+    var r = await fetch("/modelflow/api/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:code})});
+    var d = await r.json().catch(function(){ return {ok:false}; });
+    return !!d.ok;
+  }
   function openSheet(){
     resetSheet(); mask.classList.add("show");
     (async function(){
       var saved=""; try{ saved=localStorage.getItem("mf_lic")||""; }catch(e){}
       if(saved.length===5){
         try{
-          var h=await shaHex(saved);
-          if(CODE_HASHES.indexOf(h)!==-1){ input.value=saved; startDownload(); return; }
+          if(await checkCode(saved)){ input.value=saved; startDownload(); return; }
         }catch(e){}
       }
       setTimeout(function(){ input.focus(); }, 280);
@@ -652,10 +650,6 @@ footer a:hover{color:var(--blue)}
   mask.addEventListener("click", function(e){ if(e.target===mask) closeSheet(); });
   document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeSheet(); });
 
-  function shaHex(str){
-    return crypto.subtle.digest("SHA-256", new TextEncoder().encode(str.trim().toUpperCase()))
-      .then(function(buf){ return [].map.call(new Uint8Array(buf), function(x){ return x.toString(16).padStart(2,"0"); }).join(""); });
-  }
   function startDownload(){
     // 验证通过，直接触发浏览器下载（下载任务出现在浏览器右上角/下载栏），并关闭小窗
     var a=document.createElement("a");
@@ -666,13 +660,13 @@ footer a:hover{color:var(--blue)}
   async function verify(){
     var code=(input.value||"").trim();
     if(code.length!==5){ errEl.textContent="请输入 5 位授权码"; return; }
-    errEl.textContent="";
+    errEl.textContent="校验中…";
     try{
-      var h=await shaHex(code);
-      if(CODE_HASHES.indexOf(h)===-1){ errEl.textContent="授权码无效，请核对后重试"; return; }
+      var ok = await checkCode(code);
+      if(!ok){ errEl.textContent="授权码无效或已吊销，请核对后重试"; return; }
       try{ localStorage.setItem("mf_lic", code); }catch(e){}
       startDownload();
-    }catch(e){ errEl.textContent="当前浏览器不支持本地校验，请更换现代浏览器"; }
+    }catch(e){ errEl.textContent="授权服务暂时不可用，请稍后重试"; }
   }
   document.getElementById("licConfirm").addEventListener("click", verify);
   input.addEventListener("keydown", function(e){ if(e.key==="Enter") verify(); });
