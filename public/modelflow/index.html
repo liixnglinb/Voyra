@@ -85,7 +85,7 @@ img{display:block;max-width:100%}
 @keyframes previewIn{from{opacity:0;transform:translateY(48px) scale(.985)}to{opacity:1;transform:none}}
 
 /* 产品预览窗口 —— 精致双层：外层视差+光晕 / 内层入场 */
-.hero-preview{position:relative;z-index:2;width:100%;max-width:1120px;margin:48px auto 0;
+.hero-preview{position:relative;z-index:2;width:100%;max-width:1320px;margin:48px auto 0;
   will-change:transform}
 .hero-preview::before{content:"";position:absolute;left:50%;top:8%;bottom:4%;width:118%;
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;
@@ -132,7 +132,7 @@ img{display:block;max-width:100%}
 .pv-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shimmer 2.4s infinite}
 .pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#7c5cff}
 /* 双栏 */
-.pv-cols{display:grid;grid-template-columns:236px 1fr;gap:14px;align-items:start}
+.pv-cols{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
 /* 左：步骤列表 */
 .pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:8px}
 .pv-ss{position:relative;display:flex;align-items:flex-start;gap:9px;padding:8px 8px}
@@ -385,9 +385,10 @@ img{display:block;max-width:100%}
       </button>
     </div>
     <div class="hero-note">最新版本 <span class="num-en" id="heroVer">0.7.6</span> · 适用于 Windows 10 / 11 x64</div>
+  </div>
 
-    <!-- 产品预览（外层视差 / 内层入场，互不干扰） -->
-    <div class="hero-preview" id="heroPreview">
+  <!-- 产品预览（外层视差 / 内层入场，互不干扰） -->
+  <div class="hero-preview" id="heroPreview">
      <div class="hero-preview-in">
       <div class="pv-window">
         <!-- 浏览器栏 -->
@@ -475,7 +476,6 @@ img{display:block;max-width:100%}
         </div>
       </div>
      </div>
-    </div>
   </div>
 </section>
 
