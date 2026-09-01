@@ -59,13 +59,18 @@ img{display:block;max-width:100%}
 
 /* ============ Hero（tabbit：副标题在上、大标题在下、产品预览） ============ */
 .hero{position:relative;padding:64px 24px 0;overflow:hidden;
-  background:linear-gradient(180deg,#fff 0%,#fff 58%,#f6f4ff 100%)}
-.hero-glow{position:absolute;left:50%;bottom:-160px;width:1100px;max-width:150%;height:520px;transform:translateX(-50%);
-  pointer-events:none;z-index:0;filter:blur(90px);
-  background:radial-gradient(42% 55% at 32% 50%,rgba(122,158,255,.30),transparent 70%),
-             radial-gradient(42% 55% at 68% 45%,rgba(168,140,255,.24),transparent 70%)}
+  background:
+    radial-gradient(60% 50% at 18% 85%,rgba(140,170,255,.16),transparent 70%),
+    radial-gradient(55% 48% at 82% 88%,rgba(120,210,200,.14),transparent 70%),
+    radial-gradient(50% 42% at 50% 100%,rgba(168,140,255,.12),transparent 70%),
+    linear-gradient(180deg,#fff 0%,#fbfaff 62%,#f4f2ff 100%)}
+.hero-glow{position:absolute;left:50%;bottom:-180px;width:1200px;max-width:160%;height:580px;transform:translateX(-50%);
+  pointer-events:none;z-index:0;filter:blur(100px);
+  background:radial-gradient(40% 52% at 30% 50%,rgba(122,158,255,.26),transparent 70%),
+             radial-gradient(40% 52% at 70% 48%,rgba(168,140,255,.20),transparent 70%),
+             radial-gradient(30% 40% at 50% 60%,rgba(120,210,200,.14),transparent 70%)}
 .hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;
-  padding:72px 0 0;display:flex;flex-direction:column;align-items:center}
+  padding:56px 0 0;display:flex;flex-direction:column;align-items:center}
 .hero-kicker{font-size:20px;line-height:28px;font-weight:400;color:var(--muted);
   opacity:0;animation:fadeUp .8s .05s cubic-bezier(.22,1,.36,1) forwards}
 .hero h1{margin-top:14px;font-size:60px;line-height:70px;font-weight:600;letter-spacing:-.01em;color:#000;
@@ -78,9 +83,14 @@ img{display:block;max-width:100%}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 @keyframes previewIn{from{opacity:0;transform:translateY(48px) scale(.985)}to{opacity:1;transform:none}}
 
-/* 产品预览窗口 —— 1:1 还原真实软件运行页（精致双层：外层视差 / 内层入场） */
-.hero-preview{position:relative;z-index:2;width:100%;max-width:1040px;margin:64px auto 0;
+/* 产品预览窗口 —— 精致双层：外层视差+光晕 / 内层入场 */
+.hero-preview{position:relative;z-index:2;width:100%;max-width:1120px;margin:48px auto 0;
   will-change:transform}
+.hero-preview::before{content:"";position:absolute;left:50%;top:8%;bottom:4%;width:118%;
+  transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;
+  background:radial-gradient(38% 50% at 18% 50%,rgba(122,158,255,.22),transparent 70%),
+             radial-gradient(38% 50% at 82% 50%,rgba(168,140,255,.18),transparent 70%),
+             radial-gradient(30% 40% at 50% 80%,rgba(120,210,200,.12),transparent 70%)}
 .hero-preview-in{opacity:0;animation:previewIn .95s .5s cubic-bezier(.22,1,.36,1) forwards}
 @keyframes previewIn{from{opacity:0;transform:translateY(52px) scale(.982)}to{opacity:1;transform:none}}
 .pv-window{background:#fff;border:1px solid #ececf0;border-radius:20px;overflow:hidden;text-align:left;
