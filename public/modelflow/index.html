@@ -4,25 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ModelFlow 智模流水线 · 数学建模全自动工作流</title>
-<meta name="description" content="ModelFlow 智模流水线：数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。支持 Windows 10/11。">
+<meta name="description" content="ModelFlow 智模流水线：数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。">
 <link rel="icon" type="image/png" href="./favicon-48.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ink:#101319; --ink-2:#1d2129; --muted:rgba(16,19,25,.56); --muted-2:rgba(16,19,25,.68);
-  --blue:#1b7ce3; --blue-hi:#2c96fb; --blue-lo:#0d68cf; --blue-deep:#0a54a8;
-  --blue-soft:#eaf3fe; --blue-line:rgba(27,124,227,.18);
-  --gold:#c9a227; --gold-deep:#9a7515; --gold-mark:#ffd54d; --gold-soft:#fdf6df;
-  --violet:#7c5cff; --teal:#13b9a6; --orange:#f0a04c;
-  --line:#e9ebf0; --line-2:#dfe3ea; --bg:#ffffff; --bg-soft:#f6f8fb;
-  --r:16px; --r-lg:24px; --pill:999px;
-  --shadow-s:0 2px 8px rgba(16,40,80,.06);
-  --shadow-m:0 14px 34px -16px rgba(16,50,110,.22);
-  --shadow-l:0 40px 80px -28px rgba(16,45,100,.28);
-  --zh:"PingFang SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,"Segoe UI",sans-serif;
-  --en:"Montserrat",var(--zh);
+  --ink:#0a0a0a;
+  --ink-2:#1a1a1a;
+  --muted:rgba(10,10,10,.52);
+  --muted-2:rgba(10,10,10,.65);
+  --line:#ececec;
+  --line-2:#e2e2e2;
+  --bg:#ffffff;
+  --bg-soft:#f7f7f8;
+  --blue:#2563eb;
+  --violet:#7c3aed;
+  --teal:#0d9488;
+  --orange:#ea580c;
+  --pink:#db2777;
+  --r:20px;
+  --r-lg:28px;
+  --pill:999px;
+  --shadow-s:0 1px 3px rgba(0,0,0,.06);
+  --shadow-m:0 12px 32px -12px rgba(0,0,0,.18);
+  --shadow-l:0 32px 64px -20px rgba(0,0,0,.22);
+  --zh:"Noto Sans SC","PingFang SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,"Segoe UI",sans-serif;
+  --en:"Inter",var(--zh);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -30,253 +39,258 @@ body{font-family:var(--zh);color:var(--ink);background:var(--bg);line-height:1.6
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 img{display:block;max-width:100%}
-::selection{background:rgba(44,150,251,.22)}
+::selection{background:rgba(37,99,235,.18)}
 .en{font-family:var(--en)}
-.wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 24px}
+.wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* ============ 滚动渐入动效 ============ */
+.reveal{opacity:0;transform:translateY(36px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+.reveal-delay-4{transition-delay:.4s}
 
 /* ============ 顶部导航 ============ */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:background .3s,box-shadow .3s}
-.nav-inner{max-width:1180px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.nav.scrolled{background:rgba(255,255,255,.82);backdrop-filter:saturate(160%) blur(16px);box-shadow:0 1px 0 var(--line)}
-.brand{display:flex;align-items:center;gap:11px;min-width:0}
-.brand img{width:34px;height:34px;border-radius:9px;box-shadow:0 4px 10px -3px rgba(13,104,207,.5)}
-.brand-txt{display:flex;flex-direction:column;line-height:1.15}
-.brand-txt b{font-family:var(--en);font-size:17px;font-weight:800;letter-spacing:-.01em}
-.brand-txt span{font-size:11px;color:var(--muted);letter-spacing:.12em}
-.nav-right{display:flex;align-items:center;gap:18px}
-.nav-back{font-size:14px;color:var(--muted-2);display:inline-flex;align-items:center;gap:6px;transition:color .2s;white-space:nowrap}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;transition:background .35s,box-shadow .35s,backdrop-filter .35s}
+.nav-inner{max-width:1200px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav.scrolled{background:rgba(255,255,255,.8);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);box-shadow:0 1px 0 var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand img{width:32px;height:32px;border-radius:8px}
+.brand b{font-family:var(--en);font-size:18px;font-weight:800;letter-spacing:-.02em}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-back{font-size:14px;color:var(--muted-2);transition:color .2s;white-space:nowrap}
 .nav-back:hover{color:var(--ink)}
 
-/* ============ 蓝色主按钮 ============ */
-.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;
-  height:52px;padding:0 30px;border-radius:var(--pill);color:#fff;font-size:16px;font-weight:600;white-space:nowrap;
-  background:linear-gradient(180deg,var(--blue-hi),var(--blue-lo));
-  box-shadow:0 10px 22px -8px rgba(13,104,207,.55),inset 0 1px 0 rgba(255,255,255,.28);
-  transition:transform .22s ease,box-shadow .22s ease,filter .22s;overflow:hidden}
-.btn::after{content:"";position:absolute;inset:0;border-radius:inherit;
-  background:linear-gradient(120deg,rgba(255,255,255,.22),transparent 40%);pointer-events:none}
-.btn:hover{transform:translateY(-2px);box-shadow:0 16px 30px -10px rgba(13,104,207,.6),inset 0 1px 0 rgba(255,255,255,.3)}
+/* ============ 黑色主按钮（tabbit 风格） ============ */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  height:54px;padding:0 32px;border-radius:var(--pill);color:#fff;font-size:16px;font-weight:600;white-space:nowrap;
+  background:#0a0a0a;
+  box-shadow:0 8px 24px -8px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.12);
+  transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s,background .25s;overflow:hidden}
+.btn::before{content:"";position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 50%);pointer-events:none}
+.btn:hover{transform:translateY(-2px);box-shadow:0 14px 32px -8px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15);background:#1a1a1a}
 .btn:active{transform:translateY(0)}
-.btn svg{width:19px;height:19px}
+.btn svg{width:20px;height:20px;flex-shrink:0}
+.btn .sep{width:1px;height:22px;background:rgba(255,255,255,.2);margin:0 2px}
+.btn .tag{font-size:12px;font-weight:500;opacity:.7;font-family:var(--en)}
 .btn.sm{height:40px;padding:0 20px;font-size:14px}
-.btn-ghost{display:inline-flex;align-items:center;gap:8px;height:52px;padding:0 26px;border-radius:var(--pill);
-  font-size:15px;font-weight:600;color:var(--ink-2);border:1.5px solid var(--line-2);background:#fff;transition:.2s}
-.btn-ghost:hover{border-color:var(--blue);color:var(--blue);transform:translateY(-2px);box-shadow:var(--shadow-s)}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;height:54px;padding:0 28px;border-radius:var(--pill);
+  font-size:15px;font-weight:600;color:var(--ink-2);border:1.5px solid var(--line-2);background:#fff;transition:.25s}
+.btn-ghost:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:var(--shadow-s)}
 
-/* ============ Hero ============ */
-.hero{position:relative;padding:132px 24px 72px;overflow:hidden;
-  background:linear-gradient(180deg,#f4f9ff 0%,#ffffff 62%)}
-.hero-glow{position:absolute;left:50%;top:-180px;width:1100px;max-width:130%;height:520px;transform:translateX(-50%);
-  filter:blur(110px);opacity:.5;pointer-events:none;
-  background:radial-gradient(40% 55% at 32% 40%,rgba(44,150,251,.5),transparent 70%),
-             radial-gradient(42% 55% at 68% 35%,rgba(124,92,255,.34),transparent 70%),
-             radial-gradient(36% 50% at 50% 70%,rgba(255,213,77,.32),transparent 70%)}
-.hero-inner{position:relative;z-index:2;max-width:900px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center}
+/* ============ Hero（tabbit 首屏风格） ============ */
+.hero{position:relative;padding:140px 24px 60px;overflow:hidden;background:#fff}
+.hero-glow{position:absolute;left:50%;bottom:-200px;width:1200px;max-width:140%;height:600px;transform:translateX(-50%);
+  filter:blur(120px);opacity:.45;pointer-events:none;z-index:0;
+  background:radial-gradient(38% 50% at 28% 45%,rgba(37,99,235,.45),transparent 70%),
+             radial-gradient(40% 52% at 72% 40%,rgba(124,58,237,.35),transparent 70%),
+             radial-gradient(35% 48% at 50% 70%,rgba(13,148,136,.28),transparent 70%);
+  animation:glowBreathe 8s ease-in-out infinite}
+@keyframes glowBreathe{0%,100%{opacity:.4;transform:translateX(-50%) scale(1)}50%{opacity:.55;transform:translateX(-50%) scale(1.05)}}
+.hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted-2);
-  background:#fff;border:1px solid var(--line);border-radius:var(--pill);padding:7px 16px;box-shadow:var(--shadow-s)}
-.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.16)}
-.hero-badge .ver{color:var(--blue-deep);font-weight:700;font-family:var(--en)}
-.hero h1{margin-top:26px;font-size:clamp(38px,5.6vw,60px);line-height:1.18;font-weight:800;letter-spacing:-.01em;color:#0b1424}
-.hero h1 .en{font-weight:800}
-.hero h1 .hl{background:linear-gradient(120deg,var(--blue-hi),var(--blue) 45%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero-desc{margin-top:20px;font-size:clamp(16px,1.9vw,19px);line-height:1.8;color:var(--muted-2);max-width:680px}
-.hero-cta{margin-top:32px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:center}
-.hero-meta{margin-top:26px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-.hero-meta span{font-size:13px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:var(--pill);padding:6px 14px}
+  background:#fff;border:1px solid var(--line);border-radius:var(--pill);padding:7px 18px;box-shadow:var(--shadow-s)}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
+.hero-badge .ver{color:var(--ink);font-weight:700;font-family:var(--en)}
+.hero h1{margin-top:28px;font-size:clamp(40px,6.2vw,68px);line-height:1.12;font-weight:900;letter-spacing:-.025em;color:var(--ink)}
+.hero h1 .en{font-family:var(--en);font-weight:900}
+.hero h1 .hl{background:linear-gradient(120deg,var(--blue),var(--violet) 55%,var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-desc{margin-top:22px;font-size:clamp(16px,1.8vw,19px);line-height:1.75;color:var(--muted-2);max-width:640px;font-weight:400}
+.hero-cta{margin-top:36px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center;align-items:center}
+.hero-meta{margin-top:28px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.hero-meta span{font-size:12.5px;color:var(--muted);background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--pill);padding:6px 14px;font-weight:500}
 .hero-meta b{color:var(--ink-2);font-weight:600}
 
-/* 产品 mock */
-.hero-mock{position:relative;z-index:2;width:100%;max-width:940px;margin:56px auto 0}
-.mock-window{background:#fff;border:1px solid var(--line-2);border-radius:18px;box-shadow:var(--shadow-l);overflow:hidden;text-align:left}
-.mock-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#fafbfd;border-bottom:1px solid var(--line)}
+/* 产品 mock（tabbit 风格：浏览器窗口 + 渐变光晕） */
+.hero-mock{position:relative;z-index:2;width:100%;max-width:980px;margin:64px auto 0}
+.mock-window{background:#fff;border:1px solid var(--line-2);border-radius:16px;box-shadow:var(--shadow-l);overflow:hidden;text-align:left}
+.mock-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#fafafa;border-bottom:1px solid var(--line)}
 .mock-bar i{width:11px;height:11px;border-radius:50%}
 .mock-bar i:nth-child(1){background:#ff5f57}.mock-bar i:nth-child(2){background:#febc2e}.mock-bar i:nth-child(3){background:#28c840}
-.mock-url{margin-left:12px;flex:1;height:26px;border-radius:7px;background:#eef1f5;display:flex;align-items:center;padding:0 12px;
+.mock-url{margin-left:12px;flex:1;height:26px;border-radius:7px;background:#eee;display:flex;align-items:center;padding:0 12px;
   font-family:Consolas,monospace;font-size:12px;color:var(--muted)}
-.mock-body{display:grid;grid-template-columns:196px 1fr}
-.mock-side{background:#fafbfd;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:5px}
-.ms{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted-2);padding:7px 10px;border-radius:8px}
-.ms .n{width:18px;height:18px;border-radius:50%;background:#e9edf2;font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--en);font-weight:700}
-.ms.done{color:var(--ink-2)}.ms.done .n{background:#22c55e;color:#fff}
-.ms.run{background:var(--blue-soft);color:var(--blue-deep);font-weight:600}.ms.run .n{background:var(--blue);color:#fff}
-.ms .spin{width:13px;height:13px;border:2px solid rgba(27,124,227,.25);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+.mock-body{display:grid;grid-template-columns:200px 1fr;min-height:340px}
+.mock-side{background:#fafafa;border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.ms{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted-2);padding:8px 10px;border-radius:8px;transition:.2s}
+.ms .n{width:20px;height:20px;border-radius:6px;background:#eee;font-size:10px;display:grid;place-items:center;flex-shrink:0;font-family:var(--en);font-weight:700;color:var(--muted)}
+.ms.done{color:var(--ink-2);background:#fff;box-shadow:var(--shadow-s)}
+.ms.done .n{background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff}
+.ms.running{color:var(--ink);background:rgba(37,99,235,.06)}
+.ms.running .n{background:var(--blue);color:#fff;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.ms .bar{flex:1;height:4px;border-radius:2px;background:#eee;overflow:hidden}
+.ms .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--violet));border-radius:2px;animation:loadbar 2s ease-in-out infinite}
+@keyframes loadbar{0%{width:0}100%{width:100%}}
+.mock-main{padding:24px 28px;display:flex;flex-direction:column;gap:14px}
+.mock-title{font-size:15px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px}
+.mock-title .tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:rgba(37,99,235,.1);color:var(--blue);font-family:var(--en)}
+.mock-line{height:10px;border-radius:5px;background:#f0f0f0;position:relative;overflow:hidden}
+.mock-line.w70{width:70%}.mock-line.w50{width:50%}.mock-line.w85{width:85%}.mock-line.w40{width:40%}
+.mock-line::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shimmer 2s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.mock-code{background:#0d1117;border-radius:10px;padding:14px 18px;font-family:Consolas,monospace;font-size:12px;color:#c9d1d9;line-height:1.8}
+.mock-code .ok{color:#7ee787}.mock-code .run{color:#f0883e}.mock-code .cmt{color:#8b949e}
+.mock-files{display:flex;gap:8px;flex-wrap:wrap}
+.mock-file{font-size:11px;padding:5px 10px;border-radius:6px;background:#f5f5f5;color:var(--muted-2);font-family:var(--en);border:1px solid var(--line)}
+.mock-file.pdf{background:rgba(13,148,136,.08);color:var(--teal);border-color:rgba(13,148,136,.2)}
+
+/* ============ 通用 Section 标题（tabbit 风格：超大居中） ============ */
+.section{position:relative;padding:100px 24px;overflow:hidden}
+.section-head{max-width:720px;margin:0 auto 64px;text-align:center}
+.section-eyebrow{font-size:13px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:16px;font-family:var(--en)}
+.section h2{font-size:clamp(32px,4.6vw,52px);line-height:1.15;font-weight:900;letter-spacing:-.02em;color:var(--ink)}
+.section .sub{margin-top:18px;font-size:clamp(15px,1.6vw,18px);line-height:1.7;color:var(--muted-2)}
+
+/* ============ 核心功能卡片（tabbit 彩色渐变卡片风格） ============ */
+.features{background:var(--bg)}
+.feature-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto}
+.fcard{position:relative;border-radius:var(--r-lg);padding:36px 30px;min-height:380px;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:var(--shadow-m);transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s}
+.fcard:hover{transform:translateY(-6px);box-shadow:var(--shadow-l)}
+.fcard::before{content:"";position:absolute;inset:0;opacity:.08;pointer-events:none;
+  background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.4),transparent 60%)}
+.fcard.blue{background:linear-gradient(150deg,#3b82f6 0%,#1d4ed8 100%)}
+.fcard.violet{background:linear-gradient(150deg,#8b5cf6 0%,#6d28d9 100%)}
+.fcard.teal{background:linear-gradient(150deg,#14b8a6 0%,#0f766e 100%)}
+.fcard .icon{width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;margin-bottom:24px;backdrop-filter:blur(8px)}
+.fcard .icon svg{width:26px;height:26px;color:#fff}
+.fcard h3{font-size:22px;font-weight:800;color:#fff;letter-spacing:-.01em;line-height:1.3;margin-bottom:12px}
+.fcard p{font-size:14.5px;line-height:1.7;color:rgba(255,255,255,.82);flex:1}
+.fcard .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:20px}
+.fcard .tags span{font-size:11px;padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);font-weight:500;backdrop-filter:blur(4px)}
+
+/* ============ 九步流程区 ============ */
+.pipeline{background:var(--bg-soft)}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1100px;margin:0 auto}
+.stage{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:32px 28px;transition:transform .3s,box-shadow .3s}
+.stage:hover{transform:translateY(-4px);box-shadow:var(--shadow-m)}
+.stage-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-family:var(--en);margin-bottom:8px}
+.stage h3{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:6px}
+.stage .stage-desc{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6}
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:var(--bg-soft);transition:.2s}
+.step:hover{background:#fff;box-shadow:var(--shadow-s)}
+.step .num{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--violet));color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0;font-family:var(--en)}
+.step .txt{font-size:13.5px;font-weight:600;color:var(--ink-2)}
+.stage-output{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);font-size:12px;color:var(--muted)}
+.stage-output b{color:var(--teal);font-weight:600}
+
+/* ============ 多模型区 ============ */
+.models{background:var(--bg)}
+.model-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;max-width:900px;margin:0 auto}
+.model-chip{display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:var(--pill);background:#fff;border:1px solid var(--line);
+  font-size:14px;font-weight:600;color:var(--ink-2);transition:.25s;box-shadow:var(--shadow-s)}
+.model-chip:hover{transform:translateY(-2px);box-shadow:var(--shadow-m);border-color:var(--line-2)}
+.model-chip .dot{width:8px;height:8px;border-radius:50%}
+.model-features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:900px;margin:48px auto 0}
+.mfeat{text-align:center;padding:24px}
+.mfeat .micon{width:44px;height:44px;border-radius:12px;background:var(--bg-soft);display:grid;place-items:center;margin:0 auto 16px}
+.mfeat .micon svg{width:22px;height:22px;color:var(--blue)}
+.mfeat h4{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.mfeat p{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* ============ 本地运行区 ============ */
+.local{background:var(--bg-soft)}
+.local-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:0 auto}
+.lcard{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:32px 28px;text-align:center;transition:.3s}
+.lcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-m)}
+.lcard .licon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(37,99,235,.1),rgba(124,58,237,.1));display:grid;place-items:center;margin:0 auto 20px}
+.lcard .licon svg{width:28px;height:28px;color:var(--blue)}
+.lcard h4{font-size:17px;font-weight:800;color:var(--ink);margin-bottom:10px}
+.lcard p{font-size:13.5px;color:var(--muted-2);line-height:1.7}
+
+/* ============ FAQ ============ */
+.faq{background:var(--bg)}
+.faq-list{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.faq-item{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;transition:box-shadow .25s}
+.faq-item:hover{box-shadow:var(--shadow-s)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px;cursor:pointer;font-size:15px;font-weight:600;color:var(--ink)}
+.faq-q .arrow{width:20px;height:20px;flex-shrink:0;transition:transform .3s;color:var(--muted)}
+.faq-item.open .faq-q .arrow{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .4s ease;padding:0 24px}
+.faq-item.open .faq-a{max-height:300px;padding:0 24px 20px}
+.faq-a p{font-size:14px;line-height:1.75;color:var(--muted-2)}
+
+/* ============ 底部 CTA ============ */
+.cta{position:relative;padding:100px 24px;overflow:hidden;background:var(--ink);text-align:center}
+.cta-glow{position:absolute;left:50%;top:50%;width:800px;max-width:120%;height:400px;transform:translate(-50%,-50%);
+  filter:blur(100px);opacity:.3;pointer-events:none;
+  background:radial-gradient(40% 60% at 30% 50%,rgba(37,99,235,.6),transparent 70%),
+             radial-gradient(40% 60% at 70% 50%,rgba(124,58,237,.5),transparent 70%)}
+.cta-inner{position:relative;z-index:2;max-width:640px;margin:0 auto}
+.cta h2{font-size:clamp(30px,4.4vw,48px);line-height:1.2;font-weight:900;color:#fff;letter-spacing:-.02em}
+.cta p{margin-top:16px;font-size:16px;color:rgba(255,255,255,.6);line-height:1.7}
+.cta .btn{margin-top:32px;background:#fff;color:var(--ink);box-shadow:0 8px 32px -8px rgba(255,255,255,.3)}
+.cta .btn:hover{background:#f0f0f0;transform:translateY(-2px)}
+.cta .btn::before{background:linear-gradient(180deg,rgba(0,0,0,.04),transparent 50%)}
+
+/* ============ 页脚 ============ */
+.footer{background:var(--ink);border-top:1px solid rgba(255,255,255,.08);padding:32px 24px}
+.footer-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.footer .brand b{color:#fff}
+.footer p{font-size:13px;color:rgba(255,255,255,.4)}
+.footer a{color:rgba(255,255,255,.5);transition:color .2s}
+.footer a:hover{color:#fff}
+
+/* ============ 授权码弹窗 ============ */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.modal-overlay.show{opacity:1;visibility:visible}
+.modal{background:#fff;border-radius:20px;box-shadow:var(--shadow-l);width:100%;max-width:420px;padding:36px 32px;
+  transform:translateY(20px) scale(.96);transition:transform .35s cubic-bezier(.22,1,.36,1);position:relative}
+.modal-overlay.show .modal{transform:translateY(0) scale(1)}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;display:grid;place-items:center;
+  color:var(--muted);transition:.2s;font-size:18px}
+.modal-close:hover{background:var(--bg-soft);color:var(--ink)}
+.modal-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--blue),var(--violet));display:grid;place-items:center;margin:0 auto 20px}
+.modal-icon svg{width:28px;height:28px;color:#fff}
+.modal h3{font-size:22px;font-weight:800;text-align:center;color:var(--ink);margin-bottom:8px}
+.modal .modal-desc{font-size:14px;text-align:center;color:var(--muted-2);margin-bottom:24px;line-height:1.6}
+.modal-input{width:100%;height:52px;border:2px solid var(--line);border-radius:12px;padding:0 18px;font-size:20px;
+  font-family:var(--en);font-weight:700;letter-spacing:.3em;text-align:center;text-transform:uppercase;
+  color:var(--ink);background:var(--bg-soft);transition:border-color .25s,box-shadow .25s;outline:none}
+.modal-input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.modal-input::placeholder{color:var(--muted);letter-spacing:.3em;font-weight:500}
+.modal-err{margin-top:10px;font-size:13px;color:#dc2626;text-align:center;min-height:18px}
+.modal .btn{width:100%;margin-top:16px}
+.modal-note{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
+.modal-note a{color:var(--blue);font-weight:600}
+.modal-loading{display:none;align-items:center;justify-content:center;gap:10px;font-size:14px;color:var(--muted-2);margin-top:16px}
+.modal-loading.show{display:flex}
+.spinner{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.mock-main{padding:20px 22px;display:flex;flex-direction:column;gap:13px}
-.mm-block{border:1px solid var(--line);border-radius:12px;padding:15px 17px;display:flex;flex-direction:column;gap:11px}
-.mm-prog{height:6px;border-radius:var(--pill);background:#eef1f5;overflow:hidden}
-.mm-prog span{display:block;height:100%;width:66%;border-radius:inherit;background:linear-gradient(90deg,var(--blue-hi),var(--violet));animation:prog 2.8s ease-in-out infinite alternate}
-@keyframes prog{from{width:28%}to{width:88%}}
-.mm-log{font-family:Consolas,monospace;font-size:11.5px;line-height:1.95;color:var(--muted)}
-.mm-log .ok{color:#16a34a;font-weight:600}.mm-log .bl{color:var(--blue)}.mm-log .vi{color:var(--violet)}
-.mm-line{height:12px;border-radius:6px;background:#f1f3f6}.mm-line.w46{width:46%}.mm-line.w72{width:72%}.mm-line.w62{width:62%}
 
-/* ============ 通用 section ============ */
-.sec{padding:96px 24px}
-.sec-head{max-width:760px;margin:0 auto 52px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
-.kicker{font-family:var(--en);font-size:13px;font-weight:700;letter-spacing:.18em;color:var(--blue);text-transform:uppercase}
-.sec-title{font-size:clamp(28px,3.8vw,42px);line-height:1.25;font-weight:800;letter-spacing:-.01em;color:#0b1424}
-.sec-sub{font-size:17px;line-height:1.75;color:var(--muted-2)}
-
-/* 三特性 */
-.feat3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.feat{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:28px 24px;display:flex;flex-direction:column;gap:13px;
-  transition:transform .28s,box-shadow .28s,border-color .28s}
-.feat:hover{transform:translateY(-5px);box-shadow:var(--shadow-m);border-color:var(--blue-line)}
-.feat-ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--blue-soft);color:var(--blue)}
-.feat-ic.v{background:#f1ecff;color:var(--violet)}.feat-ic.g{background:var(--gold-soft);color:var(--gold-deep)}
-.feat-ic svg{width:24px;height:24px}
-.feat h3{font-size:18.5px;font-weight:700}
-.feat p{font-size:14.5px;line-height:1.75;color:var(--muted-2)}
-
-/* 九步三阶段横滑卡 */
-.stages{background:linear-gradient(180deg,#fff,var(--bg-soft));padding:96px 0}
-.stage-track{display:grid;grid-template-columns:repeat(3,minmax(290px,1fr));gap:22px;max-width:1180px;margin:0 auto;padding:4px 24px 18px;
-  overflow-x:auto;overscroll-behavior-x:contain;touch-action:pan-x;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
-.stage-track::-webkit-scrollbar{height:6px}.stage-track::-webkit-scrollbar-thumb{background:rgba(16,40,80,.18);border-radius:99px}
-.stage{position:relative;border-radius:26px;padding:34px 30px 26px;min-height:500px;color:#fff;display:flex;flex-direction:column;overflow:hidden}
-.stage::before{content:"";position:absolute;inset:0;border-radius:inherit;
-  background:radial-gradient(120% 90% at 8% 0,rgba(255,255,255,.28),transparent 46%),radial-gradient(100% 100% at 94% 100%,rgba(0,0,0,.22),transparent 60%)}
-.stage::after{content:"";position:absolute;inset:11px;border-radius:17px;border:1px solid rgba(255,255,255,.22);
-  background:linear-gradient(130deg,rgba(255,255,255,.16),transparent 34%)}
-.stage>*{position:relative;z-index:1}
-.stage.s1{background:linear-gradient(150deg,#3aa4ff,#1b7ce3 52%,#0d62c4)}
-.stage.s2{background:linear-gradient(150deg,#9a82ff,#7c5cff 52%,#5a3cd6)}
-.stage.s3{background:linear-gradient(150deg,#f6b061,#ef9a3c 52%,#d97d1f)}
-.stage-no{font-family:var(--en);font-size:13px;font-weight:700;letter-spacing:.14em;opacity:.85;margin-bottom:14px}
-.stage h3{font-size:24px;font-weight:800;line-height:1.4;margin-bottom:10px}
-.stage>p{font-size:14px;line-height:1.7;opacity:.94}
-.stage-steps{margin-top:22px;display:flex;flex-direction:column;gap:9px}
-.stage-step{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);
-  border-radius:11px;padding:11px 14px;font-size:14px;font-weight:600}
-.stage-step i{width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.24);display:grid;place-items:center;font-style:normal;font-size:11px;font-family:var(--en)}
-.stage-foot{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.22);font-size:12.5px;opacity:.86;line-height:1.6}
-
-/* 图文交替 */
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;margin-bottom:96px}
-.frow:last-child{margin-bottom:0}
-.frow.rev .fvis{order:2}
-.ftext h3{font-size:clamp(24px,3vw,33px);line-height:1.35;font-weight:800;color:#0b1424;margin-bottom:16px}
-.ftext>p{font-size:16px;line-height:1.85;color:var(--muted-2);margin-bottom:8px}
-.flist{margin-top:22px;display:flex;flex-direction:column;gap:16px}
-.fli{display:flex;gap:13px}
-.fli .ic{flex-shrink:0;width:28px;height:28px;border-radius:9px;background:var(--blue-soft);color:var(--blue);display:grid;place-items:center;margin-top:1px}
-.fli .ic.g{background:var(--gold-soft);color:var(--gold-deep)}
-.fli .ic svg{width:15px;height:15px}
-.fli b{display:block;font-size:15.5px;font-weight:700;margin-bottom:3px}
-.fli span{font-size:14px;line-height:1.7;color:var(--muted-2)}
-.fvis{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-m);overflow:hidden}
-.fv-bar{display:flex;gap:7px;padding:12px 16px;border-bottom:1px solid var(--line);background:#fafbfd}
-.fv-bar i{width:10px;height:10px;border-radius:50%;background:#e3e7ed}
-.fv-pad{padding:22px;display:flex;flex-direction:column;gap:14px}
-.term{background:#0f1826;border-radius:13px;padding:18px;font-family:Consolas,monospace;font-size:12.5px;line-height:2;color:#c4d0e2}
-.term .gd{color:var(--gold-mark)}.term .bl{color:#7db4ff}.term .ok{color:#4ade80}.term .vi{color:#c4b5fd}
-.doc{border:1px solid var(--line);border-radius:12px;padding:16px 18px}
-.doc .t{font-size:13px;font-weight:700;margin-bottom:11px;display:flex;align-items:center;gap:8px}
-.doc .ln{height:9px;border-radius:5px;background:#eef1f5;margin-bottom:8px}.doc .ln:last-child{margin-bottom:0}
-.doc .ln.a{width:88%}.doc .ln.b{width:70%}.doc .ln.c{width:80%}.doc .ln.d{width:52%}
-.doc .ln.hl{background:linear-gradient(90deg,#dbeafe,#eef5ff)}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:6px 13px;border-radius:var(--pill);
-  background:#f4f6f9;border:1px solid var(--line);color:#445066}
-.chip.hot{background:var(--blue-soft);border-color:var(--blue-line);color:var(--blue-deep)}
-.chip .d{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55}
-
-/* 本地优先 深色 */
-.local{background:#0f1826;color:#fff;padding:96px 24px}
-.local .sec-title{color:#fff}.local .sec-sub{color:rgba(255,255,255,.6)}
-.local .kicker{color:#7db4ff}
-.local-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.lc{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:28px;transition:.25s}
-.lc:hover{background:rgba(255,255,255,.08);transform:translateY(-4px)}
-.lc .ic{width:46px;height:46px;border-radius:13px;background:rgba(44,150,251,.18);color:#7db4ff;display:grid;place-items:center;margin-bottom:16px}
-.lc .ic svg{width:23px;height:23px}
-.lc h3{font-size:17.5px;margin-bottom:9px;font-weight:700}
-.lc p{font-size:14px;line-height:1.75;color:rgba(255,255,255,.62)}
-
-/* FAQ */
-.faq-list{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:13px}
-.faq{border:1px solid var(--line);border-radius:20px;background:#fff;overflow:hidden;transition:border-color .3s,box-shadow .3s}
-.faq.open{border-color:var(--blue-line);box-shadow:var(--shadow-s)}
-.faq-q{width:100%;display:flex;align-items:center;justify-content:space-between;gap:18px;text-align:left;padding:21px 24px;font-size:16.5px;font-weight:700}
-.faq-q .plus{flex-shrink:0;width:28px;height:28px;border-radius:50%;background:#f1f3f6;display:grid;place-items:center;transition:transform .3s,background .3s,color .3s}
-.faq.open .plus{transform:rotate(45deg);background:var(--blue-soft);color:var(--blue)}
-.faq-q .plus svg{width:15px;height:15px}
-.faq-a{max-height:0;overflow:hidden;opacity:0;transition:max-height .35s ease,opacity .3s ease}
-.faq.open .faq-a{max-height:420px;opacity:1}
-.faq-a-in{padding:0 24px 21px;font-size:15px;line-height:1.8;color:var(--muted-2)}
-.faq-a-in code{font-family:Consolas,monospace;background:#f4f6f9;padding:2px 7px;border-radius:6px;font-size:13.5px;color:var(--blue-deep)}
-.faq-a-in b{color:var(--ink-2)}
-
-/* CTA */
-.cta{position:relative;text-align:center;padding:104px 24px;overflow:hidden;background:linear-gradient(180deg,#fff,#eef5ff)}
-.cta-glow{position:absolute;left:50%;bottom:-170px;width:880px;height:380px;transform:translateX(-50%);filter:blur(110px);opacity:.5;pointer-events:none;
-  background:radial-gradient(45% 60% at 35% 50%,rgba(44,150,251,.5),transparent 70%),radial-gradient(45% 60% at 65% 50%,rgba(124,92,255,.4),transparent 70%)}
-.cta>*{position:relative}
-.cta h2{font-size:clamp(30px,4.4vw,46px);font-weight:800;color:#0b1424;margin-bottom:15px}
-.cta p{font-size:18px;color:var(--muted-2);margin-bottom:34px}
-.cta .btn{height:58px;padding:0 42px;font-size:17px}
-.cta-note{margin-top:20px;font-size:13.5px;color:var(--muted)}
-
-footer{border-top:1px solid var(--line);padding:34px 24px;text-align:center;font-size:13px;color:var(--muted);background:#fff}
-footer .frow{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
-footer a:hover{color:var(--blue)}
-
-/* 滚动显现 */
-.reveal{opacity:0;transform:translateY(48px);transition:opacity .85s ease,transform .85s cubic-bezier(.2,.7,.2,1)}
-.reveal.in{opacity:1;transform:none}
-.reveal.d1{transition-delay:.1s}.reveal.d2{transition-delay:.2s}.reveal.d3{transition-delay:.3s}
-@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.hero-glow,.cta-glow,.mm-prog span,.ms .spin{animation:none}}
-
-/* ============ 小窗式授权（小标签页） ============ */
-.mask{position:fixed;inset:0;z-index:1000;background:rgba(15,24,38,.46);backdrop-filter:blur(5px);
-  display:none;align-items:center;justify-content:center;padding:24px;opacity:0;transition:opacity .25s}
-.mask.show{display:flex;opacity:1}
-.sheet{width:100%;max-width:408px;background:#fff;border-radius:20px;overflow:hidden;
-  transform:translateY(16px) scale(.97);transition:transform .3s cubic-bezier(.2,.8,.2,1);box-shadow:0 40px 90px -20px rgba(10,30,70,.5)}
-.mask.show .sheet{transform:none}
-/* 小窗标题栏，呼应"小标签页" */
-.sheet-bar{display:flex;align-items:center;gap:9px;padding:13px 16px;background:linear-gradient(180deg,#f7faff,#eef4fb);border-bottom:1px solid var(--line)}
-.sheet-bar .tb-dot{width:9px;height:9px;border-radius:50%;background:#22c55e}
-.sheet-bar .tb-title{font-size:13px;font-weight:700;color:var(--ink-2);flex:1;display:flex;align-items:center;gap:8px}
-.sheet-bar .tb-title img{width:18px;height:18px;border-radius:5px}
-.sheet-bar .tb-x{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:#8a93a3;transition:.2s}
-.sheet-bar .tb-x:hover{background:#e9edf3;color:var(--ink)}
-.sheet-body{padding:26px 26px 24px}
-.gate-key{width:52px;height:52px;border-radius:14px;background:linear-gradient(180deg,var(--blue-hi),var(--blue-lo));display:grid;place-items:center;margin-bottom:18px;box-shadow:0 8px 16px -6px rgba(13,104,207,.5)}
-.gate-key svg{width:25px;height:25px;color:#fff}
-.sheet-body h3{font-size:21px;font-weight:800;margin-bottom:8px}
-.sheet-body .hint{font-size:14px;line-height:1.7;color:var(--muted-2);margin-bottom:20px}
-.sheet-body .hint b{color:var(--ink-2)}
-.code-input{width:100%;height:54px;text-align:center;font-family:var(--en);font-size:23px;font-weight:700;letter-spacing:9px;
-  text-transform:uppercase;border:1.5px solid var(--line-2);border-radius:13px;background:#fafbfd;color:#0b1424;outline:none;transition:.2s}
-.code-input:focus{border-color:var(--blue);background:#fff;box-shadow:0 0 0 4px rgba(44,150,251,.14)}
-.code-err{color:#e5484d;font-size:13px;margin-top:10px;min-height:18px;font-weight:600}
-.sheet-body .btn{width:100%;margin-top:4px}
-.sheet-foot{text-align:center;font-size:12px;color:#9aa2b1;margin-top:15px;line-height:1.6}
-/* 响应式 */
-@media (max-width:920px){
-  .feat3,.local-grid{grid-template-columns:1fr}
-  .frow{grid-template-columns:1fr;gap:30px}.frow.rev .fvis{order:0}
-  .mock-body{grid-template-columns:1fr}.mock-side{display:none}
-  .stage-track{grid-template-columns:repeat(3,80vw)}
-  .nav-back{display:none}.sec,.stages,.local{padding-left:18px;padding-right:18px}
-  .frow{margin-bottom:64px}.brand-txt span{display:none}
+/* ============ 响应式 ============ */
+@media(max-width:900px){
+  .feature-cards,.stages,.model-features,.local-grid{grid-template-columns:1fr}
+  .mock-body{grid-template-columns:1fr}
+  .mock-side{display:none}
+  .nav-back{display:none}
+}
+@media(max-width:600px){
+  .hero{padding:120px 20px 40px}
+  .section{padding:72px 20px}
+  .hero-cta{flex-direction:column;width:100%}
+  .hero-cta .btn,.hero-cta .btn-ghost{width:100%}
+  .modal{padding:28px 24px}
 }
 </style>
 </head>
 <body>
 
-<!-- ============ 导航 ============ -->
+<!-- ============ 顶部导航 ============ -->
 <nav class="nav" id="nav">
   <div class="nav-inner">
-    <a class="brand" href="#top">
-      <img src="./logo-64.png" alt="ModelFlow" width="34" height="34">
-      <span class="brand-txt"><b>ModelFlow</b><span>智模流水线</span></span>
+    <a href="#top" class="brand">
+      <img src="./logo-64.png" alt="ModelFlow">
+      <b>ModelFlow</b>
     </a>
     <div class="nav-right">
-      <a class="nav-back" href="https://lxlrwxs.top" target="_blank" rel="noreferrer">← 返回工具中心</a>
-      <button class="btn sm dl-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <a href="https://lxlrwxs.top" class="nav-back">← 个人工具中心</a>
+      <button class="btn sm dl-btn" onclick="openModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         下载
       </button>
     </div>
@@ -284,226 +298,242 @@ footer a:hover{color:var(--blue)}
 </nav>
 
 <!-- ============ Hero ============ -->
-<header class="hero" id="top">
-  <div class="hero-glow" aria-hidden="true"></div>
+<section class="hero" id="top">
+  <div class="hero-glow"></div>
   <div class="hero-inner">
-    <span class="hero-badge reveal in"><span class="dot"></span>最新版本 <span class="en ver">—</span> · 仅支持 Windows 10/11 x64</span>
-    <h1 class="reveal in d1">一道赛题，<span class="hl">九步成稿</span></h1>
-    <p class="hero-desc reveal in d2"><span class="en">ModelFlow</span> 智模流水线 —— 数学建模竞赛全自动工作流。从赛题解析、建模求解、编程计算，到论文撰写与 PDF 编译，一条龙跑完，你只需要提供题目。</p>
-    <div class="hero-cta reveal in d3">
-      <button class="btn dl-btn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 21h8M12 18v3"/></svg>
-        下载 Windows 版
-      </button>
-      <a class="btn-ghost" href="#pipeline">了解工作流 ↓</a>
+    <div class="hero-badge reveal">
+      <span class="dot"></span>
+      最新版本 <span class="ver" id="heroVer">0.7.6</span> · 仅支持 Windows 10/11 x64
     </div>
-    <div class="hero-meta reveal in d4">
-      <span>版本 <b class="en ver">—</b></span>
+    <h1 class="reveal reveal-delay-1">一道赛题，<span class="hl">九步成稿</span></h1>
+    <p class="hero-desc reveal reveal-delay-2">ModelFlow 智模流水线 —— 数学建模竞赛全自动工作流。从赛题解析、建模求解、编程计算，到论文撰写与 PDF 编译，一条龙跑完，你只需要提供题目。</p>
+    <div class="hero-cta reveal reveal-delay-3">
+      <button class="btn dl-btn" onclick="openModal()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 3v7.5H3V5.5zM11.5 10.5V3L21 5.5v5h-9.5zM3 12h7.5v7.5L3 17.5V12zM11.5 19.5V12H21v5.5l-9.5 2z"/></svg>
+        <span class="sep"></span>
+        下载 Windows 版
+        <span class="tag" id="btnVer">0.7.6</span>
+      </button>
+      <a href="#pipeline" class="btn-ghost">
+        了解工作流
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+      </a>
+    </div>
+    <div class="hero-meta reveal reveal-delay-4">
+      <span>版本 <b id="metaVer">0.7.6</b></span>
       <span>系统 <b>Windows 10/11 x64</b></span>
       <span>引擎 <b>API / CLI 双引擎</b></span>
       <span>流程 <b>九步全自动</b></span>
     </div>
-  </div>
 
-  <div class="hero-mock reveal in d4">
-    <div class="mock-window">
-      <div class="mock-bar"><i></i><i></i><i></i><div class="mock-url en">http://127.0.0.1:8000 — ModelFlow 工作流</div></div>
-      <div class="mock-body">
-        <aside class="mock-side">
-          <div class="ms done"><span class="n">✓</span>赛题分析</div>
-          <div class="ms done"><span class="n">✓</span>建模求解</div>
-          <div class="ms done"><span class="n">✓</span>编程实现</div>
-          <div class="ms run"><span class="spin"></span>图表生成</div>
-          <div class="ms"><span class="n">5</span>架构图绘制</div>
-          <div class="ms"><span class="n">6</span>逻辑对抗复核</div>
-          <div class="ms"><span class="n">7</span>竞赛论文撰写</div>
-          <div class="ms"><span class="n">8</span>编译合规检查</div>
-          <div class="ms"><span class="n">9</span>论文改进循环</div>
-        </aside>
-        <div class="mock-main">
-          <div class="mm-block">
-            <div class="mm-prog"><span></span></div>
-            <div class="mm-log">
-              <span class="ok">[✓]</span> 赛题分析完成 → PROBLEM_ANALYSIS.md<br>
-              <span class="ok">[✓]</span> 建模求解完成 → MODELING_REPORT.md<br>
-              <span class="ok">[✓]</span> 编程实现完成 → RESULTS.md（残差 1.2e-4）<br>
-              <span class="bl">[…]</span> 正在生成论文图表 <span class="vi">Figure_1.png …</span>
+    <!-- 产品 mock -->
+    <div class="hero-mock reveal reveal-delay-2">
+      <div class="mock-window">
+        <div class="mock-bar">
+          <i></i><i></i><i></i>
+          <div class="mock-url">http://127.0.0.1:8000 — ModelFlow 工作流</div>
+        </div>
+        <div class="mock-body">
+          <div class="mock-side">
+            <div class="ms done"><span class="n">✓</span>赛题分析</div>
+            <div class="ms done"><span class="n">✓</span>建模求解</div>
+            <div class="ms done"><span class="n">✓</span>编程实现</div>
+            <div class="ms running"><span class="n">4</span>图表生成<span class="bar"><i></i></span></div>
+            <div class="ms"><span class="n">5</span>流程架构图</div>
+            <div class="ms"><span class="n">6</span>逻辑对抗复核</div>
+            <div class="ms"><span class="n">7</span>论文撰写</div>
+            <div class="ms"><span class="n">8</span>编译检查</div>
+            <div class="ms"><span class="n">9</span>改进循环</div>
+          </div>
+          <div class="mock-main">
+            <div class="mock-title">
+              正在生成论文图表
+              <span class="tag">STEP 4/9</span>
+            </div>
+            <div class="mock-line w85"></div>
+            <div class="mock-line w70"></div>
+            <div class="mock-line w50"></div>
+            <div class="mock-code">
+              <span class="cmt"># 自动生成结果图表</span><br>
+              <span class="ok">[✓]</span> Figure_1.png · 残差分析图 (2.4 MB)<br>
+              <span class="ok">[✓]</span> Figure_2.png · 参数敏感性热力图<br>
+              <span class="run">[…]</span> Figure_3.png · 模型对比折线图 …<br>
+              <span class="cmt"># 产物已落盘，自检通过后进入下一步</span>
+            </div>
+            <div class="mock-files">
+              <span class="mock-file">PROBLEM_ANALYSIS.md</span>
+              <span class="mock-file">MODELING_REPORT.md</span>
+              <span class="mock-file">RESULTS.md</span>
+              <span class="mock-file">Figure_1.png</span>
+              <span class="mock-file">Figure_2.png</span>
+              <span class="mock-file pdf">main.pdf</span>
             </div>
           </div>
-          <div class="mm-line w72"></div>
-          <div class="mm-line w62"></div>
         </div>
       </div>
     </div>
   </div>
-</header>
+</section>
 
-<!-- ============ 三特性 ============ -->
-<section class="sec" id="pipeline">
+<!-- ============ 核心功能卡片 ============ -->
+<section class="section features" id="features">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="kicker reveal">PIPELINE</span>
-      <h2 class="sec-title reveal d1">把三天的工作量，压进一条流水线</h2>
-      <p class="sec-sub reveal d2">不再手动切换十几个工具、复制粘贴到凌晨。赛题丢进来，九个专业环节自动接力，每一步都有产物、可检查、可回退。</p>
+    <div class="section-head reveal">
+      <div class="section-eyebrow">CORE FEATURES</div>
+      <h2>把三天的工作量，<br>压进一条流水线</h2>
+      <p class="sub">不再手动切换十几个工具、复制粘贴到凌晨。赛题丢进来，三个专业阶段自动接力，每一步都有产物、可检查、可回退。</p>
     </div>
-    <div class="feat3">
-      <div class="feat reveal">
-        <div class="feat-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+    <div class="feature-cards">
+      <div class="fcard blue reveal reveal-delay-1">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
         <h3>赛题智能解析</h3>
         <p>支持文字、PDF、图片赛题，自动抽取题目、变量与约束，识别需要求解的子问题，输出结构化的问题分析报告。</p>
+        <div class="tags">
+          <span>文字 / PDF / 图片</span>
+          <span>变量抽取</span>
+          <span>子问题识别</span>
+        </div>
       </div>
-      <div class="feat reveal d1">
-        <div class="feat-ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg></div>
+      <div class="fcard violet reveal reveal-delay-2">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
         <h3>建模 · 求解 · 出图</h3>
         <p>自动选择模型、编写并运行代码、求解计算，同步生成结果图表与流程架构图，数据与图全部落盘可追溯。</p>
+        <div class="tags">
+          <span>自动建模</span>
+          <span>代码运行</span>
+          <span>论文级图表</span>
+        </div>
       </div>
-      <div class="feat reveal d2">
-        <div class="feat-ic v"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg></div>
+      <div class="fcard teal reveal reveal-delay-3">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+        </div>
         <h3>论文一键成稿</h3>
         <p>按竞赛规范撰写 LaTeX 论文，自动编译为 PDF，并经过逻辑对抗复核与多轮改进循环，直接产出可提交稿件。</p>
+        <div class="tags">
+          <span>LaTeX 论文</span>
+          <span>PDF 编译</span>
+          <span>逻辑对抗复核</span>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ 九步三阶段 ============ -->
-<section class="stages">
-  <div class="wrap" style="max-width:1080px">
-    <div class="sec-head" style="margin-bottom:42px">
-      <span class="kicker reveal">NINE STEPS</span>
-      <h2 class="sec-title reveal d1">九个专业环节，三段式自动接力</h2>
-      <p class="sec-sub reveal d2">每个环节加载对应的专业 Skill 作为方法内核，产物逐级传递，环环自检。</p>
-    </div>
-  </div>
-  <div class="stage-track">
-    <article class="stage s1 reveal">
-      <div class="stage-no en">STAGE 01</div>
-      <h3>理解与建模</h3>
-      <p>读懂题目、确定方法、跑出结果，把一道开放赛题变成可计算的问题。</p>
-      <div class="stage-steps">
-        <div class="stage-step"><i>1</i>赛题分析</div>
-        <div class="stage-step"><i>2</i>建模求解</div>
-        <div class="stage-step"><i>3</i>编程实现</div>
-      </div>
-      <div class="stage-foot">产物：问题分析 · 建模报告 · 计算结果</div>
-    </article>
-    <article class="stage s2 reveal d1">
-      <div class="stage-no en">STAGE 02</div>
-      <h3>可视化与复核</h3>
-      <p>生成论文级图表与流程图，再以对抗视角审查逻辑漏洞，让结论站得住脚。</p>
-      <div class="stage-steps">
-        <div class="stage-step"><i>4</i>图表生成</div>
-        <div class="stage-step"><i>5</i>流程与架构图</div>
-        <div class="stage-step"><i>6</i>逻辑对抗复核</div>
-      </div>
-      <div class="stage-foot">产物：结果图表 · 架构图 · 逻辑审查报告</div>
-    </article>
-    <article class="stage s3 reveal d2">
-      <div class="stage-no en">STAGE 03</div>
-      <h3>成稿与打磨</h3>
-      <p>按竞赛模板写论文、编译 PDF、自动多轮改进，直到形成完整可交稿。</p>
-      <div class="stage-steps">
-        <div class="stage-step"><i>7</i>竞赛论文撰写</div>
-        <div class="stage-step"><i>8</i>编译与合规检查</div>
-        <div class="stage-step"><i>9</i>论文改进循环</div>
-      </div>
-      <div class="stage-foot">产物：main.tex · main.pdf · 改进稿</div>
-    </article>
-  </div>
-</section>
-
-<!-- ============ 图文交替 ============ -->
-<section class="sec">
+<!-- ============ 九步流程 ============ -->
+<section class="section pipeline" id="pipeline">
   <div class="wrap">
-    <div class="frow">
-      <div class="ftext reveal">
-        <h3>全自动执行，过程全程可见</h3>
-        <p>每个步骤加载对应 Skill 的专业方法，自动拼装赛题与配置、调用大模型、运行代码并把产物落盘。实时输出面板滚动播报进度，支持随时暂停 / 恢复，断点可续跑。</p>
-        <div class="flist">
-          <div class="fli"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><div><b>逐步自检，产物落盘</b><span>每步产出 .md / .tex / .json / .png，自检通过后才进入下一步。</span></div></div>
-          <div class="fli"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg></span><div><b>暂停 / 恢复 / 续跑</b><span>关键节点设检查点，中途可暂停修改，再从断点继续，不必重头再来。</span></div></div>
-        </div>
-      </div>
-      <div class="fvis reveal d2">
-        <div class="fv-bar"><i></i><i></i><i></i></div>
-        <div class="fv-pad">
-          <div class="term"><span class="gd">$</span> modelflow run --competition<br><span class="bl">[step 1/9]</span> 赛题分析 ……… <span class="ok">OK</span><br><span class="bl">[step 2/9]</span> 建模求解 ……… <span class="ok">OK</span><br><span class="bl">[step 3/9]</span> 编程实现 ……… <span class="ok">OK</span><br><span class="bl">[step 4/9]</span> 图表生成 ……… <span class="vi">RUNNING</span><br>&nbsp;&nbsp;└ Figure_1.png · Figure_2.png</div>
-          <div class="doc"><div class="t">📄 RESULTS.md（自动生成）</div><div class="ln hl a"></div><div class="ln b"></div><div class="ln c"></div><div class="ln d"></div></div>
-        </div>
-      </div>
+    <div class="section-head reveal">
+      <div class="section-eyebrow">NINE STEPS</div>
+      <h2>九个专业环节，<br>三段式自动接力</h2>
+      <p class="sub">每个环节加载对应的专业 Skill 作为方法内核，产物逐级传递，环环自检。</p>
     </div>
-
-    <div class="frow rev">
-      <div class="ftext reveal">
-        <h3>多模型自由切换，API / CLI 双引擎</h3>
-        <p>不绑定单一模型。内置多家主流大模型，既可走云端 API，也可接入本地命令行模型，按环节分别指定"执行 / 审查 / 编辑"角色模型，兼顾效果与成本。</p>
-        <div class="flist">
-          <div class="fli"><span class="ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg></span><div><b>按步骤分配角色模型</b><span>执行、审查、编辑可分别选用不同模型，让强模型用在刀刃上。</span></div></div>
-          <div class="fli"><span class="ic g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-6-6-6M12 19h8"/></svg></span><div><b>云端 / 本地双通道</b><span>API 与本地 CLI 引擎并存，断网或有本地模型时照样能跑。</span></div></div>
+    <div class="stages">
+      <div class="stage reveal reveal-delay-1">
+        <div class="stage-label">STAGE 01</div>
+        <h3>理解与建模</h3>
+        <p class="stage-desc">读懂题目、确定方法、跑出结果，把一道开放赛题变成可计算的问题。</p>
+        <div class="steps">
+          <div class="step"><span class="num">1</span><span class="txt">赛题分析</span></div>
+          <div class="step"><span class="num">2</span><span class="txt">建模求解</span></div>
+          <div class="step"><span class="num">3</span><span class="txt">编程实现</span></div>
         </div>
+        <div class="stage-output">产物：<b>问题分析 · 建模报告 · 计算结果</b></div>
       </div>
-      <div class="fvis reveal d2">
-        <div class="fv-bar"><i></i><i></i><i></i></div>
-        <div class="fv-pad">
-          <div style="font-size:13px;font-weight:700;color:#667085;margin-bottom:2px">执行引擎 / 模型选择</div>
-          <div class="chips">
-            <span class="chip hot"><span class="d"></span>Claude</span>
-            <span class="chip"><span class="d"></span>DeepSeek</span>
-            <span class="chip"><span class="d"></span>豆包</span>
-            <span class="chip"><span class="d"></span>通义千问</span>
-            <span class="chip"><span class="d"></span>智谱 GLM</span>
-            <span class="chip"><span class="d"></span>MiniMax</span>
-            <span class="chip"><span class="d"></span>Kimi</span>
-            <span class="chip"><span class="d"></span>Gemini</span>
-            <span class="chip"><span class="d"></span>OpenAI</span>
-          </div>
-          <div class="doc"><div class="t">⚙️ 分角色配置</div><div class="ln a"></div><div class="ln c"></div><div class="ln b"></div></div>
+      <div class="stage reveal reveal-delay-2">
+        <div class="stage-label">STAGE 02</div>
+        <h3>可视化与复核</h3>
+        <p class="stage-desc">生成论文级图表与流程图，再以对抗视角审查逻辑漏洞，让结论站得住脚。</p>
+        <div class="steps">
+          <div class="step"><span class="num">4</span><span class="txt">图表生成</span></div>
+          <div class="step"><span class="num">5</span><span class="txt">流程与架构图</span></div>
+          <div class="step"><span class="num">6</span><span class="txt">逻辑对抗复核</span></div>
         </div>
+        <div class="stage-output">产物：<b>结果图表 · 架构图 · 逻辑审查报告</b></div>
       </div>
-    </div>
-
-    <div class="frow">
-      <div class="ftext reveal">
-        <h3>产物编辑器 + 实时输出，全程可控</h3>
-        <p>每一步产物都能在内置编辑器中直接查看与修改，改完再继续后续流程；实时输出面板完整记录模型回复、代码运行与编译日志，黑盒过程一目了然。</p>
-        <div class="flist">
-          <div class="fli"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><div><b>产物可编辑再续跑</b><span>不满意 AI 初稿？直接改，后续步骤基于你的版本继续。</span></div></div>
-          <div class="fli"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span><div><b>编译日志全回收</b><span>xelatex 编译输出实时可见，哪里报错改哪里，不再对着失败发懵。</span></div></div>
+      <div class="stage reveal reveal-delay-3">
+        <div class="stage-label">STAGE 03</div>
+        <h3>成稿与打磨</h3>
+        <p class="stage-desc">按竞赛模板写论文、编译 PDF、自动多轮改进，直到形成完整可交稿。</p>
+        <div class="steps">
+          <div class="step"><span class="num">7</span><span class="txt">竞赛论文撰写</span></div>
+          <div class="step"><span class="num">8</span><span class="txt">编译与合规检查</span></div>
+          <div class="step"><span class="num">9</span><span class="txt">论文改进循环</span></div>
         </div>
-      </div>
-      <div class="fvis reveal d2">
-        <div class="fv-bar"><i></i><i></i><i></i></div>
-        <div class="fv-pad">
-          <div class="doc"><div class="t">✏️ MODELING_REPORT.md · 可编辑</div><div class="ln hl a"></div><div class="ln b"></div><div class="ln a"></div><div class="ln c"></div><div class="ln d"></div></div>
-          <div class="term">xelatex main.tex → <span class="ok">main.pdf (2.4 MB)</span><br>output written to paper/main.pdf</div>
-        </div>
+        <div class="stage-output">产物：<b>main.tex · main.pdf · 改进稿</b></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ 本地优先 ============ -->
-<section class="local">
+<!-- ============ 多模型 ============ -->
+<section class="section models" id="models">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="kicker reveal">LOCAL FIRST</span>
-      <h2 class="sec-title reveal d1">装在你电脑上，数据握在手里</h2>
-      <p class="sec-sub reveal d2">桌面应用本地启动，浏览器只是操作界面，工作区文件全部保存在本机。</p>
+    <div class="section-head reveal">
+      <div class="section-eyebrow">MULTI-MODEL</div>
+      <h2>多模型自由切换，<br>API / CLI 双引擎</h2>
+      <p class="sub">不绑定单一模型。内置多家主流大模型，既可走云端 API，也可接入本地命令行模型，按环节分别指定"执行 / 审查 / 编辑"角色模型。</p>
+    </div>
+    <div class="model-grid reveal">
+      <div class="model-chip"><span class="dot" style="background:#d97757"></span>Claude</div>
+      <div class="model-chip"><span class="dot" style="background:#4a90d9"></span>DeepSeek</div>
+      <div class="model-chip"><span class="dot" style="background:#3370ff"></span>豆包</div>
+      <div class="model-chip"><span class="dot" style="background:#624de4"></span>通义千问</div>
+      <div class="model-chip"><span class="dot" style="background:#27ae60"></span>智谱 GLM</div>
+      <div class="model-chip"><span class="dot" style="background:#eb5e0b"></span>MiniMax</div>
+      <div class="model-chip"><span class="dot" style="background:#111"></span>Kimi</div>
+      <div class="model-chip"><span class="dot" style="background:#4285f4"></span>Gemini</div>
+      <div class="model-chip"><span class="dot" style="background:#10a37f"></span>OpenAI</div>
+      <div class="model-chip"><span class="dot" style="background:#8b5cf6"></span>LongCat</div>
+      <div class="model-chip"><span class="dot" style="background:#f59e0b"></span>Moonshot</div>
+      <div class="model-chip"><span class="dot" style="background:#06b6d4"></span>Groq</div>
+    </div>
+    <div class="model-features">
+      <div class="mfeat reveal reveal-delay-1">
+        <div class="micon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h4>按步骤分配角色模型</h4>
+        <p>执行、审查、编辑可分别选用不同模型，让强模型用在刀刃上。</p>
+      </div>
+      <div class="mfeat reveal reveal-delay-2">
+        <div class="micon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h4>云端 / 本地双通道</h4>
+        <p>API 与本地 CLI 引擎并存，断网或有本地模型时照样能跑。</p>
+      </div>
+      <div class="mfeat reveal reveal-delay-3">
+        <div class="micon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+        <h4>软件本身不售卖模型额度</h4>
+        <p>填入你自己的 API Key 即可运行，费用直接交给模型服务商，不经手、不抽成。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 本地运行 ============ -->
+<section class="section local" id="local">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="section-eyebrow">LOCAL FIRST</div>
+      <h2>装在你电脑上，<br>数据握在手里</h2>
+      <p class="sub">桌面应用本地启动，浏览器只是操作界面，工作区文件全部保存在本机。</p>
     </div>
     <div class="local-grid">
-      <div class="lc reveal">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg></div>
-        <h3>本地运行</h3>
+      <div class="lcard reveal reveal-delay-1">
+        <div class="licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+        <h4>本地运行</h4>
         <p>双击启动，本机起服务、自动打开浏览器，无需部署服务器，不依赖在线编辑器。</p>
       </div>
-      <div class="lc reveal d1">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <h3>文件留在本机</h3>
+      <div class="lcard reveal reveal-delay-2">
+        <div class="licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+        <h4>文件留在本机</h4>
         <p>赛题、代码、论文、图表全部存在本地工作区，不经过第三方服务器托管你的成果。</p>
       </div>
-      <div class="lc reveal d2">
-        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.8 1 6.4 2.6L21 8"/><path d="M21 3v5h-5"/></svg></div>
-        <h3>应用内在线更新</h3>
+      <div class="lcard reveal reveal-delay-3">
+        <div class="licon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg></div>
+        <h4>应用内在线更新</h4>
         <p>设置里一键检查更新，自动下载、SHA-256 校验、静默升级，数据与授权完整保留。</p>
       </div>
     </div>
@@ -511,170 +541,216 @@ footer a:hover{color:var(--blue)}
 </section>
 
 <!-- ============ FAQ ============ -->
-<section class="sec">
+<section class="section faq" id="faq">
   <div class="wrap">
-    <div class="sec-head">
-      <span class="kicker reveal">FAQ</span>
-      <h2 class="sec-title reveal d1">常见问题</h2>
+    <div class="section-head reveal">
+      <div class="section-eyebrow">FAQ</div>
+      <h2>常见问题</h2>
     </div>
     <div class="faq-list">
-      <div class="faq reveal">
-        <button class="faq-q">支持什么操作系统？<span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
-        <div class="faq-a"><div class="faq-a-in">目前仅支持 <b>Windows 10 / 11 的 64 位系统</b>。下载后双击安装包即可安装，装到当前用户目录，<b>无需管理员权限、不会弹 UAC</b>。macOS 版本暂未提供。</div></div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          支持什么操作系统？
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="faq-a"><p>目前仅支持 Windows 10 / 11 的 64 位系统。下载后双击安装包即可安装，装到当前用户目录，无需管理员权限、不会弹 UAC。macOS 版本暂未提供。</p></div>
       </div>
-      <div class="faq reveal d1">
-        <button class="faq-q">需要会编程吗？零基础能用吗？<span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
-        <div class="faq-a"><div class="faq-a-in">不需要手写代码。你只需填入赛题（文字 / PDF / 图片均可）、选好模型与模板，点击开始，建模、写代码、跑结果、画图、写论文都由流水线自动完成。具备建模基础能让你更好地审阅和修改中间产物。</div></div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          需要会编程吗？零基础能用吗？
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="faq-a"><p>不需要手写代码。你只需填入赛题（文字 / PDF / 图片均可）、选好模型与模板，点击开始，建模、写代码、跑结果、画图、写论文都由流水线自动完成。具备建模基础能让你更好地审阅和修改中间产物。</p></div>
       </div>
-      <div class="faq reveal d2">
-        <button class="faq-q">下载为什么需要授权码？<span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
-        <div class="faq-a"><div class="faq-a-in">ModelFlow 为小范围授权分发软件。点击「下载 Windows 版」会弹出一个小窗口，输入你获得的 <b>5 位授权码</b>即可解锁下载；该授权码同时用于软件首次启动时的激活。请向开发者索取。</div></div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          下载为什么需要授权码？
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="faq-a"><p>ModelFlow 为小范围授权分发软件。点击「下载 Windows 版」会弹出一个小窗口，输入你获得的 5 位授权码即可解锁下载；该授权码同时用于软件首次启动时的激活（一码一机）。请向开发者索取。</p></div>
       </div>
-      <div class="faq reveal">
-        <button class="faq-q">AI 模型要自己准备吗？怎么计费？<span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
-        <div class="faq-a"><div class="faq-a-in">软件本身不售卖模型额度。你在设置中填入自己的 API Key（或接入本地 CLI 模型）即可运行，费用直接交给你选择的模型服务商，软件不经手、不抽成。</div></div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          AI 模型要自己准备吗？怎么计费？
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="faq-a"><p>软件本身不售卖模型额度。你在设置中填入自己的 API Key（或接入本地 CLI 模型）即可运行，费用直接交给你选择的模型服务商，软件不经手、不抽成。</p></div>
       </div>
-      <div class="faq reveal d1">
-        <button class="faq-q">装了新版本，数据和授权会丢吗？<span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
-        <div class="faq-a"><div class="faq-a-in">不会。无论是应用内在线更新，还是下载新安装包覆盖安装，授权、工作区、模型配置与所有产物都会原样保留。</div></div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          装了新版本，数据和授权会丢吗？
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="faq-a"><p>不会。无论是应用内在线更新，还是下载新安装包覆盖安装，授权、工作区、模型配置与所有产物都会原样保留。</p></div>
       </div>
-      <div class="faq reveal d2">
-        <button class="faq-q">如何确认安装包没被篡改？<span class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></button>
-        <div class="faq-a"><div class="faq-a-in">更新清单 <code>latest.json</code> 公布了安装包的 SHA-256 摘要。下载后可在文件目录执行 <code>certutil -hashfile 文件名 SHA256</code> 比对，一致即完整未被篡改；软件内自动更新也会强制校验。</div></div>
+      <div class="faq-item reveal">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          如何确认安装包没被篡改？
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+        <div class="faq-a"><p>更新清单 latest.json 公布了安装包的 SHA-256 摘要。下载后可在文件目录执行 <code>certutil -hashfile 文件名 SHA256</code> 比对，一致即完整未被篡改；软件内自动更新也会强制校验。</p></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ CTA ============ -->
+<!-- ============ 底部 CTA ============ -->
 <section class="cta">
-  <div class="cta-glow" aria-hidden="true"></div>
-  <h2 class="reveal">把熬夜赶稿，交给 ModelFlow</h2>
-  <p class="reveal d1">从赛题到可提交的论文 PDF，一条流水线跑完。</p>
-  <button class="btn dl-btn reveal d2">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18M8 21h8M12 18v3"/></svg>
-    下载 Windows 版 · <span class="en ver">—</span>
-  </button>
-  <div class="cta-note reveal d3">Windows 10/11 x64 · 免管理员安装 · 应用内在线更新</div>
+  <div class="cta-glow"></div>
+  <div class="cta-inner">
+    <h2 class="reveal">把熬夜赶稿，<br>交给 ModelFlow</h2>
+    <p class="reveal reveal-delay-1">从赛题到可提交的论文 PDF，一条流水线跑完。</p>
+    <button class="btn dl-btn reveal reveal-delay-2" onclick="openModal()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 3v7.5H3V5.5zM11.5 10.5V3L21 5.5v5h-9.5zM3 12h7.5v7.5L3 17.5V12zM11.5 19.5V12H21v5.5l-9.5 2z"/></svg>
+      <span class="sep"></span>
+      下载 Windows 版 · <span class="tag" id="ctaVer">0.7.6</span>
+    </button>
+  </div>
 </section>
 
-<footer>
-  <div class="frow">
-    <a href="https://lxlrwxs.top" target="_blank" rel="noreferrer">Voyra 个人工具中心</a>
-    <a href="#pipeline">工作流</a>
-    <a href="#top">回到顶部</a>
+<!-- ============ 页脚 ============ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <a href="#top" class="brand">
+      <img src="./logo-64.png" alt="ModelFlow" style="width:28px;height:28px;border-radius:7px">
+      <b>ModelFlow</b>
+    </a>
+    <p>© 2026 ModelFlow · 智模流水线 · <a href="https://lxlrwxs.top">Voyra 个人工具中心</a></p>
   </div>
-  <div>© 2026 <span class="en">ModelFlow</span> · 智模流水线</div>
 </footer>
 
-<!-- ============ 小窗授权 ============ -->
-<div class="mask" id="mask" role="dialog" aria-modal="true" aria-label="授权下载">
-  <div class="sheet">
-    <div class="sheet-bar">
-      <span class="tb-dot"></span>
-      <span class="tb-title"><img src="./favicon-48.png" alt="">ModelFlow · 授权下载</span>
-      <button class="tb-x" id="sheetClose" aria-label="关闭"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+<!-- ============ 授权码弹窗 ============ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
-    <div class="sheet-body">
-      <div id="gateForm">
-        <div class="gate-key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-        <h3>输入授权码</h3>
-        <p class="hint">请输入你获得的 <b>5 位授权码</b>解锁下载，验证通过后生成限时下载链接（5 分钟有效）。</p>
-        <input class="code-input" id="licInput" maxlength="5" placeholder="XXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="latin">
-        <div class="code-err" id="licErr"></div>
-        <button class="btn" id="licConfirm">验证并下载</button>
-        <div class="sheet-foot">下载链接限时有效，过期需重新验证授权码</div>
-      </div>
-    </div>
+    <h3>输入授权码</h3>
+    <p class="modal-desc">ModelFlow 为授权分发软件，请输入你获得的 5 位授权码解锁下载。</p>
+    <input type="text" class="modal-input" id="licInput" maxlength="5" placeholder="XXXXX" autocomplete="off" oninput="this.value=this.value.toUpperCase();clearErr()">
+    <div class="modal-err" id="modalErr"></div>
+    <div class="modal-loading" id="modalLoading"><span class="spinner"></span>正在验证并准备下载…</div>
+    <button class="btn" id="modalBtn" onclick="submitCode()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      验证并下载
+    </button>
+    <p class="modal-note">授权码同时用于软件首次启动激活（一码一机）。<br>没有授权码？请联系开发者获取。</p>
   </div>
 </div>
 
 <script>
-(function(){
-  "use strict";
-  var COS_BASE = "https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com";
-  var FALLBACK = {version:"0.7.4", url: COS_BASE + "/ModelFlow-0.7.4-setup.exe"};
-  var manifest = FALLBACK;
+// ============ 导航滚动效果 ============
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 20);
+}, {passive:true});
 
-  function fillVersion(v){ document.querySelectorAll(".ver").forEach(function(e){ e.textContent = v; }); }
-  fetch(COS_BASE + "/latest.json", {cache:"no-store"})
-    .then(function(r){ if(!r.ok) throw 0; return r.json(); })
-    .then(function(m){ if(m && m.version && m.url){ manifest = m; fillVersion(m.version); } else fillVersion(FALLBACK.version); })
-    .catch(function(){ fillVersion(FALLBACK.version); });
-
-  var nav = document.getElementById("nav");
-  function onScroll(){ nav.classList.toggle("scrolled", window.scrollY > 16); }
-  window.addEventListener("scroll", onScroll, {passive:true}); onScroll();
-
-  var io = new IntersectionObserver(function(es){
-    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } });
-  }, {threshold:.12, rootMargin:"0px 0px -5% 0px"});
-  document.querySelectorAll(".reveal:not(.in)").forEach(function(el){ io.observe(el); });
-
-  document.querySelectorAll(".faq-q").forEach(function(btn){
-    btn.addEventListener("click", function(){
-      var item = btn.closest(".faq"), was = item.classList.contains("open");
-      document.querySelectorAll(".faq.open").forEach(function(i){ i.classList.remove("open"); });
-      if(!was) item.classList.add("open");
-    });
+// ============ 滚动渐入动效（IntersectionObserver） ============
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
   });
+}, {threshold: 0.12, rootMargin: '0px 0px -40px 0px'});
+revealEls.forEach(el => observer.observe(el));
 
-  var mask = document.getElementById("mask"),
-      gateForm = document.getElementById("gateForm"),
-      input = document.getElementById("licInput"),
-      errEl = document.getElementById("licErr");
-  input.addEventListener("input", function(){ input.value = input.value.toUpperCase().replace(/[^A-Z0-9]/g,""); errEl.textContent=""; });
+// ============ FAQ 折叠 ============
+function toggleFaq(el) {
+  const item = el.parentElement;
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
 
-  function resetSheet(){ gateForm.style.display="block"; input.value=""; errEl.textContent=""; }
-  // 后端校验授权码（与管理后台 D1 同步，管理员新生成的码也能下载）
-  // 返回完整响应对象：{ok, download_url, msg, ...}
-  async function checkCode(code){
-    var r = await fetch("/modelflow/api/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code:code})});
-    var d = await r.json().catch(function(){ return {ok:false}; });
-    return d;
+// ============ 授权码弹窗 ============
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(() => document.getElementById('licInput').focus(), 200);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+function clearErr() {
+  document.getElementById('modalErr').textContent = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && document.getElementById('modalOverlay').classList.contains('show')) submitCode();
+});
+
+async function submitCode() {
+  const input = document.getElementById('licInput');
+  const code = input.value.trim().toUpperCase();
+  const errEl = document.getElementById('modalErr');
+  const btn = document.getElementById('modalBtn');
+  const loading = document.getElementById('modalLoading');
+
+  if (code.length !== 5) {
+    errEl.textContent = '请输入 5 位授权码';
+    return;
   }
-  function openSheet(){
-    resetSheet(); mask.classList.add("show");
-    (async function(){
-      var saved=""; try{ saved=localStorage.getItem("mf_lic")||""; }catch(e){}
-      if(saved.length===5){
-        try{
-          var d = await checkCode(saved);
-          if(d.ok){ input.value=saved; startDownload(d.download_url); return; }
-        }catch(e){}
+
+  btn.style.display = 'none';
+  loading.classList.add('show');
+  errEl.textContent = '';
+
+  try {
+    const resp = await fetch('/modelflow/api/verify', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({code})
+    });
+    const data = await resp.json();
+
+    if (!resp.ok || !data.ok) {
+      throw new Error(data.msg || '授权码无效');
+    }
+
+    // 验证通过，触发下载
+    const dlUrl = data.download_url;
+    if (dlUrl) {
+      // 用 fetch 确认可下载后创建 a 标签触发浏览器下载
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      closeModal();
+      // 记住授权码
+      try { localStorage.setItem('mf_lic', code); } catch(e) {}
+    } else {
+      throw new Error('下载链接生成失败，请重试');
+    }
+  } catch (e) {
+    errEl.textContent = e.message || '验证失败，请重试';
+    btn.style.display = '';
+    loading.classList.remove('show');
+  }
+}
+
+// ============ 从 COS latest.json 动态拉版本号 ============
+(async function loadVersion() {
+  try {
+    const resp = await fetch('https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/latest.json', {cache:'no-store'});
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.version) {
+        document.querySelectorAll('#heroVer,#btnVer,#metaVer,#ctaVer').forEach(el => el.textContent = data.version);
       }
-      setTimeout(function(){ input.focus(); }, 280);
-    })();
-  }
-  function closeSheet(){ mask.classList.remove("show"); }
-  document.querySelectorAll(".dl-btn").forEach(function(b){ b.addEventListener("click", openSheet); });
-  document.getElementById("sheetClose").addEventListener("click", closeSheet);
-  mask.addEventListener("click", function(e){ if(e.target===mask) closeSheet(); });
-  document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeSheet(); });
-
-  function startDownload(url){
-    // 验证通过，直接触发浏览器下载（下载任务出现在浏览器右上角/下载栏），并关闭小窗
-    // 优先用后端返回的预签名 URL（COS 桶已私有，直链 403）；未配置 COS 密钥时回退到 manifest.url
-    var dlUrl = url || manifest.url;
-    var a=document.createElement("a");
-    a.href=dlUrl; a.download="ModelFlow-" + manifest.version + "-setup.exe"; a.rel="noopener";
-    document.body.appendChild(a); a.click(); a.remove();
-    closeSheet();
-  }
-  async function verify(){
-    var code=(input.value||"").trim();
-    if(code.length!==5){ errEl.textContent="请输入 5 位授权码"; return; }
-    errEl.textContent="校验中…";
-    try{
-      var d = await checkCode(code);
-      if(!d.ok){ errEl.textContent=d.msg || "授权码无效或已吊销，请核对后重试"; return; }
-      try{ localStorage.setItem("mf_lic", code); }catch(e){}
-      startDownload(d.download_url);
-    }catch(e){ errEl.textContent="授权服务暂时不可用，请稍后重试"; }
-  }
-  document.getElementById("licConfirm").addEventListener("click", verify);
-  input.addEventListener("keydown", function(e){ if(e.key==="Enter") verify(); });
+    }
+  } catch(e) {}
 })();
+
+// 页面加载时如果有保存的授权码，自动填入
+try {
+  const saved = localStorage.getItem('mf_lic');
+  if (saved && saved.length === 5) document.getElementById('licInput').value = saved;
+} catch(e) {}
 </script>
 </body>
 </html>
