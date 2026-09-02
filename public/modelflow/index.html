@@ -85,7 +85,7 @@ img{display:block;max-width:100%}
 @keyframes previewIn{from{opacity:0;transform:translateY(48px) scale(.985)}to{opacity:1;transform:none}}
 
 /* 产品预览窗口 —— 精致双层：外层视差+光晕 / 内层入场 */
-.hero-preview{position:relative;z-index:2;width:100%;max-width:1320px;margin:48px auto 0;
+.hero-preview{position:relative;z-index:2;width:100%;max-width:1180px;margin:44px auto 0;
   will-change:transform}
 .hero-preview::before{content:"";position:absolute;left:50%;top:8%;bottom:4%;width:118%;
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;
@@ -119,7 +119,7 @@ img{display:block;max-width:100%}
 .pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#3b82f6;animation:breathe 1.3s ease-in-out infinite}
 @keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(59,130,246,.4)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(59,130,246,0)}}
 /* 工作区 */
-.pv-work{max-width:1080px;margin:0 auto;padding:22px 28px 0}
+.pv-work{max-width:980px;margin:0 auto;padding:20px 26px 0}
 .pv-job-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .pv-job-title{font-size:14.5px;font-weight:700;color:#1b1b1b}
 .pv-job-id{font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0}
@@ -132,7 +132,7 @@ img{display:block;max-width:100%}
 .pv-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shimmer 2.4s infinite}
 .pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#7c5cff}
 /* 双栏 */
-.pv-cols{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:stretch}
+.pv-cols{display:grid;grid-template-columns:272px 1fr;gap:16px;align-items:stretch}
 /* 左：步骤列表 */
 .pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:14px 12px 16px;display:flex;flex-direction:column}
 .pv-group{flex:1;display:flex;flex-direction:column;justify-content:center}
@@ -342,6 +342,8 @@ img{display:block;max-width:100%}
 .footer p{font-size:13px;color:var(--muted)}
 .footer a{color:var(--muted-2);transition:color .2s}
 .footer a:hover{color:#000}
+.admin-entry{font-size:11px!important;color:#d0d4dc!important;opacity:.55;letter-spacing:.05em;transition:.2s;padding:2px 6px;border-radius:5px}
+.admin-entry:hover{color:#7c5cff!important;opacity:1;background:#f3f0ff}
 
 /* ============ 授权码弹窗 ============ */
 .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
@@ -528,11 +530,12 @@ img{display:block;max-width:100%}
                         <line x1="0" y1="56" x2="360" y2="56" stroke="#f0f0f4" stroke-width="1"/>
                         <line x1="0" y1="92" x2="360" y2="92" stroke="#f0f0f4" stroke-width="1"/>
                         <line x1="0" y1="128" x2="360" y2="128" stroke="#f0f0f4" stroke-width="1"/>
-                        <path d="M20 110 C80 96 100 78 140 66 S200 42 240 32 S300 18 340 14" fill="none" stroke="#7c5cff" stroke-width="2.8" stroke-linecap="round" filter="url(#pvGlow)"/>
-                        <path d="M20 110 C80 96 100 78 140 66 S200 42 240 32 S300 18 340 14 L340 135 L20 135 Z" fill="url(#pvChartGrad)"/>
-                        <circle cx="20" cy="110" r="3.8" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
-                        <circle cx="140" cy="66" r="3.8" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
-                        <circle cx="240" cy="32" r="3.8" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
+                        <path d="M20 110 C60 100 80 92 100 88 C120 84 160 68 180 62 C200 56 240 40 260 36 C280 32 320 18 340 14" fill="none" stroke="#7c5cff" stroke-width="2.8" stroke-linecap="round" filter="url(#pvGlow)"/>
+                        <path d="M20 110 C60 100 80 92 100 88 C120 84 160 68 180 62 C200 56 240 40 260 36 C280 32 320 18 340 14 L340 134 L20 134 Z" fill="url(#pvChartGrad)"/>
+                        <circle cx="20" cy="110" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
+                        <circle cx="100" cy="88" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
+                        <circle cx="180" cy="62" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
+                        <circle cx="260" cy="36" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
                         <circle cx="340" cy="14" r="4.5" fill="#7c5cff"/>
                         <text x="340" y="6" text-anchor="middle" fill="#7c5cff" font-size="10" font-weight="700" font-family="Consolas,monospace">8.8</text>
                       </svg>
@@ -554,42 +557,6 @@ img{display:block;max-width:100%}
                     <div class="pv-file"><span class="pv-fic csv">CSV</span><div class="pv-finfo"><span class="pv-fname">参数对比表.csv</span><span class="pv-fcat">数据表格</span></div><span class="pv-fsize">3.1 KB</span><span class="pv-fstat done">✓</span></div>
                     <div class="pv-file"><span class="pv-fic html">HTML</span><div class="pv-finfo"><span class="pv-fname">架构流程图.html</span><span class="pv-fcat">交互可视化</span></div><span class="pv-fsize">1.8 MB</span><span class="pv-fstat done">✓</span></div>
                     <div class="pv-file pv-file-building"><span class="pv-fic pdf">PDF</span><div class="pv-finfo"><span class="pv-fname">main.pdf</span><span class="pv-fcat">最终论文</span><div class="pv-fprog"><div class="pv-fprog-fill"></div></div></div><span class="pv-fsize">编译中</span><span class="pv-fstat run">●</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-                    <div><span class="log-dot info"></span>参数对比表已导出 (Excel)</div>
-                    <div><span class="log-dot run"></span>正在绘制模型对比折线图<span class="pv-caret"></span></div>
-                  </div>
-                </div>
-                <div class="pv-card">
-                  <div class="pv-card-t">审稿分数曲线<span class="cnt">轮次 → 分数</span></div>
-                  <div class="pv-score">
-                    <svg viewBox="0 0 320 100" preserveAspectRatio="xMidYMid meet">
-                      <line x1="28" y1="14" x2="306" y2="14" stroke="#eeeef2" stroke-dasharray="3 4"/>
-                      <line x1="28" y1="40" x2="306" y2="40" stroke="#eeeef2" stroke-dasharray="3 4"/>
-                      <line x1="28" y1="66" x2="306" y2="66" stroke="#eeeef2" stroke-dasharray="3 4"/>
-                      <path d="M28 58 L98 40 L168 26 L238 16 L306 12" fill="none" stroke="#7c5cff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M28 58 L98 40 L168 26 L238 16 L306 12 L306 70 L28 70 Z" fill="url(#pvGrad)" opacity=".5"/>
-                      <defs><linearGradient id="pvGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c5cff" stop-opacity=".28"/><stop offset="1" stop-color="#7c5cff" stop-opacity="0"/></linearGradient></defs>
-                      <circle cx="28" cy="58" r="3.4" fill="#fff" stroke="#7c5cff" stroke-width="2"/>
-                      <circle cx="98" cy="40" r="3.4" fill="#fff" stroke="#7c5cff" stroke-width="2"/>
-                      <circle cx="168" cy="26" r="3.4" fill="#fff" stroke="#7c5cff" stroke-width="2"/>
-                      <circle cx="238" cy="16" r="3.4" fill="#7c5cff"/>
-                      <circle cx="306" cy="12" r="3.4" fill="#7c5cff"/>
-                    </svg>
-                    <div class="pv-score-note">多轮对抗改进，审稿分稳步上升<b>8.8 / 10</b></div>
-                  </div>
-                </div>
-                <div class="pv-card">
-                  <div class="pv-card-t">产物文件<span class="cnt">12 个 · 全部落盘</span></div>
-                  <div class="pv-files pv-files-grid">
-                    <div class="pv-fr"><span class="pv-ic py">py</span><div class="pv-fr-info"><span class="pv-fr-name">Q1_solve.py</span><span class="pv-fr-cat">code</span></div><span class="pv-fr-size">8.2 KB</span></div>
-                    <div class="pv-fr"><span class="pv-ic md">md</span><div class="pv-fr-info"><span class="pv-fr-name">建模报告.md</span><span class="pv-fr-cat">report</span></div><span class="pv-fr-size">14 KB</span></div>
-                    <div class="pv-fr"><span class="pv-ic img">img</span><div class="pv-fr-info"><span class="pv-fr-name">Figure_2.png</span><span class="pv-fr-cat">figures</span></div><span class="pv-fr-size">2.4 MB</span></div>
-                    <div class="pv-fr"><span class="pv-ic csv">csv</span><div class="pv-fr-info"><span class="pv-fr-name">参数对比表.csv</span><span class="pv-fr-cat">data</span></div><span class="pv-fr-size">3.1 KB</span></div>
-                    <div class="pv-fr"><span class="pv-ic html">htm</span><div class="pv-fr-info"><span class="pv-fr-name">架构流程图.html</span><span class="pv-fr-cat">viz</span></div><span class="pv-fr-size">1.8 MB</span></div>
-                    <div class="pv-fr"><span class="pv-ic pdf">pdf</span><div class="pv-fr-info"><span class="pv-fr-name">main.pdf</span><span class="pv-fr-cat">paper</span></div><span class="pv-fr-size">编译中…</span></div>
                   </div>
                 </div>
               </div>
@@ -831,6 +798,7 @@ img{display:block;max-width:100%}
       <b>ModelFlow</b>
     </a>
     <p>© 2026 ModelFlow · 智模流水线 · <a href="https://lxlrwxs.top">Voyra 个人工具中心</a></p>
+    <a href="./admin/" class="admin-entry">管理</a>
   </div>
 </footer>
 
@@ -883,9 +851,10 @@ function applyParallax(){
   let p = (vh - r.top) / span;
   p = Math.min(1, Math.max(0, p));
   const ty = 30 - p * 36;
-  // rotateX 斜→平（对齐 tabbit：scrollY 0→340px 对应 30°→0°，线性）
-  const scrollP = Math.min(1, window.scrollY / 340);
-  const rx = 30 - scrollP * 30;
+  // rotateX 斜→平：基于预览窗口相对视口顶部的位置，提前平缓变平
+  // r.top>420 保持30°；从420→120 平缓 30°→0°；距视口顶部120px时已完全平铺
+  const tiltP = Math.min(1, Math.max(0, (420 - r.top) / 300));
+  const rx = 30 - tiltP * 30;
   preview.style.transform = `rotateX(${rx.toFixed(2)}deg) translate3d(0,${ty.toFixed(2)}px,0)`;
 }
 function onFrame(){
