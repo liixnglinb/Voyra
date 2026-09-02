@@ -11,7 +11,9 @@
 // 与桌面端 app/licensing.py 保持一致的 HMAC 密钥（客户端内置同值，仅用于离线令牌校验）
 export const SECRET = "1adee14c497b3b976a3beb1aa602744a8a54b04782e2b2526ccb0800924b9af3";
 export const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 去除易混 I O 0 1
-export const SEED_CODES = ["H2DTH", "2FMGW", "NFE8H", "GX7VJ", "9GAQF"];
+// 注意：不再硬编码初始授权码（SEED_CODES 已移除）。
+// 固定码写在源码中有泄露风险；首次部署后请通过管理后台 setup → 登录 → 生成授权码。
+// 已有的旧初始码（H2DTH/2FMGW/NFE8H/GX7VJ/9GAQF）若仓库曾公开，应在管理后台吊销并重新生成。
 
 const enc = new TextEncoder();
 function bufToHex(buf) {
@@ -85,7 +87,8 @@ export function guardDB(env) {
   return null;
 }
 
-// 首次运行自动建表 + 播种 5 个授权码（幂等）
+// 首次运行自动建表（幂等）。不再播种固定授权码——
+// 固定码硬编码在源码中有泄露风险。首次部署后请通过管理后台生成授权码。
 export async function ensure(db) {
   if (!db) throw new Error("D1 binding 'DB' 未配置");
   await db.batch([
@@ -99,11 +102,6 @@ export async function ensure(db) {
       window_start INTEGER DEFAULT 0, banned_until INTEGER DEFAULT 0,
       PRIMARY KEY (ip, action))`),
   ]);
-  const t = now();
-  for (const code of SEED_CODES) {
-    await db.prepare("INSERT OR IGNORE INTO codes(code,note,is_admin,created_at) VALUES(?,?,0,?)")
-      .bind(code, "初始授权码", t).run();
-  }
 }
 
 // 管理密码：哈希存 meta.admin_pass_hash；返回是否通过
