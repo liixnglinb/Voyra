@@ -134,42 +134,50 @@ img{display:block;max-width:100%}
 /* 双栏 */
 .pv-cols{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
 /* 左：步骤列表 */
-.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:8px}
-.pv-ss{position:relative;display:flex;align-items:flex-start;gap:9px;padding:8px 8px}
-.pv-ss:not(:last-child)::before{content:"";position:absolute;left:18px;top:27px;bottom:-3px;width:2px;background:#eef0f4}
+.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:14px 12px}
+.pv-group{margin-bottom:14px}
+.pv-group:last-child{margin-bottom:0}
+.pv-group-t{font-size:9.5px;font-weight:700;color:#b4b8c0;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;padding-left:4px}
+.pv-ss{position:relative;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px}
+.pv-ss:not(:last-child)::before{content:"";position:absolute;left:18px;top:30px;bottom:-2px;width:2px;background:#eef0f4}
 .pv-dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;flex-shrink:0;z-index:1;font-weight:700}
 .pv-dot.done{background:#16a34a;color:#fff}
 .pv-dot.run{background:#7c5cff;color:#fff;box-shadow:0 0 0 3px #ece9ff;animation:breathe2 1.4s ease-in-out infinite}
 @keyframes breathe2{0%,100%{box-shadow:0 0 0 3px #ece9ff}50%{box-shadow:0 0 0 5px rgba(124,92,255,.12)}}
 .pv-dot.wait{background:#eef0f4;color:#b4b8c0}
 .pv-ss-main{min-width:0}
-.pv-ss-name{font-size:12px;font-weight:700;color:#1b1b1b;line-height:1.3}
+.pv-ss-name{font-size:12.5px;font-weight:600;color:#1b1b1b;line-height:1.3}
 .pv-ss.wait .pv-ss-name{color:#b4b8c0;font-weight:600}
-.pv-ss-skill{font-family:Consolas,monospace;font-size:9.5px;color:#c2c6ce;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
-.pv-ss.run{background:linear-gradient(90deg,#f3f0ff,transparent 85%);border-radius:8px}
+.pv-ss-skill{display:none}
+.pv-ss.run{background:linear-gradient(90deg,#f3f0ff,#f8f6ff)}
 /* 右：输出 + 图表 + 产物 */
-.pv-right{display:flex;flex-direction:column;gap:14px;min-width:0}
-.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:16px 18px}
+.pv-right{display:flex;flex-direction:column;gap:16px;min-width:0}
+.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:18px 20px}
 .pv-card-t{font-size:12px;font-weight:700;color:#1b1b1b;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .pv-card-t .cnt{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0;font-weight:500}
 /* 日志 */
-.pv-log{background:#fbfbfd;border:1px solid #f0f0f3;border-radius:9px;padding:13px 16px;font-family:Consolas,monospace;font-size:11.5px;line-height:2.05;color:#6c757d}
-.pv-log .tag{display:inline-block;min-width:44px;font-weight:700}
+.pv-log{background:#fbfbfd;border:1px solid #f0f0f3;border-radius:9px;padding:12px 16px;font-family:Consolas,monospace;font-size:11px;line-height:2.1;color:#6c757d}
+.pv-log>div{display:flex;align-items:center}
+.log-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:9px;vertical-align:middle;flex-shrink:0}
+.log-dot.ok{background:#16a34a}.log-dot.run{background:#7c5cff;animation:breathe2 1.4s ease-in-out infinite}.log-dot.info{background:#3b82f6}
 .pv-log .ok{color:#16a34a}.pv-log .run{color:#7c5cff}.pv-log .info{color:#3b82f6}.pv-log .mut{color:#b4b8c0}
 .pv-caret{display:inline-block;width:6px;height:12px;background:#7c5cff;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 /* 审稿分数曲线 */
-.pv-score{display:flex;align-items:flex-end;gap:14px}
-.pv-score svg{flex:1;height:96px;max-width:100%}
-.pv-score-note{font-size:10px;color:#8a8f99;line-height:1.6;max-width:118px}
-.pv-score-note b{display:block;font-size:15px;color:#7c5cff;font-family:Consolas,monospace}
+.pv-score{display:flex;flex-direction:column;align-items:center;gap:10px}
+.pv-score svg{width:100%;height:108px;max-width:100%}
+.pv-score-note{font-size:11px;color:#8a8f99;line-height:1.6;text-align:center}
+.pv-score-note b{display:inline;font-size:15px;color:#7c5cff;font-family:Consolas,monospace;font-weight:700;margin-left:4px}
 /* 产物文件 */
 .pv-files{display:flex;flex-direction:column;gap:2px}
-.pv-fr{display:flex;align-items:center;gap:10px;padding:6px 6px;border-radius:8px}
+.pv-files-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
+.pv-fr{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px}
+.pv-fr-info{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.pv-files-grid .pv-fr-name{font-size:11px}
 .pv-fr:hover{background:#f7f7f9}
 .pv-ic{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:9px;font-weight:800;flex-shrink:0;font-family:Consolas,monospace}
 .pv-ic.py{background:#e8f5ee;color:#16a34a}.pv-ic.md{background:#e8ecfa;color:#4a5bb5}
-.pv-ic.img{background:#fdf6df;color:#9a7515}.pv-ic.pdf{background:#fdecec;color:#ef4444}
+.pv-ic.img{background:#fdf6df;color:#9a7515}.pv-ic.pdf{background:#fdecec;color:#ef4444}.pv-ic.csv{background:#e6f7f0;color:#0d9488}.pv-ic.html{background:#fff0e6;color:#ea580c}
 .pv-fr-name{font-size:11.5px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pv-fr-cat{font-size:10px;color:#b4b8c0}
 .pv-fr-size{margin-left:auto;font-family:Consolas,monospace;font-size:10px;color:#b4b8c0}
@@ -391,11 +399,6 @@ img{display:block;max-width:100%}
   <div class="hero-preview" id="heroPreview">
      <div class="hero-preview-in">
       <div class="pv-window">
-        <!-- 浏览器栏 -->
-        <div class="pv-chrome">
-          <i></i><i></i><i></i>
-          <div class="pv-addr"><span class="lock"></span>127.0.0.1:8000/run/3<span class="ref">↻</span></div>
-        </div>
         <!-- 软件本体 -->
         <div class="pv-app">
           <!-- 软件顶栏 -->
@@ -421,25 +424,36 @@ img{display:block;max-width:100%}
             <div class="pv-cols">
               <!-- 左：九步流水线 -->
               <div class="pv-steps">
-                <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">赛题分析</div><div class="pv-ss-skill">comp-prob-analysis</div></div></div>
-                <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">建模求解</div><div class="pv-ss-skill">comp-modeling</div></div></div>
-                <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">编程实现</div><div class="pv-ss-skill">comp-code</div></div></div>
-                <div class="pv-ss run"><span class="pv-dot run">4</span><div class="pv-ss-main"><div class="pv-ss-name">图表生成</div><div class="pv-ss-skill">paper-figure</div></div></div>
-                <div class="pv-ss wait"><span class="pv-dot wait">5</span><div class="pv-ss-main"><div class="pv-ss-name">流程与架构图</div><div class="pv-ss-skill">paper-figure-html</div></div></div>
-                <div class="pv-ss wait"><span class="pv-dot wait">6</span><div class="pv-ss-main"><div class="pv-ss-name">逻辑对抗复核</div><div class="pv-ss-skill">comp-review</div></div></div>
-                <div class="pv-ss wait"><span class="pv-dot wait">7</span><div class="pv-ss-main"><div class="pv-ss-name">竞赛论文撰写</div><div class="pv-ss-skill">comp-paper-zh</div></div></div>
-                <div class="pv-ss wait"><span class="pv-dot wait">8</span><div class="pv-ss-main"><div class="pv-ss-name">编译与合规检查</div><div class="pv-ss-skill">comp-compile</div></div></div>
-                <div class="pv-ss wait"><span class="pv-dot wait">9</span><div class="pv-ss-main"><div class="pv-ss-name">论文改进循环</div><div class="pv-ss-skill">auto-improve-loop</div></div></div>
+                <div class="pv-group">
+                  <div class="pv-group-t">前期分析</div>
+                  <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">赛题分析</div></div></div>
+                  <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">建模求解</div></div></div>
+                  <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">编程实现</div></div></div>
+                </div>
+                <div class="pv-group">
+                  <div class="pv-group-t">建模求解</div>
+                  <div class="pv-ss run"><span class="pv-dot run">4</span><div class="pv-ss-main"><div class="pv-ss-name">图表生成</div></div></div>
+                  <div class="pv-ss wait"><span class="pv-dot wait">5</span><div class="pv-ss-main"><div class="pv-ss-name">流程与架构图</div></div></div>
+                  <div class="pv-ss wait"><span class="pv-dot wait">6</span><div class="pv-ss-main"><div class="pv-ss-name">逻辑对抗复核</div></div></div>
+                </div>
+                <div class="pv-group">
+                  <div class="pv-group-t">论文输出</div>
+                  <div class="pv-ss wait"><span class="pv-dot wait">7</span><div class="pv-ss-main"><div class="pv-ss-name">竞赛论文撰写</div></div></div>
+                  <div class="pv-ss wait"><span class="pv-dot wait">8</span><div class="pv-ss-main"><div class="pv-ss-name">编译与合规检查</div></div></div>
+                  <div class="pv-ss wait"><span class="pv-dot wait">9</span><div class="pv-ss-main"><div class="pv-ss-name">论文改进循环</div></div></div>
+                </div>
               </div>
               <!-- 右：输出 / 审稿曲线 / 产物 -->
               <div class="pv-right">
                 <div class="pv-card">
                   <div class="pv-card-t">实时输出</div>
                   <div class="pv-log">
-                    <div><span class="tag ok">[完成]</span> 问题分析.md · 子问题 3 个已结构化</div>
-                    <div><span class="tag ok">[完成]</span> Q1_solve.py 求解收敛，残差 1.2e-4</div>
-                    <div><span class="tag info">[图表]</span> 灵敏度热力图已生成 (2.4 MB)</div>
-                    <div><span class="tag run">[运行]</span> 正在绘制模型对比折线图<span class="pv-caret"></span></div>
+                    <div><span class="log-dot ok"></span>问题分析.md · 子问题 3 个已结构化</div>
+                    <div><span class="log-dot ok"></span>Q1_solve.py 求解收敛，残差 1.2e-4</div>
+                    <div><span class="log-dot ok"></span>约束校验通过，可行域已确认</div>
+                    <div><span class="log-dot info"></span>灵敏度热力图已生成 (2.4 MB)</div>
+                    <div><span class="log-dot info"></span>参数对比表已导出 (Excel)</div>
+                    <div><span class="log-dot run"></span>正在绘制模型对比折线图<span class="pv-caret"></span></div>
                   </div>
                 </div>
                 <div class="pv-card">
@@ -463,11 +477,13 @@ img{display:block;max-width:100%}
                 </div>
                 <div class="pv-card">
                   <div class="pv-card-t">产物文件<span class="cnt">12 个 · 全部落盘</span></div>
-                  <div class="pv-files">
-                    <div class="pv-fr"><span class="pv-ic py">py</span><span class="pv-fr-name">Q1_solve.py</span><span class="pv-fr-cat">code</span><span class="pv-fr-size">8.2 KB</span></div>
-                    <div class="pv-fr"><span class="pv-ic md">M↓</span><span class="pv-fr-name">建模报告.md</span><span class="pv-fr-cat">report</span><span class="pv-fr-size">14 KB</span></div>
-                    <div class="pv-fr"><span class="pv-ic img">▦</span><span class="pv-fr-name">Figure_2.png</span><span class="pv-fr-cat">figures</span><span class="pv-fr-size">2.4 MB</span></div>
-                    <div class="pv-fr"><span class="pv-ic pdf">PDF</span><span class="pv-fr-name">main.pdf</span><span class="pv-fr-cat">paper</span><span class="pv-fr-size">编译中…</span></div>
+                  <div class="pv-files pv-files-grid">
+                    <div class="pv-fr"><span class="pv-ic py">py</span><div class="pv-fr-info"><span class="pv-fr-name">Q1_solve.py</span><span class="pv-fr-cat">code</span></div><span class="pv-fr-size">8.2 KB</span></div>
+                    <div class="pv-fr"><span class="pv-ic md">md</span><div class="pv-fr-info"><span class="pv-fr-name">建模报告.md</span><span class="pv-fr-cat">report</span></div><span class="pv-fr-size">14 KB</span></div>
+                    <div class="pv-fr"><span class="pv-ic img">img</span><div class="pv-fr-info"><span class="pv-fr-name">Figure_2.png</span><span class="pv-fr-cat">figures</span></div><span class="pv-fr-size">2.4 MB</span></div>
+                    <div class="pv-fr"><span class="pv-ic csv">csv</span><div class="pv-fr-info"><span class="pv-fr-name">参数对比表.csv</span><span class="pv-fr-cat">data</span></div><span class="pv-fr-size">3.1 KB</span></div>
+                    <div class="pv-fr"><span class="pv-ic html">htm</span><div class="pv-fr-info"><span class="pv-fr-name">架构流程图.html</span><span class="pv-fr-cat">viz</span></div><span class="pv-fr-size">1.8 MB</span></div>
+                    <div class="pv-fr"><span class="pv-ic pdf">pdf</span><div class="pv-fr-info"><span class="pv-fr-name">main.pdf</span><span class="pv-fr-cat">paper</span></div><span class="pv-fr-size">编译中…</span></div>
                   </div>
                 </div>
               </div>
