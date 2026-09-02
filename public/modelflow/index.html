@@ -62,14 +62,14 @@ img{display:block;max-width:100%}
 .hero{position:relative;padding:64px 24px 0;overflow:hidden;
   perspective:2000px;perspective-origin:50% 28%;-webkit-perspective:2000px;
   background:
-    radial-gradient(60% 50% at 18% 85%,rgba(140,170,255,.16),transparent 70%),
-    radial-gradient(55% 48% at 82% 88%,rgba(120,210,200,.14),transparent 70%),
-    radial-gradient(50% 42% at 50% 100%,rgba(168,140,255,.12),transparent 70%),
-    linear-gradient(180deg,#fff 0%,#fbfaff 62%,#f4f2ff 100%)}
+    radial-gradient(60% 50% at 18% 85%,rgba(255,210,90,.18),transparent 70%),
+    radial-gradient(55% 48% at 82% 88%,rgba(255,180,60,.14),transparent 70%),
+    radial-gradient(50% 42% at 50% 100%,rgba(255,230,150,.14),transparent 70%),
+    linear-gradient(180deg,#fff 0%,#fffbf0 62%,#fdf6df 100%)}
 .hero-glow{position:absolute;left:50%;bottom:-180px;width:1200px;max-width:160%;height:580px;transform:translateX(-50%);
   pointer-events:none;z-index:0;filter:blur(100px);
-  background:radial-gradient(40% 52% at 30% 50%,rgba(122,158,255,.26),transparent 70%),
-             radial-gradient(40% 52% at 70% 48%,rgba(168,140,255,.20),transparent 70%),
+  background:radial-gradient(40% 52% at 30% 50%,rgba(255,200,60,.26),transparent 70%),
+             radial-gradient(40% 52% at 70% 48%,rgba(255,213,77,.20),transparent 70%),
              radial-gradient(30% 40% at 50% 60%,rgba(120,210,200,.14),transparent 70%)}
 .hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;
   padding:104px 0 0;display:flex;flex-direction:column;align-items:center}
@@ -90,8 +90,8 @@ img{display:block;max-width:100%}
   will-change:transform}
 .hero-preview::before{content:"";position:absolute;left:50%;top:8%;bottom:4%;width:118%;
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;
-  background:radial-gradient(38% 50% at 18% 50%,rgba(122,158,255,.22),transparent 70%),
-             radial-gradient(38% 50% at 82% 50%,rgba(168,140,255,.18),transparent 70%),
+  background:radial-gradient(38% 50% at 18% 50%,rgba(255,200,60,.22),transparent 70%),
+             radial-gradient(38% 50% at 82% 50%,rgba(255,213,77,.18),transparent 70%),
              radial-gradient(30% 40% at 50% 80%,rgba(120,210,200,.12),transparent 70%)}
 .hero-preview-in{opacity:0;animation:previewIn .95s .5s cubic-bezier(.22,1,.36,1) forwards}
 @keyframes previewIn{from{opacity:0;transform:translateY(52px) scale(.982)}to{opacity:1;transform:none}}
@@ -111,11 +111,11 @@ img{display:block;max-width:100%}
 .pv-app{background:rgba(248,248,251,.55);padding:0 0 16px;backdrop-filter:blur(10px)}
 .pv-appbar{display:flex;align-items:center;gap:22px;height:50px;padding:0 20px;background:rgba(255,255,255,.55);border-bottom:1px solid rgba(255,255,255,.45)}
 .pv-ab-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;color:#1b1b1b}
-.pv-ab-brand .lg{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#5b8bff,#7c5cff);display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}
-.pv-ab-brand span{color:#7c5cff}
+.pv-ab-brand .lg{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}
+.pv-ab-brand span{color:#c9a227}
 .pv-ab-nav{display:flex;gap:16px;font-size:12px;color:#8a8f99}
 .pv-ab-nav b{color:#1b1b1b;font-weight:600;position:relative}
-.pv-ab-nav b::after{content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:#7c5cff;border-radius:2px}
+.pv-ab-nav b::after{content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:#c9a227;border-radius:2px}
 .pv-ab-badge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#3b82f6;background:#eaf2fd;padding:3px 10px;border-radius:999px}
 .pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#3b82f6;animation:breathe 1.3s ease-in-out infinite}
 @keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(59,130,246,.4)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(59,130,246,0)}}
@@ -129,9 +129,9 @@ img{display:block;max-width:100%}
 .pv-prog{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:11px 16px;margin-bottom:14px}
 .pv-prog .pl{font-size:11px;font-weight:700;color:#4a4e57;white-space:nowrap}
 .pv-track{flex:1;height:6px;border-radius:999px;background:#eef0f4;overflow:hidden}
-.pv-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#9b82ff,#7c5cff);position:relative;overflow:hidden}
+.pv-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227);position:relative;overflow:hidden}
 .pv-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shimmer 2.4s infinite}
-.pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#7c5cff}
+.pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#c9a227}
 /* 双栏 */
 .pv-cols{display:grid;grid-template-columns:272px 1fr;gap:16px;align-items:stretch}
 /* 左：步骤列表 */
@@ -141,21 +141,21 @@ img{display:block;max-width:100%}
 .pv-steps-foot{margin-top:12px;padding-top:14px;border-top:1px solid #f0f0f3}
 .pv-sf-label{font-size:10px;color:#b4b8c0;font-weight:600;margin-bottom:7px}
 .pv-sf-bar{height:5px;border-radius:999px;background:#eef0f4;overflow:hidden;margin-bottom:7px}
-.pv-sf-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#9b82ff,#7c5cff)}
+.pv-sf-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227)}
 .pv-sf-num{font-size:11px;color:#8a8f99}
-.pv-sf-num b{font-size:15px;color:#7c5cff;font-weight:700;font-family:Consolas,monospace}
+.pv-sf-num b{font-size:15px;color:#c9a227;font-weight:700;font-family:Consolas,monospace}
 .pv-ss{position:relative;display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:8px}
 .pv-ss:not(:last-child)::before{content:"";position:absolute;left:18px;top:30px;bottom:-2px;width:2px;background:#eef0f4}
 .pv-dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;flex-shrink:0;z-index:1;font-weight:700}
 .pv-dot.done{background:#16a34a;color:#fff}
-.pv-dot.run{background:#7c5cff;color:#fff;box-shadow:0 0 0 3px #ece9ff;animation:breathe2 1.4s ease-in-out infinite}
-@keyframes breathe2{0%,100%{box-shadow:0 0 0 3px #ece9ff}50%{box-shadow:0 0 0 5px rgba(124,92,255,.12)}}
+.pv-dot.run{background:#c9a227;color:#fff;box-shadow:0 0 0 3px #faf0d0;animation:breathe2 1.4s ease-in-out infinite}
+@keyframes breathe2{0%,100%{box-shadow:0 0 0 3px #faf0d0}50%{box-shadow:0 0 0 5px rgba(201,162,39,.12)}}
 .pv-dot.wait{background:#eef0f4;color:#b4b8c0}
 .pv-ss-main{min-width:0}
 .pv-ss-name{font-size:12.5px;font-weight:600;color:#1b1b1b;line-height:1.3}
 .pv-ss.wait .pv-ss-name{color:#b4b8c0;font-weight:600}
 .pv-ss-skill{display:none}
-.pv-ss.run{background:linear-gradient(90deg,#f3f0ff,#f8f6ff)}
+.pv-ss.run{background:linear-gradient(90deg,#fdf6df,#f8f6ff)}
 /* 右：输出 + 图表 + 产物 */
 .pv-right{display:flex;flex-direction:column;gap:10px;min-width:0}
 .pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:10px 14px}
@@ -167,17 +167,17 @@ img{display:block;max-width:100%}
 .pv-term-bar i{width:9px;height:9px;border-radius:50%}
 .pv-term-bar i:nth-child(1){background:#ff5f57}.pv-term-bar i:nth-child(2){background:#febc2e}.pv-term-bar i:nth-child(3){background:#28c840}
 .pv-term-bar span{font-family:Consolas,monospace;font-size:10.5px;color:#8a8f99;margin-left:6px}
-.pv-term-live{margin-left:auto!important;color:#a78bfa!important;font-weight:700;font-size:9.5px!important}
+.pv-term-live{margin-left:auto!important;color:#d4a83a!important;font-weight:700;font-size:9.5px!important}
 .pv-term-body{padding:7px 12px 8px;font-family:Consolas,monospace;font-size:10px;line-height:1.45}
 .pv-term-line{display:flex;align-items:center;gap:8px;color:#c8ccd4}
 .pt-time{color:#5a5f6a;flex-shrink:0;font-size:10px}
 .pt-lv{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;letter-spacing:.03em}
 .pt-ok{background:rgba(22,163,74,.15);color:#4ade80}
 .pt-info{background:rgba(59,130,246,.15);color:#60a5fa}
-.pt-run{background:rgba(124,92,255,.18);color:#a78bfa}
+.pt-run{background:rgba(201,162,39,.18);color:#d4a83a}
 .pt-msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pv-log .ok{color:#16a34a}.pv-log .run{color:#7c5cff}.pv-log .info{color:#3b82f6}.pv-log .mut{color:#b4b8c0}
-.pv-caret{display:inline-block;width:6px;height:12px;background:#7c5cff;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
+.pv-log .ok{color:#16a34a}.pv-log .run{color:#c9a227}.pv-log .info{color:#3b82f6}.pv-log .mut{color:#b4b8c0}
+.pv-caret{display:inline-block;width:6px;height:12px;background:#c9a227;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 /* 审稿分数曲线 */
 .pv-chart{display:flex;gap:10px;margin-bottom:8px}
@@ -187,7 +187,7 @@ img{display:block;max-width:100%}
 .pv-chart-x{display:flex;justify-content:space-between;padding:0 4px;margin-top:4px;font-family:Consolas,monospace;font-size:9.5px;color:#b4b8c0}
 .pv-chart-stats{display:flex;gap:10px;padding-top:8px;border-top:1px solid #f0f0f3}
 .pv-cs{flex:1;text-align:center;background:#fafafd;border-radius:9px;padding:5px 4px}
-.pv-cs b{display:block;font-size:14px;font-weight:700;color:#7c5cff;font-family:Consolas,monospace;line-height:1.2}
+.pv-cs b{display:block;font-size:14px;font-weight:700;color:#c9a227;font-family:Consolas,monospace;line-height:1.2}
 .pv-cs span{font-size:9.5px;color:#8a8f99;margin-top:2px;display:block}
 /* 产物文件 */
 .pv-files-list{display:grid;grid-template-columns:1fr 1fr;gap:1px 14px}.pv-file-building{grid-column:1/-1}
@@ -201,11 +201,11 @@ img{display:block;max-width:100%}
 .pv-fname{font-size:11px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
 .pv-fcat{font-size:9px;color:#b4b8c0;line-height:1.15}
 .pv-fprog{height:3px;border-radius:999px;background:#eef0f4;margin-top:1px;overflow:hidden}
-.pv-fprog-fill{height:100%;width:68%;border-radius:999px;background:linear-gradient(90deg,#9b82ff,#7c5cff)}
+.pv-fprog-fill{height:100%;width:68%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227)}
 .pv-fsize{font-family:Consolas,monospace;font-size:9.5px;color:#8a8f99;flex-shrink:0;width:44px;text-align:right}
 .pv-fstat{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:700;flex-shrink:0}
 .pv-fstat.done{background:#e8f5ee;color:#16a34a}
-.pv-fstat.run{background:#f3f0ff;color:#7c5cff}
+.pv-fstat.run{background:#fdf6df;color:#c9a227}
 
 /* ============ 通用 Section（tabbit：48px/600 居中标题） ============ */
 .section{position:relative;padding:140px 24px;overflow:hidden}
@@ -254,17 +254,17 @@ img{display:block;max-width:100%}
 .v-toc{display:flex;justify-content:center;gap:8px}
 .v-toc span{font-size:11px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.14);opacity:.9}
 .scard.c1{background:
-  radial-gradient(130% 130% at 8% 2%,rgba(214,230,255,.72) 0,transparent 44%),
-  radial-gradient(100% 120% at 96% 100%,rgba(15,45,120,.58) 0,transparent 58%),
-  linear-gradient(138deg,#6aa5ff,#3b7ef0 45%,#1f5fd6)}
+  radial-gradient(130% 130% at 8% 2%,rgba(255,240,190,.72) 0,transparent 44%),
+  radial-gradient(100% 120% at 96% 100%,rgba(180,130,10,.58) 0,transparent 58%),
+  linear-gradient(138deg,#ffe89a,#ffd54d 45%,#e0b020)}
 .scard.c2{background:
-  radial-gradient(132% 132% at 8% 4%,rgba(238,232,255,.66) 0,transparent 42%),
-  radial-gradient(105% 130% at 96% 98%,rgba(70,40,150,.56) 0,transparent 58%),
-  linear-gradient(140deg,#c3acff,#9a73ee 45%,#7246d1)}
+  radial-gradient(132% 132% at 8% 4%,rgba(255,238,190,.66) 0,transparent 42%),
+  radial-gradient(105% 130% at 96% 98%,rgba(150,100,10,.56) 0,transparent 58%),
+  linear-gradient(140deg,#f5d98a,#d4a83a 45%,#b8860b)}
 .scard.c3{background:
-  radial-gradient(130% 130% at 10% 4%,rgba(224,250,244,.64) 0,transparent 44%),
-  radial-gradient(105% 120% at 94% 100%,rgba(12,90,78,.58) 0,transparent 58%),
-  linear-gradient(142deg,#86e0d2,#3fb8a2 46%,#0e8f7c)}
+  radial-gradient(130% 130% at 10% 4%,rgba(255,235,180,.64) 0,transparent 44%),
+  radial-gradient(105% 120% at 94% 100%,rgba(120,80,5,.58) 0,transparent 58%),
+  linear-gradient(142deg,#e8c468,#c9a227 46%,#9a7515)}
 .scard.c1{box-shadow:0 20px 44px -22px rgba(59,126,240,.30),inset 0 1px 0 rgba(255,255,255,.28)}
 .scard.c2{box-shadow:0 20px 44px -22px rgba(124,70,209,.30),inset 0 1px 0 rgba(255,255,255,.28)}
 .scard.c3{box-shadow:0 20px 44px -22px rgba(14,143,124,.30),inset 0 1px 0 rgba(255,255,255,.28)}
@@ -330,8 +330,8 @@ img{display:block;max-width:100%}
 .final{position:relative;background:#fff;padding:140px 24px;text-align:center;overflow:hidden}
 .final-glow{position:absolute;left:50%;top:60%;width:760px;max-width:130%;height:420px;transform:translate(-50%,-50%);
   filter:blur(100px);pointer-events:none;
-  background:radial-gradient(45% 60% at 35% 50%,rgba(122,158,255,.22),transparent 70%),
-             radial-gradient(45% 60% at 65% 50%,rgba(168,140,255,.18),transparent 70%)}
+  background:radial-gradient(45% 60% at 35% 50%,rgba(255,200,60,.22),transparent 70%),
+             radial-gradient(45% 60% at 65% 50%,rgba(255,213,77,.18),transparent 70%)}
 .final-inner{position:relative;z-index:2;max-width:680px;margin:0 auto}
 .final h2{font-size:48px;line-height:58px;font-weight:600;color:#000;letter-spacing:-.01em}
 .final p{margin-top:20px;font-size:18px;line-height:28px;color:var(--muted)}
@@ -345,7 +345,7 @@ img{display:block;max-width:100%}
 .footer a{color:var(--muted-2);transition:color .2s}
 .footer a:hover{color:#000}
 .admin-entry{font-size:11px!important;color:#d0d4dc!important;opacity:.55;letter-spacing:.05em;transition:.2s;padding:2px 6px;border-radius:5px}
-.admin-entry:hover{color:#7c5cff!important;opacity:1;background:#f3f0ff}
+.admin-entry:hover{color:#c9a227!important;opacity:1;background:#fdf6df}
 
 /* ============ 授权码弹窗 ============ */
 .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
@@ -524,8 +524,8 @@ img{display:block;max-width:100%}
                       <svg viewBox="0 0 360 140" preserveAspectRatio="xMidYMid meet">
                         <defs>
                           <linearGradient id="pvChartGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stop-color="#7c5cff" stop-opacity=".32"/>
-                            <stop offset="1" stop-color="#7c5cff" stop-opacity="0"/>
+                            <stop offset="0" stop-color="#c9a227" stop-opacity=".32"/>
+                            <stop offset="1" stop-color="#c9a227" stop-opacity="0"/>
                           </linearGradient>
                           <filter id="pvGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
                         </defs>
@@ -533,13 +533,13 @@ img{display:block;max-width:100%}
                         <line x1="0" y1="56" x2="360" y2="56" stroke="#f0f0f4" stroke-width="1"/>
                         <line x1="0" y1="92" x2="360" y2="92" stroke="#f0f0f4" stroke-width="1"/>
                         <line x1="0" y1="128" x2="360" y2="128" stroke="#f0f0f4" stroke-width="1"/>
-                        <path d="M20 110 C60 100 80 92 100 88 C120 84 160 68 180 62 C200 56 240 40 260 36 C280 32 320 18 340 14" fill="none" stroke="#7c5cff" stroke-width="2.8" stroke-linecap="round" filter="url(#pvGlow)"/>
+                        <path d="M20 110 C60 100 80 92 100 88 C120 84 160 68 180 62 C200 56 240 40 260 36 C280 32 320 18 340 14" fill="none" stroke="#c9a227" stroke-width="2.8" stroke-linecap="round" filter="url(#pvGlow)"/>
                         <path d="M20 110 C60 100 80 92 100 88 C120 84 160 68 180 62 C200 56 240 40 260 36 C280 32 320 18 340 14 L340 134 L20 134 Z" fill="url(#pvChartGrad)"/>
-                        <circle cx="20" cy="110" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
-                        <circle cx="100" cy="88" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
-                        <circle cx="180" cy="62" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
-                        <circle cx="260" cy="36" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
-                        <circle cx="340" cy="14" r="4.5" fill="#7c5cff"/>
+                        <circle cx="20" cy="110" r="3.6" fill="#fff" stroke="#c9a227" stroke-width="2.2"/>
+                        <circle cx="100" cy="88" r="3.6" fill="#fff" stroke="#c9a227" stroke-width="2.2"/>
+                        <circle cx="180" cy="62" r="3.6" fill="#fff" stroke="#c9a227" stroke-width="2.2"/>
+                        <circle cx="260" cy="36" r="3.6" fill="#fff" stroke="#c9a227" stroke-width="2.2"/>
+                        <circle cx="340" cy="14" r="4.5" fill="#c9a227"/>
                         
                       </svg>
                       <div class="pv-chart-x"><span>R1</span><span>R2</span><span>R3</span><span>R4</span><span>R5</span></div>
