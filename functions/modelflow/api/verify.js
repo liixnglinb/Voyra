@@ -38,9 +38,6 @@ export async function onRequestPost({ request, env }) {
 
   return json({
     ok: true,
-    admin: !!r.is_admin,
-    bound: !!r.bound_mid,
-    note: r.note || "",
     download_url: downloadUrl, // 未配置 COS 密钥时为 null，前端回退
   });
 }

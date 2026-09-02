@@ -171,7 +171,7 @@ tr:hover td{background:#faf9ff}
   "use strict";
   var API = "/modelflow/api/admin";
   var pass = "";
-  try { pass = localStorage.getItem("mf_admin_pass") || ""; } catch(e){}
+  try { pass = sessionStorage.getItem("mf_admin_pass") || ""; } catch(e){}
 
   var $ = function(s){ return document.querySelector(s); };
   function toast(msg){ var t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(function(){t.classList.remove("show");},2200); }
@@ -219,20 +219,20 @@ tr:hover td{background:#faf9ff}
       var sr = await fetch(API+"/setup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({pass:p})});
       var sd = await sr.json().catch(()=>({}));
       if(!sd.ok){ $("#authErr").textContent=sd.msg||"初始化失败"; return; }
-      pass=p; localStorage.setItem("mf_admin_pass",pass); enter();
+      pass=p; sessionStorage.setItem("mf_admin_pass",pass); enter();
     }else{
       if(!p){ $("#authErr").textContent="请输入管理密码"; return; }
       pass=p;
       try{
         await call("/codes",null,"GET");
-        localStorage.setItem("mf_admin_pass",pass); enter();
+        sessionStorage.setItem("mf_admin_pass",pass); enter();
       }catch(e){ if(e.message!=="forbidden"){ $("#authErr").textContent="无法连接服务，请确认 Functions 与 D1 已配置"; } else { $("#authErr").textContent="管理密码错误"; pass=""; } }
     }
   }
 
   function enter(){ $("#authBox").classList.add("hidden"); $("#main").classList.remove("hidden"); refresh(); }
   function logout(msg){
-    pass=""; localStorage.removeItem("mf_admin_pass");
+    pass=""; sessionStorage.removeItem("mf_admin_pass");
     $("#main").classList.add("hidden"); $("#authBox").classList.remove("hidden");
     if(msg) $("#authErr").textContent=msg;
   }
@@ -248,7 +248,7 @@ tr:hover td{background:#faf9ff}
     if(np==null) return; np=np.trim();
     if(np.length<6){ toast("密码至少 6 位"); return; }
     var d=await call("/resetpass",{pass:np});
-    if(d.ok){ pass=np; localStorage.setItem("mf_admin_pass",pass); toast("密码已更新"); } else toast(d.msg||"失败");
+    if(d.ok){ pass=np; sessionStorage.setItem("mf_admin_pass",pass); toast("密码已更新"); } else toast(d.msg||"失败");
   });
 
   /* ---------- 生成 ---------- */

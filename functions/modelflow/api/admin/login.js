@@ -18,5 +18,6 @@ export async function onRequestPost({ request, env }) {
   const d = await readBody(request);
   const r = await checkAdmin(env, (d.pass || "").trim());
   if (r.ok) return json({ ok: true });
-  return json({ ok: false, setup: r.reason === "not_setup", msg: r.reason === "not_setup" ? "尚未设置管理密码" : "管理密码错误" }, 403);
+  // 统一错误消息，不区分"未设置"与"密码错误"，防止攻击者探测后台初始化状态
+  return json({ ok: false, msg: "管理密码错误" }, 403);
 }

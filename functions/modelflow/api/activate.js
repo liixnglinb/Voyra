@@ -28,7 +28,7 @@ export async function onRequestPost({ request, env }) {
   if (!r || r.revoked) return json({ ok: false, msg: "授权码无效或已吊销" }, 403);
 
   if (r.is_admin) {
-    return json({ ok: true, admin: true, token: await tokenFor(code, mid), code });
+    return json({ ok: true, admin: true, token: await tokenFor(code, mid) });
   }
 
   // 一机一码：该设备已绑定其他未吊销码 → 拒绝（不泄露其他码明文）
@@ -47,5 +47,5 @@ export async function onRequestPost({ request, env }) {
     await env.DB.prepare("UPDATE codes SET bound_mid=?, bound_at=? WHERE code=?")
       .bind(mid, now(), codeHash).run();
   }
-  return json({ ok: true, admin: false, token: await tokenFor(code, mid), code });
+  return json({ ok: true, admin: false, token: await tokenFor(code, mid) });
 }
