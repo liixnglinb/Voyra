@@ -71,7 +71,7 @@ img{display:block;max-width:100%}
              radial-gradient(40% 52% at 70% 48%,rgba(168,140,255,.20),transparent 70%),
              radial-gradient(30% 40% at 50% 60%,rgba(120,210,200,.14),transparent 70%)}
 .hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;
-  padding:56px 0 0;display:flex;flex-direction:column;align-items:center}
+  padding:104px 0 0;display:flex;flex-direction:column;align-items:center}
 .hero-kicker{font-size:20px;line-height:28px;font-weight:400;color:var(--muted);
   opacity:0;animation:fadeUp .8s .05s cubic-bezier(.22,1,.36,1) forwards}
 .hero h1{margin-top:14px;font-size:60px;line-height:70px;font-weight:600;letter-spacing:-.01em;color:#000;
@@ -85,7 +85,7 @@ img{display:block;max-width:100%}
 @keyframes previewIn{from{opacity:0;transform:translateY(48px) scale(.985)}to{opacity:1;transform:none}}
 
 /* 产品预览窗口 —— 精致双层：外层视差+光晕 / 内层入场 */
-.hero-preview{position:relative;z-index:2;width:100%;max-width:1180px;margin:44px auto 0;
+.hero-preview{position:relative;z-index:2;width:100%;max-width:1180px;margin:80px auto 0;
   will-change:transform}
 .hero-preview::before{content:"";position:absolute;left:50%;top:8%;bottom:4%;width:118%;
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;
@@ -119,7 +119,7 @@ img{display:block;max-width:100%}
 .pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#3b82f6;animation:breathe 1.3s ease-in-out infinite}
 @keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(59,130,246,.4)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(59,130,246,0)}}
 /* 工作区 */
-.pv-work{max-width:980px;margin:0 auto;padding:20px 26px 0}
+.pv-work{max-width:980px;margin:0 auto;padding:16px 24px 0}
 .pv-job-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .pv-job-title{font-size:14.5px;font-weight:700;color:#1b1b1b}
 .pv-job-id{font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0}
@@ -134,7 +134,7 @@ img{display:block;max-width:100%}
 /* 双栏 */
 .pv-cols{display:grid;grid-template-columns:272px 1fr;gap:16px;align-items:stretch}
 /* 左：步骤列表 */
-.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:14px 12px 16px;display:flex;flex-direction:column}
+.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:10px 12px 12px;display:flex;flex-direction:column}
 .pv-group{flex:1;display:flex;flex-direction:column;justify-content:center}
 .pv-group-t{font-size:9.5px;font-weight:700;color:#b4b8c0;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;padding-left:4px}
 .pv-steps-foot{margin-top:12px;padding-top:14px;border-top:1px solid #f0f0f3}
@@ -143,7 +143,7 @@ img{display:block;max-width:100%}
 .pv-sf-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#9b82ff,#7c5cff)}
 .pv-sf-num{font-size:11px;color:#8a8f99}
 .pv-sf-num b{font-size:15px;color:#7c5cff;font-weight:700;font-family:Consolas,monospace}
-.pv-ss{position:relative;display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:8px}
+.pv-ss{position:relative;display:flex;align-items:center;gap:10px;padding:5px 8px;border-radius:8px}
 .pv-ss:not(:last-child)::before{content:"";position:absolute;left:18px;top:30px;bottom:-2px;width:2px;background:#eef0f4}
 .pv-dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;flex-shrink:0;z-index:1;font-weight:700}
 .pv-dot.done{background:#16a34a;color:#fff}
@@ -156,18 +156,18 @@ img{display:block;max-width:100%}
 .pv-ss-skill{display:none}
 .pv-ss.run{background:linear-gradient(90deg,#f3f0ff,#f8f6ff)}
 /* 右：输出 + 图表 + 产物 */
-.pv-right{display:flex;flex-direction:column;gap:16px;min-width:0}
-.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:16px 18px}
+.pv-right{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:10px 14px}
 .pv-card-t{font-size:12px;font-weight:700;color:#1b1b1b;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .pv-card-t .cnt{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0;font-weight:500}
 /* 日志 */
 .pv-terminal{border-radius:10px;overflow:hidden;border:1px solid #e8e8ed;background:#1a1d24}
-.pv-term-bar{display:flex;align-items:center;gap:7px;padding:8px 14px;background:#23262e;border-bottom:1px solid #2e313a}
+.pv-term-bar{display:flex;align-items:center;gap:7px;padding:5px 12px;background:#23262e;border-bottom:1px solid #2e313a}
 .pv-term-bar i{width:9px;height:9px;border-radius:50%}
 .pv-term-bar i:nth-child(1){background:#ff5f57}.pv-term-bar i:nth-child(2){background:#febc2e}.pv-term-bar i:nth-child(3){background:#28c840}
 .pv-term-bar span{font-family:Consolas,monospace;font-size:10.5px;color:#8a8f99;margin-left:6px}
 .pv-term-live{margin-left:auto!important;color:#a78bfa!important;font-weight:700;font-size:9.5px!important}
-.pv-term-body{padding:12px 14px;font-family:Consolas,monospace;font-size:10.5px;line-height:1.95}
+.pv-term-body{padding:7px 12px 8px;font-family:Consolas,monospace;font-size:10px;line-height:1.45}
 .pv-term-line{display:flex;align-items:center;gap:8px;color:#c8ccd4}
 .pt-time{color:#5a5f6a;flex-shrink:0;font-size:10px}
 .pt-lv{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;letter-spacing:.03em}
@@ -179,30 +179,30 @@ img{display:block;max-width:100%}
 .pv-caret{display:inline-block;width:6px;height:12px;background:#7c5cff;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 /* 审稿分数曲线 */
-.pv-chart{display:flex;gap:10px;margin-bottom:14px}
+.pv-chart{display:flex;gap:10px;margin-bottom:8px}
 .pv-chart-y{display:flex;flex-direction:column;justify-content:space-between;padding:4px 0 18px;font-family:Consolas,monospace;font-size:9px;color:#c2c6ce;text-align:right;width:28px;flex-shrink:0}
 .pv-chart-main{flex:1;min-width:0}
-.pv-chart-main svg{width:100%;height:120px;max-width:100%;display:block}
+.pv-chart-main svg{width:100%;height:70px;max-width:100%;display:block}
 .pv-chart-x{display:flex;justify-content:space-between;padding:0 4px;margin-top:4px;font-family:Consolas,monospace;font-size:9.5px;color:#b4b8c0}
-.pv-chart-stats{display:flex;gap:10px;padding-top:14px;border-top:1px solid #f0f0f3}
-.pv-cs{flex:1;text-align:center;background:#fafafd;border-radius:10px;padding:10px 4px}
-.pv-cs b{display:block;font-size:18px;font-weight:700;color:#7c5cff;font-family:Consolas,monospace}
-.pv-cs span{font-size:10px;color:#8a8f99;margin-top:2px;display:block}
+.pv-chart-stats{display:flex;gap:10px;padding-top:8px;border-top:1px solid #f0f0f3}
+.pv-cs{flex:1;text-align:center;background:#fafafd;border-radius:9px;padding:5px 4px}
+.pv-cs b{display:block;font-size:14px;font-weight:700;color:#7c5cff;font-family:Consolas,monospace;line-height:1.2}
+.pv-cs span{font-size:9.5px;color:#8a8f99;margin-top:2px;display:block}
 /* 产物文件 */
-.pv-files-list{display:flex;flex-direction:column;gap:2px}
-.pv-file{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:10px;transition:background .2s}
+.pv-files-list{display:grid;grid-template-columns:1fr 1fr;gap:1px 14px}.pv-file-building{grid-column:1/-1}
+.pv-file{display:flex;align-items:center;gap:9px;padding:2px 8px;border-radius:9px;transition:background .2s}
 .pv-file:hover{background:#f7f7f9}
-.pv-fic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:8.5px;font-weight:800;flex-shrink:0;font-family:Consolas,monospace;letter-spacing:.02em}
+.pv-fic{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:7.5px;font-weight:800;flex-shrink:0;font-family:Consolas,monospace;letter-spacing:.02em}
 .pv-fic.py{background:#e8f5ee;color:#16a34a}.pv-fic.md{background:#e8ecfa;color:#4a5bb5}
 .pv-fic.img{background:#fdf6df;color:#9a7515}.pv-fic.pdf{background:#fdecec;color:#ef4444}
 .pv-fic.csv{background:#e6f7f0;color:#0d9488}.pv-fic.html{background:#fff0e6;color:#ea580c}
-.pv-finfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.pv-fname{font-size:12px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pv-fcat{font-size:10px;color:#b4b8c0}
-.pv-fprog{height:3px;border-radius:999px;background:#eef0f4;margin-top:3px;overflow:hidden}
+.pv-finfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.25}
+.pv-fname{font-size:11px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
+.pv-fcat{font-size:9px;color:#b4b8c0;line-height:1.15}
+.pv-fprog{height:3px;border-radius:999px;background:#eef0f4;margin-top:1px;overflow:hidden}
 .pv-fprog-fill{height:100%;width:68%;border-radius:999px;background:linear-gradient(90deg,#9b82ff,#7c5cff)}
-.pv-fsize{font-family:Consolas,monospace;font-size:10.5px;color:#8a8f99;flex-shrink:0;width:52px;text-align:right}
-.pv-fstat{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0}
+.pv-fsize{font-family:Consolas,monospace;font-size:9.5px;color:#8a8f99;flex-shrink:0;width:44px;text-align:right}
+.pv-fstat{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:700;flex-shrink:0}
 .pv-fstat.done{background:#e8f5ee;color:#16a34a}
 .pv-fstat.run{background:#f3f0ff;color:#7c5cff}
 
@@ -537,7 +537,7 @@ img{display:block;max-width:100%}
                         <circle cx="180" cy="62" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
                         <circle cx="260" cy="36" r="3.6" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
                         <circle cx="340" cy="14" r="4.5" fill="#7c5cff"/>
-                        <text x="340" y="6" text-anchor="middle" fill="#7c5cff" font-size="10" font-weight="700" font-family="Consolas,monospace">8.8</text>
+                        
                       </svg>
                       <div class="pv-chart-x"><span>R1</span><span>R2</span><span>R3</span><span>R4</span><span>R5</span></div>
                     </div>
