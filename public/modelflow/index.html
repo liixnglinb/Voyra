@@ -132,13 +132,18 @@ img{display:block;max-width:100%}
 .pv-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shimmer 2.4s infinite}
 .pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#7c5cff}
 /* 双栏 */
-.pv-cols{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+.pv-cols{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:stretch}
 /* 左：步骤列表 */
-.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:14px 12px}
-.pv-group{margin-bottom:14px}
-.pv-group:last-child{margin-bottom:0}
-.pv-group-t{font-size:9.5px;font-weight:700;color:#b4b8c0;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;padding-left:4px}
-.pv-ss{position:relative;display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px}
+.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:14px 12px 16px;display:flex;flex-direction:column}
+.pv-group{flex:1;display:flex;flex-direction:column;justify-content:center}
+.pv-group-t{font-size:9.5px;font-weight:700;color:#b4b8c0;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;padding-left:4px}
+.pv-steps-foot{margin-top:12px;padding-top:14px;border-top:1px solid #f0f0f3}
+.pv-sf-label{font-size:10px;color:#b4b8c0;font-weight:600;margin-bottom:7px}
+.pv-sf-bar{height:5px;border-radius:999px;background:#eef0f4;overflow:hidden;margin-bottom:7px}
+.pv-sf-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#9b82ff,#7c5cff)}
+.pv-sf-num{font-size:11px;color:#8a8f99}
+.pv-sf-num b{font-size:15px;color:#7c5cff;font-weight:700;font-family:Consolas,monospace}
+.pv-ss{position:relative;display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:8px}
 .pv-ss:not(:last-child)::before{content:"";position:absolute;left:18px;top:30px;bottom:-2px;width:2px;background:#eef0f4}
 .pv-dot{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:10px;flex-shrink:0;z-index:1;font-weight:700}
 .pv-dot.done{background:#16a34a;color:#fff}
@@ -152,35 +157,54 @@ img{display:block;max-width:100%}
 .pv-ss.run{background:linear-gradient(90deg,#f3f0ff,#f8f6ff)}
 /* 右：输出 + 图表 + 产物 */
 .pv-right{display:flex;flex-direction:column;gap:16px;min-width:0}
-.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:18px 20px}
+.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:16px 18px}
 .pv-card-t{font-size:12px;font-weight:700;color:#1b1b1b;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .pv-card-t .cnt{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0;font-weight:500}
 /* 日志 */
-.pv-log{background:#fbfbfd;border:1px solid #f0f0f3;border-radius:9px;padding:12px 16px;font-family:Consolas,monospace;font-size:11px;line-height:2.1;color:#6c757d}
-.pv-log>div{display:flex;align-items:center}
-.log-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:9px;vertical-align:middle;flex-shrink:0}
-.log-dot.ok{background:#16a34a}.log-dot.run{background:#7c5cff;animation:breathe2 1.4s ease-in-out infinite}.log-dot.info{background:#3b82f6}
+.pv-terminal{border-radius:10px;overflow:hidden;border:1px solid #e8e8ed;background:#1a1d24}
+.pv-term-bar{display:flex;align-items:center;gap:7px;padding:8px 14px;background:#23262e;border-bottom:1px solid #2e313a}
+.pv-term-bar i{width:9px;height:9px;border-radius:50%}
+.pv-term-bar i:nth-child(1){background:#ff5f57}.pv-term-bar i:nth-child(2){background:#febc2e}.pv-term-bar i:nth-child(3){background:#28c840}
+.pv-term-bar span{font-family:Consolas,monospace;font-size:10.5px;color:#8a8f99;margin-left:6px}
+.pv-term-live{margin-left:auto!important;color:#a78bfa!important;font-weight:700;font-size:9.5px!important}
+.pv-term-body{padding:12px 14px;font-family:Consolas,monospace;font-size:10.5px;line-height:1.95}
+.pv-term-line{display:flex;align-items:center;gap:8px;color:#c8ccd4}
+.pt-time{color:#5a5f6a;flex-shrink:0;font-size:10px}
+.pt-lv{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;letter-spacing:.03em}
+.pt-ok{background:rgba(22,163,74,.15);color:#4ade80}
+.pt-info{background:rgba(59,130,246,.15);color:#60a5fa}
+.pt-run{background:rgba(124,92,255,.18);color:#a78bfa}
+.pt-msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pv-log .ok{color:#16a34a}.pv-log .run{color:#7c5cff}.pv-log .info{color:#3b82f6}.pv-log .mut{color:#b4b8c0}
 .pv-caret{display:inline-block;width:6px;height:12px;background:#7c5cff;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 /* 审稿分数曲线 */
-.pv-score{display:flex;flex-direction:column;align-items:center;gap:10px}
-.pv-score svg{width:100%;height:108px;max-width:100%}
-.pv-score-note{font-size:11px;color:#8a8f99;line-height:1.6;text-align:center}
-.pv-score-note b{display:inline;font-size:15px;color:#7c5cff;font-family:Consolas,monospace;font-weight:700;margin-left:4px}
+.pv-chart{display:flex;gap:10px;margin-bottom:14px}
+.pv-chart-y{display:flex;flex-direction:column;justify-content:space-between;padding:4px 0 18px;font-family:Consolas,monospace;font-size:9px;color:#c2c6ce;text-align:right;width:28px;flex-shrink:0}
+.pv-chart-main{flex:1;min-width:0}
+.pv-chart-main svg{width:100%;height:120px;max-width:100%;display:block}
+.pv-chart-x{display:flex;justify-content:space-between;padding:0 4px;margin-top:4px;font-family:Consolas,monospace;font-size:9.5px;color:#b4b8c0}
+.pv-chart-stats{display:flex;gap:10px;padding-top:14px;border-top:1px solid #f0f0f3}
+.pv-cs{flex:1;text-align:center;background:#fafafd;border-radius:10px;padding:10px 4px}
+.pv-cs b{display:block;font-size:18px;font-weight:700;color:#7c5cff;font-family:Consolas,monospace}
+.pv-cs span{font-size:10px;color:#8a8f99;margin-top:2px;display:block}
 /* 产物文件 */
-.pv-files{display:flex;flex-direction:column;gap:2px}
-.pv-files-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}
-.pv-fr{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:8px}
-.pv-fr-info{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
-.pv-files-grid .pv-fr-name{font-size:11px}
-.pv-fr:hover{background:#f7f7f9}
-.pv-ic{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:9px;font-weight:800;flex-shrink:0;font-family:Consolas,monospace}
-.pv-ic.py{background:#e8f5ee;color:#16a34a}.pv-ic.md{background:#e8ecfa;color:#4a5bb5}
-.pv-ic.img{background:#fdf6df;color:#9a7515}.pv-ic.pdf{background:#fdecec;color:#ef4444}.pv-ic.csv{background:#e6f7f0;color:#0d9488}.pv-ic.html{background:#fff0e6;color:#ea580c}
-.pv-fr-name{font-size:11.5px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pv-fr-cat{font-size:10px;color:#b4b8c0}
-.pv-fr-size{margin-left:auto;font-family:Consolas,monospace;font-size:10px;color:#b4b8c0}
+.pv-files-list{display:flex;flex-direction:column;gap:2px}
+.pv-file{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:10px;transition:background .2s}
+.pv-file:hover{background:#f7f7f9}
+.pv-fic{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:8.5px;font-weight:800;flex-shrink:0;font-family:Consolas,monospace;letter-spacing:.02em}
+.pv-fic.py{background:#e8f5ee;color:#16a34a}.pv-fic.md{background:#e8ecfa;color:#4a5bb5}
+.pv-fic.img{background:#fdf6df;color:#9a7515}.pv-fic.pdf{background:#fdecec;color:#ef4444}
+.pv-fic.csv{background:#e6f7f0;color:#0d9488}.pv-fic.html{background:#fff0e6;color:#ea580c}
+.pv-finfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pv-fname{font-size:12px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv-fcat{font-size:10px;color:#b4b8c0}
+.pv-fprog{height:3px;border-radius:999px;background:#eef0f4;margin-top:3px;overflow:hidden}
+.pv-fprog-fill{height:100%;width:68%;border-radius:999px;background:linear-gradient(90deg,#9b82ff,#7c5cff)}
+.pv-fsize{font-family:Consolas,monospace;font-size:10.5px;color:#8a8f99;flex-shrink:0;width:52px;text-align:right}
+.pv-fstat{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0}
+.pv-fstat.done{background:#e8f5ee;color:#16a34a}
+.pv-fstat.run{background:#f3f0ff;color:#7c5cff}
 
 /* ============ 通用 Section（tabbit：48px/600 居中标题） ============ */
 .section{position:relative;padding:140px 24px;overflow:hidden}
@@ -445,7 +469,7 @@ img{display:block;max-width:100%}
             </div>
             <!-- 双栏 -->
             <div class="pv-cols">
-              <!-- 左：九步流水线 -->
+              <!-- 左：九步流水线（铺满） -->
               <div class="pv-steps">
                 <div class="pv-group">
                   <div class="pv-group-t">前期分析</div>
@@ -465,16 +489,75 @@ img{display:block;max-width:100%}
                   <div class="pv-ss wait"><span class="pv-dot wait">8</span><div class="pv-ss-main"><div class="pv-ss-name">编译与合规检查</div></div></div>
                   <div class="pv-ss wait"><span class="pv-dot wait">9</span><div class="pv-ss-main"><div class="pv-ss-name">论文改进循环</div></div></div>
                 </div>
+                <div class="pv-steps-foot">
+                  <div class="pv-sf-label">流水线总进度</div>
+                  <div class="pv-sf-bar"><div class="pv-sf-fill"></div></div>
+                  <div class="pv-sf-num"><b>4</b>/9 步 · 44%</div>
+                </div>
               </div>
-              <!-- 右：输出 / 审稿曲线 / 产物 -->
+              <!-- 右：终端日志 / 审稿图表 / 产物列表 -->
               <div class="pv-right">
                 <div class="pv-card">
                   <div class="pv-card-t">实时输出</div>
-                  <div class="pv-log">
-                    <div><span class="log-dot ok"></span>问题分析.md · 子问题 3 个已结构化</div>
-                    <div><span class="log-dot ok"></span>Q1_solve.py 求解收敛，残差 1.2e-4</div>
-                    <div><span class="log-dot ok"></span>约束校验通过，可行域已确认</div>
-                    <div><span class="log-dot info"></span>灵敏度热力图已生成 (2.4 MB)</div>
+                  <div class="pv-terminal">
+                    <div class="pv-term-bar"><i></i><i></i><i></i><span>run.log</span><span class="pv-term-live">● LIVE</span></div>
+                    <div class="pv-term-body">
+                      <div class="pv-term-line"><span class="pt-time">12:01:03</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">问题分析.md · 子问题 3 个已结构化</span></div>
+                      <div class="pv-term-line"><span class="pt-time">12:01:08</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">Q1_solve.py 求解收敛，残差 1.2e-4</span></div>
+                      <div class="pv-term-line"><span class="pt-time">12:01:12</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">约束校验通过，可行域已确认</span></div>
+                      <div class="pv-term-line"><span class="pt-time">12:01:18</span><span class="pt-lv pt-info">INFO</span><span class="pt-msg">灵敏度热力图已生成 (2.4 MB)</span></div>
+                      <div class="pv-term-line"><span class="pt-time">12:01:22</span><span class="pt-lv pt-info">INFO</span><span class="pt-msg">参数对比表已导出 (Excel)</span></div>
+                      <div class="pv-term-line"><span class="pt-time">12:01:25</span><span class="pt-lv pt-run">RUN</span><span class="pt-msg">正在绘制模型对比折线图</span><span class="pv-caret"></span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="pv-card">
+                  <div class="pv-card-t">审稿分数曲线<span class="cnt">对抗轮次 → 分数</span></div>
+                  <div class="pv-chart">
+                    <div class="pv-chart-y"><span>9.0</span><span>8.0</span><span>7.0</span><span>6.0</span></div>
+                    <div class="pv-chart-main">
+                      <svg viewBox="0 0 360 140" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                          <linearGradient id="pvChartGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#7c5cff" stop-opacity=".32"/>
+                            <stop offset="1" stop-color="#7c5cff" stop-opacity="0"/>
+                          </linearGradient>
+                          <filter id="pvGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                        </defs>
+                        <line x1="0" y1="20" x2="360" y2="20" stroke="#f0f0f4" stroke-width="1"/>
+                        <line x1="0" y1="56" x2="360" y2="56" stroke="#f0f0f4" stroke-width="1"/>
+                        <line x1="0" y1="92" x2="360" y2="92" stroke="#f0f0f4" stroke-width="1"/>
+                        <line x1="0" y1="128" x2="360" y2="128" stroke="#f0f0f4" stroke-width="1"/>
+                        <path d="M20 110 C80 96 100 78 140 66 S200 42 240 32 S300 18 340 14" fill="none" stroke="#7c5cff" stroke-width="2.8" stroke-linecap="round" filter="url(#pvGlow)"/>
+                        <path d="M20 110 C80 96 100 78 140 66 S200 42 240 32 S300 18 340 14 L340 135 L20 135 Z" fill="url(#pvChartGrad)"/>
+                        <circle cx="20" cy="110" r="3.8" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
+                        <circle cx="140" cy="66" r="3.8" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
+                        <circle cx="240" cy="32" r="3.8" fill="#fff" stroke="#7c5cff" stroke-width="2.2"/>
+                        <circle cx="340" cy="14" r="4.5" fill="#7c5cff"/>
+                        <text x="340" y="6" text-anchor="middle" fill="#7c5cff" font-size="10" font-weight="700" font-family="Consolas,monospace">8.8</text>
+                      </svg>
+                      <div class="pv-chart-x"><span>R1</span><span>R2</span><span>R3</span><span>R4</span><span>R5</span></div>
+                    </div>
+                  </div>
+                  <div class="pv-chart-stats">
+                    <div class="pv-cs"><b>8.8</b><span>最终分数</span></div>
+                    <div class="pv-cs"><b>+2.1</b><span>累计提升</span></div>
+                    <div class="pv-cs"><b>5</b><span>对抗轮次</span></div>
+                  </div>
+                </div>
+                <div class="pv-card">
+                  <div class="pv-card-t">产物文件<span class="cnt">12 个 · 全部落盘</span></div>
+                  <div class="pv-files pv-files-list">
+                    <div class="pv-file"><span class="pv-fic py">PY</span><div class="pv-finfo"><span class="pv-fname">Q1_solve.py</span><span class="pv-fcat">Python 源码</span></div><span class="pv-fsize">8.2 KB</span><span class="pv-fstat done">✓</span></div>
+                    <div class="pv-file"><span class="pv-fic md">MD</span><div class="pv-finfo"><span class="pv-fname">建模报告.md</span><span class="pv-fcat">分析报告</span></div><span class="pv-fsize">14 KB</span><span class="pv-fstat done">✓</span></div>
+                    <div class="pv-file"><span class="pv-fic img">IMG</span><div class="pv-finfo"><span class="pv-fname">Figure_2.png</span><span class="pv-fcat">灵敏度热力图</span></div><span class="pv-fsize">2.4 MB</span><span class="pv-fstat done">✓</span></div>
+                    <div class="pv-file"><span class="pv-fic csv">CSV</span><div class="pv-finfo"><span class="pv-fname">参数对比表.csv</span><span class="pv-fcat">数据表格</span></div><span class="pv-fsize">3.1 KB</span><span class="pv-fstat done">✓</span></div>
+                    <div class="pv-file"><span class="pv-fic html">HTML</span><div class="pv-finfo"><span class="pv-fname">架构流程图.html</span><span class="pv-fcat">交互可视化</span></div><span class="pv-fsize">1.8 MB</span><span class="pv-fstat done">✓</span></div>
+                    <div class="pv-file pv-file-building"><span class="pv-fic pdf">PDF</span><div class="pv-finfo"><span class="pv-fname">main.pdf</span><span class="pv-fcat">最终论文</span><div class="pv-fprog"><div class="pv-fprog-fill"></div></div></div><span class="pv-fsize">编译中</span><span class="pv-fstat run">●</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
                     <div><span class="log-dot info"></span>参数对比表已导出 (Excel)</div>
                     <div><span class="log-dot run"></span>正在绘制模型对比折线图<span class="pv-caret"></span></div>
                   </div>
@@ -548,13 +631,13 @@ img{display:block;max-width:100%}
       <h3 class="scard-h">建模 · 求解 · 出图</h3>
       <p class="scard-p">写代码、跑结果、画论文图</p>
       <div class="scard-visual">
-        <svg class="v-curve" viewBox="0 0 220 70" preserveAspectRatio="none">
+        <svg class="v-curve" viewBox="0 0 220 70" preserveAspectRatio="xMidYMid meet">
           <defs><linearGradient id="cardGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
           <path d="M10 56 Q60 48 100 36 T210 12" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2.5" stroke-linecap="round"/>
           <path d="M10 56 Q60 48 100 36 T210 12 L210 68 L10 68 Z" fill="url(#cardGrad2)"/>
           <circle cx="10" cy="56" r="3.5" fill="#fff"/>
           <circle cx="100" cy="36" r="3.5" fill="#fff"/>
-          <circle cx="210" cy="12" r="4.5" fill="#fff"/>
+          <circle cx="210" cy="12" r="3.8" fill="#fff"/>
         </svg>
         <div class="v-stats">
           <div class="v-stat"><b>R²</b><span>0.94</span></div>
