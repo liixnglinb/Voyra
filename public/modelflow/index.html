@@ -194,7 +194,7 @@ img{display:block;max-width:100%}
 /* ============ 功能卡片（tabbit：320×570 固定卡片、多层渐变、横向排布） ============ */
 .features{background:#fff}
 .cards-stage{margin-top:72px;display:grid;grid-template-columns:repeat(3,320px);gap:24px;justify-content:center}
-.scard{position:relative;width:320px;height:570px;border-radius:28px;padding:40px 32px 28px;overflow:hidden;
+.scard{position:relative;width:320px;height:520px;border-radius:28px;padding:36px 28px 24px;overflow:hidden;
   display:flex;flex-direction:column;color:#fff;border:1px solid rgba(255,255,255,.18);
   box-shadow:0 24px 48px -24px rgba(30,40,90,.30),inset 0 1px 0 rgba(255,255,255,.22)}
 .scard.c1{background:
@@ -209,18 +209,28 @@ img{display:block;max-width:100%}
   radial-gradient(130% 130% at 10% 4%,rgba(224,250,244,.64) 0,transparent 44%),
   radial-gradient(105% 120% at 94% 100%,rgba(12,90,78,.58) 0,transparent 58%),
   linear-gradient(142deg,#86e0d2,#3fb8a2 46%,#0e8f7c)}
-.scard-top h3{font-size:28px;line-height:36px;font-weight:600;letter-spacing:-.01em}
-.scard-top p{margin-top:6px;font-size:22px;line-height:30px;font-weight:600;opacity:.92}
-.scard-demo{margin-top:auto;border-radius:14px;background:rgba(255,255,255,.16);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.22);padding:16px;display:flex;flex-direction:column;gap:9px}
-.demo-bar{display:flex;align-items:center;gap:7px}
-.demo-bar i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.55)}
-.demo-bar span{flex:1;height:7px;border-radius:4px;background:rgba(255,255,255,.28)}
-.demo-row{height:9px;border-radius:5px;background:rgba(255,255,255,.24)}
-.demo-row.w90{width:90%}.demo-row.w75{width:75%}.demo-row.w60{width:60%}.demo-row.w45{width:45%}
-.demo-chip{align-self:flex-start;font-size:11px;font-family:var(--en);padding:4px 10px;border-radius:6px;background:rgba(255,255,255,.22);margin-top:2px}
-.demo-dark{margin-top:4px;border-radius:10px;background:rgba(0,0,0,.22);padding:11px 13px;font-family:Consolas,monospace;font-size:11px;line-height:1.8;color:rgba(255,255,255,.85)}
-.demo-dark b{color:#fff}
+.scard-top h3{font-size:26px;line-height:34px;font-weight:600;letter-spacing:-.01em}
+.scard-top p{margin-top:8px;font-size:17px;line-height:24px;font-weight:500;opacity:.88}
+.scard-demo{margin-top:auto;border-radius:16px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.20);padding:18px;display:flex;flex-direction:column;gap:12px}
+.demo-head{display:flex;align-items:center;gap:8px}
+.demo-ico{font-size:15px}
+.demo-title{font-size:13px;font-weight:600;flex:1;opacity:.95}
+.demo-tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.25);opacity:.9}
+.demo-kw{display:flex;flex-wrap:wrap;gap:6px}
+.demo-kw span{font-size:10.5px;padding:3px 9px;border-radius:6px;background:rgba(255,255,255,.18);opacity:.85}
+.demo-list{display:flex;flex-direction:column;gap:6px}
+.demo-li{display:flex;align-items:center;gap:9px;font-size:12px;opacity:.92}
+.demo-n{width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:10px;font-weight:700;flex-shrink:0}
+.demo-code{font-family:Consolas,monospace;font-size:11px;line-height:1.8;background:rgba(0,0,0,.18);border-radius:9px;padding:10px 12px;opacity:.9}
+.demo-metrics{display:flex;gap:8px}
+.demo-m{flex:1;text-align:center;background:rgba(255,255,255,.14);border-radius:9px;padding:8px 4px}
+.demo-m b{display:block;font-size:10px;opacity:.7;font-weight:500}
+.demo-m span{display:block;font-size:14px;font-weight:700;margin-top:2px}
+.demo-toc{display:flex;flex-direction:column;gap:5px}
+.demo-toc-i{display:flex;align-items:center;gap:8px;font-size:11.5px;opacity:.9}
+.demo-toc-n{width:16px;height:16px;border-radius:4px;background:rgba(255,255,255,.20);display:grid;place-items:center;font-size:9px;font-weight:700;flex-shrink:0}
+.demo-foot{font-size:10.5px;opacity:.72;border-top:1px solid rgba(255,255,255,.18);padding-top:10px}
 
 /* ============ 九步流程 ============ */
 .pipeline{background:#f7f7f8}
@@ -508,12 +518,14 @@ img{display:block;max-width:100%}
         <p>读懂题目，拆出子问题</p>
       </div>
       <div class="scard-demo">
-        <div class="demo-bar"><i></i><i></i><span></span></div>
-        <div class="demo-row w90"></div>
-        <div class="demo-row w75"></div>
-        <div class="demo-row w60"></div>
-        <div class="demo-dark"><b>变量提取</b> x₁..xₙ · 约束 6 项<br><b>子问题</b> 识别 3 个 · 已结构化</div>
-        <span class="demo-chip">文字 / PDF / 图片赛题</span>
+        <div class="demo-head"><span class="demo-ico">📄</span><span class="demo-title">2024国赛A题.pdf</span><span class="demo-tag">已解析</span></div>
+        <div class="demo-kw"><span>优化</span><span>约束</span><span>求解</span><span>灵敏度</span></div>
+        <div class="demo-list">
+          <div class="demo-li"><span class="demo-n">1</span>目标函数建模</div>
+          <div class="demo-li"><span class="demo-n">2</span>约束条件分析</div>
+          <div class="demo-li"><span class="demo-n">3</span>求解策略选择</div>
+        </div>
+        <div class="demo-foot">变量 x₁..xₙ · 约束 6 项 · 已结构化</div>
       </div>
     </div>
     <div class="scard c2" data-rise data-delay="1">
@@ -522,12 +534,14 @@ img{display:block;max-width:100%}
         <p>写代码、跑结果、画论文图</p>
       </div>
       <div class="scard-demo">
-        <div class="demo-bar"><i></i><i></i><span></span></div>
-        <div class="demo-row w75"></div>
-        <div class="demo-row w90"></div>
-        <div class="demo-row w45"></div>
-        <div class="demo-dark"><b>模型</b> 多元回归 + 灵敏度<br><b>图表</b> 3 张已生成 · 全部落盘</div>
-        <span class="demo-chip">自动建模 / 代码运行 / 论文级图表</span>
+        <div class="demo-head"><span class="demo-ico">💻</span><span class="demo-title">Q1_solve.py</span><span class="demo-tag">运行中</span></div>
+        <div class="demo-code">model = LinearRegression()<br>result = model.fit(X, y)<br>score = result.r2_score()</div>
+        <div class="demo-metrics">
+          <div class="demo-m"><b>R²</b><span>0.942</span></div>
+          <div class="demo-m"><b>耗时</b><span>2.3s</span></div>
+          <div class="demo-m"><b>图表</b><span>3张</span></div>
+        </div>
+        <div class="demo-foot">灵敏度热力图 ✓ · 参数对比表 ✓</div>
       </div>
     </div>
     <div class="scard c3" data-rise data-delay="2">
@@ -536,12 +550,14 @@ img{display:block;max-width:100%}
         <p>LaTeX 撰写、编译 PDF</p>
       </div>
       <div class="scard-demo">
-        <div class="demo-bar"><i></i><i></i><span></span></div>
-        <div class="demo-row w90"></div>
-        <div class="demo-row w60"></div>
-        <div class="demo-row w75"></div>
-        <div class="demo-dark"><b>main.tex</b> 已生成 18 页<br><b>xelatex</b> 编译通过 · main.pdf ✓</div>
-        <span class="demo-chip">LaTeX / PDF / 逻辑对抗复核</span>
+        <div class="demo-head"><span class="demo-ico">📝</span><span class="demo-title">main.tex</span><span class="demo-tag">18页</span></div>
+        <div class="demo-toc">
+          <div class="demo-toc-i"><span class="demo-toc-n">1</span>摘要与问题重述</div>
+          <div class="demo-toc-i"><span class="demo-toc-n">2</span>模型假设与符号</div>
+          <div class="demo-toc-i"><span class="demo-toc-n">3</span>建模与求解过程</div>
+          <div class="demo-toc-i"><span class="demo-toc-n">4</span>灵敏度分析与结论</div>
+        </div>
+        <div class="demo-foot">xelatex 编译通过 · main.pdf 2.4MB</div>
       </div>
     </div>
   </div>
