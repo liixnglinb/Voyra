@@ -925,7 +925,7 @@ async function submitCode(){
       a.href = dlUrl; a.download = '';
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       closeModal();
-      try { localStorage.setItem('mf_lic', code); } catch(e) {}
+      try { sessionStorage.setItem('mf_lic', code); } catch(e) {}
     } else throw new Error('下载链接生成失败，请重试');
   } catch (e){
     errEl.textContent = e.message || '验证失败，请重试';
@@ -948,7 +948,7 @@ async function submitCode(){
 
 // 自动填入保存的授权码
 try {
-  const saved = localStorage.getItem('mf_lic');
+  const saved = sessionStorage.getItem('mf_lic');
   if (saved && saved.length === 5) document.getElementById('licInput').value = saved;
 } catch(e) {}
 </script>

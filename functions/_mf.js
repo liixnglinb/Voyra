@@ -22,6 +22,10 @@ function bufToHex(buf) {
 export async function sha256Hex(str) {
   return bufToHex(await crypto.subtle.digest("SHA-256", enc.encode(String(str))));
 }
+// 授权码哈希：数据库只存 SHA-256，不存明文。查询/更新前先调此函数。
+export async function hashCode(code) {
+  return sha256Hex((code || "").trim().toUpperCase());
+}
 // HMAC-SHA256(key, msg) → hex（与 Python hmac.new(...).hexdigest() 等价）
 export async function hmacHex(keyStr, msgStr) {
   const key = await crypto.subtle.importKey(
@@ -48,15 +52,17 @@ export function now() {
   return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 19).replace("T", " ");
 }
 
-// 统一 CORS / JSON
+// 统一 CORS / JSON —— 仅允许自有域名跨域调用（防第三方网站嵌入授权接口）
+const ALLOWED_ORIGIN = "https://lxlrwxs.top";
 export function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type,X-Admin-Pass",
+      "Vary": "Origin",
       "Cache-Control": "no-store",
     },
   });
@@ -64,15 +70,27 @@ export function json(data, status = 200) {
 export function preflight() {
   return new Response(null, {
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type,X-Admin-Pass",
       "Access-Control-Max-Age": "86400",
+      "Vary": "Origin",
     },
   });
 }
 export async function readBody(request) {
   try { return await request.json(); } catch (e) { return {}; }
+}
+
+// 网页来源校验：仅允许从 lxlrwxs.top 发起的请求（用于下载验证等网页端接口）。
+// 软件端接口（activate/check）不调用此函数，因为 Python requests 不带 Origin。
+export function checkWebOrigin(request) {
+  const origin = (request.headers.get("Origin") || "").toLowerCase();
+  const referer = (request.headers.get("Referer") || "").toLowerCase();
+  const allowed = "https://lxlrwxs.top";
+  if (origin && origin.startsWith(allowed)) return true;
+  if (!origin && referer && referer.startsWith(allowed)) return true;
+  return false;
 }
 
 // D1 未绑定时的友好拦截：返回 503 提示，而不是让 Worker 抛异常
@@ -87,8 +105,8 @@ export function guardDB(env) {
   return null;
 }
 
-// 首次运行自动建表（幂等）。不再播种固定授权码——
-// 固定码硬编码在源码中有泄露风险。首次部署后请通过管理后台生成授权码。
+// 首次运行自动建表（幂等）+ 自动迁移明文码为哈希。
+// 不再播种固定授权码——固定码硬编码在源码中有泄露风险。
 export async function ensure(db) {
   if (!db) throw new Error("D1 binding 'DB' 未配置");
   await db.batch([
@@ -102,6 +120,18 @@ export async function ensure(db) {
       window_start INTEGER DEFAULT 0, banned_until INTEGER DEFAULT 0,
       PRIMARY KEY (ip, action))`),
   ]);
+  // 迁移：旧版明文存储的授权码（长度 != 64）自动转为 SHA-256 哈希
+  const migrated = await db.prepare("SELECT v FROM meta WHERE k='codes_hashed'").first();
+  if (!migrated) {
+    const { results } = await db.prepare("SELECT code FROM codes").all();
+    for (const row of results || []) {
+      if (row.code && row.code.length !== 64) {
+        const h = await hashCode(row.code);
+        await db.prepare("UPDATE codes SET code=? WHERE code=?").bind(h, row.code).run();
+      }
+    }
+    await db.prepare("INSERT OR REPLACE INTO meta(k,v) VALUES('codes_hashed','1')").run();
+  }
 }
 
 // 管理密码：哈希存 meta.admin_pass_hash；返回是否通过

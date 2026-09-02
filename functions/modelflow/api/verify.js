@@ -1,13 +1,20 @@
 // POST /modelflow/api/verify  {code}
 // 下载门禁的服务端校验：存在且未吊销即可通过，通过后返回 COS 预签名下载 URL（5 分钟有效）。
 // 防爆破：同一 IP 每分钟最多 10 次，超过封禁 5 分钟。
-import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl } from "../../_mf.js";
+// 来源限制：仅允许从 lxlrwxs.top 网页发起（防脚本直接调用 / 第三方网站嵌入下载）。
+// 授权码哈希存储：数据库只存 SHA-256，查询前先转哈希。
+import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl, hashCode, checkWebOrigin } from "../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
 export async function onRequestPost({ request, env }) {
   const g = guardDB(env); if (g) return g;
   await ensure(env.DB);
+
+  // 来源限制：必须从自有网页进入下载
+  if (!checkWebOrigin(request)) {
+    return json({ ok: false, msg: "请从官方下载页进入下载" }, 403);
+  }
 
   // 防爆破：速率限制
   const ip = getClientIP(request);
@@ -18,7 +25,8 @@ export async function onRequestPost({ request, env }) {
 
   const d = await readBody(request);
   const code = (d.code || "").trim().toUpperCase();
-  const r = await env.DB.prepare("SELECT is_admin,bound_mid,note,revoked FROM codes WHERE code=?").bind(code).first();
+  const codeHash = await hashCode(code);
+  const r = await env.DB.prepare("SELECT is_admin,bound_mid,note,revoked FROM codes WHERE code=?").bind(codeHash).first();
   if (!r || r.revoked) return json({ ok: false, msg: "授权码无效或已吊销" }, 403);
 
   // 验证通过，生成 COS 预签名下载 URL（桶已设为私有，直链 403）

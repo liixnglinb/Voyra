@@ -276,16 +276,20 @@ tr:hover td{background:#faf9ff}
       var mid=c.bound_mid?'<span class="mid">'+esc(c.bound_mid.slice(0,12))+'…</span>':'<span class="muted">未绑定</span>';
       var stat=c.revoked?'<span class="badge rev">已吊销</span>':(c.bound_mid?'<span class="badge ok">已激活</span>':'<span class="badge free">未使用</span>');
       var acts='<div class="acts">';
-      if(c.bound_mid) acts+='<button class="btn ghost sm" data-act="unbind" data-code="'+c.code+'">解绑</button>';
-      acts+='<button class="btn danger sm" data-act="revoke" data-code="'+c.code+'" data-to="'+(c.revoked?0:1)+'">'+(c.revoked?'恢复':'吊销')+'</button>';
+      if(c.bound_mid) acts+='<button class="btn ghost sm" data-act="unbind" data-code-short="'+c.code_short+'">解绑</button>';
+      acts+='<button class="btn danger sm" data-act="revoke" data-code-short="'+c.code_short+'" data-to="'+(c.revoked?0:1)+'">'+(c.revoked?'恢复':'吊销')+'</button>';
       acts+='</div>';
-      return '<tr><td><span class="code-pill">'+c.code+'</span></td><td>'+esc(c.note||'—')+'</td><td>'+type+'</td><td>'+mid+'</td><td class="muted">'+esc(c.bound_at||'—')+'</td><td>'+stat+'</td><td>'+acts+'</td></tr>';
+      return '<tr><td><span class="code-pill">'+c.code_short+'</span></td><td>'+esc(c.note||'—')+'</td><td>'+type+'</td><td>'+mid+'</td><td class="muted">'+esc(c.bound_at||'—')+'</td><td>'+stat+'</td><td>'+acts+'</td></tr>';
     }).join("");
     tb.querySelectorAll("button[data-act]").forEach(function(b){
       b.addEventListener("click",async function(){
-        var act=b.dataset.act,code=b.dataset.code;
-        if(act==="unbind"){ if(!confirm("解绑 "+code+" ？解绑后该码可在新机器激活。")) return; var d=await call("/unbind",{code:code}); if(d.ok){toast("已解绑");refresh();} }
-        if(act==="revoke"){ var to=parseInt(b.dataset.to,10); if(!confirm((to?"吊销":"恢复")+" "+code+" ？")) return; var d2=await call("/revoke",{code:code,revoked:!!to}); if(d2.ok){toast(to?"已吊销":"已恢复");refresh();} }
+        var act=b.dataset.act;
+        var code=prompt("请输入要操作的授权码（5位明文）：","");
+        if(!code) return;
+        code=code.trim().toUpperCase();
+        if(code.length!==5){ alert("授权码必须是5位"); return; }
+        if(act==="unbind"){ if(!confirm("解绑 "+code+" ？解绑后该码可在新机器激活。")) return; var d=await call("/unbind",{code:code}); if(d.ok){toast("已解绑");refresh();} else alert(d.msg||"操作失败"); }
+        if(act==="revoke"){ var to=parseInt(b.dataset.to,10); if(!confirm((to?"吊销":"恢复")+" "+code+" ？")) return; var d2=await call("/revoke",{code:code,revoked:!!to}); if(d2.ok){toast(to?"已吊销":"已恢复");refresh();} else alert(d2.msg||"操作失败"); }
       });
     });
   }
