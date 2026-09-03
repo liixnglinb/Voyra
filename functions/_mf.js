@@ -47,6 +47,51 @@ export async function tokenFor(code, mid) {
   return (await hmacHex(SECRET, `${code}|${mid}`)).slice(0, 32);
 }
 
+// ========== 授权码对称加密（AES-GCM） ==========
+// 数据库 code 字段存 SHA-256 哈希（用于验证），code_enc 字段存 AES-GCM 密文（用于管理员查看明文）。
+// 加密密钥从 COS_SECRET_KEY 派生（SHA-256 取 32 字节），无需额外配置环境变量。
+// 5 位码哈希可暴力破解（32^5≈3355万），加密比哈希更安全：数据库泄露无密钥无法解密。
+function b64encode(bytes) {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function b64decode(str) {
+  const bin = atob(str);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+async function getCodeKey(env) {
+  const secret = env.CODE_ENC_KEY || env.COS_SECRET_KEY || "modelflow-fallback-key";
+  const raw = await crypto.subtle.digest("SHA-256", enc.encode(secret));
+  return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+// 加密明文授权码 → base64(iv[12] + ciphertext+tag)
+export async function encryptCode(plain, env) {
+  const key = await getCodeKey(env);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(plain));
+  const out = new Uint8Array(12 + ct.byteLength);
+  out.set(iv, 0);
+  out.set(new Uint8Array(ct), 12);
+  return b64encode(out);
+}
+// 解密密文 → 明文；失败返回 null
+export async function decryptCode(encStr, env) {
+  if (!encStr) return null;
+  try {
+    const key = await getCodeKey(env);
+    const raw = b64decode(encStr);
+    const iv = raw.slice(0, 12);
+    const ct = raw.slice(12);
+    const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+    return new TextDecoder().decode(pt);
+  } catch {
+    return null;
+  }
+}
+
 export function now() {
   // 东八区时间字符串，与旧服务 time.strftime("%Y-%m-%d %H:%M:%S") 风格一致
   return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 19).replace("T", " ");
@@ -131,6 +176,14 @@ export async function ensure(db) {
       }
     }
     await db.prepare("INSERT OR REPLACE INTO meta(k,v) VALUES('codes_hashed','1')").run();
+  }
+  // 迁移：新增 code_enc 字段（AES-GCM 密文，用于管理员查看明文），幂等
+  const encCol = await db.prepare("SELECT v FROM meta WHERE k='code_enc_added'").first();
+  if (!encCol) {
+    try {
+      await db.prepare("ALTER TABLE codes ADD COLUMN code_enc TEXT DEFAULT ''").run();
+    } catch { /* 已存在则忽略 */ }
+    await db.prepare("INSERT OR REPLACE INTO meta(k,v) VALUES('code_enc_added','1')").run();
   }
 }
 
