@@ -2,7 +2,7 @@
 // 软件在线更新时调用：验证已激活用户的 code+token，返回 COS 预签名下载 URL。
 // 只有已激活（bound_mid 非空）且 token 匹配的用户才能下载更新包。
 // 防爆破：同一 IP 每分钟最多 5 次，超过封禁 10 分钟。
-import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl, tokenFor } from "../../_mf.js";
+import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl, tokenFor, hashCode } from "../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
@@ -24,7 +24,9 @@ export async function onRequestPost({ request, env }) {
 
   if (!code || !token) return json({ ok: false, msg: "参数缺失" }, 400);
 
-  const r = await env.DB.prepare("SELECT * FROM codes WHERE code=?").bind(code).first();
+  // 注意：数据库 code 字段存 SHA-256 哈希，查询前必须转哈希
+  const codeHash = await hashCode(code);
+  const r = await env.DB.prepare("SELECT * FROM codes WHERE code=?").bind(codeHash).first();
   if (!r || r.revoked) return json({ ok: false, msg: "授权码无效或已吊销" }, 403);
 
   if (r.is_admin) {

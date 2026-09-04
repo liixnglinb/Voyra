@@ -4,7 +4,7 @@
 //   COS 桶改私有后直链 403。此接口验证 code 后 302 重定向到限时预签名 URL，
 //   requests 库自动跟随重定向即可正常下载。
 // 防爆破：同一 IP 每分钟最多 10 次，超过封禁 5 分钟（与 verify 一致）。
-import { guardDB, ensure, getClientIP, checkRateLimit, signCosUrl } from "../../_mf.js";
+import { guardDB, ensure, getClientIP, checkRateLimit, signCosUrl, hashCode } from "../../_mf.js";
 
 export async function onRequestGet({ request, env }) {
   const g = guardDB(env);
@@ -32,7 +32,9 @@ export async function onRequestGet({ request, env }) {
   }
 
   // 验证授权码存在且未吊销（不校验绑定，下载阶段可能尚未激活）
-  const r = await env.DB.prepare("SELECT revoked FROM codes WHERE code=?").bind(code).first();
+  // 注意：数据库 code 字段存 SHA-256 哈希，查询前必须转哈希
+  const codeHash = await hashCode(code);
+  const r = await env.DB.prepare("SELECT revoked FROM codes WHERE code=?").bind(codeHash).first();
   if (!r || r.revoked) {
     return new Response("授权码无效或已吊销", {
       status: 403,
