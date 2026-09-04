@@ -4,7 +4,7 @@
 //   COS 桶改私有后直链 403。此接口验证 code 后 302 重定向到限时预签名 URL，
 //   requests 库自动跟随重定向即可正常下载。
 // 防爆破：同一 IP 每分钟最多 10 次，超过封禁 5 分钟（与 verify 一致）。
-import { guardDB, ensure, getClientIP, checkRateLimit, signCosUrl, hashCode } from "../../_mf.js";
+import { guardDB, ensure, getClientIP, checkRateLimit, signCosUrl, hashCode, latestVersion } from "../../_mf.js";
 
 export async function onRequestGet({ request, env }) {
   const g = guardDB(env);
@@ -42,8 +42,14 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  // 从 COS latest.json 读取最新版本号（latest.json 保持公有读）
-  const version = await latestVersion(env);
+  // 从 COS latest.json 读取最新版本号（latest.json 保持公有读）；失败明确报错，不回退旧版本
+  const version = await latestVersion();
+  if (!version) {
+    return new Response("暂时无法获取最新版本，请稍后重试", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  }
   const key = `ModelFlow-${version}-setup.exe`;
 
   // 生成 5 分钟有效的预签名下载 URL
@@ -57,15 +63,4 @@ export async function onRequestGet({ request, env }) {
 
   // 302 重定向到预签名 URL（requests / 浏览器自动跟随）
   return Response.redirect(downloadUrl, 302);
-}
-
-async function latestVersion(env) {
-  try {
-    const resp = await fetch("https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/latest.json");
-    if (resp.ok) {
-      const m = await resp.json();
-      if (m && m.version) return m.version;
-    }
-  } catch (e) {}
-  return "0.7.6"; // 回退默认版本
 }

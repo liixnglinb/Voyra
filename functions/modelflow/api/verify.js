@@ -3,7 +3,7 @@
 // 防爆破：同一 IP 每分钟最多 10 次，超过封禁 5 分钟。
 // 来源限制：仅允许从 lxlrwxs.top 网页发起（防脚本直接调用 / 第三方网站嵌入下载）。
 // 授权码哈希存储：数据库只存 SHA-256，查询前先转哈希。
-import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl, hashCode, checkWebOrigin } from "../../_mf.js";
+import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl, hashCode, checkWebOrigin, latestVersion } from "../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
@@ -31,27 +31,19 @@ export async function onRequestPost({ request, env }) {
 
   // 验证通过，生成 COS 预签名下载 URL（桶已设为私有，直链 403）
   const version = d.version || "latest";
-  const key = version === "latest"
-    ? `ModelFlow-${await latestVersion(env)}-setup.exe`
-    : `ModelFlow-${version}-setup.exe`;
-  const downloadUrl = await signCosUrl(env, key, 300);
+  let key = null;
+  if (version === "latest") {
+    const lv = await latestVersion();
+    if (lv) key = `ModelFlow-${lv}-setup.exe`;
+  } else {
+    key = `ModelFlow-${version}-setup.exe`;
+  }
+  const downloadUrl = key ? await signCosUrl(env, key, 300) : null;
 
   return json({
     ok: true,
-    download_url: downloadUrl, // 未配置 COS 密钥时为 null，前端回退
+    download_url: downloadUrl, // 版本读取失败/未配置 COS 密钥时为 null，前端回退
   });
-}
-
-async function latestVersion(env) {
-  // 从 COS latest.json 读取最新版本号（latest.json 保持公有读）
-  try {
-    const resp = await fetch("https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/latest.json");
-    if (resp.ok) {
-      const m = await resp.json();
-      if (m && m.version) return m.version;
-    }
-  } catch (e) {}
-  return "0.7.5"; // 回退
 }
 
 export async function onRequestGet() {

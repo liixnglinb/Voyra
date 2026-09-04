@@ -279,3 +279,16 @@ export async function signCosUrl(env, key, expiresSeconds = 300) {
   const q = `q-sign-algorithm=sha1&q-ak=${encodeURIComponent(secretId)}&q-sign-time=${encodeURIComponent(signTime)}&q-key-time=${encodeURIComponent(signTime)}&q-header-list=${headerList}&q-url-param-list=${urlParamList}`;
   return `https://${host}${uriPath}?${q}&q-signature=${signature}`;
 }
+
+// 从 COS latest.json 读取最新版本号（latest.json 保持公有读）。
+// 失败返回 null（调用方应明确报错，不要回退到可能已删除的旧版本号）。
+export async function latestVersion() {
+  try {
+    const resp = await fetch("https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/latest.json");
+    if (resp.ok) {
+      const m = await resp.json();
+      if (m && m.version) return String(m.version);
+    }
+  } catch (e) {}
+  return null;
+}

@@ -2,7 +2,7 @@
 // 软件在线更新时调用：验证已激活用户的 code+token，返回 COS 预签名下载 URL。
 // 只有已激活（bound_mid 非空）且 token 匹配的用户才能下载更新包。
 // 防爆破：同一 IP 每分钟最多 5 次，超过封禁 10 分钟。
-import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl, tokenFor, hashCode } from "../../_mf.js";
+import { guardDB, ensure, json, preflight, readBody, getClientIP, checkRateLimit, signCosUrl, tokenFor, hashCode, latestVersion } from "../../_mf.js";
 
 export const onRequestOptions = () => preflight();
 
@@ -41,21 +41,20 @@ export async function onRequestPost({ request, env }) {
   }
 
   // 验证通过，生成预签名下载 URL
-  const key = version
-    ? `ModelFlow-${version}-setup.exe`
-    : `ModelFlow-${await latestVersion()}-setup.exe`;
+  let key = null;
+  if (version) {
+    key = `ModelFlow-${version}-setup.exe`;
+  } else {
+    const lv = await latestVersion();
+    if (lv) key = `ModelFlow-${lv}-setup.exe`;
+  }
+  if (!key) {
+    return json({ ok: false, msg: "暂时无法获取最新版本，请稍后重试" }, 503);
+  }
   const downloadUrl = await signCosUrl(env, key, 600); // 更新包给 10 分钟有效期
+  if (!downloadUrl) {
+    return json({ ok: false, msg: "服务未配置 COS 密钥，无法生成下载链接" }, 500);
+  }
 
   return json({ ok: true, download_url: downloadUrl });
-}
-
-async function latestVersion() {
-  try {
-    const resp = await fetch("https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/latest.json");
-    if (resp.ok) {
-      const m = await resp.json();
-      if (m && m.version) return m.version;
-    }
-  } catch (e) {}
-  return "0.7.5";
 }
