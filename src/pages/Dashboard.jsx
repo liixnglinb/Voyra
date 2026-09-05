@@ -20,6 +20,12 @@ const FEATURED = [
   { to: '/baby-care', no: '08', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
 ];
 
+
+const APPS = [
+  { to: '/modelflow/', external: false, no: '01', name: 'ModelFlow 智模流水线', desc: '数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
+  { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通签到、位置签到、二维码签到三种类型，内置智能防风控。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
+];
+
 const MATHMODEL_SKILL = {
   href: 'https://github.com/liixnglinb/mathmodel-skill',
   name: '数学建模 Skill',
@@ -69,7 +75,7 @@ const CONTACTS = [
   { no: '03', label: '网站', value: 'lxlrwxs.top', href: 'https://lxlrwxs.top', Icon: Globe },
 ];
 
-const TABS = [['products', '产品'], ['skills', 'Skills'], ['articles', '文章'], ['me', '关于我'], ['contact', '交流']];
+const TABS = [['products', '产品'], ['skills', 'Skills'], ['apps', '应用'], ['me', '关于我'], ['contact', '交流']];
 function getTabFromHash() {
   const query = window.location.hash.split('?')[1] || '';
   const tab = new URLSearchParams(query).get('tab');
@@ -236,6 +242,26 @@ function FeatureArt({ type }) {
     </div>;
   }
 
+
+  if (type === 'modelflow') {
+    const steps = ['题意', '假设', '建模', '求解', '检验', '论文'];
+    return <div className="vr-art vr-tool-art vr-modelflow-art">
+      <div className="vr-preview-top"><Sparkles size={15} /><span>ModelFlow 流水线</span><b>9 步</b></div>
+      <div className="vr-model-flow">{steps.map((step, index) => <React.Fragment key={step}><button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><i>{String(index + 1).padStart(2, '0')}</i>{step}</button>{index < steps.length - 1 && <span />}</React.Fragment>)}</div>
+      <div className="vr-model-flow-status"><span>当前阶段：{['解析题目', '建立假设', '构建模型', '求解计算', '结果检验', '撰写论文'][active]}</span><b>{active + 1}/6</b></div>
+    </div>;
+  }
+
+  if (type === 'checkin') {
+    const courses = ['自动控制原理', '电力电子技术', '单片机原理'];
+    const statuses = ['监听中', '已签到', '监听中'];
+    return <div className="vr-art vr-tool-art vr-checkin-art">
+      <div className="vr-preview-top"><CalendarRange size={15} /><span>签到监控</span><b>18 门课</b></div>
+      <div className="vr-checkin-stats"><span><b>6</b> 今日成功</span><span><b>1</b> 待处理</span><span><b>156</b> 累计</span></div>
+      <div className="vr-checkin-list">{courses.map((course, index) => <button key={course} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><span>{course}</span><em className={statuses[index] === '已签到' ? 'done' : 'monitoring'}>{statuses[index]}</em></button>)}</div>
+    </div>;
+  }
+
   return <div className="vr-art vr-tool-art vr-care-art">
     <div className="vr-preview-top"><Sparkles size={15} /><span>今日护理</span><b>{checked ? '已记录' : '待记录'}</b></div>
     <div className="vr-care-stats"><span><b>02</b> 喂养</span><span><b>03</b> 睡眠</span><span><b>01</b> 护理</span></div>
@@ -275,26 +301,21 @@ function SkillsPanel() {
   </section>;
 }
 
-function ArticlesPanel({ go }) {
-  const openArticle = (article, event) => {
-    const navigateToArticle = () => flushSync(() => go(`/articles/${article.slug}`));
-    const supportsTransition = 'startViewTransition' in document
-      && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-
-    if (!supportsTransition) {
-      navigateToArticle();
-      return;
-    }
-
-    const cover = event.currentTarget.querySelector('.vr-article-cover');
-    cover?.style.setProperty('view-transition-name', 'article-cover');
-    const transition = document.startViewTransition(navigateToArticle);
-    transition.finished.finally(() => cover?.style.removeProperty('view-transition-name'));
-  };
-
-  return <div className="vr-article-grid">{ARTICLES.map((article, index) => <div className="vr-roll-wrap vr-panel-stagger" data-roll key={article.slug}><button className="vr-article-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.24)}s` }} onPointerMove={updateSpotlight} onClick={(event) => openArticle(article, event)}>
-    <span className="vr-spotlight" aria-hidden="true" /><ArticleCover article={article} index={index} /><span className="vr-article-info"><span className="vr-article-date">{article.date}</span><strong className="vr-article-title">{article.title}</strong><span className="vr-article-desc">{article.desc}</span><span className="vr-article-open">阅读 <ArrowUpRight size={16} /></span></span>
-  </button></div>)}</div>;
+function AppsPanel({ openProduct }) {
+  return <div className="vr-product-list">{APPS.map((app, index) => {
+    const Icon = app.Icon;
+    const openApp = (event) => {
+      if (event.target.closest('button')) return;
+      openProduct(app.to, app.external);
+    };
+    return (
+      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={app.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openApp} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openApp(event); } }} role="link" tabIndex={0}>
+        <span className="vr-spotlight" aria-hidden="true" />
+        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{app.name}</h2></div><p>{app.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(app.to, app.external)}>{app.cta}<ArrowUpRight size={17} /></button></div>
+        <FeatureArt type={app.art} />
+      </article></div>
+    );
+  })}</div>;
 }
 
 function AboutPanel() {
@@ -392,7 +413,7 @@ export default function Dashboard() {
   const panels = useMemo(() => ({
     products: <ProductPanel openProduct={openProduct} />,
     skills: <SkillsPanel />,
-    articles: <ArticlesPanel go={go} />,
+    apps: <AppsPanel openProduct={openProduct} />,
     me: <AboutPanel />,
     contact: <ContactPanel />,
   }), [go, openProduct]);
@@ -616,6 +637,10 @@ export default function Dashboard() {
       .vr-home .vr-uikit-foot { margin-top: auto; padding-top: 9px; border-top: 1px solid #ececec; color: #999; font-size: 9.5px; }
       @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; } }
     `}</style>
+    <style>{`
+.vr-modelflow-art{padding:18px}.vr-model-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.vr-model-flow button{display:grid;gap:4px;place-items:center;padding:10px 6px;border:1px solid #e5e5e5;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer}.vr-model-flow button.is-active{background:#ffe08a;border-color:#d4a930}.vr-model-flow button i{font-size:10px;color:#999;font-style:normal;font-family:ui-monospace,monospace}.vr-model-flow button b{font-size:12px;font-weight:600}.vr-model-flow>span{display:none}.vr-model-flow-status{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:11px;color:#888}.vr-model-flow-status b{color:#a48830;font-family:ui-monospace,monospace}
+.vr-checkin-art{padding:18px}.vr-checkin-stats{display:flex;gap:12px;margin-top:14px}.vr-checkin-stats span{flex:1;padding:10px 8px;border:1px solid #eee;border-radius:8px;background:#fff;text-align:center;font-size:10px;color:#999}.vr-checkin-stats span b{display:block;font-size:20px;font-weight:700;color:#1b1b1b;font-family:ui-monospace,monospace;margin-bottom:2px}.vr-checkin-list{display:grid;gap:6px;margin-top:14px}.vr-checkin-list button{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-checkin-list button.is-active{border-color:#FF6B35;background:#FFF3EE}.vr-checkin-list button span{font-size:12px;font-weight:600;color:#333}.vr-checkin-list button em{font-size:10px;font-style:normal;padding:3px 8px;border-radius:99px;font-weight:600}.vr-checkin-list button em.monitoring{background:#e8f5e9;color:#28a745}.vr-checkin-list button em.done{background:#fff3e0;color:#f57c00}
+`}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a><a className="vr-github" href="/modelflow/" target="_blank" rel="noreferrer" style={{border:"1px solid rgba(27,27,27,.18)",borderRadius:99,padding:"6px 12px"}}>⬇ 下载软件</a></header>
