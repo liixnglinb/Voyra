@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Github,
-  Globe, LayoutGrid, Lightbulb, ListTree, Shapes,
+  Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Shapes,
   NotebookPen, Route, Sparkles, Star,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
@@ -24,6 +24,7 @@ const FEATURED = [
 const APPS = [
   { to: '/modelflow/', external: false, no: '01', name: 'ModelFlow 智模流水线', desc: '数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
   { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通签到、位置签到、二维码签到三种类型，内置智能防风控。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
+  { to: '/local-toolbox/', external: false, no: '03', name: '本地工具箱', desc: 'Windows 本地磁盘清理与系统工具平台：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
 ];
 
 const MATHMODEL_SKILL = {
@@ -259,6 +260,16 @@ function FeatureArt({ type }) {
       <div className="vr-preview-top"><CalendarRange size={15} /><span>签到监控</span><b>18 门课</b></div>
       <div className="vr-checkin-stats"><span><b>6</b> 今日成功</span><span><b>1</b> 待处理</span><span><b>156</b> 累计</span></div>
       <div className="vr-checkin-list">{courses.map((course, index) => <button key={course} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><span>{course}</span><em className={statuses[index] === '已签到' ? 'done' : 'monitoring'}>{statuses[index]}</em></button>)}</div>
+    </div>;
+  }
+
+  if (type === 'toolbox') {
+    const cats = [['系统文件', '12.4G'], ['软件缓存', '8.1G'], ['下载文件', '3.2G'], ['大文件', '1.9G']];
+    return <div className="vr-art vr-tool-art vr-toolbox-art">
+      <div className="vr-preview-top"><HardDrive size={15} /><span>磁盘扫描</span><b>{active ? '已清理 3.6G' : '24 万+ 文件'}</b></div>
+      <div className="vr-toolbox-drive"><span>C: 系统盘</span><i className={active ? 'is-done' : ''} style={{ '--fill': '62%' }}><b /></i><em>{active ? '已清理 3.6 GB' : '已用 62% · 可清理 18.4 GB'}</em></div>
+      <div className="vr-toolbox-cats">{cats.map((c, index) => <button key={c[0]} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><span>{c[0]}</span><em>{c[1]}</em></button>)}</div>
+      <div className="vr-toolbox-foot"><b>9 大功能</b><span>扫描 · 缓存清理 · 目录百科 · 重复文件</span></div>
     </div>;
   }
 
@@ -640,6 +651,7 @@ export default function Dashboard() {
     <style>{`
 .vr-modelflow-art{padding:18px}.vr-model-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.vr-model-flow button{display:grid;gap:4px;place-items:center;padding:10px 6px;border:1px solid #e5e5e5;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer}.vr-model-flow button.is-active{background:#ffe08a;border-color:#d4a930}.vr-model-flow button i{font-size:10px;color:#999;font-style:normal;font-family:ui-monospace,monospace}.vr-model-flow button b{font-size:12px;font-weight:600}.vr-model-flow>span{display:none}.vr-model-flow-status{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:11px;color:#888}.vr-model-flow-status b{color:#a48830;font-family:ui-monospace,monospace}
 .vr-checkin-art{padding:18px}.vr-checkin-stats{display:flex;gap:12px;margin-top:14px}.vr-checkin-stats span{flex:1;padding:10px 8px;border:1px solid #eee;border-radius:8px;background:#fff;text-align:center;font-size:10px;color:#999}.vr-checkin-stats span b{display:block;font-size:20px;font-weight:700;color:#1b1b1b;font-family:ui-monospace,monospace;margin-bottom:2px}.vr-checkin-list{display:grid;gap:6px;margin-top:14px}.vr-checkin-list button{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-checkin-list button.is-active{border-color:#FF6B35;background:#FFF3EE}.vr-checkin-list button span{font-size:12px;font-weight:600;color:#333}.vr-checkin-list button em{font-size:10px;font-style:normal;padding:3px 8px;border-radius:99px;font-weight:600}.vr-checkin-list button em.monitoring{background:#e8f5e9;color:#28a745}.vr-checkin-list button em.done{background:#fff3e0;color:#f57c00}
+.vr-toolbox-art{padding:18px}.vr-toolbox-drive{margin-top:14px}.vr-toolbox-drive span{font-size:11px;font-weight:600;color:#333}.vr-toolbox-drive i{display:block;height:6px;border-radius:99px;background:#eee;margin-top:6px;position:relative;overflow:hidden}.vr-toolbox-drive i b{position:absolute;left:0;top:0;bottom:0;width:var(--fill);background:linear-gradient(90deg,#a48830,#d4a930);border-radius:99px}.vr-toolbox-drive i.is-done b{width:100%;background:linear-gradient(90deg,#34c759,#28a745)}.vr-toolbox-drive em{display:block;font-size:10px;font-style:normal;color:#999;margin-top:6px}.vr-toolbox-cats{display:grid;gap:6px;margin-top:14px}.vr-toolbox-cats button{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-toolbox-cats button.is-active{border-color:#a48830;background:#FFFAEB}.vr-toolbox-cats button span{font-size:12px;font-weight:600;color:#333}.vr-toolbox-cats button em{font-size:10px;font-style:normal;color:#888;font-family:ui-monospace,monospace}.vr-toolbox-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#999}.vr-toolbox-foot b{color:#a48830;font-family:ui-monospace,monospace}
 `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
