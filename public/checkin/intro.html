@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>软件介绍 · 学习通自动签到助手</title>
+<meta name="description" content="学习通自动签到助手详细功能介绍：三种签到类型、智能防风控、多账号管理、数据可视化、签到二次核对等全部功能详解。">
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/liixnglinb/superstar-checkin/main/assets/app-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1a1a1a;
+  --muted:rgba(0,0,0,.5);
+  --muted-2:rgba(0,0,0,.72);
+  --line:rgba(0,0,0,.08);
+  --bg:#fff;
+  --brand:#FF6B35;
+  --brand-deep:#E55A2B;
+  --brand-light:#FFF3EE;
+  --mint-1:#e8f8f0;
+  --mint-2:#c8f0dc;
+  --mint-3:#a5e6c8;
+  --mint-4:#7dd8ad;
+  --charcoal:#2C333B;
+  --zh:"PingFang SC","Noto Sans SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --en:"Montserrat",var(--zh);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+img{display:block;max-width:100%}
+::selection{background:rgba(255,107,53,.2)}
+.en,.num-en{font-family:var(--en)}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* 导航 */
+.nav{position:sticky;top:0;z-index:100;height:64px;background:rgba(255,255,255,.85);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid rgba(0,0,0,.06)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-icon{width:38px;height:38px;border-radius:10px;background:var(--charcoal);display:grid;place-items:center;box-shadow:0 4px 12px rgba(44,51,59,.2)}
+.brand-icon svg{width:22px;height:22px}
+.brand b{font-family:var(--en);font-size:18px;font-weight:700;color:var(--ink)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:14px;font-weight:600;color:var(--muted-2);transition:color .2s}
+.nav-links a:hover{color:var(--brand)}
+.nav-dl{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 20px;border-radius:9999px;background:linear-gradient(135deg,var(--brand),var(--brand-deep));color:#fff;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(255,107,53,.3);transition:transform .3s,box-shadow .3s}
+.nav-dl:hover{transform:scale(1.05);box-shadow:0 8px 20px rgba(255,107,53,.4)}
+
+/* Hero */
+.intro-hero{position:relative;padding:80px 0 60px;background:linear-gradient(180deg,var(--mint-1) 0%,#f0faf5 50%,#fff 100%);overflow:hidden}
+.intro-hero::before{content:"";position:absolute;inset:0;opacity:.3;background-image:radial-gradient(circle,rgba(0,0,0,.05) 1px,transparent 1px);background-size:24px 24px}
+.intro-hero-inner{position:relative;z-index:2;max-width:900px;margin:0 auto;text-align:center;padding:0 32px}
+.intro-breadcrumb{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:20px}
+.intro-breadcrumb a{color:var(--muted);transition:color .2s}
+.intro-breadcrumb a:hover{color:var(--brand)}
+.intro-breadcrumb span{color:#ccc}
+.intro-hero h1{font-size:52px;font-weight:900;line-height:1.15;letter-spacing:-.02em;margin-bottom:18px}
+.intro-hero h1 .brand-text{background:linear-gradient(135deg,var(--brand),var(--brand-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
+.intro-hero p{font-size:17px;color:var(--muted-2);line-height:1.8;max-width:640px;margin:0 auto 32px}
+.intro-meta{display:flex;justify-content:center;gap:32px;flex-wrap:wrap}
+.intro-meta-item{text-align:center}
+.intro-meta-item b{display:block;font-size:32px;font-weight:800;color:var(--brand);font-family:var(--en)}
+.intro-meta-item span{font-size:12px;color:var(--muted);margin-top:4px;display:block}
+
+/* Section 通用 */
+.section{padding:80px 0}
+.section.alt{background:#f8fffb}
+.section-head{text-align:center;max-width:680px;margin:0 auto 56px}
+.section-kicker{font-size:13px;font-weight:700;color:var(--brand);letter-spacing:.1em;text-transform:uppercase;font-family:var(--en);margin-bottom:12px}
+.section-title{font-size:38px;font-weight:800;line-height:1.2;letter-spacing:-.01em}
+.section-desc{margin-top:14px;font-size:15px;color:var(--muted);line-height:1.8}
+
+/* 功能大卡片（左右交替） */
+.feature-row{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;max-width:1100px;margin:0 auto 80px;padding:0 32px}
+.feature-row:last-child{margin-bottom:0}
+.feature-row.reverse .feature-copy{order:2}
+.feature-row.reverse .feature-visual{order:1}
+.feature-copy h3{font-size:28px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.feature-copy h3 .num{font-family:var(--en);font-size:14px;font-weight:700;color:var(--brand);background:var(--brand-light);padding:4px 10px;border-radius:6px}
+.feature-copy p{font-size:15px;color:var(--muted-2);line-height:1.85;margin-bottom:18px}
+.feature-points{display:grid;gap:10px}
+.feature-point{display:flex;align-items:flex-start;gap:10px;font-size:14px;font-weight:600;color:var(--charcoal)}
+.feature-point i{width:20px;height:20px;border-radius:50%;background:var(--mint-3);display:grid;place-items:center;flex-shrink:0;margin-top:1px;font-style:normal}
+.feature-point i svg{width:11px;height:11px;color:#fff}
+
+/* 功能可视化卡片 */
+.feature-visual{position:relative}
+.visual-card{position:relative;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:20px;overflow:hidden;box-shadow:0 20px 50px -15px rgba(0,0,0,.12)}
+.visual-card-titlebar{height:36px;display:flex;align-items:center;gap:6px;padding:0 14px;background:var(--charcoal)}
+.visual-dot{width:10px;height:10px;border-radius:50%}
+.visual-dot.r{background:#ff5f57}.visual-dot.y{background:#febc2e}.visual-dot.g{background:#28c840}
+.visual-card-title{margin-left:8px;color:rgba(255,255,255,.6);font-size:11px;font-weight:600}
+.visual-card-body{padding:18px}
+
+/* 统计行 */
+.v-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.v-stat{background:#f8f9fa;border-radius:8px;padding:10px 6px;text-align:center}
+.v-stat-label{font-size:9px;color:#999;margin-bottom:2px}
+.v-stat-value{font-size:18px;font-weight:800;font-family:var(--en)}
+.v-stat-value.success{color:#28a745}.v-stat-value.warn{color:var(--brand)}
+
+/* 课程列表 */
+.v-section{font-size:11px;font-weight:700;color:#333;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.v-section::before{content:"";width:3px;height:11px;background:var(--brand);border-radius:2px}
+.v-list{display:grid;gap:6px}
+.v-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #eee;border-radius:6px}
+.v-item-info{display:flex;align-items:center;gap:8px}
+.v-item-icon{width:24px;height:24px;border-radius:6px;background:var(--brand-light);display:grid;place-items:center;color:var(--brand)}
+.v-item-icon svg{width:12px;height:12px}
+.v-item-name{font-size:11px;font-weight:600;color:#333}
+.v-item-status{font-size:9px;padding:2px 7px;border-radius:99px;font-weight:700}
+.v-item-status.monitoring{background:#e8f5e9;color:#28a745}
+.v-item-status.done{background:#fff3e0;color:#f57c00}
+
+/* 趋势图模拟 */
+.v-chart{display:flex;align-items:flex-end;gap:4px;height:80px;padding:10px 0;border-bottom:1px solid #eee;margin-bottom:8px}
+.v-bar{flex:1;background:linear-gradient(180deg,var(--brand),var(--brand-deep));border-radius:3px 3px 0 0;transition:height .3s;position:relative}
+.v-bar.success{background:linear-gradient(180deg,#7dd8ad,#5cc99a)}
+.v-bar-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:8px;color:#999}
+
+/* 日历模拟 */
+.v-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.v-cal-day{aspect-ratio:1;display:grid;place-items:center;font-size:9px;border-radius:4px;color:#999}
+.v-cal-day.success{background:#e8f5e9;color:#28a745;font-weight:700}
+.v-cal-day.fail{background:#ffebee;color:#e53935;font-weight:700}
+.v-cal-day.today{border:2px solid var(--brand);color:var(--brand);font-weight:700}
+
+/* 设置页模拟 */
+.v-settings{display:grid;gap:8px}
+.v-setting{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#f8f9fa;border-radius:6px}
+.v-setting-label{font-size:11px;font-weight:600;color:#333}
+.v-toggle{width:32px;height:18px;border-radius:99px;background:var(--brand);position:relative;transition:background .2s}
+.v-toggle::after{content:"";position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s}
+.v-toggle.off{background:#ddd}
+.v-toggle.off::after{transform:translateX(-14px)}
+
+/* 功能网格 */
+.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto;padding:0 32px}
+.feature-card{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:18px;padding:28px 24px;transition:all .35s cubic-bezier(.22,1,.36,1)}
+.feature-card:hover{transform:translateY(-5px);box-shadow:0 20px 40px -12px rgba(0,0,0,.12);border-color:rgba(255,107,53,.2)}
+.feature-card-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--mint-2),var(--mint-3));display:grid;place-items:center;color:var(--charcoal);margin-bottom:18px;box-shadow:0 6px 16px rgba(125,216,173,.3)}
+.feature-card-icon svg{width:24px;height:24px}
+.feature-card h4{font-size:17px;font-weight:700;margin-bottom:8px}
+.feature-card p{font-size:13px;color:#666;line-height:1.75}
+
+/* 下载 CTA */
+.download-cta{position:relative;padding:100px 0;background:var(--charcoal);overflow:hidden;text-align:center}
+.download-cta::before{content:"";position:absolute;inset:0;opacity:.1;background-image:radial-gradient(circle,rgba(255,255,255,.3) 1px,transparent 1px);background-size:32px 32px}
+.download-cta::after{content:"";position:absolute;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(circle,rgba(255,107,53,.25),transparent 70%);filter:blur(80px)}
+.download-cta-inner{position:relative;z-index:2;max-width:640px;margin:0 auto;padding:0 32px}
+.download-cta h2{font-size:40px;font-weight:800;color:#fff;margin-bottom:14px}
+.download-cta p{font-size:16px;color:rgba(255,255,255,.6);margin-bottom:36px;line-height:1.8}
+.pill{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 36px;border-radius:1000px;color:#fff;font-size:17px;font-weight:600;background:linear-gradient(135deg,var(--brand),var(--brand-deep));box-shadow:0 12px 32px rgba(255,107,53,.4);transition:transform .35s,box-shadow .35s}
+.pill:hover{transform:scale(1.06);box-shadow:0 20px 48px rgba(255,107,53,.55)}
+.pill svg{width:20px;height:20px}
+.pill .psep{width:1px;height:22px;background:rgba(255,255,255,.2)}
+.pill .ptag{font-size:13px;font-weight:500;opacity:.6;font-family:var(--en)}
+
+/* 免责声明 */
+.disclaimer{padding:60px 0;background:#f8f9fa}
+.disclaimer-box{max-width:800px;margin:0 auto;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:16px;padding:32px}
+.disclaimer-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.disclaimer-title svg{width:20px;height:20px;color:var(--brand)}
+.disclaimer-text{font-size:14px;color:#666;line-height:2}
+.disclaimer-text p{margin-bottom:10px}
+.disclaimer-text strong{color:#333}
+
+/* 页脚 */
+.footer{background:#1a1f26;color:rgba(255,255,255,.5);padding:36px 32px;text-align:center;font-size:13px}
+.footer-links{display:flex;justify-content:center;gap:24px;margin-bottom:14px;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.6);transition:color .2s}
+.footer-links a:hover{color:var(--brand)}
+
+/* 响应式 */
+@media(max-width:900px){
+  .nav-links{display:none}
+  .intro-hero h1{font-size:36px}
+  .feature-row{grid-template-columns:1fr;gap:32px}
+  .feature-row.reverse .feature-copy{order:initial}
+  .feature-row.reverse .feature-visual{order:initial}
+  .feature-grid{grid-template-columns:1fr;max-width:480px}
+  .section-title{font-size:28px}
+  .download-cta h2{font-size:30px}
+  .v-stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- 导航 -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
+      </div>
+      <b>签到助手</b>
+    </div>
+    <div class="nav-links">
+      <a href="#checkin">签到类型</a>
+      <a href="#smart">智能防风控</a>
+      <a href="#features">全部功能</a>
+      <a href="index.html">返回首页</a>
+    </div>
+    <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="nav-dl">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      立即下载
+    </a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="intro-hero">
+  <div class="intro-hero-inner">
+    <div class="intro-breadcrumb">
+      <a href="index.html">首页</a><span>/</span><span>软件介绍</span>
+    </div>
+    <h1>深入了解<span class="brand-text">签到助手</span><br>的全部能力</h1>
+    <p>从自动签到到智能防风控，从多账号管理到数据可视化，学习通自动签到助手为你提供完整的课程签到管理体验。</p>
+    <div class="intro-meta">
+      <div class="intro-meta-item"><b>3+</b><span>签到类型</span></div>
+      <div class="intro-meta-item"><b>15+</b><span>实用功能</span></div>
+      <div class="intro-meta-item"><b>100%</b><span>免费开源</span></div>
+      <div class="intro-meta-item"><b>v3.1.0</b><span>当前版本</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 三种签到类型 -->
+<section class="section" id="checkin">
+  <div class="section-head">
+    <div class="section-kicker">CHECKIN TYPES</div>
+    <h2 class="section-title">三种签到类型，全覆盖</h2>
+    <p class="section-desc">学习通最常用的三种签到方式，软件全部支持自动化处理</p>
+  </div>
+
+  <!-- 普通签到 -->
+  <div class="feature-row">
+    <div class="feature-copy">
+      <h3><span class="num">01</span>普通签到</h3>
+      <p>检测到签到活动后自动提交，无需任何手动操作。老师发布签到，软件在后台静默完成，你甚至不需要打开学习通 APP。</p>
+      <div class="feature-points">
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>全自动完成，零操作</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>IM 实时通道 + 轮询兜底</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>签到结果实时推送通知</div>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="visual-card">
+        <div class="visual-card-titlebar">
+          <span class="visual-dot r"></span><span class="visual-dot y"></span><span class="visual-dot g"></span>
+          <span class="visual-card-title">签到助手 · 普通签到</span>
+        </div>
+        <div class="visual-card-body">
+          <div class="v-section">检测到签到活动</div>
+          <div class="v-list">
+            <div class="v-item">
+              <div class="v-item-info">
+                <div class="v-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/></svg></div>
+                <div class="v-item-name">自动控制原理 · 普通签到</div>
+              </div>
+              <span class="v-item-status done">已签到</span>
+            </div>
+            <div class="v-item">
+              <div class="v-item-info">
+                <div class="v-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/></svg></div>
+                <div class="v-item-name">电力电子技术 · 普通签到</div>
+              </div>
+              <span class="v-item-status done">已签到</span>
+            </div>
+          </div>
+          <div class="v-section" style="margin-top:14px">签到结果推送</div>
+          <div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;font-size:11px;color:#28a745;font-weight:600;display:flex;align-items:center;gap:8px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><polyline points="20 6 9 17 4 12"/></svg>
+            签到成功！自动控制原理 · 普通签到
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 位置签到 -->
+  <div class="feature-row reverse">
+    <div class="feature-copy">
+      <h3><span class="num">02</span>位置签到</h3>
+      <p>自动读取老师发布的坐标，以老师位置为中心 10 米半径内生成签到点，模拟真实位置提交。你在宿舍也能完成教室的位置签到。</p>
+      <div class="feature-points">
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>自动读取老师发布坐标</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>10 米精度范围内生成签到点</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>常用位置一键收藏切换</div>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="visual-card">
+        <div class="visual-card-titlebar">
+          <span class="visual-dot r"></span><span class="visual-dot y"></span><span class="visual-dot g"></span>
+          <span class="visual-card-title">签到助手 · 位置签到</span>
+        </div>
+        <div class="visual-card-body">
+          <div class="v-section">老师发布位置</div>
+          <div style="background:#f0faf5;border-radius:8px;padding:10px 12px;margin-bottom:12px">
+            <div style="font-size:10px;color:#999;margin-bottom:4px">签到位置</div>
+            <div style="font-size:12px;font-weight:700;color:#333">湖南人文科技学院 · 致远楼 312</div>
+            <div style="font-size:10px;color:#999;margin-top:4px;font-family:var(--en)">27.7128°N, 111.9970°E</div>
+          </div>
+          <div class="v-section">自动生成签到点（10米范围内）</div>
+          <div style="position:relative;height:100px;background:linear-gradient(135deg,#e8f8f0,#f0faf5);border-radius:8px;overflow:hidden;margin-bottom:10px">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;border:2px dashed #7dd8ad;opacity:.5"></div>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px rgba(255,107,53,.3)"></div>
+            <div style="position:absolute;top:30%;left:60%;width:8px;height:8px;border-radius:50%;background:#7dd8ad"></div>
+            <div style="position:absolute;bottom:25%;left:35%;width:6px;height:6px;border-radius:50%;background:#7dd8ad"></div>
+          </div>
+          <div style="background:#e8f5e9;border-radius:8px;padding:8px 12px;font-size:11px;color:#28a745;font-weight:600;text-align:center">位置签到成功</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 二维码签到 -->
+  <div class="feature-row">
+    <div class="feature-copy">
+      <h3><span class="num">03</span>二维码签到</h3>
+      <p>把任意签到二维码图片直接拖入软件窗口，自动识别 enc 参数并完成签到。二维码会随时间更新，更新后拖入新码即可，一张图就能搞定。</p>
+      <div class="feature-points">
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>拖拽图片即签，无需手动输入</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>自动识别 enc 加密参数</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>二维码更新后拖入新码即可</div>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="visual-card">
+        <div class="visual-card-titlebar">
+          <span class="visual-dot r"></span><span class="visual-dot y"></span><span class="visual-dot g"></span>
+          <span class="visual-card-title">签到助手 · 二维码签到</span>
+        </div>
+        <div class="visual-card-body">
+          <div class="v-section">拖拽二维码到此处</div>
+          <div style="border:2px dashed #ddd;border-radius:12px;padding:24px;text-align:center;margin-bottom:12px;transition:all .3s" id="dropZone">
+            <div style="width:48px;height:48px;margin:0 auto 10px;background:var(--brand-light);border-radius:12px;display:grid;place-items:center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:#333">将二维码图片拖入此处</div>
+            <div style="font-size:10px;color:#999;margin-top:4px">或点击右上角「二维码签到」上传</div>
+          </div>
+          <div class="v-section">识别结果</div>
+          <div style="background:#f8f9fa;border-radius:8px;padding:10px 12px;margin-bottom:10px">
+            <div style="font-size:10px;color:#999;margin-bottom:4px">enc 参数</div>
+            <div style="font-size:11px;font-family:var(--en);color:#333;word-break:break-all">A7B3C9D2E8F1A4B6C0D5E9F2A1B8C7D4E6F0A3B5C9D1E8F2A4B7C0D6E9F1A5B8C3D0E7F2A6B9C4D1E8F0A3B7C5D2E9F1A4B8C6D0E3F7A2B5C9D1E6F0A8B4C7D3E5F1A9B2C6D0E4F8A1B5C3D7E2F6A0B9C4D8E1F5A3B7C2D6E0F4A8B1C5D9E3F7A2B6C0D4E8F1A5B9C3D7E2F6A0B4C8D1E5F9A3B7C2D6E0F4A8B1C5D9E3F7A2B6C0D4E8F1A5B9C3D7E2F6A0B4C8D1E5F9A3B7C2D6E0F4A8B1C5D9E3F7A2B6C0D4E8F1A5B9C3D7E2F6A0B4C8D1E5F9A3B7C2D6E0F4A8B1C5D9E3F7A2B6C0D4E8F1A5B9C3D7E2F6A0B4C8D1E5F9</div>
+          </div>
+          <div style="background:#e8f5e9;border-radius:8px;padding:8px 12px;font-size:11px;color:#28a745;font-weight:600;text-align:center">二维码签到成功</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 智能防风控 -->
+<section class="section alt" id="smart">
+  <div class="section-head">
+    <div class="section-kicker">SMART ANTI-DETECTION</div>
+    <h2 class="section-title">智能防风控设计</h2>
+    <p class="section-desc">多层策略降低被检测风险，让签到行为更接近真实人类</p>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <h4>模拟人类延迟</h4>
+      <p>检测到签到后不立刻提交，随机等待 30~300 秒再签到，避免"老师刚发布你就秒签"被怀疑。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+      <h4>签到前确认</h4>
+      <p>检测到签到后先弹通知倒计时（默认 10 秒），可点击取消，超时自动签。灵活可控。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></div>
+      <h4>智能轮询间隔</h4>
+      <p>白天用短间隔轮询，夜间自动切换为 3 倍长间隔，减少无效请求和被风控概率。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+      <h4>签到二次核对</h4>
+      <p>提交成功后再次查询学习通平台确认已签到，避免"显示成功实际没签上"的尴尬。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c2.39 0 4.68.94 6.36 2.64L21 8"/></svg></div>
+      <h4>课前预检查</h4>
+      <p>每天早上自动检查所有账号 Cookie 有效性和网络连通性，有问题立即推送提醒。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <h4>密码加密存储</h4>
+      <p>账号密码使用 Windows DPAPI 加密存储在本地，不上传任何服务器，隐私安全有保障。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 全部功能 -->
+<section class="section" id="features">
+  <div class="section-head">
+    <div class="section-kicker">ALL FEATURES</div>
+    <h2 class="section-title">更多实用功能</h2>
+    <p class="section-desc">不止是自动签到，更是一套完整的课程签到管理工具</p>
+  </div>
+
+  <!-- 多账号 + 数据可视化 -->
+  <div class="feature-row">
+    <div class="feature-copy">
+      <h3><span class="num">A</span>多账号管理</h3>
+      <p>支持多个学习通账号同时监控，各自独立登录、独立统计签到数据。和室友共用一台电脑也能各自签到。</p>
+      <div class="feature-points">
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>多账号同时监控签到</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>各账号独立统计数据</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>密码 DPAPI 加密存储</div>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="visual-card">
+        <div class="visual-card-titlebar">
+          <span class="visual-dot r"></span><span class="visual-dot y"></span><span class="visual-dot g"></span>
+          <span class="visual-card-title">签到助手 · 多账号统计</span>
+        </div>
+        <div class="visual-card-body">
+          <div class="v-stats">
+            <div class="v-stat"><div class="v-stat-label">账号1</div><div class="v-stat-value success">52</div></div>
+            <div class="v-stat"><div class="v-stat-label">账号2</div><div class="v-stat-value success">48</div></div>
+            <div class="v-stat"><div class="v-stat-label">账号3</div><div class="v-stat-value success">56</div></div>
+            <div class="v-stat"><div class="v-stat-label">总成功</div><div class="v-stat-value">156</div></div>
+          </div>
+          <div class="v-section">签到趋势（近14天）</div>
+          <div class="v-chart">
+            <div class="v-bar success" style="height:60%"><span class="v-bar-label">1</span></div>
+            <div class="v-bar success" style="height:80%"><span class="v-bar-label">3</span></div>
+            <div class="v-bar" style="height:45%"><span class="v-bar-label">5</span></div>
+            <div class="v-bar success" style="height:90%"><span class="v-bar-label">7</span></div>
+            <div class="v-bar success" style="height:70%"><span class="v-bar-label">9</span></div>
+            <div class="v-bar" style="height:55%"><span class="v-bar-label">11</span></div>
+            <div class="v-bar success" style="height:85%"><span class="v-bar-label">13</span></div>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:20px;font-size:10px;color:#999">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(180deg,#7dd8ad,#5cc99a)"></span>成功</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:linear-gradient(180deg,var(--brand),var(--brand-deep))"></span>失败</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 课表页 + 日历 -->
+  <div class="feature-row reverse">
+    <div class="feature-copy">
+      <h3><span class="num">B</span>课表与日历视图</h3>
+      <p>课程卡片网格展示，每门课显示老师、监听状态、签到统计。日历形式展示每天签到情况，绿色成功、红色失败，历史记录清晰可查。</p>
+      <div class="feature-points">
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>课程卡片网格，一键切换监听</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>签到日历视图，一目了然</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>课程备注，记录老师特点</div>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="visual-card">
+        <div class="visual-card-titlebar">
+          <span class="visual-dot r"></span><span class="visual-dot y"></span><span class="visual-dot g"></span>
+          <span class="visual-card-title">签到助手 · 签到日历</span>
+        </div>
+        <div class="visual-card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:700;color:#333">2026年9月</div>
+            <div style="display:flex;gap:6px">
+              <div style="width:24px;height:24px;border-radius:6px;background:#f0f0f0;display:grid;place-items:center;font-size:12px;color:#666">‹</div>
+              <div style="width:24px;height:24px;border-radius:6px;background:#f0f0f0;display:grid;place-items:center;font-size:12px;color:#666">›</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:6px">
+            <div style="text-align:center;font-size:9px;color:#999;padding:4px 0">一</div>
+            <div style="text-align:center;font-size:9px;color:#999;padding:4px 0">二</div>
+            <div style="text-align:center;font-size:9px;color:#999;padding:4px 0">三</div>
+            <div style="text-align:center;font-size:9px;color:#999;padding:4px 0">四</div>
+            <div style="text-align:center;font-size:9px;color:#999;padding:4px 0">五</div>
+            <div style="text-align:center;font-size:9px;color:#999;padding:4px 0">六</div>
+            <div style="text-align:center;font-size:9px;color:#999;padding:4px 0">日</div>
+          </div>
+          <div class="v-calendar">
+            <div class="v-cal-day"></div>
+            <div class="v-cal-day"></div>
+            <div class="v-cal-day success">1</div>
+            <div class="v-cal-day success">2</div>
+            <div class="v-cal-day success">3</div>
+            <div class="v-cal-day">4</div>
+            <div class="v-cal-day">5</div>
+            <div class="v-cal-day success">6</div>
+            <div class="v-cal-day success">7</div>
+            <div class="v-cal-day fail">8</div>
+            <div class="v-cal-day success">9</div>
+            <div class="v-cal-day success">10</div>
+            <div class="v-cal-day">11</div>
+            <div class="v-cal-day">12</div>
+            <div class="v-cal-day success">13</div>
+            <div class="v-cal-day success">14</div>
+            <div class="v-cal-day success">15</div>
+            <div class="v-cal-day today">16</div>
+            <div class="v-cal-day">17</div>
+            <div class="v-cal-day">18</div>
+            <div class="v-cal-day">19</div>
+            <div class="v-cal-day">20</div>
+            <div class="v-cal-day">21</div>
+            <div class="v-cal-day">22</div>
+            <div class="v-cal-day">23</div>
+            <div class="v-cal-day">24</div>
+            <div class="v-cal-day">25</div>
+            <div class="v-cal-day">26</div>
+            <div class="v-cal-day">27</div>
+            <div class="v-cal-day">28</div>
+            <div class="v-cal-day">29</div>
+            <div class="v-cal-day">30</div>
+          </div>
+          <div style="display:flex;gap:14px;margin-top:12px;font-size:10px;color:#999;justify-content:center">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#e8f5e9"></span>成功</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;background:#ffebee"></span>失败</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:3px;border:2px solid var(--brand)"></span>今天</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通知 + 设置 -->
+  <div class="feature-row">
+    <div class="feature-copy">
+      <h3><span class="num">C</span>通知推送与设置</h3>
+      <p>支持钉钉、Bark、PushPlus、邮件、桌面通知五种渠道，签到结果实时推送。丰富的设置项让软件完全按照你的习惯运行。</p>
+      <div class="feature-points">
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>五种通知渠道可选</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>每日/每周签到报告</div>
+        <div class="feature-point"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>配置导入导出，一键迁移</div>
+      </div>
+    </div>
+    <div class="feature-visual">
+      <div class="visual-card">
+        <div class="visual-card-titlebar">
+          <span class="visual-dot r"></span><span class="visual-dot y"></span><span class="visual-dot g"></span>
+          <span class="visual-card-title">签到助手 · 设置</span>
+        </div>
+        <div class="visual-card-body">
+          <div class="v-section">智能防风控</div>
+          <div class="v-settings">
+            <div class="v-setting">
+              <span class="v-setting-label">模拟人类延迟</span>
+              <div class="v-toggle"></div>
+            </div>
+            <div class="v-setting">
+              <span class="v-setting-label">签到前确认（10秒）</span>
+              <div class="v-toggle"></div>
+            </div>
+            <div class="v-setting">
+              <span class="v-setting-label">签到后二次核对</span>
+              <div class="v-toggle"></div>
+            </div>
+            <div class="v-setting">
+              <span class="v-setting-label">智能轮询间隔</span>
+              <div class="v-toggle off"></div>
+            </div>
+            <div class="v-setting">
+              <span class="v-setting-label">课前预检查（7:00）</span>
+              <div class="v-toggle"></div>
+            </div>
+          </div>
+          <div class="v-section" style="margin-top:14px">通知推送</div>
+          <div class="v-settings">
+            <div class="v-setting">
+              <span class="v-setting-label">桌面通知</span>
+              <div class="v-toggle"></div>
+            </div>
+            <div class="v-setting">
+              <span class="v-setting-label">钉钉机器人</span>
+              <div class="v-toggle off"></div>
+            </div>
+            <div class="v-setting">
+              <span class="v-setting-label">每日签到报告（22:00）</span>
+              <div class="v-toggle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 下载 CTA -->
+<section class="download-cta">
+  <div class="download-cta-inner">
+    <h2>立即开始使用签到助手</h2>
+    <p>免费开源 · Windows 10/11 专用 · 安装包约 106MB<br>安装后常驻系统托盘，后台自动监控签到</p>
+    <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      下载安装包 v3.1.0
+      <span class="psep"></span>
+      <span class="ptag">.exe · 106MB</span>
+    </a>
+  </div>
+</section>
+
+<!-- 免责声明 -->
+<section class="disclaimer">
+  <div class="disclaimer-box">
+    <h3 class="disclaimer-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      免责声明
+    </h3>
+    <div class="disclaimer-text">
+      <p>本软件仅用于<strong>个人学习自动化技术研究</strong>。使用本软件进行签到可能违反所在学校的考勤管理规定，请自行评估风险并承担后果。</p>
+      <p>请勿将软件用于<strong>作弊、代签</strong>等违规用途。软件作者不对使用本软件导致的任何后果负责。</p>
+      <p>学习通（超星）是注册商标，本软件与学习通官方无任何关联。请遵守学校规章制度和相关法律法规。</p>
+    </div>
+  </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="footer">
+  <div class="footer-links">
+    <a href="index.html">返回首页</a>
+    <a href="https://github.com/liixnglinb/superstar-checkin" target="_blank" rel="noreferrer">GitHub 仓库</a>
+    <a href="https://github.com/liixnglinb/superstar-checkin/releases" target="_blank" rel="noreferrer">Releases</a>
+    <a href="https://lxlrwxs.top">返回 Voyra 主页</a>
+  </div>
+  <p>© 2026 学习通自动签到助手 · 基于 Voyra 个人站分发 · 仅供学习研究使用</p>
+</footer>
+
+</body>
+</html>

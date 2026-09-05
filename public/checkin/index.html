@@ -3,25 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>学习通自动签到助手 · 桌面端自动签到软件</title>
-<meta name="description" content="学习通自动签到助手：桌面端常驻后台，自动监听课程签到活动，支持普通签到、位置签到、二维码签到三种类型，内置智能防风控、多账号管理、签到二次核对。仅支持 Windows 10/11。">
+<title>学习通自动签到助手 · 一句话，自动签到</title>
+<meta name="description" content="学习通自动签到助手：桌面端常驻后台，自动监听课程签到活动，支持普通签到、位置签到、二维码签到。一句话，自动签到。">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/liixnglinb/superstar-checkin/main/assets/app-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 <style>
 :root{
-  --ink:#1d1d1f;
-  --black:#000;
+  --ink:#1a1a1a;
   --muted:rgba(0,0,0,.5);
   --muted-2:rgba(0,0,0,.72);
-  --line:#ececec;
-  --line-2:#e4e4e4;
+  --line:rgba(0,0,0,.08);
   --bg:#fff;
   --brand:#FF6B35;
   --brand-deep:#E55A2B;
   --brand-light:#FFF3EE;
-  --brand-glow:rgba(255,107,53,.18);
+  --mint-1:#e8f8f0;
+  --mint-2:#c8f0dc;
+  --mint-3:#a5e6c8;
+  --mint-4:#7dd8ad;
   --charcoal:#2C333B;
   --zh:"PingFang SC","Noto Sans SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --en:"Montserrat",var(--zh);
@@ -32,218 +34,246 @@ body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.5;-web
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 img{display:block;max-width:100%}
-::selection{background:var(--brand-glow)}
+::selection{background:rgba(255,107,53,.2)}
 .en,.num-en{font-family:var(--en)}
-.wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 24px}
+.wrap{width:100%;max-width:1200px;margin:0 auto;padding:0 32px}
 
-/* 顶部导航 */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;
-  background:rgba(255,255,255,.72);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
-.nav-inner{max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
-.brand{display:flex;align-items:center;gap:16px}
-.brand-icon{width:40px;height:40px;border-radius:10px;flex-shrink:0;background:var(--charcoal);display:grid;place-items:center}
-.brand-icon svg{width:24px;height:24px}
-.brand b{font-family:var(--en);font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1}
-.brand span{font-size:12px;color:var(--muted);margin-left:2px}
-.nav-links{display:flex;align-items:center;gap:30px;margin-left:8px}
+/* ============ 顶部公告横幅 ============ */
+.announce{position:relative;z-index:101;height:40px;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(90deg,var(--mint-4),var(--brand));color:#fff;font-size:13px;font-weight:500}
+.announce b{font-weight:700}
+.announce .dot{width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+
+/* ============ 顶部导航（毛玻璃） ============ */
+.nav{position:sticky;top:0;left:0;right:0;z-index:100;height:64px;
+  background:rgba(255,255,255,.72);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  border-bottom:1px solid rgba(0,0,0,.06)}
+.nav-inner{max-width:1280px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;background:var(--charcoal);display:grid;place-items:center;box-shadow:0 4px 12px rgba(44,51,59,.2)}
+.brand-icon svg{width:22px;height:22px}
+.brand b{font-family:var(--en);font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--ink);line-height:1}
+.nav-links{display:flex;align-items:center;gap:32px;margin-left:8px}
 .nav-links a{font-size:14px;font-weight:600;color:var(--muted-2);transition:color .2s;white-space:nowrap}
 .nav-links a:hover{color:#000}
-.nav-right{display:flex;align-items:center;gap:18px}
-.nav-dl{display:inline-flex;align-items:center;gap:6px;height:32px;padding:6px 14px;border-radius:9999px;
-  background:linear-gradient(135deg,var(--brand),var(--brand-deep));color:#fff;font-size:14px;font-weight:500;box-shadow:0 4px 10px rgba(255,107,53,.2);transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s}
-.nav-dl:hover{transform:scale(1.06);box-shadow:0 8px 18px rgba(255,107,53,.3)}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nav-ghost{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:9999px;
+  border:1px solid rgba(0,0,0,.12);color:var(--ink);font-size:14px;font-weight:600;transition:all .25s}
+.nav-ghost:hover{border-color:var(--brand);color:var(--brand)}
+.nav-dl{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 18px;border-radius:9999px;
+  background:linear-gradient(135deg,var(--brand),var(--brand-deep));color:#fff;font-size:14px;font-weight:600;
+  box-shadow:0 4px 14px rgba(255,107,53,.3);transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s}
+.nav-dl:hover{transform:scale(1.06);box-shadow:0 8px 20px rgba(255,107,53,.4)}
 .nav-dl:active{transform:scale(.98)}
 
-/* 黑色胶囊下载按钮 */
-.pill{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;
-  height:48px;padding:0 26px;border-radius:1000px;color:#fff;font-size:16px;font-weight:500;white-space:nowrap;
-  background:linear-gradient(135deg,var(--brand),var(--brand-deep));box-shadow:0 10px 24px rgba(255,107,53,.25);
-  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s cubic-bezier(.22,1,.36,1);will-change:transform}
-.pill:hover{transform:scale(1.08);box-shadow:0 18px 36px rgba(255,107,53,.35)}
-.pill:active{transform:scale(1.04)}
-.pill svg{width:19px;height:19px;flex-shrink:0}
-.pill .psep{width:1px;height:20px;background:rgba(255,255,255,.22)}
-.pill .ptag{font-size:13px;font-weight:500;opacity:.62;font-family:var(--en);padding-left:2px}
-
-/* Hero */
-.hero{position:relative;padding:64px 24px 0;overflow:hidden;
-  perspective:2000px;perspective-origin:50% 28%;-webkit-perspective:2000px;
+/* ============ Hero（薄荷绿渐变 + 点阵背景） ============ */
+.hero{position:relative;overflow:hidden;min-height:620px;display:flex;align-items:center;
   background:
-    radial-gradient(60% 50% at 18% 85%,rgba(255,107,53,.12),transparent 70%),
-    radial-gradient(55% 48% at 82% 88%,rgba(255,140,80,.1),transparent 70%),
-    radial-gradient(50% 42% at 50% 100%,rgba(255,200,160,.1),transparent 70%),
-    linear-gradient(180deg,#fff 0%,#fffbf8 62%,#fdf5f0 100%)}
-.hero-glow{position:absolute;left:50%;bottom:-180px;width:1200px;max-width:160%;height:580px;transform:translateX(-50%);
-  pointer-events:none;z-index:0;filter:blur(100px);
-  background:radial-gradient(40% 52% at 30% 50%,rgba(255,107,53,.2),transparent 70%),
-             radial-gradient(40% 52% at 70% 48%,rgba(255,140,80,.16),transparent 70%),
-             radial-gradient(30% 40% at 50% 60%,rgba(255,180,120,.1),transparent 70%)}
-.hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;
-  padding:104px 0 0;display:flex;flex-direction:column;align-items:center}
-.hero-kicker{font-size:20px;line-height:28px;font-weight:400;color:var(--muted);
-  opacity:0;animation:fadeUp .8s .05s cubic-bezier(.22,1,.36,1) forwards}
-.hero h1{margin-top:14px;font-size:60px;line-height:70px;font-weight:600;letter-spacing:-.01em;color:#000;
-  opacity:0;animation:fadeUp .8s .15s cubic-bezier(.22,1,.36,1) forwards}
-.hero h1 .en{font-family:var(--en)}
+    radial-gradient(ellipse 80% 60% at 20% 30%,rgba(165,230,200,.4),transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%,rgba(255,107,53,.08),transparent 60%),
+    linear-gradient(180deg,var(--mint-1) 0%,#f0faf5 40%,#fff 100%)}
+.hero-dots{position:absolute;inset:0;pointer-events:none;opacity:.4;
+  background-image:radial-gradient(circle,rgba(0,0,0,.06) 1px,transparent 1px);background-size:24px 24px}
+.hero-glow{position:absolute;left:50%;top:20%;width:800px;height:500px;transform:translateX(-50%);
+  pointer-events:none;filter:blur(100px);background:radial-gradient(circle,rgba(125,216,173,.3),transparent 70%)}
+.hero-inner{position:relative;z-index:2;max-width:1200px;margin:0 auto;padding:80px 32px 100px;
+  display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.hero-copy{max-width:560px}
+.hero-kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;
+  background:rgba(255,255,255,.8);border:1px solid rgba(0,0,0,.08);font-size:13px;font-weight:600;color:var(--charcoal);
+  margin-bottom:24px;backdrop-filter:blur(10px)}
+.hero-kicker i{width:8px;height:8px;border-radius:50%;background:var(--brand);font-style:normal;animation:pulse 1.5s ease-in-out infinite}
+.hero h1{font-size:72px;font-weight:900;line-height:1.05;letter-spacing:-.02em;color:var(--ink);margin-bottom:20px}
 .hero h1 .brand-text{background:linear-gradient(135deg,var(--brand),var(--brand-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero-pills{margin-top:36px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
-  opacity:0;animation:fadeUp .8s .3s cubic-bezier(.22,1,.36,1) forwards}
-.hero-note{margin-top:18px;font-size:13px;color:var(--muted);
-  opacity:0;animation:fadeUp .8s .42s cubic-bezier(.22,1,.36,1) forwards}
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.hero h1 .outline-text{color:transparent;-webkit-text-stroke:2px var(--ink)}
+.hero-sub{font-size:18px;line-height:1.7;color:var(--muted-2);margin-bottom:36px;max-width:480px}
+.hero-buttons{display:flex;gap:16px;flex-wrap:wrap}
+.pill{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  height:52px;padding:0 28px;border-radius:1000px;color:#fff;font-size:16px;font-weight:600;white-space:nowrap;
+  background:linear-gradient(135deg,#0a0a0a,#1a1a1a);box-shadow:0 10px 28px rgba(0,0,0,.18);
+  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s;will-change:transform}
+.pill:hover{transform:scale(1.06);box-shadow:0 16px 36px rgba(0,0,0,.25)}
+.pill:active{transform:scale(1.04)}
+.pill svg{width:20px;height:20px;flex-shrink:0}
+.pill.secondary{background:#fff;color:var(--ink);border:1px solid rgba(0,0,0,.12);box-shadow:0 4px 14px rgba(0,0,0,.06)}
+.pill.secondary:hover{border-color:var(--brand);color:var(--brand);box-shadow:0 8px 20px rgba(255,107,53,.15)}
+.pill .psep{width:1px;height:22px;background:rgba(255,255,255,.2)}
+.pill.secondary .psep{background:rgba(0,0,0,.15)}
+.pill .ptag{font-size:13px;font-weight:500;opacity:.6;font-family:var(--en)}
 
-/* 产品预览窗口 */
-.hero-preview{position:relative;z-index:2;width:100%;max-width:1180px;margin:80px auto 0;
-  will-change:transform}
-.hero-preview::before{content:"";position:absolute;left:50%;top:8%;bottom:4%;width:118%;
-  transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;
-  background:radial-gradient(38% 50% at 18% 50%,rgba(255,107,53,.18),transparent 70%),
-             radial-gradient(38% 50% at 82% 50%,rgba(255,140,80,.14),transparent 70%)}
-.hero-preview-in{opacity:0;animation:previewIn .95s .5s cubic-bezier(.22,1,.36,1) forwards}
-@keyframes previewIn{from{opacity:0;transform:translateY(52px) scale(.982)}to{opacity:1;transform:none}}
-.pv-window{background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.58);border-radius:12px;overflow:hidden;text-align:left;
-  backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);
-  box-shadow:0 1px 2px rgba(20,24,60,.04),0 24px 48px -18px rgba(40,48,110,.26),0 60px 100px -36px rgba(40,48,110,.20),0 100px 150px -60px rgba(40,48,110,.14)}
-.pv-titlebar{height:44px;display:flex;align-items:center;gap:8px;padding:0 16px;background:rgba(44,51,59,.95);border-bottom:1px solid rgba(255,255,255,.08)}
-.pv-dot{width:12px;height:12px;border-radius:50%}
-.pv-dot.r{background:#ff5f57}.pv-dot.y{background:#febc2e}.pv-dot.g{background:#28c840}
-.pv-title{margin-left:12px;color:rgba(255,255,255,.7);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
-.pv-title-icon{width:18px;height:18px;border-radius:4px;background:var(--charcoal);display:grid;place-items:center}
-.pv-title-icon svg{width:12px;height:12px}
-.pv-body{display:grid;grid-template-columns:200px 1fr;min-height:420px}
-.pv-sidebar{background:#fafafa;border-right:1px solid var(--line);padding:20px 12px}
-.pv-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13px;color:#555;margin-bottom:4px;transition:all .2s}
-.pv-nav-item.active{background:var(--brand-light);color:var(--brand-deep);font-weight:600}
-.pv-nav-item svg{width:16px;height:16px;flex-shrink:0}
-.pv-main{padding:24px}
-.pv-stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.pv-stat{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px}
-.pv-stat-label{font-size:11px;color:#999;margin-bottom:6px}
-.pv-stat-value{font-size:24px;font-weight:700;color:var(--ink);font-family:var(--en)}
-.pv-stat-value.success{color:#28a745}
-.pv-stat-value.warn{color:var(--brand)}
-.pv-section-title{font-size:14px;font-weight:600;color:#333;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.pv-section-title::before{content:"";width:3px;height:14px;background:var(--brand);border-radius:2px}
-.pv-course-list{display:grid;gap:10px}
-.pv-course{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:8px}
-.pv-course-info{display:flex;align-items:center;gap:12px}
-.pv-course-icon{width:32px;height:32px;border-radius:8px;background:var(--brand-light);display:grid;place-items:center;color:var(--brand)}
-.pv-course-icon svg{width:16px;height:16px}
-.pv-course-name{font-size:13px;font-weight:600;color:#333}
-.pv-course-teacher{font-size:11px;color:#999;margin-top:2px}
-.pv-course-status{font-size:11px;padding:4px 10px;border-radius:99px;font-weight:600}
-.pv-course-status.monitoring{background:#e8f5e9;color:#28a745}
-.pv-course-status.done{background:#fff3e0;color:#f57c00}
+/* Lottie 动画容器 */
+.hero-anim{position:relative;width:100%;max-width:480px;height:480px;margin:0 auto}
+.hero-anim::before{content:"";position:absolute;inset:10%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,107,53,.12),transparent 70%);filter:blur(40px)}
+#lottie-container{width:100%;height:100%;position:relative;z-index:1}
 
-/* Section 通用 */
-.section{padding:100px 24px;position:relative}
+/* ============ 大卡片区域（可点击跳转介绍页） ============ */
+.big-card-section{position:relative;padding:80px 0 100px;background:#fff}
+.big-card-wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+.big-card{position:relative;display:grid;grid-template-columns:1fr 1.2fr;gap:0;min-height:480px;
+  border-radius:28px;overflow:hidden;cursor:pointer;
+  background:linear-gradient(135deg,#f8fffb 0%,#f0faf5 100%);
+  border:1px solid rgba(0,0,0,.06);box-shadow:0 20px 60px -20px rgba(0,0,0,.12);
+  transition:transform .4s cubic-bezier(.22,1,.36,1),box-shadow .4s}
+.big-card:hover{transform:translateY(-6px);box-shadow:0 32px 80px -20px rgba(0,0,0,.18)}
+.big-card-left{position:relative;padding:48px 44px;display:flex;flex-direction:column;justify-content:center;
+  background:linear-gradient(135deg,rgba(165,230,200,.2),rgba(255,107,53,.04))}
+.big-card-left::after{content:"";position:absolute;right:0;top:10%;bottom:10%;width:1px;background:rgba(0,0,0,.06)}
+.big-card-tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--brand);
+  letter-spacing:.08em;text-transform:uppercase;font-family:var(--en);margin-bottom:16px}
+.big-card-tag::before{content:"";width:24px;height:2px;background:var(--brand);border-radius:2px}
+.big-card h2{font-size:40px;font-weight:800;line-height:1.2;letter-spacing:-.01em;color:var(--ink);margin-bottom:16px}
+.big-card-desc{font-size:15px;line-height:1.8;color:var(--muted-2);margin-bottom:28px;max-width:400px}
+.big-card-features{display:grid;gap:12px;margin-bottom:32px}
+.big-card-feature{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--charcoal)}
+.big-card-feature i{width:22px;height:22px;border-radius:50%;background:var(--mint-3);display:grid;place-items:center;flex-shrink:0;font-style:normal}
+.big-card-feature i svg{width:12px;height:12px;color:#fff}
+.big-card-cta{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--brand);
+  padding:12px 24px;border-radius:999px;background:#fff;border:1.5px solid var(--brand);
+  transition:all .3s;align-self:flex-start}
+.big-card:hover .big-card-cta{background:var(--brand);color:#fff;transform:translateX(4px)}
+.big-card-cta svg{width:18px;height:18px;transition:transform .3s}
+.big-card:hover .big-card-cta svg{transform:translateX(4px)}
+
+.big-card-right{position:relative;display:flex;align-items:center;justify-content:center;padding:32px;
+  background:
+    radial-gradient(circle at 70% 30%,rgba(255,107,53,.06),transparent 50%),
+    radial-gradient(circle at 30% 70%,rgba(125,216,173,.15),transparent 50%)}
+.big-card-right::before{content:"";position:absolute;inset:0;opacity:.3;
+  background-image:radial-gradient(circle,rgba(0,0,0,.04) 1px,transparent 1px);background-size:20px 20px}
+
+/* 模拟软件窗口 */
+.mock-window{position:relative;z-index:1;width:100%;max-width:460px;background:rgba(255,255,255,.9);
+  border:1px solid rgba(0,0,0,.08);border-radius:16px;overflow:hidden;
+  box-shadow:0 24px 60px -12px rgba(0,0,0,.18);backdrop-filter:blur(20px);
+  animation:floatWindow 4s ease-in-out infinite}
+@keyframes floatWindow{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.mock-titlebar{height:40px;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--charcoal)}
+.mock-dot{width:11px;height:11px;border-radius:50%}
+.mock-dot.r{background:#ff5f57}.mock-dot.y{background:#febc2e}.mock-dot.g{background:#28c840}
+.mock-title{margin-left:10px;color:rgba(255,255,255,.7);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.mock-title-icon{width:16px;height:16px;border-radius:4px;background:rgba(255,107,53,.9);display:grid;place-items:center}
+.mock-body{padding:20px}
+.mock-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.mock-stat{background:#f8f9fa;border-radius:10px;padding:12px 8px;text-align:center}
+.mock-stat-label{font-size:10px;color:#999;margin-bottom:4px}
+.mock-stat-value{font-size:20px;font-weight:800;font-family:var(--en)}
+.mock-stat-value.success{color:#28a745}.mock-stat-value.warn{color:var(--brand)}
+.mock-section{font-size:12px;font-weight:700;color:#333;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.mock-section::before{content:"";width:3px;height:12px;background:var(--brand);border-radius:2px}
+.mock-courses{display:grid;gap:8px}
+.mock-course{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#fff;
+  border:1px solid #eee;border-radius:8px}
+.mock-course-info{display:flex;align-items:center;gap:10px}
+.mock-course-icon{width:28px;height:28px;border-radius:7px;background:var(--brand-light);display:grid;place-items:center;color:var(--brand)}
+.mock-course-icon svg{width:14px;height:14px}
+.mock-course-name{font-size:12px;font-weight:600;color:#333}
+.mock-course-status{font-size:10px;padding:3px 8px;border-radius:99px;font-weight:700}
+.mock-course-status.monitoring{background:#e8f5e9;color:#28a745}
+.mock-course-status.done{background:#fff3e0;color:#f57c00}
+
+/* ============ 三种签到类型 ============ */
+.types-section{position:relative;padding:100px 0;background:linear-gradient(180deg,#fff 0%,#f8fffb 100%)}
 .section-head{text-align:center;max-width:680px;margin:0 auto 60px}
-.section-kicker{font-size:14px;font-weight:600;color:var(--brand);letter-spacing:.08em;text-transform:uppercase;font-family:var(--en);margin-bottom:14px}
-.section-title{font-size:42px;font-weight:700;line-height:1.2;color:#000;letter-spacing:-.01em}
+.section-kicker{font-size:13px;font-weight:700;color:var(--brand);letter-spacing:.1em;text-transform:uppercase;font-family:var(--en);margin-bottom:14px}
+.section-title{font-size:44px;font-weight:800;line-height:1.15;letter-spacing:-.01em;color:var(--ink)}
 .section-desc{margin-top:16px;font-size:16px;color:var(--muted);line-height:1.8}
-
-/* 三种签到 */
-.checkin-types{background:linear-gradient(180deg,#fdf5f0 0%,#fff 100%)}
-.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1120px;margin:0 auto}
-.type-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:36px 30px;position:relative;overflow:hidden;transition:all .35s cubic-bezier(.22,1,.36,1)}
-.type-card:hover{transform:translateY(-6px);box-shadow:0 24px 48px -12px rgba(255,107,53,.18);border-color:rgba(255,107,53,.3)}
-.type-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--brand),var(--brand-deep));transform:scaleX(0);transform-origin:left;transition:transform .4s ease}
+.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1200px;margin:0 auto;padding:0 32px}
+.type-card{position:relative;background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:24px;padding:40px 32px;
+  overflow:hidden;transition:all .4s cubic-bezier(.22,1,.36,1)}
+.type-card:hover{transform:translateY(-8px);box-shadow:0 28px 60px -16px rgba(0,0,0,.14);border-color:rgba(255,107,53,.2)}
+.type-card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--mint-4),var(--brand));transform:scaleX(0);transform-origin:left;transition:transform .4s}
 .type-card:hover::before{transform:scaleX(1)}
-.type-icon{width:56px;height:56px;border-radius:16px;background:var(--brand-light);display:grid;place-items:center;color:var(--brand);margin-bottom:24px}
-.type-icon svg{width:28px;height:28px}
-.type-no{position:absolute;top:28px;right:28px;font-size:48px;font-weight:800;color:transparent;-webkit-text-stroke:1px rgba(0,0,0,.06);font-family:var(--en);line-height:1}
-.type-name{font-size:24px;font-weight:700;color:#000;margin-bottom:10px}
-.type-desc{font-size:14px;color:#666;line-height:1.8;margin-bottom:20px}
-.type-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:6px 12px;border-radius:99px;background:var(--brand-light);color:var(--brand-deep)}
+.type-icon{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,var(--mint-2),var(--mint-3));
+  display:grid;place-items:center;color:var(--charcoal);margin-bottom:24px;box-shadow:0 8px 20px rgba(125,216,173,.3)}
+.type-icon svg{width:30px;height:30px}
+.type-no{position:absolute;top:32px;right:32px;font-size:56px;font-weight:900;color:transparent;
+  -webkit-text-stroke:1.5px rgba(0,0,0,.05);font-family:var(--en);line-height:1}
+.type-name{font-size:26px;font-weight:800;color:var(--ink);margin-bottom:12px}
+.type-desc{font-size:14px;color:#666;line-height:1.85;margin-bottom:24px}
+.type-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:7px 14px;
+  border-radius:99px;background:var(--mint-2);color:var(--charcoal)}
 .type-tag svg{width:12px;height:12px}
 
-/* 功能特性 */
-.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1120px;margin:0 auto}
-.feature-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:28px 24px;transition:all .3s ease}
-.feature-card:hover{border-color:rgba(255,107,53,.25);box-shadow:0 12px 28px -8px rgba(0,0,0,.08);transform:translateY(-3px)}
-.feature-icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--brand-light),#fff);display:grid;place-items:center;color:var(--brand);margin-bottom:18px;border:1px solid rgba(255,107,53,.15)}
-.feature-icon svg{width:22px;height:22px}
-.feature-name{font-size:17px;font-weight:700;color:#000;margin-bottom:8px}
-.feature-desc{font-size:13px;color:#666;line-height:1.75}
-
-/* 智能防风控 */
-.smart-section{background:linear-gradient(135deg,#2C333B 0%,#1a1f26 100%);color:#fff;position:relative;overflow:hidden}
-.smart-section::before{content:"";position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,53,.15),transparent 70%);pointer-events:none}
-.smart-section .section-title{color:#fff}
-.smart-section .section-desc{color:rgba(255,255,255,.6)}
-.smart-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;max-width:1000px;margin:0 auto;position:relative;z-index:1}
-.smart-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:32px;backdrop-filter:blur(10px);transition:all .3s ease}
-.smart-card:hover{background:rgba(255,255,255,.08);border-color:rgba(255,107,53,.3);transform:translateY(-3px)}
-.smart-card-head{display:flex;align-items:center;gap:14px;margin-bottom:16px}
-.smart-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand-deep));display:grid;place-items:center;color:#fff;flex-shrink:0}
-.smart-icon svg{width:24px;height:24px}
-.smart-name{font-size:20px;font-weight:700;color:#fff}
-.smart-desc{font-size:14px;color:rgba(255,255,255,.65);line-height:1.8}
-
-/* 下载区 */
-.download-section{background:linear-gradient(180deg,#fff 0%,#fdf5f0 100%);text-align:center}
-.download-box{max-width:640px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:24px;padding:48px 40px;box-shadow:0 24px 60px -20px rgba(255,107,53,.15)}
-.download-icon{width:72px;height:72px;border-radius:20px;background:var(--charcoal);display:grid;place-items:center;margin:0 auto 24px}
-.download-icon svg{width:40px;height:40px}
-.download-title{font-size:28px;font-weight:700;color:#000;margin-bottom:10px}
-.download-desc{font-size:15px;color:#666;margin-bottom:32px;line-height:1.7}
-.download-meta{display:flex;justify-content:center;gap:32px;margin-top:28px;padding-top:24px;border-top:1px solid var(--line)}
+/* ============ 下载区 ============ */
+.download-section{position:relative;padding:100px 0;background:var(--charcoal);overflow:hidden}
+.download-section::before{content:"";position:absolute;inset:0;opacity:.1;
+  background-image:radial-gradient(circle,rgba(255,255,255,.3) 1px,transparent 1px);background-size:32px 32px}
+.download-section::after{content:"";position:absolute;top:-200px;left:50%;transform:translateX(-50%);
+  width:800px;height:500px;background:radial-gradient(circle,rgba(255,107,53,.2),transparent 70%);filter:blur(80px)}
+.download-box{position:relative;z-index:2;max-width:680px;margin:0 auto;text-align:center;padding:0 32px}
+.download-icon{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,var(--brand),var(--brand-deep));
+  display:grid;place-items:center;margin:0 auto 28px;box-shadow:0 16px 40px rgba(255,107,53,.4)}
+.download-icon svg{width:44px;height:44px;color:#fff}
+.download-title{font-size:40px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:-.01em}
+.download-desc{font-size:16px;color:rgba(255,255,255,.6);margin-bottom:40px;line-height:1.8}
+.download-box .pill{height:58px;padding:0 36px;font-size:17px;background:linear-gradient(135deg,var(--brand),var(--brand-deep));
+  box-shadow:0 12px 32px rgba(255,107,53,.4)}
+.download-box .pill:hover{box-shadow:0 20px 48px rgba(255,107,53,.55)}
+.download-meta{display:flex;justify-content:center;gap:40px;margin-top:36px;padding-top:32px;
+  border-top:1px solid rgba(255,255,255,.1)}
 .download-meta-item{text-align:center}
-.download-meta-item b{display:block;font-size:20px;font-weight:700;color:var(--brand);font-family:var(--en)}
-.download-meta-item span{font-size:12px;color:#999;margin-top:4px;display:block}
+.download-meta-item b{display:block;font-size:28px;font-weight:800;color:var(--brand);font-family:var(--en)}
+.download-meta-item span{font-size:12px;color:rgba(255,255,255,.5);margin-top:6px;display:block}
 
-/* 免责声明 */
-.disclaimer{background:#fafafa;padding:60px 24px}
-.disclaimer-box{max-width:800px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px}
-.disclaimer-title{font-size:18px;font-weight:700;color:#000;margin-bottom:16px;display:flex;align-items:center;gap:10px}
-.disclaimer-title svg{width:20px;height:20px;color:var(--brand)}
-.disclaimer-text{font-size:14px;color:#666;line-height:2}
-.disclaimer-text p{margin-bottom:12px}
-.disclaimer-text strong{color:#333}
+/* ============ 页脚 ============ */
+.footer{background:#1a1f26;color:rgba(255,255,255,.5);padding:40px 32px;text-align:center;font-size:13px}
+.footer-links{display:flex;justify-content:center;gap:28px;margin-bottom:16px;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.6);transition:color .2s}
+.footer-links a:hover{color:var(--brand)}
 
-/* 页脚 */
-.footer{background:#1a1f26;color:rgba(255,255,255,.5);padding:40px 24px;text-align:center;font-size:13px}
-.footer a{color:rgba(255,255,255,.7);transition:color .2s}
-.footer a:hover{color:var(--brand)}
-.footer-links{display:flex;justify-content:center;gap:24px;margin-bottom:16px}
-
-/* 响应式 */
-@media(max-width:900px){
-  .nav-links{display:none}
-  .hero h1{font-size:40px;line-height:50px}
-  .hero-kicker{font-size:16px}
-  .pv-body{grid-template-columns:1fr}
-  .pv-sidebar{display:none}
-  .pv-stat-row{grid-template-columns:repeat(2,1fr)}
-  .type-grid,.features-grid{grid-template-columns:1fr}
-  .smart-grid{grid-template-columns:1fr}
+/* ============ 响应式 ============ */
+@media(max-width:960px){
+  .hero-inner{grid-template-columns:1fr;gap:40px;text-align:center;padding:60px 24px 80px}
+  .hero-copy{margin:0 auto}
+  .hero-sub{margin-left:auto;margin-right:auto}
+  .hero-buttons{justify-content:center}
+  .hero h1{font-size:48px}
+  .hero-anim{max-width:360px;height:360px}
+  .big-card{grid-template-columns:1fr}
+  .big-card-left::after{display:none}
+  .big-card-left{padding:36px 28px}
+  .big-card-right{padding:24px;min-height:360px}
+  .big-card h2{font-size:30px}
+  .type-grid{grid-template-columns:1fr;max-width:480px}
   .section-title{font-size:32px}
-  .section{padding:70px 24px}
-  .download-meta{gap:20px}
+  .nav-links{display:none}
+  .announce{font-size:11px;padding:0 16px;text-align:center}
+  .download-title{font-size:30px}
+  .download-meta{gap:24px}
 }
 </style>
 </head>
 <body>
+
+<!-- 顶部公告 -->
+<div class="announce">
+  <span class="dot"></span>
+  <span><b>v3.1.0</b> 全新版本上线！智能防风控 + 签到二次核对 + 镜像加速下载</span>
+</div>
 
 <!-- 顶部导航 -->
 <nav class="nav">
   <div class="nav-inner">
     <div class="brand">
       <div class="brand-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
       </div>
-      <b>学习通自动签到</b><span>助手</span>
+      <b>签到助手</b>
     </div>
     <div class="nav-links">
       <a href="#features">功能特性</a>
       <a href="#types">签到类型</a>
-      <a href="#smart">智能防风控</a>
       <a href="#download">下载</a>
+      <a href="https://github.com/liixnglinb/superstar-checkin" target="_blank" rel="noreferrer">GitHub</a>
     </div>
     <div class="nav-right">
-      <a href="https://github.com/liixnglinb/superstar-checkin" target="_blank" rel="noreferrer" class="nav-dl">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        GitHub
+      <a href="intro.html" class="nav-ghost">软件介绍</a>
+      <a href="#download" class="nav-dl">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        立即下载
       </a>
     </div>
   </div>
@@ -251,100 +281,98 @@ img{display:block;max-width:100%}
 
 <!-- Hero -->
 <section class="hero">
+  <div class="hero-dots"></div>
   <div class="hero-glow"></div>
   <div class="hero-inner">
-    <div class="hero-kicker">桌面端常驻后台 · 自动监听课程签到</div>
-    <h1>学习通<span class="brand-text">自动签到</span><br>助手</h1>
-    <div class="hero-pills">
-      <a href="#download" class="pill">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        立即下载
-        <span class="psep"></span>
-        <span class="ptag">v3.1.0 · Windows</span>
-      </a>
-      <a href="https://github.com/liixnglinb/superstar-checkin/releases" target="_blank" rel="noreferrer" class="pill" style="background:linear-gradient(135deg,#2C333B,#1a1f26);box-shadow:0 10px 24px rgba(44,51,59,.2)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        查看 Releases
-      </a>
+    <div class="hero-copy">
+      <div class="hero-kicker"><i></i>桌面端常驻后台 · 自动监听签到</div>
+      <h1>一句话，<span class="brand-text">自动签到</span></h1>
+      <p class="hero-sub">学习通自动签到助手，安装后常驻系统托盘，自动监听课程签到活动。普通签到、位置签到、二维码签到，三种类型全覆盖。</p>
+      <div class="hero-buttons">
+        <a href="#download" class="pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          立即下载
+          <span class="psep"></span>
+          <span class="ptag">v3.1.0 · Windows</span>
+        </a>
+        <a href="intro.html" class="pill secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          查看介绍
+        </a>
+      </div>
     </div>
-    <div class="hero-note">仅支持 Windows 10 / 11（x64）· 免费开源 · 账号密码本地加密存储</div>
+    <div class="hero-anim">
+      <div id="lottie-container"></div>
+    </div>
   </div>
+</section>
 
-  <!-- 软件预览窗口 -->
-  <div class="hero-preview">
-    <div class="hero-preview-in">
-      <div class="pv-window">
-        <div class="pv-titlebar">
-          <span class="pv-dot r"></span><span class="pv-dot y"></span><span class="pv-dot g"></span>
-          <div class="pv-title">
-            <div class="pv-title-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/></svg>
-            </div>
-            学习通自动签到助手 · 总览
-          </div>
+<!-- 大卡片（点击跳转介绍页） -->
+<section class="big-card-section">
+  <div class="big-card-wrap">
+    <a href="intro.html" class="big-card" id="bigCard">
+      <div class="big-card-left">
+        <div class="big-card-tag">SOFTWARE INTRO</div>
+        <h2>了解签到助手<br>的全部能力</h2>
+        <p class="big-card-desc">从自动签到到智能防风控，从多账号管理到数据可视化，深入了解学习通自动签到助手的每一项功能。</p>
+        <div class="big-card-features">
+          <div class="big-card-feature"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>三种签到类型全覆盖</div>
+          <div class="big-card-feature"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>智能防风控设计</div>
+          <div class="big-card-feature"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>多账号同时管理</div>
+          <div class="big-card-feature"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></i>签到结果二次核对</div>
         </div>
-        <div class="pv-body">
-          <div class="pv-sidebar">
-            <div class="pv-nav-item active">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              总览
-            </div>
-            <div class="pv-nav-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-              课表
-            </div>
-            <div class="pv-nav-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              历史记录
-            </div>
-            <div class="pv-nav-item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              设置
+        <div class="big-card-cta">
+          查看完整介绍
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+      </div>
+      <div class="big-card-right">
+        <div class="mock-window">
+          <div class="mock-titlebar">
+            <span class="mock-dot r"></span><span class="mock-dot y"></span><span class="mock-dot g"></span>
+            <div class="mock-title">
+              <div class="mock-title-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/></svg>
+              </div>
+              签到助手 · 总览
             </div>
           </div>
-          <div class="pv-main">
-            <div class="pv-stat-row">
-              <div class="pv-stat"><div class="pv-stat-label">监控课程</div><div class="pv-stat-value">18</div></div>
-              <div class="pv-stat"><div class="pv-stat-label">累计签到</div><div class="pv-stat-value">156</div></div>
-              <div class="pv-stat"><div class="pv-stat-label">今日成功</div><div class="pv-stat-value success">6</div></div>
-              <div class="pv-stat"><div class="pv-stat-label">待处理</div><div class="pv-stat-value warn">1</div></div>
+          <div class="mock-body">
+            <div class="mock-stats">
+              <div class="mock-stat"><div class="mock-stat-label">监控课程</div><div class="mock-stat-value">18</div></div>
+              <div class="mock-stat"><div class="mock-stat-label">累计签到</div><div class="mock-stat-value">156</div></div>
+              <div class="mock-stat"><div class="mock-stat-label">今日成功</div><div class="mock-stat-value success">6</div></div>
+              <div class="mock-stat"><div class="mock-stat-label">待处理</div><div class="mock-stat-value warn">1</div></div>
             </div>
-            <div class="pv-section-title">今日课程签到状态</div>
-            <div class="pv-course-list">
-              <div class="pv-course">
-                <div class="pv-course-info">
-                  <div class="pv-course-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                  <div><div class="pv-course-name">自动控制原理</div><div class="pv-course-teacher">张教授 · 第3节</div></div>
+            <div class="mock-section">今日课程签到</div>
+            <div class="mock-courses">
+              <div class="mock-course">
+                <div class="mock-course-info">
+                  <div class="mock-course-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+                  <div class="mock-course-name">自动控制原理</div>
                 </div>
-                <span class="pv-course-status monitoring">监听中</span>
+                <span class="mock-course-status monitoring">监听中</span>
               </div>
-              <div class="pv-course">
-                <div class="pv-course-info">
-                  <div class="pv-course-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                  <div><div class="pv-course-name">电力电子技术</div><div class="pv-course-teacher">李老师 · 第5节</div></div>
+              <div class="mock-course">
+                <div class="mock-course-info">
+                  <div class="mock-course-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+                  <div class="mock-course-name">电力电子技术</div>
                 </div>
-                <span class="pv-course-status done">已签到</span>
-              </div>
-              <div class="pv-course">
-                <div class="pv-course-info">
-                  <div class="pv-course-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                  <div><div class="pv-course-name">单片机原理</div><div class="pv-course-teacher">王教授 · 第7节</div></div>
-                </div>
-                <span class="pv-course-status monitoring">监听中</span>
+                <span class="mock-course-status done">已签到</span>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </a>
   </div>
 </section>
 
 <!-- 三种签到类型 -->
-<section class="section checkin-types" id="types">
+<section class="types-section" id="types">
   <div class="section-head">
     <div class="section-kicker">CHECKIN TYPES</div>
-    <h2 class="section-title">三种签到类型全覆盖</h2>
+    <h2 class="section-title">三种签到类型，全覆盖</h2>
     <p class="section-desc">学习通最常用的三种签到方式，软件全部支持自动化处理</p>
   </div>
   <div class="type-grid">
@@ -355,7 +383,7 @@ img{display:block;max-width:100%}
       </div>
       <h3 class="type-name">普通签到</h3>
       <p class="type-desc">检测到签到活动后自动提交，无需任何手动操作。老师发布签到，软件在后台静默完成。</p>
-      <span class="type-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>全自动 · 零操作</span>
+      <span class="type-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>全自动 · 零操作</span>
     </div>
     <div class="type-card">
       <div class="type-no">02</div>
@@ -378,110 +406,15 @@ img{display:block;max-width:100%}
   </div>
 </section>
 
-<!-- 功能特性 -->
-<section class="section" id="features">
-  <div class="section-head">
-    <div class="section-kicker">FEATURES</div>
-    <h2 class="section-title">丰富的实用功能</h2>
-    <p class="section-desc">不止是自动签到，更是一套完整的课程签到管理工具</p>
-  </div>
-  <div class="features-grid">
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <h3 class="feature-name">多账号管理</h3>
-      <p class="feature-desc">支持多个学习通账号同时监控，各自独立登录、独立统计签到数据。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <h3 class="feature-name">签到趋势图</h3>
-      <p class="feature-desc">近 14 天签到成功/失败趋势可视化，一目了然掌握签到情况。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-      <h3 class="feature-name">签到日历</h3>
-      <p class="feature-desc">日历形式展示每天签到情况，绿色成功、红色失败，历史记录清晰可查。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
-      <h3 class="feature-name">课表页</h3>
-      <p class="feature-desc">课程卡片网格展示，每门课显示老师、监听状态、签到统计，点击切换监听。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
-      <h3 class="feature-name">多渠道通知</h3>
-      <p class="feature-desc">钉钉 / Bark / PushPlus / 邮件 / 桌面通知，签到结果实时推送，不漏任何一条。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <h3 class="feature-name">密码加密存储</h3>
-      <p class="feature-desc">账号密码使用 Windows DPAPI 加密存储在本地，不上传任何服务器，隐私安全。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-      <h3 class="feature-name">检查更新</h3>
-      <p class="feature-desc">内置更新检测，GitHub Releases 一键下载安装，自动使用国内镜像加速下载。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-      <h3 class="feature-name">签到二次核对</h3>
-      <p class="feature-desc">提交成功后再次查询学习通平台确认已签到，避免"显示成功实际没签上"。</p>
-    </div>
-    <div class="feature-card">
-      <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <h3 class="feature-name">每日/每周报告</h3>
-      <p class="feature-desc">每天定时推送签到日报，每周日推送签到周报，漏签课程自动预警提醒。</p>
-    </div>
-  </div>
-</section>
-
-<!-- 智能防风控 -->
-<section class="section smart-section" id="smart">
-  <div class="section-head">
-    <div class="section-kicker" style="color:#FF8C5A">SMART ANTI-DETECTION</div>
-    <h2 class="section-title">智能防风控设计</h2>
-    <p class="section-desc">多层策略降低被检测风险，让签到行为更接近真实人类</p>
-  </div>
-  <div class="smart-grid">
-    <div class="smart-card">
-      <div class="smart-card-head">
-        <div class="smart-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <h3 class="smart-name">模拟人类延迟</h3>
-      </div>
-      <p class="smart-desc">检测到签到后不立刻提交，随机等待 30~300 秒再签到，避免"老师刚发布你就秒签"被怀疑。延迟范围可自定义配置。</p>
-    </div>
-    <div class="smart-card">
-      <div class="smart-card-head">
-        <div class="smart-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-        <h3 class="smart-name">签到前确认可取消</h3>
-      </div>
-      <p class="smart-desc">检测到签到后先弹通知倒计时（默认 10 秒），可点击取消，超时自动签。适合"这门课今天想自己签"的场景，灵活可控。</p>
-    </div>
-    <div class="smart-card">
-      <div class="smart-card-head">
-        <div class="smart-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></div>
-        <h3 class="smart-name">智能轮询间隔</h3>
-      </div>
-      <p class="smart-desc">白天（默认 8:00-22:00）用配置的短间隔轮询，夜间自动切换为 3 倍长间隔，减少无效请求和被风控概率。每次轮询叠加随机抖动。</p>
-    </div>
-    <div class="smart-card">
-      <div class="smart-card-head">
-        <div class="smart-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-        <h3 class="smart-name">课前预检查</h3>
-      </div>
-      <p class="smart-desc">每天指定时间（默认早上 7 点）自动检查所有账号 Cookie 有效性和学习通网络连通性，有问题立即推送提醒，避免人到教室才发现登不上。</p>
-    </div>
-  </div>
-</section>
-
 <!-- 下载区 -->
-<section class="section download-section" id="download">
+<section class="download-section" id="download">
   <div class="download-box">
     <div class="download-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#FF6B35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg>
     </div>
-    <h2 class="download-title">立即下载学习通自动签到助手</h2>
+    <h2 class="download-title">立即下载签到助手</h2>
     <p class="download-desc">免费开源 · Windows 10/11 专用 · 安装包约 106MB<br>安装后常驻系统托盘，后台自动监控签到</p>
-    <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="pill" style="height:56px;font-size:18px;padding:0 36px">
+    <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="pill">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       下载安装包 v3.1.0
       <span class="psep"></span>
@@ -496,30 +429,147 @@ img{display:block;max-width:100%}
   </div>
 </section>
 
-<!-- 免责声明 -->
-<section class="disclaimer">
-  <div class="disclaimer-box">
-    <h3 class="disclaimer-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-      免责声明
-    </h3>
-    <div class="disclaimer-text">
-      <p>本软件仅用于<strong>个人学习自动化技术研究</strong>。使用本软件进行签到可能违反所在学校的考勤管理规定，请自行评估风险并承担后果。</p>
-      <p>请勿将软件用于<strong>作弊、代签</strong>等违规用途。软件作者不对使用本软件导致的任何后果负责。</p>
-      <p>学习通（超星）是注册商标，本软件与学习通官方无任何关联。请遵守学校规章制度和相关法律法规。</p>
-    </div>
-  </div>
-</section>
-
 <!-- 页脚 -->
 <footer class="footer">
   <div class="footer-links">
+    <a href="intro.html">软件介绍</a>
     <a href="https://github.com/liixnglinb/superstar-checkin" target="_blank" rel="noreferrer">GitHub 仓库</a>
     <a href="https://github.com/liixnglinb/superstar-checkin/releases" target="_blank" rel="noreferrer">Releases</a>
     <a href="https://lxlrwxs.top">返回 Voyra 主页</a>
   </div>
   <p>© 2026 学习通自动签到助手 · 基于 Voyra 个人站分发 · 仅供学习研究使用</p>
 </footer>
+
+<script>
+// Lottie 动画 - 用 SVG 动画模拟（签到成功动画）
+(function(){
+  const container = document.getElementById('lottie-container');
+  if(!container) return;
+  
+  // 创建 SVG 动画（闹钟 + 对勾 + 波纹）
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 400 400');
+  svg.setAttribute('width', '100%');
+  svg.setAttribute('height', '100%');
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#a5e6c8;stop-opacity:0.3"/>
+        <stop offset="100%" style="stop-color:#FF6B35;stop-opacity:0.1"/>
+      </linearGradient>
+      <linearGradient id="clockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#2C333B"/>
+        <stop offset="100%" style="stop-color:#1a1f26"/>
+      </linearGradient>
+      <linearGradient id="checkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#FF6B35"/>
+        <stop offset="100%" style="stop-color:#E55A2B"/>
+      </linearGradient>
+    </defs>
+    
+    <!-- 背景圆 -->
+    <circle cx="200" cy="200" r="160" fill="url(#bgGrad)">
+      <animate attributeName="r" values="155;165;155" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 波纹 -->
+    <circle cx="200" cy="200" r="120" fill="none" stroke="#7dd8ad" stroke-width="2" opacity="0">
+      <animate attributeName="r" values="100;180" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;0" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="200" cy="200" r="120" fill="none" stroke="#FF6B35" stroke-width="2" opacity="0">
+      <animate attributeName="r" values="100;180" dur="2.5s" begin="1.25s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0" dur="2.5s" begin="1.25s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- 闹钟主体 -->
+    <g transform="translate(200, 200)">
+      <!-- 闹钟外框 -->
+      <circle cx="0" cy="10" r="90" fill="url(#clockGrad)" stroke="#3a4250" stroke-width="3">
+        <animateTransform attributeName="transform" type="rotate" values="-3;3;-3" dur="2s" repeatCount="indefinite"/>
+      </circle>
+      
+      <!-- 闹钟表盘 -->
+      <circle cx="0" cy="10" r="72" fill="#fff"/>
+      
+      <!-- 刻度 -->
+      <g stroke="#ddd" stroke-width="2">
+        <line x1="0" y1="-58" x2="0" y2="-50"/>
+        <line x1="0" y1="50" x2="0" y2="58"/>
+        <line x1="-58" y1="10" x2="-50" y2="10"/>
+        <line x1="50" y1="10" x2="58" y2="10"/>
+      </g>
+      
+      <!-- 时针 -->
+      <line x1="0" y1="10" x2="0" y2="-30" stroke="#2C333B" stroke-width="5" stroke-linecap="round">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 10" to="360 0 10" dur="12s" repeatCount="indefinite"/>
+      </line>
+      
+      <!-- 分针 -->
+      <line x1="0" y1="10" x2="0" y2="-45" stroke="#FF6B35" stroke-width="3.5" stroke-linecap="round">
+        <animateTransform attributeName="transform" type="rotate" from="0 0 10" to="360 0 10" dur="2s" repeatCount="indefinite"/>
+      </line>
+      
+      <!-- 中心点 -->
+      <circle cx="0" cy="10" r="6" fill="#FF6B35"/>
+      
+      <!-- 闹钟顶部按钮 -->
+      <rect x="-12" y="-88" width="24" height="10" rx="3" fill="#3a4250"/>
+      
+      <!-- 闹钟铃铛 -->
+      <g>
+        <ellipse cx="-55" cy="-65" rx="18" ry="14" fill="#3a4250" transform="rotate(-20 -55 -65)"/>
+        <ellipse cx="55" cy="-65" rx="18" ry="14" fill="#3a4250" transform="rotate(20 55 -65)"/>
+      </g>
+      
+      <!-- 闹钟腿 -->
+      <line x1="-40" y1="90" x2="-55" y2="110" stroke="#3a4250" stroke-width="6" stroke-linecap="round"/>
+      <line x1="40" y1="90" x2="55" y2="110" stroke="#3a4250" stroke-width="6" stroke-linecap="round"/>
+    </g>
+    
+    <!-- 签到成功对勾（弹出动画） -->
+    <g transform="translate(290, 110)">
+      <circle cx="0" cy="0" r="32" fill="url(#checkGrad)" opacity="0">
+        <animate attributeName="opacity" values="0;0;1;1;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.6;0.65;0.9;1"/>
+        <animate attributeName="r" values="20;32;32;32;20" dur="4s" repeatCount="indefinite" keyTimes="0;0.65;0.9;0.9;1"/>
+      </circle>
+      <path d="M-12,0 L-4,8 L14,-8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0">
+        <animate attributeName="opacity" values="0;0;1;1;0" dur="4s" repeatCount="indefinite" keyTimes="0;0.65;0.7;0.9;1"/>
+        <animate attributeName="stroke-dasharray" from="0 40" to="40 0" dur="0.3s" begin="2.6s"/>
+      </path>
+    </g>
+    
+    <!-- 浮动小点 -->
+    <g fill="#7dd8ad" opacity="0.6">
+      <circle cx="80" cy="120" r="4">
+        <animate attributeName="cy" values="120;100;120" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="330" cy="280" r="5">
+        <animate attributeName="cy" values="280;260;280" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="100" cy="300" r="3">
+        <animate attributeName="cy" values="300;285;300" dur="3.5s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+    <g fill="#FF6B35" opacity="0.5">
+      <circle cx="320" cy="150" r="4">
+        <animate attributeName="cy" values="150;135;150" dur="2.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="70" cy="220" r="3">
+        <animate attributeName="cy" values="220;205;220" dur="3.2s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+  `;
+  container.appendChild(svg);
+})();
+
+// 大卡片点击效果（已经是 a 标签，这里加额外的点击反馈）
+document.getElementById('bigCard')?.addEventListener('click', function(e){
+  // 链接会自动跳转，这里可以加点击动画
+  this.style.transform = 'scale(0.98)';
+  setTimeout(() => { this.style.transform = ''; }, 150);
+});
+</script>
 
 </body>
 </html>
