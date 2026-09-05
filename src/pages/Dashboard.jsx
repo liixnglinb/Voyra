@@ -306,12 +306,12 @@ function AppsPanel({ openProduct }) {
     const Icon = app.Icon;
     const openApp = (event) => {
       if (event.target.closest('button')) return;
-      openProduct(app.to, app.external);
+      window.open(window.location.origin + app.to, '_blank', 'noopener,noreferrer');
     };
     return (
       <div className="vr-roll-wrap vr-panel-stagger" data-roll key={app.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openApp} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openApp(event); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{app.name}</h2></div><p>{app.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(app.to, app.external)}>{app.cta}<ArrowUpRight size={17} /></button></div>
+        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{app.name}</h2></div><p>{app.desc}</p></div>
         <FeatureArt type={app.art} />
       </article></div>
     );
