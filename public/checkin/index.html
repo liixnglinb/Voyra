@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>学习通自动签到助手 · 一句话，自动签到</title>
+<title>学习通自动签到助手 · 让签到，成为习惯</title>
 <meta name="description" content="学习通自动签到助手：桌面端常驻后台，自动监听课程签到活动。一句话，自动签到。">
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/liixnglinb/superstar-checkin/main/assets/app-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,6 +96,15 @@ img{display:block;max-width:100%}
   animation:fadeInUp .8s cubic-bezier(.22,1,.36,1) .65s both}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
+/* Hero 装饰元素 */
+.hero-deco{position:absolute;z-index:1;border-radius:50%;pointer-events:none;filter:blur(60px);opacity:.4}
+.hero-deco-1{width:300px;height:300px;background:radial-gradient(circle,rgba(255,107,53,.3),transparent 70%);top:15%;left:10%;animation:float 8s ease-in-out infinite}
+.hero-deco-2{width:250px;height:250px;background:radial-gradient(circle,rgba(44,51,59,.15),transparent 70%);bottom:20%;right:12%;animation:float 10s ease-in-out infinite reverse}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+
+/* 区块标签 */
+.section-tag{display:inline-block;font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--brand);margin-bottom:14px;padding:4px 14px;border-radius:999px;background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.15)}
+
 /* 按钮 */
 .pill{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;
   height:56px;padding:0 32px;border-radius:1000px;color:#fff;font-size:17px;font-weight:600;white-space:nowrap;
@@ -149,6 +158,8 @@ img{display:block;max-width:100%}
 .big-dl svg{width:24px;height:24px}
 .big-dl .psep{width:1px;height:26px;background:rgba(255,255,255,.25)}
 .big-dl .ptag{font-size:14px;font-weight:500;opacity:.75;font-family:var(--en)}
+.big-dl-pulse{animation:pulseGlow 3s ease-in-out infinite}
+@keyframes pulseGlow{0%,100%{box-shadow:0 14px 36px rgba(255,107,53,.35)}50%{box-shadow:0 14px 50px rgba(255,107,53,.55)}}
 
 /* ============ 系统要求 ============ */
 .requirements{padding:70px 0;background:#f8f9fa}
@@ -224,10 +235,10 @@ img{display:block;max-width:100%}
     <source src="bg-green.mp4" type="video/mp4">
   </video>
   <div class="hero-overlay"></div>
-  <div class="hero-content">
+  <div class="hero-deco hero-deco-1"></div><div class="hero-deco hero-deco-2"></div><div class="hero-content">
     <div class="hero-kicker"><i></i>桌面端常驻后台 · 自动监听签到</div>
-    <h1>一句话，<span class="brand-text">自动签到</span></h1>
-    <p class="hero-sub">学习通自动签到助手，安装后常驻系统托盘，自动监听课程签到活动。普通签到、位置签到、二维码签到，三种类型全覆盖。</p>
+    <h1>让签到，<span class="brand-text">成为习惯</span></h1>
+    <p class="hero-sub">学习通自动签到助手，安装后常驻系统托盘，后台静默运行。普通签到、位置签到、二维码签到，三种类型全覆盖，从此不再错过。</p>
     <div class="hero-buttons">
       <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="pill">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -250,7 +261,7 @@ img{display:block;max-width:100%}
 <!-- 下载信息区 -->
 <section class="download-info reveal" id="download">
   <div class="download-info-inner">
-    <h2 class="reveal reveal-delay-1">立即开始使用</h2>
+    <div class="section-tag reveal reveal-delay-1">DOWNLOAD</div><h2 class="reveal reveal-delay-1">立即开始使用</h2>
     <p class="reveal reveal-delay-1">免费开源 · Windows 10/11 专用 · 安装后常驻系统托盘，后台自动监控签到</p>
     <div class="download-cards">
       <div class="dl-card reveal reveal-delay-1">
@@ -270,7 +281,7 @@ img{display:block;max-width:100%}
         <b>0</b><span>广告捆绑</span>
       </div>
     </div>
-    <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="big-dl reveal reveal-delay-2">
+    <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="big-dl big-dl-pulse reveal reveal-delay-2">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       下载安装包 v3.1.0
       <span class="psep"></span>
