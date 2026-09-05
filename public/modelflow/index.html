@@ -27,7 +27,11 @@ body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.5;-web
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 img{display:block;max-width:100%}
-::selection{background:rgba(0,0,0,.08)}
+::selection{background:rgba(255,213,77,.38);color:#1b1b1b}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-track{background:#f5f5f7}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#e0b84a,#c9a227);border-radius:999px;border:2px solid #f5f5f7}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#d4a83a,#b8921f)}
 .en,.num-en{font-family:var(--en)}
 .wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 24px}
 
@@ -116,9 +120,9 @@ img{display:block;max-width:100%}
 .pv-ab-nav{display:flex;gap:16px;font-size:12px;color:#8a8f99}
 .pv-ab-nav b{color:#1b1b1b;font-weight:600;position:relative}
 .pv-ab-nav b::after{content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:#c9a227;border-radius:2px}
-.pv-ab-badge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#3b82f6;background:#eaf2fd;padding:3px 10px;border-radius:999px}
-.pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#3b82f6;animation:breathe 1.3s ease-in-out infinite}
-@keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(59,130,246,.4)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(59,130,246,0)}}
+.pv-ab-badge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#c9a227;background:#faf0d0;padding:3px 10px;border-radius:999px}
+.pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#c9a227;animation:breathe 1.3s ease-in-out infinite}
+@keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(201,162,39,.45)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(201,162,39,0)}}
 /* 工作区 */
 .pv-work{max-width:980px;margin:0 auto;padding:16px 24px 0}
 .pv-job-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -284,15 +288,16 @@ img{display:block;max-width:100%}
 .stages{margin-top:72px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1080px;margin-left:auto;margin-right:auto}
 .stage{background:#fff;border:1px solid var(--line);border-radius:24px;padding:34px 30px;transition:transform .3s,box-shadow .3s}
 .stage:hover{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(0,0,0,.18)}
-.stage-label{font-family:var(--en);font-size:12px;font-weight:600;letter-spacing:.12em;color:#3b6ef0;margin-bottom:10px}
+.stage-label{font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.12em;color:#c9a227;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.stage-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(201,162,39,.35),transparent)}
 .stage h3{font-size:23px;font-weight:700;color:#000;margin-bottom:8px}
 .stage .sd{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px}
 .steps{display:flex;flex-direction:column;gap:10px}
 .step{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;background:#f7f7f8}
-.step .n{width:26px;height:26px;border-radius:8px;background:#000;color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0;font-family:var(--en)}
+.step .n{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ffd54d,#c9a227);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0;font-family:var(--en);box-shadow:0 3px 8px -2px rgba(201,162,39,.45)}
 .step .t{font-size:14px;font-weight:600;color:var(--ink)}
 .stage-out{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line-2);font-size:12.5px;color:var(--muted)}
-.stage-out b{color:#0d9488;font-weight:600}
+.stage-out b{color:#9a7515;font-weight:700}
 
 /* ============ 多模型 ============ */
 .models{background:#fff}
@@ -303,7 +308,7 @@ img{display:block;max-width:100%}
 .chip .dot{width:8px;height:8px;border-radius:50%}
 .mfeat{margin-top:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:960px;margin-left:auto;margin-right:auto}
 .mf{text-align:center;padding:28px 24px;border-radius:20px;background:#f7f7f8}
-.mf .mi{width:46px;height:46px;border-radius:13px;background:#000;display:grid;place-items:center;margin:0 auto 16px}
+.mf .mi{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 8px 18px -8px rgba(201,162,39,.55)}
 .mf .mi svg{width:22px;height:22px;color:#fff}
 .mf h4{font-size:16px;font-weight:700;color:#000;margin-bottom:8px}
 .mf p{font-size:13.5px;color:var(--muted);line-height:1.7}
@@ -313,7 +318,7 @@ img{display:block;max-width:100%}
 .local-grid{margin-top:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1040px;margin-left:auto;margin-right:auto}
 .lc{background:#fff;border:1px solid var(--line);border-radius:24px;padding:36px 30px;text-align:center;transition:transform .3s,box-shadow .3s}
 .lc:hover{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(0,0,0,.18)}
-.lc .li{width:56px;height:56px;border-radius:16px;background:#000;display:grid;place-items:center;margin:0 auto 20px}
+.lc .li{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;margin:0 auto 20px;box-shadow:0 10px 22px -8px rgba(201,162,39,.55)}
 .lc .li svg{width:26px;height:26px;color:#fff}
 .lc h4{font-size:18px;font-weight:700;color:#000;margin-bottom:10px}
 .lc p{font-size:14px;color:var(--muted);line-height:1.7}
@@ -322,7 +327,8 @@ img{display:block;max-width:100%}
 .faq{background:#fff}
 .faq-list{margin-top:56px;max-width:760px;margin-left:auto;margin-right:auto;display:flex;flex-direction:column;gap:14px}
 .fq{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
-.fq:hover{border-color:#d6d6d6}
+.fq:hover{border-color:#e6d9a8;box-shadow:0 8px 24px -12px rgba(201,162,39,.18)}
+.fq:hover .fq-q .ic::before,.fq:hover .fq-q .ic::after{background:#c9a227}
 .fq-item{transition:box-shadow .25s ease,border-color .25s ease,transform .25s ease}.fq-item:hover{border-color:#d8d8de;box-shadow:0 6px 20px rgba(20,20,40,.05);transform:translateY(-1px)}
   .fq-q{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 26px;cursor:pointer;font-size:17px;font-weight:600;color:#000}
 .fq-q .ic{position:relative;width:20px;height:20px;flex-shrink:0}
@@ -349,7 +355,9 @@ img{display:block;max-width:100%}
 /* ============ 页脚 ============ */
 .footer{background:#fff;padding:36px 24px 44px;border-top:1px solid var(--line)}
 .footer-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.footer .brand{display:inline-flex;align-items:center;gap:9px}
 .footer .brand b{color:var(--ink)}
+.footer .brand img{box-shadow:0 3px 10px -3px rgba(201,162,39,.5)}
 .footer p{font-size:13px;color:var(--muted)}
 .footer a{color:var(--muted-2);transition:color .2s}
 .footer a:hover{color:#000}
@@ -562,9 +570,9 @@ img{display:block;max-width:100%}
                     </div>
                   </div>
                   <div class="pv-chart-stats">
-                    <div class="pv-cs"><b>8.8</b><span>最终分数</span></div>
-                    <div class="pv-cs"><b>+2.6</b><span>累计提升</span></div>
-                    <div class="pv-cs"><b>6</b><span>对抗轮次</span></div>
+                    <div class="pv-cs"><b data-count="8.8" data-dec="1">8.8</b><span>最终分数</span></div>
+                    <div class="pv-cs"><b data-count="2.6" data-dec="1" data-prefix="+">+2.6</b><span>累计提升</span></div>
+                    <div class="pv-cs"><b data-count="6" data-dec="0">6</b><span>对抗轮次</span></div>
                   </div>
                 </div>
                 <div class="pv-card">
@@ -985,6 +993,30 @@ async function submitCode(){
     while (body.children.length > 6) body.removeChild(body.firstChild);
     i++;
   }, 2600);
+})();
+
+// ============ 审稿统计卡数字滚动计数 ============
+(function(){
+  const els = Array.from(document.querySelectorAll('.pv-cs b[data-count]'));
+  if (!els.length || !('IntersectionObserver' in window)) return;
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      const el = en.target;
+      const target = parseFloat(el.dataset.count);
+      const dec = parseInt(el.dataset.dec || '0', 10);
+      const prefix = el.dataset.prefix || '';
+      const dur = 1200, t0 = performance.now();
+      (function tick(t){
+        const p = Math.min(1, (t - t0) / dur);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = prefix + (target * e).toFixed(dec);
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
+      obs.unobserve(el);
+    });
+  }, {threshold: .5});
+  els.forEach(el => obs.observe(el));
 })();
 
 // 自动填入保存的授权码
