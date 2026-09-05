@@ -1,867 +1,11 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ModelFlow 智模流水线 · 数学建模全自动工作流</title>
-<meta name="description" content="ModelFlow 智模流水线：数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。">
-<link rel="icon" type="image/png" href="./favicon-48.png?v=transparent">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --ink:#1d1d1f;
-  --black:#000;
-  --muted:rgba(0,0,0,.5);
-  --muted-2:rgba(0,0,0,.72);
-  --line:#ececec;
-  --line-2:#e4e4e4;
-  --bg:#fff;
-  --zh:"PingFang SC","Noto Sans SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  --en:"Montserrat",var(--zh);
-}
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden}
-a{color:inherit;text-decoration:none}
-button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
-img{display:block;max-width:100%}
-::selection{background:rgba(255,213,77,.38);color:#1b1b1b}
-::-webkit-scrollbar{width:10px}
-::-webkit-scrollbar-track{background:#f5f5f7}
-::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#e0b84a,#c9a227);border-radius:999px;border:2px solid #f5f5f7}
-::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#d4a83a,#b8921f)}
-.en,.num-en{font-family:var(--en)}
-.wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 24px}
-
-/* ============ 顶部导航（tabbit：常驻半透明毛玻璃） ============ */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;
-  transition:box-shadow .3s ease,border-color .3s ease}
-  background:rgba(255,255,255,.72);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}
-.nav.scrolled{box-shadow:0 6px 24px -10px rgba(0,0,0,.10);border-bottom-color:rgba(0,0,0,.05)}
-.nav-inner{max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}
-.brand{display:flex;align-items:center;gap:16px}
-.brand img{width:40px;height:40px;border-radius:10px;flex-shrink:0}
-.brand b{font-family:var(--en);font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1}
-.nav-links{display:flex;align-items:center;gap:30px;margin-left:8px}
-.nav-links a{font-size:14px;font-weight:600;color:var(--muted-2);transition:color .2s;white-space:nowrap}
-.nav-links a:hover{color:#c9a227}
-.nav-right{display:flex;align-items:center;gap:18px}
-.nav-dl{display:inline-flex;align-items:center;gap:6px;height:32px;padding:6px 14px;border-radius:9999px;
-  background:linear-gradient(135deg,#060606,#111);color:#fff;font-size:14px;font-weight:500;box-shadow:0 4px 10px rgba(0,0,0,.06);transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s,background .2s}
-.nav-dl:hover{transform:scale(1.06);box-shadow:0 8px 18px rgba(0,0,0,.14)}
-.nav-dl:active{transform:scale(.98)}
-
-/* ============ 黑色胶囊下载按钮（tabbit 精确规格 48px） ============ */
-.pill{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;
-  height:48px;padding:0 26px;border-radius:1000px;color:#fff;font-size:16px;font-weight:500;white-space:nowrap;
-  background:linear-gradient(135deg,#060606,#111);box-shadow:0 10px 24px rgba(0,0,0,.08);
-  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s cubic-bezier(.22,1,.36,1);will-change:transform}
-.pill:hover{transform:scale(1.08);box-shadow:0 18px 36px rgba(0,0,0,.16),0 0 0 5px rgba(255,213,77,.20)}
-.pill:active{transform:scale(1.04)}
-.pill svg{width:19px;height:19px;flex-shrink:0}
-.pill .psep{width:1px;height:20px;background:rgba(255,255,255,.22)}
-.pill .ptag{font-size:13px;font-weight:500;opacity:.62;font-family:var(--en);padding-left:2px}
-
-/* ============ Hero（tabbit：副标题在上、大标题在下、产品预览） ============ */
-.hero{position:relative;padding:64px 24px 0;overflow:hidden;
-  perspective:2000px;perspective-origin:50% 28%;-webkit-perspective:2000px;
-  background:
-    radial-gradient(60% 50% at 18% 85%,rgba(255,210,90,.18),transparent 70%),
-    radial-gradient(55% 48% at 82% 88%,rgba(255,180,60,.14),transparent 70%),
-    radial-gradient(50% 42% at 50% 100%,rgba(255,230,150,.14),transparent 70%),
-    linear-gradient(180deg,#fff 0%,#fffbf0 62%,#fdf6df 100%)}
-.hero-glow{position:absolute;left:50%;bottom:-180px;width:1200px;max-width:160%;height:580px;transform:translateX(-50%);
-  pointer-events:none;z-index:0;filter:blur(100px);
-  background:radial-gradient(40% 52% at 30% 50%,rgba(255,200,60,.26),transparent 70%),
-             radial-gradient(40% 52% at 70% 48%,rgba(255,213,77,.20),transparent 70%),
-             radial-gradient(30% 40% at 50% 60%,rgba(120,210,200,.14),transparent 70%)}
-.hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;
-  padding:104px 0 0;display:flex;flex-direction:column;align-items:center}
-.hero-kicker{font-size:20px;line-height:28px;font-weight:400;color:var(--muted);
-  opacity:0;animation:fadeUp .8s .05s cubic-bezier(.22,1,.36,1) forwards}
-.hero h1{margin-top:14px;font-size:60px;line-height:70px;font-weight:600;letter-spacing:-.01em;color:#000;
-  opacity:0;animation:fadeUp .8s .15s cubic-bezier(.22,1,.36,1) forwards}
-.hero h1 .en{font-family:var(--en)}
-.hero-pills{margin-top:36px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
-  opacity:0;animation:fadeUp .8s .3s cubic-bezier(.22,1,.36,1) forwards}
-.hero-note{margin-top:18px;font-size:13px;color:var(--muted);
-  opacity:0;animation:fadeUp .8s .42s cubic-bezier(.22,1,.36,1) forwards}
-@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-@keyframes previewIn{from{opacity:0;transform:translateY(48px) scale(.985)}to{opacity:1;transform:none}}
-
-/* 产品预览窗口 —— 精致双层：外层视差+光晕 / 内层入场 */
-.hero-preview{position:relative;z-index:2;width:100%;max-width:1180px;margin:80px auto 0;
-  will-change:transform}
-.hero-preview::before{content:"";position:absolute;left:50%;top:6%;bottom:6%;width:122%;
-  transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;
-  background:radial-gradient(38% 50% at 18% 50%,rgba(255,200,60,.22),transparent 70%),
-             radial-gradient(38% 50% at 82% 50%,rgba(255,213,77,.18),transparent 70%),
-             radial-gradient(30% 40% at 50% 80%,rgba(120,210,200,.12),transparent 70%)}
-.hero-preview-in{opacity:0;animation:previewIn .95s .5s cubic-bezier(.22,1,.36,1) forwards}
-@keyframes previewIn{from{opacity:0;transform:translateY(52px) scale(.982)}to{opacity:1;transform:none}}
-.pv-window{background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.58);border-radius:12px;overflow:hidden;text-align:left;
-  backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);
-  box-shadow:0 1px 2px rgba(20,24,60,.04),0 24px 48px -18px rgba(40,48,110,.26),0 60px 100px -36px rgba(40,48,110,.20),0 100px 150px -60px rgba(40,48,110,.14)}
-/* 浏览器 chrome 栏 */
-.pv-chrome{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,255,255,.45);border-bottom:1px solid rgba(255,255,255,.40)}
-.pv-chrome i{width:11px;height:11px;border-radius:50%}
-.pv-chrome i:nth-child(1){background:#ff5f57}.pv-chrome i:nth-child(2){background:#febc2e}.pv-chrome i:nth-child(3){background:#28c840}
-.pv-addr{margin-left:10px;flex:1;display:flex;align-items:center;gap:7px;height:28px;border-radius:9px;background:#f1f1f4;
-  padding:0 12px;font-family:Consolas,monospace;font-size:11.5px;color:#9a9ea8}
-.pv-addr .lock{width:10px;height:10px;border-radius:3px;border:1.6px solid #b4b8c0;position:relative}
-.pv-addr .lock::after{content:"";position:absolute;left:50%;top:-4px;width:6px;height:6px;border:1.6px solid #b4b8c0;border-bottom:0;border-radius:6px 6px 0 0;transform:translateX(-50%)}
-.pv-addr .ref{margin-left:auto;color:#c2c6ce;font-size:11px}
-/* 软件应用区 */
-.pv-app{background:rgba(248,248,251,.55);padding:0 0 16px;backdrop-filter:blur(10px)}
-.pv-appbar{display:flex;align-items:center;gap:22px;height:50px;padding:0 20px;background:rgba(255,255,255,.55);border-bottom:1px solid rgba(255,255,255,.45)}
-.pv-ab-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;color:#1b1b1b}
-.pv-ab-brand .lg{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}
-.pv-ab-brand span{color:#c9a227}
-.pv-ab-nav{display:flex;gap:16px;font-size:12px;color:#8a8f99}
-.pv-ab-nav b{color:#1b1b1b;font-weight:600;position:relative}
-.pv-ab-nav b::after{content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:#c9a227;border-radius:2px}
-.pv-ab-badge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#c9a227;background:#faf0d0;padding:3px 10px;border-radius:999px}
-.pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#c9a227;animation:breathe 1.3s ease-in-out infinite}
-@keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(201,162,39,.45)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(201,162,39,0)}}
-/* 工作区 */
-.pv-work{max-width:980px;margin:0 auto;padding:16px 24px 0}
-.pv-job-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.pv-job-title{font-size:14.5px;font-weight:700;color:#1b1b1b}
-.pv-job-id{font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0}
-.pv-job-btn{margin-left:auto;font-size:11px;font-weight:600;color:#fff;background:#1a1d24;padding:5px 12px;border-radius:8px}
-/* 全局进度条 */
-.pv-prog{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:11px 16px;margin-bottom:14px}
-.pv-prog .pl{font-size:11px;font-weight:700;color:#4a4e57;white-space:nowrap}
-.pv-track{flex:1;height:6px;border-radius:999px;background:#eef0f4;overflow:hidden}
-.pv-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227);position:relative;overflow:hidden}
-.pv-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shimmer 2.4s infinite}
-.pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#c9a227}
-/* 双栏 */
-.pv-cols{display:grid;grid-template-columns:272px 1fr;gap:16px;align-items:stretch}
-/* 左：步骤列表 */
-.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:14px 14px 16px;display:flex;flex-direction:column}
-.pv-group{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0}
-.pv-group-t{font-size:9.5px;font-weight:700;color:#b4b8c0;letter-spacing:.06em;text-transform:uppercase;margin-bottom:9px;padding-left:6px;display:flex;align-items:center;gap:8px}
-.pv-group-t::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#f0f0f3,transparent)}
-.pv-steps-foot{margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f3}
-.pv-sf-label{font-size:10px;color:#b4b8c0;font-weight:600;margin-bottom:7px}
-.pv-sf-bar{height:5px;border-radius:999px;background:#eef0f4;overflow:hidden;margin-bottom:7px}
-.pv-sf-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227)}
-.pv-sf-num{font-size:11px;color:#8a8f99}
-.pv-sf-num b{font-size:15px;color:#c9a227;font-weight:700;font-family:Consolas,monospace}
-.pv-ss{position:relative;display:flex;align-items:center;gap:12px;padding:7px 9px;border-radius:9px;transition:background .25s}
-.pv-ss:not(:last-child)::before{content:"";position:absolute;left:20px;top:36px;bottom:-6px;width:2px;background:#eef0f4}
-.pv-dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;flex-shrink:0;z-index:1;font-weight:700;transition:transform .25s}
-.pv-dot.done{background:#16a34a;color:#fff}
-.pv-dot.run{background:#c9a227;color:#fff;box-shadow:0 0 0 3px #faf0d0;animation:breathe2 1.4s ease-in-out infinite}
-@keyframes breathe2{0%,100%{box-shadow:0 0 0 3px #faf0d0}50%{box-shadow:0 0 0 5px rgba(201,162,39,.12)}}
-.pv-dot.wait{background:#eef0f4;color:#b4b8c0}
-.pv-ss-main{min-width:0}
-.pv-ss-name{font-size:13px;font-weight:600;color:#1b1b1b;line-height:1.3}
-.pv-ss.wait .pv-ss-name{color:#b4b8c0;font-weight:600}
-.pv-ss-skill{display:none}
-.pv-ss.run{background:linear-gradient(90deg,#fdf6df,#f8f6ff)}
-/* 右：输出 + 图表 + 产物 */
-.pv-right{display:flex;flex-direction:column;gap:10px;min-width:0}
-.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:10px 14px}
-.pv-card-t{font-size:12px;font-weight:700;color:#1b1b1b;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.pv-card-t .cnt{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0;font-weight:500}
-/* 日志 */
-.pv-terminal{border-radius:10px;overflow:hidden;border:1px solid #e8e8ed;background:#1a1d24}
-.pv-term-bar{display:flex;align-items:center;gap:7px;padding:5px 12px;background:#23262e;border-bottom:1px solid #2e313a}
-.pv-term-bar i{width:9px;height:9px;border-radius:50%}
-.pv-term-bar i:nth-child(1){background:#ff5f57}.pv-term-bar i:nth-child(2){background:#febc2e}.pv-term-bar i:nth-child(3){background:#28c840}
-.pv-term-bar span{font-family:Consolas,monospace;font-size:10.5px;color:#8a8f99;margin-left:6px}
-.pv-term-live{margin-left:auto!important;color:#d4a83a!important;font-weight:700;font-size:9.5px!important}
-.pv-term-body{padding:7px 12px 8px;font-family:Consolas,monospace;font-size:10px;line-height:1.45}
-.pv-term-line{display:flex;align-items:center;gap:8px;color:#c8ccd4;animation:logIn .5s ease both}
-.pv-term-line:nth-child(1){animation-delay:.08s}
-.pv-term-line:nth-child(2){animation-delay:.2s}
-.pv-term-line:nth-child(3){animation-delay:.32s}
-.pv-term-line:nth-child(4){animation-delay:.44s}
-.pv-term-line:nth-child(5){animation-delay:.56s}
-.pv-term-line:nth-child(6){animation-delay:.68s}
-@keyframes logIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.pt-time{color:#5a5f6a;flex-shrink:0;font-size:10px}
-.pt-lv{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;letter-spacing:.03em}
-.pt-ok{background:rgba(22,163,74,.15);color:#4ade80}
-.pt-info{background:rgba(59,130,246,.15);color:#60a5fa}
-.pt-run{background:rgba(201,162,39,.18);color:#d4a83a}
-.pt-msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pv-log .ok{color:#16a34a}.pv-log .run{color:#c9a227}.pv-log .info{color:#3b82f6}.pv-log .mut{color:#b4b8c0}
-.pv-caret{display:inline-block;width:6px;height:12px;background:#c9a227;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
-/* 审稿分数曲线 */
-.pv-chart{display:flex;gap:10px;margin-bottom:8px}
-.pv-chart-y{display:flex;flex-direction:column;justify-content:space-between;padding:4px 0 18px;font-family:Consolas,monospace;font-size:9px;color:#c2c6ce;text-align:right;width:28px;flex-shrink:0}
-.pv-chart-main{flex:1;min-width:0}
-.pv-chart-main svg{width:100%;height:118px;max-width:100%;display:block}
-.pv-chart-x{display:flex;justify-content:space-between;padding:0 4px;margin-top:4px;font-family:Consolas,monospace;font-size:9.5px;color:#b4b8c0}
-.pv-chart-stats{display:flex;gap:10px;padding-top:8px;border-top:1px solid #f0f0f3}
-.pv-cs{flex:1;text-align:center;background:#fafafd;border-radius:9px;padding:5px 4px}
-.pv-cs b{display:block;font-size:14px;font-weight:700;color:#c9a227;font-family:Consolas,monospace;line-height:1.2}
-.pv-cs span{font-size:9.5px;color:#8a8f99;margin-top:2px;display:block}
-/* 产物文件 */
-.pv-files-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.pv-file-building{grid-column:1/-1}
-.pv-file{display:flex;align-items:center;gap:10px;padding:6px 9px;border-radius:10px;border:1px solid transparent;transition:all .22s ease}
-.pv-file:hover{background:#f7f7f9;border-color:#eef0f4;transform:translateY(-1px);box-shadow:0 4px 12px -6px rgba(30,40,60,.08)}
-.pv-fic{width:27px;height:27px;border-radius:8px;display:grid;place-items:center;font-size:8px;font-weight:800;flex-shrink:0;font-family:Consolas,monospace;letter-spacing:.02em;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
-.pv-fic.py{background:#e8f5ee;color:#16a34a}.pv-fic.md{background:#e8ecfa;color:#4a5bb5}
-.pv-fic.img{background:#fdf6df;color:#9a7515}.pv-fic.pdf{background:#fdecec;color:#ef4444}
-.pv-fic.csv{background:#e6f7f0;color:#0d9488}.pv-fic.html{background:#fff0e6;color:#ea580c}
-.pv-finfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.25}
-.pv-fname{font-size:11px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}
-.pv-fcat{font-size:9px;color:#b4b8c0;line-height:1.15}
-.pv-fprog{height:3px;border-radius:999px;background:#eef0f4;margin-top:1px;overflow:hidden}
-.pv-fprog-fill{height:100%;width:68%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227);position:relative;overflow:hidden}
-.pv-fprog-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shimmer 2s infinite}
-.pv-fsize{font-family:Consolas,monospace;font-size:9.5px;color:#8a8f99;flex-shrink:0;width:44px;text-align:right}
-.pv-fstat{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:700;flex-shrink:0}
-.pv-fstat.done{background:#e8f5ee;color:#16a34a}
-.pv-fstat.run{background:#fdf6df;color:#c9a227}
-
-/* ============ 通用 Section（tabbit：48px/600 居中标题） ============ */
-.section{position:relative;padding:140px 24px;overflow:hidden}
-.s-head{max-width:760px;margin:0 auto;text-align:center}
-.s-head h2{font-size:48px;line-height:56px;font-weight:600;letter-spacing:-.01em;color:#000}
-.s-head .s-sub{margin-top:20px;font-size:18px;line-height:28px;font-weight:400;color:var(--muted)}
-
-/* scroll-linked 连续动效（JS 写入 inline style） */
-[data-rise]{will-change:transform,opacity}
-
-/* ============ 功能卡片（tabbit：320×570 固定卡片、多层渐变、横向排布） ============ */
-.features{background:#fff}
-.cards-stage{margin-top:72px;display:grid;grid-template-columns:repeat(3,320px);gap:24px;justify-content:center}
-.scard{position:relative;width:320px;height:480px;border-radius:28px;padding:34px 28px 24px;overflow:hidden;
-  display:flex;flex-direction:column;color:#fff;border:none;
-  box-shadow:0 32px 64px -28px rgba(154,117,21,.40),0 10px 24px -12px rgba(154,117,21,.16),
-    inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.08);
-  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s ease}
-.scard::before{content:"";position:absolute;inset:0;border-radius:28px;
-  background:linear-gradient(138deg,rgba(255,255,255,.26),transparent 44%);pointer-events:none}
-.scard:hover{transform:translateY(-6px);
-  box-shadow:0 42px 76px -28px rgba(154,117,21,.50),0 14px 30px -14px rgba(154,117,21,.22),
-    inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(255,255,255,.12)}
-.scard-stage{display:flex;align-items:center;gap:10px;margin-bottom:22px}
-.scard-num{font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.1em;opacity:.7}
-.scard-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.4),transparent)}
-.scard-h{font-size:26px;line-height:34px;font-weight:600;letter-spacing:-.01em}
-.scard-p{margin-top:8px;font-size:16px;line-height:23px;font-weight:500;opacity:.85}
-.scard-visual{margin-top:28px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px}
-.scard-bottom{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;opacity:.74}
-/* 卡片1：文档拆解 */
-.v-doc{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:9px}
-.v-doc-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.35)}
-.v-doc-bar.w80{width:80%}.v-doc-bar.w60{width:60%}.v-doc-bar.w70{width:70%}
-.v-split{display:flex;gap:8px}
-.v-chip{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 4px;font-size:11px;opacity:.94}
-.v-chip i{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.3);display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:700}
-/* 卡片2：曲线+指标 */
-.v-curve{width:100%;height:64px}
-.v-stats{display:flex;gap:8px}
-.v-stat{flex:1;text-align:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 4px}
-.v-stat b{display:block;font-size:10px;font-weight:500;opacity:.7;margin-bottom:3px}
-.v-stat span{font-size:15px;font-weight:700}
-/* 卡片3：页面堆叠 */
-.v-pages{position:relative;height:110px;display:grid;place-items:center}
-.v-page{position:absolute;width:150px;height:96px;border-radius:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.14)}
-.v-page-back{transform:translate(-22px,-10px) rotate(-5deg);opacity:.4}
-.v-page-mid{transform:translate(22px,-6px) rotate(4deg);opacity:.6}
-.v-page-front{transform:translate(0,0);background:rgba(255,255,255,.22);padding:16px;display:flex;flex-direction:column;gap:8px;justify-content:center}
-.v-pbar{height:6px;border-radius:3px;background:rgba(255,255,255,.4)}
-.v-pbar.w90{width:90%}.v-pbar.w70{width:70%}.v-pbar.w80{width:80%}
-.v-pcheck{position:absolute;right:12px;bottom:10px;width:22px;height:22px;border-radius:50%;background:#fff;color:#0e8f7c;display:grid;place-items:center;font-size:11px;font-weight:800}
-.v-toc{display:flex;justify-content:center;gap:8px}
-.v-toc span{font-size:11px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.10);opacity:.92}
-.scard.c1{background:
-  radial-gradient(130% 130% at 8% 2%,rgba(255,240,190,.72) 0,transparent 44%),
-  radial-gradient(100% 120% at 96% 100%,rgba(180,130,10,.58) 0,transparent 58%),
-  linear-gradient(138deg,#ffe89a,#ffd54d 45%,#e0b020)}
-.scard.c2{background:
-  radial-gradient(132% 132% at 8% 4%,rgba(255,238,190,.66) 0,transparent 42%),
-  radial-gradient(105% 130% at 96% 98%,rgba(150,100,10,.56) 0,transparent 58%),
-  linear-gradient(140deg,#f7dd92,#d9ad3e 45%,#c49a22)}
-.scard.c3{background:
-  radial-gradient(130% 130% at 10% 4%,rgba(255,235,180,.64) 0,transparent 44%),
-  radial-gradient(105% 120% at 94% 100%,rgba(120,80,5,.58) 0,transparent 58%),
-  linear-gradient(142deg,#ecc970,#cfa42e 46%,#a8821a)}
-/* 卡片阴影统一由 .scard 基础样式控制（暖金柔和阴影，去除蓝紫绿彩色边晕） */
-
-
-/* ============ 九步流程 ============ */
-.pipeline{background:#f7f7f8}
-.stages{margin-top:72px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1080px;margin-left:auto;margin-right:auto}
-.stage{background:#fff;border:1px solid var(--line);border-radius:24px;padding:34px 30px;transition:transform .3s,box-shadow .3s}
-.stage:hover{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(0,0,0,.18);border-color:rgba(201,162,39,.35)}
-.stage-label{font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.12em;color:#c9a227;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.stage-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(201,162,39,.35),transparent)}
-.stage h3{font-size:23px;font-weight:700;color:#000;margin-bottom:8px}
-.stage .sd{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px}
-.steps{display:flex;flex-direction:column;gap:10px}
-.step{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;background:#f7f7f8}
-.step .n{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ffd54d,#c9a227);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0;font-family:var(--en);box-shadow:0 3px 8px -2px rgba(201,162,39,.45)}
-.step .t{font-size:14px;font-weight:600;color:var(--ink)}
-.stage-out{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line-2);font-size:12.5px;color:var(--muted)}
-.stage-out b{color:#9a7515;font-weight:700}
-
-/* ============ 多模型 ============ */
-.models{background:#fff}
-.chips{margin-top:64px;display:flex;flex-wrap:wrap;justify-content:center;gap:13px;max-width:920px;margin-left:auto;margin-right:auto}
-.chip{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:9999px;background:#fff;
-  border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--ink);transition:transform .2s,box-shadow .2s}
-.chip:hover{transform:translateY(-2px);box-shadow:0 10px 20px -12px rgba(0,0,0,.2);border-color:rgba(201,162,39,.5)}
-.chip .dot{width:8px;height:8px;border-radius:50%}
-.mfeat{margin-top:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:960px;margin-left:auto;margin-right:auto}
-.mf{text-align:center;padding:28px 24px;border-radius:20px;background:#f7f7f8}
-.mf .mi{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 8px 18px -8px rgba(201,162,39,.55)}
-.mf .mi svg{width:22px;height:22px;color:#fff}
-.mf h4{font-size:16px;font-weight:700;color:#000;margin-bottom:8px}
-.mf p{font-size:13.5px;color:var(--muted);line-height:1.7}
-
-/* ============ 本地运行 ============ */
-.local{background:#f7f7f8}
-.local-grid{margin-top:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1040px;margin-left:auto;margin-right:auto}
-.lc{background:#fff;border:1px solid var(--line);border-radius:24px;padding:36px 30px;text-align:center;transition:transform .3s,box-shadow .3s}
-.lc:hover{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(0,0,0,.18)}
-.lc .li{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;margin:0 auto 20px;box-shadow:0 10px 22px -8px rgba(201,162,39,.55)}
-.lc .li svg{width:26px;height:26px;color:#fff}
-.lc h4{font-size:18px;font-weight:700;color:#000;margin-bottom:10px}
-.lc p{font-size:14px;color:var(--muted);line-height:1.7}
-
-/* ============ FAQ（tabbit：白底浅描边圆角条 + 加号） ============ */
-.faq{background:#fff}
-.faq-list{margin-top:56px;max-width:760px;margin-left:auto;margin-right:auto;display:flex;flex-direction:column;gap:14px}
-.fq{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:border-color .25s,box-shadow .25s}
-.fq:hover{border-color:#e6d9a8;box-shadow:0 8px 24px -12px rgba(201,162,39,.18)}
-.fq:hover .fq-q .ic::before,.fq:hover .fq-q .ic::after{background:#c9a227}
-.fq-item{transition:box-shadow .25s ease,border-color .25s ease,transform .25s ease}.fq-item:hover{border-color:#d8d8de;box-shadow:0 6px 20px rgba(20,20,40,.05);transform:translateY(-1px)}
-  .fq-q{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 26px;cursor:pointer;font-size:17px;font-weight:600;color:#000}
-.fq-q .ic{position:relative;width:20px;height:20px;flex-shrink:0}
-.fq-q .ic::before,.fq-q .ic::after{content:"";position:absolute;background:var(--muted-2);transition:transform .3s}
-.fq-q .ic::before{top:9px;left:2px;width:16px;height:2px}
-.fq-q .ic::after{top:2px;left:9px;width:2px;height:16px}
-.fq.open .fq-q .ic::after{transform:rotate(90deg);opacity:0}
-.fq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}
-.fq-a .inner{padding:0 26px 22px}
-.fq-a p{font-size:14.5px;line-height:1.8;color:var(--muted-2)}
-.fq-a code{font-family:Consolas,monospace;background:#f4f4f6;padding:2px 7px;border-radius:6px;font-size:13px}
-
-/* ============ 底部 CTA（tabbit：纯白、黑标题、黑按钮） ============ */
-.final{position:relative;background:#fff;padding:140px 24px;text-align:center;overflow:hidden}
-.final-glow{position:absolute;left:50%;top:60%;width:760px;max-width:130%;height:420px;transform:translate(-50%,-50%);
-  filter:blur(100px);pointer-events:none;
-  background:radial-gradient(45% 60% at 35% 50%,rgba(255,200,60,.22),transparent 70%),
-             radial-gradient(45% 60% at 65% 50%,rgba(255,213,77,.18),transparent 70%)}
-.final-inner{position:relative;z-index:2;max-width:680px;margin:0 auto}
-.final h2{font-size:48px;line-height:58px;font-weight:600;color:#000;letter-spacing:-.01em}
-.final p{margin-top:20px;font-size:18px;line-height:28px;color:var(--muted)}
-.final .pill{margin-top:36px;height:52px;padding:0 32px;font-size:17px}.final .pill:hover{transform:scale(1.05)}
-
-/* ============ 页脚 ============ */
-.footer{position:relative;background:#fff;padding:40px 24px 48px;border-top:none}
-.footer::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:140px;height:2px;border-radius:2px;
-  background:linear-gradient(90deg,transparent,#c9a227 50%,transparent)}
-.footer-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.footer .brand{display:inline-flex;align-items:center;gap:9px}
-.footer .brand b{color:var(--ink)}
-.footer .brand img{box-shadow:0 3px 10px -3px rgba(201,162,39,.5)}
-.footer p{font-size:13px;color:var(--muted)}
-.footer a{color:var(--muted-2);transition:color .2s}
-.footer a:hover{color:#000}
-.admin-entry{font-size:11px!important;color:#d0d4dc!important;opacity:.55;letter-spacing:.05em;transition:.2s;padding:2px 6px;border-radius:5px}
-.admin-entry:hover{color:#c9a227!important;opacity:1;background:#fdf6df}
-
-/* ============ 授权码弹窗 ============ */
-.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
-.modal-overlay.show{opacity:1;visibility:visible}
-.modal{background:#fff;border-radius:24px;box-shadow:0 40px 80px -20px rgba(0,0,0,.35);width:100%;max-width:420px;padding:38px 34px 32px;
-  transform:translateY(20px) scale(.96);transition:transform .38s cubic-bezier(.22,1,.36,1);position:relative}
-.modal-overlay.show .modal{transform:none}
-.modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted);transition:background .2s,color .2s,transform .2s;font-size:17px}
-  .modal-close:hover{background:rgba(0,0,0,.06);color:#000;transform:rotate(90deg)}.modal-close:active{transform:rotate(90deg) scale(.92)}
-.modal-close:hover{background:#f4f4f6;color:#000}
-.modal-icon{width:58px;height:58px;border-radius:17px;background:#000;display:grid;place-items:center;margin:0 auto 20px}
-.modal-icon svg{width:28px;height:28px;color:#fff}
-.modal h3{font-size:22px;font-weight:700;text-align:center;color:#000;margin-bottom:8px}
-.modal-desc{font-size:14px;text-align:center;color:var(--muted);margin-bottom:24px;line-height:1.65}
-.modal-input{width:100%;height:54px;border:1.5px solid var(--line-2);border-radius:14px;padding:0 18px;font-size:21px;
-  font-family:var(--en);font-weight:600;letter-spacing:.32em;text-align:center;text-transform:uppercase;
-  color:#000;background:#f7f7f8;transition:border-color .25s,box-shadow .25s,background .25s;outline:none}
-.modal-input:focus{border-color:#000;background:#fff;box-shadow:0 0 0 4px rgba(0,0,0,.06)}
-.modal-input::placeholder{color:#bbb;letter-spacing:.32em;font-weight:500}
-.modal-err{margin-top:11px;font-size:13px;color:#dc2626;text-align:center;min-height:18px}
-.modal .pill{width:100%;margin-top:14px;height:52px}
-.modal-note{margin-top:18px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}
-.modal-loading{display:none;align-items:center;justify-content:center;gap:10px;font-size:14px;color:var(--muted-2);margin-top:16px}
-.modal-loading.show{display:flex}
-.spinner{width:18px;height:18px;border:2px solid var(--line-2);border-top-color:#000;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* ============ 响应式 ============ */
-@media(max-width:1040px){
-  .cards-stage{grid-template-columns:repeat(3,minmax(280px,320px));overflow-x:auto;justify-content:flex-start;
-    padding:4px 24px 20px;max-width:100%;scrollbar-width:none}
-  .cards-stage::-webkit-scrollbar{display:none}
-}
-@media(max-width:900px){
-  .hero h1{font-size:42px;line-height:52px}
-  .s-head h2,.final h2{font-size:34px;line-height:44px}
-  .stages,.mfeat,.local-grid{grid-template-columns:1fr;max-width:520px}
-  .pv-cols{grid-template-columns:1fr}
-  .pv-steps{display:none}
-  .nav-links{display:none}
-}
-@media(max-width:600px){
-  .section{padding:96px 20px}
-  .final{padding:96px 20px}
-  .hero{padding:64px 20px 0}
-  .hero-inner{padding-top:48px}
-  .hero h1{font-size:34px;line-height:44px}
-  .hero-kicker{font-size:17px}
-  .hero-pills{flex-direction:column;width:100%}
-  .hero-pills .pill{width:100%}
-  .scard{width:280px;height:520px}
-  .cards-stage{grid-template-columns:repeat(3,280px)}
-  .modal{padding:30px 24px}
-}
-</style>
-</head>
-<body>
-
-<!-- ============ 顶部导航 ============ -->
-<nav class="nav">
-  <div class="nav-inner">
-    <div style="display:flex;align-items:center">
-      <a href="#top" class="brand">
-        <img src="./logo-64.png?v=transparent" alt="ModelFlow">
-        <b>ModelFlow</b>
-      </a>
-      <div class="nav-links">
-        <a href="#features">核心能力</a>
-        <a href="#pipeline">九步流程</a>
-        <a href="#models">多模型</a>
-        <a href="#faq">常见问题</a>
-      </div>
-    </div>
-    <div class="nav-right">
-      <a href="https://lxlrwxs.top" class="nav-links" style="font-size:14px;font-weight:500;color:var(--muted-2)">个人工具中心</a>
-      <button class="nav-dl" onclick="openModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ModelFlow 智模流水线 · 数学建模全自动工作流</title><meta name="description" content="ModelFlow 智模流水线：数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。"><link rel="icon" type="image/png" href="./favicon-48.png?v=transparent"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet"><style>:root{--ink:#1d1d1f;--black:#000;--muted:rgba(0,0,0,.5);--muted-2:rgba(0,0,0,.72);--line:#ececec;--line-2:#e4e4e4;--bg:#fff;--zh:"PingFang SC","Noto Sans SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;--en:"Montserrat",var(--zh);}*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden}a{color:inherit;text-decoration:none}button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}img{display:block;max-width:100%}::selection{background:rgba(255,213,77,.38);color:#1b1b1b}::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:#f5f5f7}::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#e0b84a,#c9a227);border-radius:999px;border:2px solid #f5f5f7}::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#d4a83a,#b8921f)}.en,.num-en{font-family:var(--en)}.wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 24px}.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;transition:box-shadow .3s ease,border-color .3s ease}background:rgba(255,255,255,.72);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px)}.nav.scrolled{box-shadow:0 6px 24px -10px rgba(0,0,0,.10);border-bottom-color:rgba(0,0,0,.05)}.nav-inner{max-width:1280px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;height:64px}.brand{display:flex;align-items:center;gap:16px}.brand img{width:40px;height:40px;border-radius:10px;flex-shrink:0}.brand b{font-family:var(--en);font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--ink);line-height:1}.nav-links{display:flex;align-items:center;gap:30px;margin-left:8px}.nav-links a{font-size:14px;font-weight:600;color:var(--muted-2);transition:color .2s;white-space:nowrap}.nav-links a:hover{color:#c9a227}.nav-right{display:flex;align-items:center;gap:18px}.nav-dl{display:inline-flex;align-items:center;gap:6px;height:32px;padding:6px 14px;border-radius:9999px;background:linear-gradient(135deg,#060606,#111);color:#fff;font-size:14px;font-weight:500;box-shadow:0 4px 10px rgba(0,0,0,.06);transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s,background .2s}.nav-dl:hover{transform:scale(1.06);box-shadow:0 8px 18px rgba(0,0,0,.14)}.nav-dl:active{transform:scale(.98)}.pill{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;height:48px;padding:0 26px;border-radius:1000px;color:#fff;font-size:16px;font-weight:500;white-space:nowrap;background:linear-gradient(135deg,#060606,#111);box-shadow:0 10px 24px rgba(0,0,0,.08);transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s cubic-bezier(.22,1,.36,1);will-change:transform}.pill:hover{transform:scale(1.08);box-shadow:0 18px 36px rgba(0,0,0,.16),0 0 0 5px rgba(255,213,77,.20)}.pill:active{transform:scale(1.04)}.pill svg{width:19px;height:19px;flex-shrink:0}.pill .psep{width:1px;height:20px;background:rgba(255,255,255,.22)}.pill .ptag{font-size:13px;font-weight:500;opacity:.62;font-family:var(--en);padding-left:2px}.hero{position:relative;padding:64px 24px 0;overflow:hidden;perspective:2000px;perspective-origin:50% 28%;-webkit-perspective:2000px;background: radial-gradient(60% 50% at 18% 85%,rgba(255,210,90,.18),transparent 70%),radial-gradient(55% 48% at 82% 88%,rgba(255,180,60,.14),transparent 70%),radial-gradient(50% 42% at 50% 100%,rgba(255,230,150,.14),transparent 70%),linear-gradient(180deg,#fff 0%,#fffbf0 62%,#fdf6df 100%)}.hero-glow{position:absolute;left:50%;bottom:-180px;width:1200px;max-width:160%;height:580px;transform:translateX(-50%);pointer-events:none;z-index:0;filter:blur(100px);background:radial-gradient(40% 52% at 30% 50%,rgba(255,200,60,.26),transparent 70%),radial-gradient(40% 52% at 70% 48%,rgba(255,213,77,.20),transparent 70%),radial-gradient(30% 40% at 50% 60%,rgba(120,210,200,.14),transparent 70%)}.hero-inner{position:relative;z-index:2;max-width:860px;margin:0 auto;text-align:center;padding:104px 0 0;display:flex;flex-direction:column;align-items:center}.hero-kicker{font-size:20px;line-height:28px;font-weight:400;color:var(--muted);opacity:0;animation:fadeUp .8s .05s cubic-bezier(.22,1,.36,1) forwards}.hero h1{margin-top:14px;font-size:60px;line-height:70px;font-weight:600;letter-spacing:-.01em;color:#000;opacity:0;animation:fadeUp .8s .15s cubic-bezier(.22,1,.36,1) forwards}.hero h1 .en{font-family:var(--en)}.hero-pills{margin-top:36px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .8s .3s cubic-bezier(.22,1,.36,1) forwards}.hero-note{margin-top:18px;font-size:13px;color:var(--muted);opacity:0;animation:fadeUp .8s .42s cubic-bezier(.22,1,.36,1) forwards}@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}@keyframes previewIn{from{opacity:0;transform:translateY(48px) scale(.985)}to{opacity:1;transform:none}}.hero-preview{position:relative;z-index:2;width:100%;max-width:1180px;margin:80px auto 0;will-change:transform}.hero-preview::before{content:"";position:absolute;left:50%;top:6%;bottom:6%;width:122%;transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:40px;background:radial-gradient(38% 50% at 18% 50%,rgba(255,200,60,.22),transparent 70%),radial-gradient(38% 50% at 82% 50%,rgba(255,213,77,.18),transparent 70%),radial-gradient(30% 40% at 50% 80%,rgba(120,210,200,.12),transparent 70%)}.hero-preview-in{opacity:0;animation:previewIn .95s .5s cubic-bezier(.22,1,.36,1) forwards}@keyframes previewIn{from{opacity:0;transform:translateY(52px) scale(.982)}to{opacity:1;transform:none}}.pv-window{background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.58);border-radius:12px;overflow:hidden;text-align:left;backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);box-shadow:0 1px 2px rgba(20,24,60,.04),0 24px 48px -18px rgba(40,48,110,.26),0 60px 100px -36px rgba(40,48,110,.20),0 100px 150px -60px rgba(40,48,110,.14)}.pv-chrome{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(255,255,255,.45);border-bottom:1px solid rgba(255,255,255,.40)}.pv-chrome i{width:11px;height:11px;border-radius:50%}.pv-chrome i:nth-child(1){background:#ff5f57}.pv-chrome i:nth-child(2){background:#febc2e}.pv-chrome i:nth-child(3){background:#28c840}.pv-addr{margin-left:10px;flex:1;display:flex;align-items:center;gap:7px;height:28px;border-radius:9px;background:#f1f1f4;padding:0 12px;font-family:Consolas,monospace;font-size:11.5px;color:#9a9ea8}.pv-addr .lock{width:10px;height:10px;border-radius:3px;border:1.6px solid #b4b8c0;position:relative}.pv-addr .lock::after{content:"";position:absolute;left:50%;top:-4px;width:6px;height:6px;border:1.6px solid #b4b8c0;border-bottom:0;border-radius:6px 6px 0 0;transform:translateX(-50%)}.pv-addr .ref{margin-left:auto;color:#c2c6ce;font-size:11px}.pv-app{background:rgba(248,248,251,.55);padding:0 0 16px;backdrop-filter:blur(10px)}.pv-appbar{display:flex;align-items:center;gap:22px;height:50px;padding:0 20px;background:rgba(255,255,255,.55);border-bottom:1px solid rgba(255,255,255,.45)}.pv-ab-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:13.5px;color:#1b1b1b}.pv-ab-brand .lg{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}.pv-ab-brand span{color:#c9a227}.pv-ab-nav{display:flex;gap:16px;font-size:12px;color:#8a8f99}.pv-ab-nav b{color:#1b1b1b;font-weight:600;position:relative}.pv-ab-nav b::after{content:"";position:absolute;left:0;right:0;bottom:-17px;height:2px;background:#c9a227;border-radius:2px}.pv-ab-badge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#c9a227;background:#faf0d0;padding:3px 10px;border-radius:999px}.pv-ab-badge i{width:6px;height:6px;border-radius:50%;background:#c9a227;animation:breathe 1.3s ease-in-out infinite}@keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(201,162,39,.45)}50%{opacity:.6;box-shadow:0 0 0 4px rgba(201,162,39,0)}}.pv-work{max-width:980px;margin:0 auto;padding:16px 24px 0}.pv-job-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}.pv-job-title{font-size:14.5px;font-weight:700;color:#1b1b1b}.pv-job-id{font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0}.pv-job-btn{margin-left:auto;font-size:11px;font-weight:600;color:#fff;background:#1a1d24;padding:5px 12px;border-radius:8px}.pv-prog{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:11px 16px;margin-bottom:14px}.pv-prog .pl{font-size:11px;font-weight:700;color:#4a4e57;white-space:nowrap}.pv-track{flex:1;height:6px;border-radius:999px;background:#eef0f4;overflow:hidden}.pv-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227);position:relative;overflow:hidden}.pv-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);animation:shimmer 2.4s infinite}.pv-prog .pp{font-family:Consolas,monospace;font-size:11px;font-weight:700;color:#c9a227}.pv-cols{display:grid;grid-template-columns:272px 1fr;gap:16px;align-items:stretch}.pv-steps{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:14px 14px 16px;display:flex;flex-direction:column}.pv-group{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-height:0}.pv-group-t{font-size:9.5px;font-weight:700;color:#b4b8c0;letter-spacing:.06em;text-transform:uppercase;margin-bottom:9px;padding-left:6px;display:flex;align-items:center;gap:8px}.pv-group-t::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#f0f0f3,transparent)}.pv-steps-foot{margin-top:14px;padding-top:14px;border-top:1px solid #f0f0f3}.pv-sf-label{font-size:10px;color:#b4b8c0;font-weight:600;margin-bottom:7px}.pv-sf-bar{height:5px;border-radius:999px;background:#eef0f4;overflow:hidden;margin-bottom:7px}.pv-sf-fill{height:100%;width:44%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227)}.pv-sf-num{font-size:11px;color:#8a8f99}.pv-sf-num b{font-size:15px;color:#c9a227;font-weight:700;font-family:Consolas,monospace}.pv-ss{position:relative;display:flex;align-items:center;gap:12px;padding:7px 9px;border-radius:9px;transition:background .25s}.pv-ss:not(:last-child)::before{content:"";position:absolute;left:20px;top:36px;bottom:-6px;width:2px;background:#eef0f4}.pv-dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10.5px;flex-shrink:0;z-index:1;font-weight:700;transition:transform .25s}.pv-dot.done{background:#16a34a;color:#fff}.pv-dot.run{background:#c9a227;color:#fff;box-shadow:0 0 0 3px #faf0d0;animation:breathe2 1.4s ease-in-out infinite}@keyframes breathe2{0%,100%{box-shadow:0 0 0 3px #faf0d0}50%{box-shadow:0 0 0 5px rgba(201,162,39,.12)}}.pv-dot.wait{background:#eef0f4;color:#b4b8c0}.pv-ss-main{min-width:0}.pv-ss-name{font-size:13px;font-weight:600;color:#1b1b1b;line-height:1.3}.pv-ss.wait .pv-ss-name{color:#b4b8c0;font-weight:600}.pv-ss-skill{display:none}.pv-ss.run{background:linear-gradient(90deg,#fdf6df,#f8f6ff)}.pv-right{display:flex;flex-direction:column;gap:10px;min-width:0}.pv-card{background:#fff;border:1px solid #f0f0f3;border-radius:12px;padding:10px 14px}.pv-card-t{font-size:12px;font-weight:700;color:#1b1b1b;margin-bottom:10px;display:flex;align-items:center;gap:8px}.pv-card-t .cnt{margin-left:auto;font-family:Consolas,monospace;font-size:10.5px;color:#b4b8c0;font-weight:500}.pv-terminal{border-radius:10px;overflow:hidden;border:1px solid #e8e8ed;background:#1a1d24}.pv-term-bar{display:flex;align-items:center;gap:7px;padding:5px 12px;background:#23262e;border-bottom:1px solid #2e313a}.pv-term-bar i{width:9px;height:9px;border-radius:50%}.pv-term-bar i:nth-child(1){background:#ff5f57}.pv-term-bar i:nth-child(2){background:#febc2e}.pv-term-bar i:nth-child(3){background:#28c840}.pv-term-bar span{font-family:Consolas,monospace;font-size:10.5px;color:#8a8f99;margin-left:6px}.pv-term-live{margin-left:auto!important;color:#d4a83a!important;font-weight:700;font-size:9.5px!important}.pv-term-body{padding:7px 12px 8px;font-family:Consolas,monospace;font-size:10px;line-height:1.45}.pv-term-line{display:flex;align-items:center;gap:8px;color:#c8ccd4;animation:logIn .5s ease both}.pv-term-line:nth-child(1){animation-delay:.08s}.pv-term-line:nth-child(2){animation-delay:.2s}.pv-term-line:nth-child(3){animation-delay:.32s}.pv-term-line:nth-child(4){animation-delay:.44s}.pv-term-line:nth-child(5){animation-delay:.56s}.pv-term-line:nth-child(6){animation-delay:.68s}@keyframes logIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}.pt-time{color:#5a5f6a;flex-shrink:0;font-size:10px}.pt-lv{font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0;letter-spacing:.03em}.pt-ok{background:rgba(22,163,74,.15);color:#4ade80}.pt-info{background:rgba(59,130,246,.15);color:#60a5fa}.pt-run{background:rgba(201,162,39,.18);color:#d4a83a}.pt-msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pv-log .ok{color:#16a34a}.pv-log .run{color:#c9a227}.pv-log .info{color:#3b82f6}.pv-log .mut{color:#b4b8c0}.pv-caret{display:inline-block;width:6px;height:12px;background:#c9a227;vertical-align:-1px;animation:blink 1.1s steps(1) infinite}@keyframes blink{50%{opacity:0}}.pv-chart{display:flex;gap:10px;margin-bottom:8px}.pv-chart-y{display:flex;flex-direction:column;justify-content:space-between;padding:4px 0 18px;font-family:Consolas,monospace;font-size:9px;color:#c2c6ce;text-align:right;width:28px;flex-shrink:0}.pv-chart-main{flex:1;min-width:0}.pv-chart-main svg{width:100%;height:118px;max-width:100%;display:block}.pv-chart-x{display:flex;justify-content:space-between;padding:0 4px;margin-top:4px;font-family:Consolas,monospace;font-size:9.5px;color:#b4b8c0}.pv-chart-stats{display:flex;gap:10px;padding-top:8px;border-top:1px solid #f0f0f3}.pv-cs{flex:1;text-align:center;background:#fafafd;border-radius:9px;padding:5px 4px}.pv-cs b{display:block;font-size:14px;font-weight:700;color:#c9a227;font-family:Consolas,monospace;line-height:1.2}.pv-cs span{font-size:9.5px;color:#8a8f99;margin-top:2px;display:block}.pv-files-list{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}.pv-file-building{grid-column:1/-1}.pv-file{display:flex;align-items:center;gap:10px;padding:6px 9px;border-radius:10px;border:1px solid transparent;transition:all .22s ease}.pv-file:hover{background:#f7f7f9;border-color:#eef0f4;transform:translateY(-1px);box-shadow:0 4px 12px -6px rgba(30,40,60,.08)}.pv-fic{width:27px;height:27px;border-radius:8px;display:grid;place-items:center;font-size:8px;font-weight:800;flex-shrink:0;font-family:Consolas,monospace;letter-spacing:.02em;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}.pv-fic.py{background:#e8f5ee;color:#16a34a}.pv-fic.md{background:#e8ecfa;color:#4a5bb5}.pv-fic.img{background:#fdf6df;color:#9a7515}.pv-fic.pdf{background:#fdecec;color:#ef4444}.pv-fic.csv{background:#e6f7f0;color:#0d9488}.pv-fic.html{background:#fff0e6;color:#ea580c}.pv-finfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;line-height:1.25}.pv-fname{font-size:11px;color:#1b1b1b;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25}.pv-fcat{font-size:9px;color:#b4b8c0;line-height:1.15}.pv-fprog{height:3px;border-radius:999px;background:#eef0f4;margin-top:1px;overflow:hidden}.pv-fprog-fill{height:100%;width:68%;border-radius:999px;background:linear-gradient(90deg,#e0b84a,#c9a227);position:relative;overflow:hidden}.pv-fprog-fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shimmer 2s infinite}.pv-fsize{font-family:Consolas,monospace;font-size:9.5px;color:#8a8f99;flex-shrink:0;width:44px;text-align:right}.pv-fstat{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:9px;font-weight:700;flex-shrink:0}.pv-fstat.done{background:#e8f5ee;color:#16a34a}.pv-fstat.run{background:#fdf6df;color:#c9a227}.section{position:relative;padding:140px 24px;overflow:hidden}.s-head{max-width:760px;margin:0 auto;text-align:center}.s-head h2{font-size:48px;line-height:56px;font-weight:600;letter-spacing:-.01em;color:#000}.s-head .s-sub{margin-top:20px;font-size:18px;line-height:28px;font-weight:400;color:var(--muted)}[data-rise]{will-change:transform,opacity}.features{background:#fff}.cards-stage{margin-top:72px;display:grid;grid-template-columns:repeat(3,320px);gap:24px;justify-content:center}.scard{position:relative;width:320px;height:480px;border-radius:28px;padding:34px 28px 24px;overflow:hidden;display:flex;flex-direction:column;color:#fff;border:none;box-shadow:0 32px 64px -28px rgba(154,117,21,.40),0 10px 24px -12px rgba(154,117,21,.16),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(255,255,255,.08);transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s ease}.scard::before{content:"";position:absolute;inset:0;border-radius:28px;background:linear-gradient(138deg,rgba(255,255,255,.26),transparent 44%);pointer-events:none}.scard:hover{transform:translateY(-6px);box-shadow:0 42px 76px -28px rgba(154,117,21,.50),0 14px 30px -14px rgba(154,117,21,.22),inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(255,255,255,.12)}.scard-stage{display:flex;align-items:center;gap:10px;margin-bottom:22px}.scard-num{font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.1em;opacity:.7}.scard-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.4),transparent)}.scard-h{font-size:26px;line-height:34px;font-weight:600;letter-spacing:-.01em}.scard-p{margin-top:8px;font-size:16px;line-height:23px;font-weight:500;opacity:.85}.scard-visual{margin-top:28px;flex:1;display:flex;flex-direction:column;justify-content:center;gap:18px}.scard-bottom{margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;opacity:.74}.v-doc{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:9px}.v-doc-bar{height:7px;border-radius:4px;background:rgba(255,255,255,.35)}.v-doc-bar.w80{width:80%}.v-doc-bar.w60{width:60%}.v-doc-bar.w70{width:70%}.v-split{display:flex;gap:8px}.v-chip{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 4px;font-size:11px;opacity:.94}.v-chip i{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.3);display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:700}.v-curve{width:100%;height:64px}.v-stats{display:flex;gap:8px}.v-stat{flex:1;text-align:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 4px}.v-stat b{display:block;font-size:10px;font-weight:500;opacity:.7;margin-bottom:3px}.v-stat span{font-size:15px;font-weight:700}.v-pages{position:relative;height:110px;display:grid;place-items:center}.v-page{position:absolute;width:150px;height:96px;border-radius:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.14)}.v-page-back{transform:translate(-22px,-10px) rotate(-5deg);opacity:.4}.v-page-mid{transform:translate(22px,-6px) rotate(4deg);opacity:.6}.v-page-front{transform:translate(0,0);background:rgba(255,255,255,.22);padding:16px;display:flex;flex-direction:column;gap:8px;justify-content:center}.v-pbar{height:6px;border-radius:3px;background:rgba(255,255,255,.4)}.v-pbar.w90{width:90%}.v-pbar.w70{width:70%}.v-pbar.w80{width:80%}.v-pcheck{position:absolute;right:12px;bottom:10px;width:22px;height:22px;border-radius:50%;background:#fff;color:#0e8f7c;display:grid;place-items:center;font-size:11px;font-weight:800}.v-toc{display:flex;justify-content:center;gap:8px}.v-toc span{font-size:11px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.10);opacity:.92}.scard.c1{background: radial-gradient(130% 130% at 8% 2%,rgba(255,240,190,.72) 0,transparent 44%),radial-gradient(100% 120% at 96% 100%,rgba(180,130,10,.58) 0,transparent 58%),linear-gradient(138deg,#ffe89a,#ffd54d 45%,#e0b020)}.scard.c2{background: radial-gradient(132% 132% at 8% 4%,rgba(255,238,190,.66) 0,transparent 42%),radial-gradient(105% 130% at 96% 98%,rgba(150,100,10,.56) 0,transparent 58%),linear-gradient(140deg,#f7dd92,#d9ad3e 45%,#c49a22)}.scard.c3{background: radial-gradient(130% 130% at 10% 4%,rgba(255,235,180,.64) 0,transparent 44%),radial-gradient(105% 120% at 94% 100%,rgba(120,80,5,.58) 0,transparent 58%),linear-gradient(142deg,#ecc970,#cfa42e 46%,#a8821a)}.pipeline{background:#f7f7f8}.stages{margin-top:72px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1080px;margin-left:auto;margin-right:auto}.stage{background:#fff;border:1px solid var(--line);border-radius:24px;padding:34px 30px;transition:transform .3s,box-shadow .3s}.stage:hover{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(0,0,0,.18);border-color:rgba(201,162,39,.35)}.stage-label{font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.12em;color:#c9a227;margin-bottom:10px;display:flex;align-items:center;gap:8px}.stage-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(201,162,39,.35),transparent)}.stage h3{font-size:23px;font-weight:700;color:#000;margin-bottom:8px}.stage .sd{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:24px}.steps{display:flex;flex-direction:column;gap:10px}.step{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;background:#f7f7f8}.step .n{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#ffd54d,#c9a227);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex-shrink:0;font-family:var(--en);box-shadow:0 3px 8px -2px rgba(201,162,39,.45)}.step .t{font-size:14px;font-weight:600;color:var(--ink)}.stage-out{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line-2);font-size:12.5px;color:var(--muted)}.stage-out b{color:#9a7515;font-weight:700}.models{background:#fff}.chips{margin-top:64px;display:flex;flex-wrap:wrap;justify-content:center;gap:13px;max-width:920px;margin-left:auto;margin-right:auto}.chip{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:9999px;background:#fff;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--ink);transition:transform .2s,box-shadow .2s}.chip:hover{transform:translateY(-2px);box-shadow:0 10px 20px -12px rgba(0,0,0,.2);border-color:rgba(201,162,39,.5)}.chip .dot{width:8px;height:8px;border-radius:50%}.mfeat{margin-top:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:960px;margin-left:auto;margin-right:auto}.mf{text-align:center;padding:28px 24px;border-radius:20px;background:#f7f7f8}.mf .mi{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;margin:0 auto 16px;box-shadow:0 8px 18px -8px rgba(201,162,39,.55)}.mf .mi svg{width:22px;height:22px;color:#fff}.mf h4{font-size:16px;font-weight:700;color:#000;margin-bottom:8px}.mf p{font-size:13.5px;color:var(--muted);line-height:1.7}.local{background:#f7f7f8}.local-grid{margin-top:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1040px;margin-left:auto;margin-right:auto}.lc{background:#fff;border:1px solid var(--line);border-radius:24px;padding:36px 30px;text-align:center;transition:transform .3s,box-shadow .3s}.lc:hover{transform:translateY(-4px);box-shadow:0 20px 40px -24px rgba(0,0,0,.18)}.lc .li{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#ffd54d,#c9a227);display:grid;place-items:center;margin:0 auto 20px;box-shadow:0 10px 22px -8px rgba(201,162,39,.55)}.lc .li svg{width:26px;height:26px;color:#fff}.lc h4{font-size:18px;font-weight:700;color:#000;margin-bottom:10px}.lc p{font-size:14px;color:var(--muted);line-height:1.7}.faq{background:#fff}.faq-list{margin-top:56px;max-width:760px;margin-left:auto;margin-right:auto;display:flex;flex-direction:column;gap:14px}.fq{background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;transition:border-color .25s,box-shadow .25s}.fq:hover{border-color:#e6d9a8;box-shadow:0 8px 24px -12px rgba(201,162,39,.18)}.fq:hover .fq-q .ic::before,.fq:hover .fq-q .ic::after{background:#c9a227}.fq-item{transition:box-shadow .25s ease,border-color .25s ease,transform .25s ease}.fq-item:hover{border-color:#d8d8de;box-shadow:0 6px 20px rgba(20,20,40,.05);transform:translateY(-1px)}.fq-q{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 26px;cursor:pointer;font-size:17px;font-weight:600;color:#000}.fq-q .ic{position:relative;width:20px;height:20px;flex-shrink:0}.fq-q .ic::before,.fq-q .ic::after{content:"";position:absolute;background:var(--muted-2);transition:transform .3s}.fq-q .ic::before{top:9px;left:2px;width:16px;height:2px}.fq-q .ic::after{top:2px;left:9px;width:2px;height:16px}.fq.open .fq-q .ic::after{transform:rotate(90deg);opacity:0}.fq-a{max-height:0;overflow:hidden;transition:max-height .4s ease}.fq-a .inner{padding:0 26px 22px}.fq-a p{font-size:14.5px;line-height:1.8;color:var(--muted-2)}.fq-a code{font-family:Consolas,monospace;background:#f4f4f6;padding:2px 7px;border-radius:6px;font-size:13px}.final{position:relative;background:#fff;padding:140px 24px;text-align:center;overflow:hidden}.final-glow{position:absolute;left:50%;top:60%;width:760px;max-width:130%;height:420px;transform:translate(-50%,-50%);filter:blur(100px);pointer-events:none;background:radial-gradient(45% 60% at 35% 50%,rgba(255,200,60,.22),transparent 70%),radial-gradient(45% 60% at 65% 50%,rgba(255,213,77,.18),transparent 70%)}.final-inner{position:relative;z-index:2;max-width:680px;margin:0 auto}.final h2{font-size:48px;line-height:58px;font-weight:600;color:#000;letter-spacing:-.01em}.final p{margin-top:20px;font-size:18px;line-height:28px;color:var(--muted)}.final .pill{margin-top:36px;height:52px;padding:0 32px;font-size:17px}.final .pill:hover{transform:scale(1.05)}.footer{position:relative;background:#fff;padding:40px 24px 48px;border-top:none}.footer::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%);width:140px;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,#c9a227 50%,transparent)}.footer-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.footer .brand{display:inline-flex;align-items:center;gap:9px}.footer .brand b{color:var(--ink)}.footer .brand img{box-shadow:0 3px 10px -3px rgba(201,162,39,.5)}.footer p{font-size:13px;color:var(--muted)}.footer a{color:var(--muted-2);transition:color .2s}.footer a:hover{color:#000}.admin-entry{font-size:11px!important;color:#d0d4dc!important;opacity:.55;letter-spacing:.05em;transition:.2s;padding:2px 6px;border-radius:5px}.admin-entry:hover{color:#c9a227!important;opacity:1;background:#fdf6df}.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}.modal-overlay.show{opacity:1;visibility:visible}.modal{background:#fff;border-radius:24px;box-shadow:0 40px 80px -20px rgba(0,0,0,.35);width:100%;max-width:420px;padding:38px 34px 32px;transform:translateY(20px) scale(.96);transition:transform .38s cubic-bezier(.22,1,.36,1);position:relative}.modal-overlay.show .modal{transform:none}.modal-close{position:absolute;top:18px;right:18px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:var(--muted);transition:background .2s,color .2s,transform .2s;font-size:17px}.modal-close:hover{background:rgba(0,0,0,.06);color:#000;transform:rotate(90deg)}.modal-close:active{transform:rotate(90deg) scale(.92)}.modal-close:hover{background:#f4f4f6;color:#000}.modal-icon{width:58px;height:58px;border-radius:17px;background:#000;display:grid;place-items:center;margin:0 auto 20px}.modal-icon svg{width:28px;height:28px;color:#fff}.modal h3{font-size:22px;font-weight:700;text-align:center;color:#000;margin-bottom:8px}.modal-desc{font-size:14px;text-align:center;color:var(--muted);margin-bottom:24px;line-height:1.65}.modal-input{width:100%;height:54px;border:1.5px solid var(--line-2);border-radius:14px;padding:0 18px;font-size:21px;font-family:var(--en);font-weight:600;letter-spacing:.32em;text-align:center;text-transform:uppercase;color:#000;background:#f7f7f8;transition:border-color .25s,box-shadow .25s,background .25s;outline:none}.modal-input:focus{border-color:#000;background:#fff;box-shadow:0 0 0 4px rgba(0,0,0,.06)}.modal-input::placeholder{color:#bbb;letter-spacing:.32em;font-weight:500}.modal-err{margin-top:11px;font-size:13px;color:#dc2626;text-align:center;min-height:18px}.modal .pill{width:100%;margin-top:14px;height:52px}.modal-note{margin-top:18px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.7}.modal-loading{display:none;align-items:center;justify-content:center;gap:10px;font-size:14px;color:var(--muted-2);margin-top:16px}.modal-loading.show{display:flex}.spinner{width:18px;height:18px;border:2px solid var(--line-2);border-top-color:#000;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:1040px){.cards-stage{grid-template-columns:repeat(3,minmax(280px,320px));overflow-x:auto;justify-content:flex-start;padding:4px 24px 20px;max-width:100%;scrollbar-width:none}.cards-stage::-webkit-scrollbar{display:none}}@media(max-width:900px){.hero h1{font-size:42px;line-height:52px}.s-head h2,.final h2{font-size:34px;line-height:44px}.stages,.mfeat,.local-grid{grid-template-columns:1fr;max-width:520px}.pv-cols{grid-template-columns:1fr}.pv-steps{display:none}.nav-links{display:none}}@media(max-width:600px){.section{padding:96px 20px}.final{padding:96px 20px}.hero{padding:64px 20px 0}.hero-inner{padding-top:48px}.hero h1{font-size:34px;line-height:44px}.hero-kicker{font-size:17px}.hero-pills{flex-direction:column;width:100%}.hero-pills .pill{width:100%}.scard{width:280px;height:520px}.cards-stage{grid-template-columns:repeat(3,280px)}.modal{padding:30px 24px}}</style></head><body><nav class="nav"><div class="nav-inner"><div style="display:flex;align-items:center"><a href="#top" class="brand"><img src="./logo-64.png?v=transparent" alt="ModelFlow"><b>ModelFlow</b></a><div class="nav-links"><a href="#features">核心能力</a><a href="#pipeline">九步流程</a><a href="#models">多模型</a><a href="#faq">常见问题</a></div></div><div class="nav-right"><a href="https://lxlrwxs.top" class="nav-links" style="font-size:14px;font-weight:500;color:var(--muted-2)">个人工具中心</a><button class="nav-dl" onclick="openModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         下载
-      </button>
-    </div>
-  </div>
-</nav>
-
-<!-- ============ Hero ============ -->
-<section class="hero" id="top">
-  <div class="hero-glow"></div>
-  <div class="hero-inner">
-    <div class="hero-kicker">一道赛题进来，可提交的论文 PDF 出来</div>
-    <h1>ModelFlow <span class="en">智模流水线</span></h1>
-    <div class="hero-pills">
-      <button class="pill" onclick="openModal()">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 3v7.5H3V5.5zM11.5 10.5V3L21 5.5v5h-9.5zM3 12h7.5v7.5L3 17.5V12zM11.5 19.5V12H21v5.5l-9.5 2z"/></svg>
-        <span class="psep"></span>
+      </button></div></div></nav><section class="hero" id="top"><div class="hero-glow"></div><div class="hero-inner"><div class="hero-kicker">一道赛题进来，可提交的论文 PDF 出来</div><h1>ModelFlow <span class="en">智模流水线</span></h1><div class="hero-pills"><button class="pill" onclick="openModal()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 3v7.5H3V5.5zM11.5 10.5V3L21 5.5v5h-9.5zM3 12h7.5v7.5L3 17.5V12zM11.5 19.5V12H21v5.5l-9.5 2z"/></svg><span class="psep"></span>
         下载 Windows 版
-        <span class="ptag" id="btnVer">0.7.6</span>
-      </button>
-    </div>
-    <div class="hero-note">最新版本 <span class="num-en" id="heroVer">0.7.6</span> · 适用于 Windows 10 / 11 x64</div>
-  </div>
-
-  <!-- 产品预览（外层视差 / 内层入场，互不干扰） -->
-  <div class="hero-preview" id="heroPreview">
-     <div class="hero-preview-in">
-      <div class="pv-window">
-        <!-- 软件本体 -->
-        <div class="pv-app">
-          <!-- 软件顶栏 -->
-          <div class="pv-appbar">
-            <div class="pv-ab-brand"><span class="lg">M</span>Model<span>Flow</span> 智模流水线</div>
-            <div class="pv-ab-nav"><b>工作流</b><span>新建</span><span>设置</span></div>
-            <div class="pv-ab-badge"><i></i>运行中</div>
-          </div>
-          <div class="pv-work">
-            <!-- 作业标题行 -->
-            <div class="pv-job-head">
-              <span class="pv-job-title">2024 国赛 A 题 · 板凳腿缠绕优化</span>
-              <span class="pv-job-id">#WF-003</span>
-              <span class="pv-job-btn">⟳ 重新运行</span>
-            </div>
-            <!-- 全局进度 -->
-            <div class="pv-prog">
-              <span class="pl">4 / 9 步骤</span>
-              <div class="pv-track"><div class="pv-fill"></div></div>
-              <span class="pp">44%</span>
-            </div>
-            <!-- 双栏 -->
-            <div class="pv-cols">
-              <!-- 左：九步流水线（铺满） -->
-              <div class="pv-steps">
-                <div class="pv-group">
-                  <div class="pv-group-t">前期分析</div>
-                  <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">赛题分析</div></div></div>
-                  <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">建模求解</div></div></div>
-                  <div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">编程实现</div></div></div>
-                </div>
-                <div class="pv-group">
-                  <div class="pv-group-t">建模求解</div>
-                  <div class="pv-ss run"><span class="pv-dot run">4</span><div class="pv-ss-main"><div class="pv-ss-name">图表生成</div></div></div>
-                  <div class="pv-ss wait"><span class="pv-dot wait">5</span><div class="pv-ss-main"><div class="pv-ss-name">流程与架构图</div></div></div>
-                  <div class="pv-ss wait"><span class="pv-dot wait">6</span><div class="pv-ss-main"><div class="pv-ss-name">逻辑对抗复核</div></div></div>
-                </div>
-                <div class="pv-group">
-                  <div class="pv-group-t">论文输出</div>
-                  <div class="pv-ss wait"><span class="pv-dot wait">7</span><div class="pv-ss-main"><div class="pv-ss-name">竞赛论文撰写</div></div></div>
-                  <div class="pv-ss wait"><span class="pv-dot wait">8</span><div class="pv-ss-main"><div class="pv-ss-name">编译与合规检查</div></div></div>
-                  <div class="pv-ss wait"><span class="pv-dot wait">9</span><div class="pv-ss-main"><div class="pv-ss-name">论文改进循环</div></div></div>
-                </div>
-                <div class="pv-steps-foot">
-                  <div class="pv-sf-label">流水线总进度</div>
-                  <div class="pv-sf-bar"><div class="pv-sf-fill"></div></div>
-                  <div class="pv-sf-num"><b>4</b>/9 步 · 44%</div>
-                </div>
-              </div>
-              <!-- 右：终端日志 / 审稿图表 / 产物列表 -->
-              <div class="pv-right">
-                <div class="pv-card">
-                  <div class="pv-card-t">实时输出</div>
-                  <div class="pv-terminal">
-                    <div class="pv-term-bar"><i></i><i></i><i></i><span>run.log</span><span class="pv-term-live">● LIVE</span></div>
-                    <div class="pv-term-body">
-                      <div class="pv-term-line"><span class="pt-time">12:01:03</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">问题分析.md · 子问题 3 个已结构化</span></div>
-                      <div class="pv-term-line"><span class="pt-time">12:01:08</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">Q1_solve.py 求解收敛，残差 1.2e-4</span></div>
-                      <div class="pv-term-line"><span class="pt-time">12:01:12</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">约束校验通过，可行域已确认</span></div>
-                      <div class="pv-term-line"><span class="pt-time">12:01:18</span><span class="pt-lv pt-info">INFO</span><span class="pt-msg">灵敏度热力图已生成 (2.4 MB)</span></div>
-                      <div class="pv-term-line"><span class="pt-time">12:01:22</span><span class="pt-lv pt-info">INFO</span><span class="pt-msg">参数对比表已导出 (Excel)</span></div>
-                      <div class="pv-term-line"><span class="pt-time">12:01:25</span><span class="pt-lv pt-run">RUN</span><span class="pt-msg">正在绘制模型对比折线图</span><span class="pv-caret"></span></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="pv-card">
-                  <div class="pv-card-t">审稿分数曲线<span class="cnt">对抗轮次 → 分数</span></div>
-                  <div class="pv-chart">
-                    <div class="pv-chart-y"><span>9.0</span><span>8.0</span><span>7.0</span><span>6.0</span></div>
-                    <div class="pv-chart-main">
-                      <svg viewBox="0 0 360 190" preserveAspectRatio="xMidYMid meet">
-                        <defs>
-                          <linearGradient id="pvChartGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stop-color="#c9a227" stop-opacity=".30"/>
-                            <stop offset="1" stop-color="#c9a227" stop-opacity="0"/>
-                          </linearGradient>
-                          <filter id="pvGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                          <filter id="pvDotGlow"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-                        </defs>
-                        <line x1="20" y1="18" x2="340" y2="18" stroke="#f3f3f6" stroke-width="1" stroke-dasharray="3 3"/>
-                        <line x1="20" y1="63" x2="340" y2="63" stroke="#f3f3f6" stroke-width="1" stroke-dasharray="3 3"/>
-                        <line x1="20" y1="108" x2="340" y2="108" stroke="#f3f3f6" stroke-width="1" stroke-dasharray="3 3"/>
-                        <line x1="20" y1="153" x2="340" y2="153" stroke="#f3f3f6" stroke-width="1"/>
-                        <path d="M20 143 C52 136 68 124 84 113 C100 102 124 92 148 81 C172 70 188 65 212 59 C236 53 256 47 276 41 C296 35 320 30 340 27" fill="none" stroke="#c9a227" stroke-width="2.6" stroke-linecap="round" filter="url(#pvGlow)"/>
-                        <path d="M20 143 C52 136 68 124 84 113 C100 102 124 92 148 81 C172 70 188 65 212 59 C236 53 256 47 276 41 C296 35 320 30 340 27 L340 158 L20 158 Z" fill="url(#pvChartGrad)"/>
-                        <circle cx="20" cy="143" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/>
-                        <circle cx="84" cy="113" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/>
-                        <circle cx="148" cy="81" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/>
-                        <circle cx="212" cy="59" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/>
-                        <circle cx="276" cy="41" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/>
-                        <circle cx="340" cy="27" r="4.6" fill="#c9a227" filter="url(#pvDotGlow)"/>
-                        <text x="20" y="133" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">6.2</text>
-                        <text x="84" y="103" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">6.9</text>
-                        <text x="148" y="71" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">7.6</text>
-                        <text x="212" y="49" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">8.1</text>
-                        <text x="276" y="31" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">8.5</text>
-                        <text x="340" y="13" text-anchor="middle" font-family="Consolas,monospace" font-size="11" font-weight="800" fill="#9a7515">8.8</text>
-                      </svg>
-                      <div class="pv-chart-x"><span>R1</span><span>R2</span><span>R3</span><span>R4</span><span>R5</span><span>R6</span></div>
-                    </div>
-                  </div>
-                  <div class="pv-chart-stats">
-                    <div class="pv-cs"><b data-count="8.8" data-dec="1">8.8</b><span>最终分数</span></div>
-                    <div class="pv-cs"><b data-count="2.6" data-dec="1" data-prefix="+">+2.6</b><span>累计提升</span></div>
-                    <div class="pv-cs"><b data-count="6" data-dec="0">6</b><span>对抗轮次</span></div>
-                  </div>
-                </div>
-                <div class="pv-card">
-                  <div class="pv-card-t">产物文件<span class="cnt">12 个 · 全部落盘</span></div>
-                  <div class="pv-files pv-files-list">
-                    <div class="pv-file"><span class="pv-fic py">PY</span><div class="pv-finfo"><span class="pv-fname">Q1_solve.py</span><span class="pv-fcat">Python 源码</span></div><span class="pv-fsize">8.2 KB</span><span class="pv-fstat done">✓</span></div>
-                    <div class="pv-file"><span class="pv-fic md">MD</span><div class="pv-finfo"><span class="pv-fname">建模报告.md</span><span class="pv-fcat">分析报告</span></div><span class="pv-fsize">14 KB</span><span class="pv-fstat done">✓</span></div>
-                    <div class="pv-file"><span class="pv-fic img">IMG</span><div class="pv-finfo"><span class="pv-fname">Figure_2.png</span><span class="pv-fcat">灵敏度热力图</span></div><span class="pv-fsize">2.4 MB</span><span class="pv-fstat done">✓</span></div>
-                    <div class="pv-file"><span class="pv-fic csv">CSV</span><div class="pv-finfo"><span class="pv-fname">参数对比表.csv</span><span class="pv-fcat">数据表格</span></div><span class="pv-fsize">3.1 KB</span><span class="pv-fstat done">✓</span></div>
-                    <div class="pv-file"><span class="pv-fic html">HTML</span><div class="pv-finfo"><span class="pv-fname">架构流程图.html</span><span class="pv-fcat">交互可视化</span></div><span class="pv-fsize">1.8 MB</span><span class="pv-fstat done">✓</span></div>
-                    <div class="pv-file pv-file-building"><span class="pv-fic pdf">PDF</span><div class="pv-finfo"><span class="pv-fname">main.pdf</span><span class="pv-fcat">最终论文</span><div class="pv-fprog"><div class="pv-fprog-fill"></div></div></div><span class="pv-fsize">编译中</span><span class="pv-fstat run">●</span></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-     </div>
-  </div>
-</section>
-
-<!-- ============ 核心功能卡片 ============ -->
-<section class="section features" id="features">
-  <div class="s-head" data-rise>
-    <h2>把三天的工作量，<br>压进一条流水线</h2>
-    <p class="s-sub">不再手动切换十几个工具、复制粘贴到凌晨。赛题丢进来，三个专业阶段自动接力，每一步都有产物、可检查、可回退。</p>
-  </div>
-  <div class="cards-stage">
-    <div class="scard c1" data-rise>
-      <div class="scard-stage"><span class="scard-num">01</span><span class="scard-line"></span></div>
-      <h3 class="scard-h">赛题智能解析</h3>
-      <p class="scard-p">读懂题目，拆出子问题</p>
-      <div class="scard-visual">
-        <div class="v-doc">
-          <span class="v-doc-bar w80"></span>
-          <span class="v-doc-bar w60"></span>
-          <span class="v-doc-bar w70"></span>
-        </div>
-        <div class="v-split">
-          <div class="v-chip"><i>1</i>目标函数</div>
-          <div class="v-chip"><i>2</i>约束条件</div>
-          <div class="v-chip"><i>3</i>求解策略</div>
-        </div>
-      </div>
-      <div class="scard-bottom">支持文字 / PDF / 图片赛题</div>
-    </div>
-    <div class="scard c2" data-rise data-delay="1">
-      <div class="scard-stage"><span class="scard-num">02</span><span class="scard-line"></span></div>
-      <h3 class="scard-h">建模 · 求解 · 出图</h3>
-      <p class="scard-p">写代码、跑结果、画论文图</p>
-      <div class="scard-visual">
-        <svg class="v-curve" viewBox="0 0 220 70" preserveAspectRatio="xMidYMid meet">
-          <defs><linearGradient id="cardGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
-          <path d="M10 56 Q60 48 100 36 T210 12" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M10 56 Q60 48 100 36 T210 12 L210 68 L10 68 Z" fill="url(#cardGrad2)"/>
-          <circle cx="10" cy="56" r="3.5" fill="#fff"/>
-          <circle cx="100" cy="36" r="3.5" fill="#fff"/>
-          <circle cx="210" cy="12" r="3.8" fill="#fff"/>
-        </svg>
-        <div class="v-stats">
-          <div class="v-stat"><b>R²</b><span>0.94</span></div>
-          <div class="v-stat"><b>耗时</b><span>2.3s</span></div>
-          <div class="v-stat"><b>图表</b><span>3 张</span></div>
-        </div>
-      </div>
-      <div class="scard-bottom">自动建模 · 代码运行 · 论文级图表</div>
-    </div>
-    <div class="scard c3" data-rise data-delay="2">
-      <div class="scard-stage"><span class="scard-num">03</span><span class="scard-line"></span></div>
-      <h3 class="scard-h">论文一键成稿</h3>
-      <p class="scard-p">LaTeX 撰写、编译 PDF</p>
-      <div class="scard-visual">
-        <div class="v-pages">
-          <div class="v-page v-page-back"></div>
-          <div class="v-page v-page-mid"></div>
-          <div class="v-page v-page-front">
-            <span class="v-pbar w90"></span>
-            <span class="v-pbar w70"></span>
-            <span class="v-pbar w80"></span>
-            <span class="v-pcheck">✓</span>
-          </div>
-        </div>
-        <div class="v-toc"><span>摘要</span><span>建模</span><span>求解</span><span>结论</span></div>
-      </div>
-      <div class="scard-bottom">LaTeX 编译 · 逻辑对抗复核</div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 九步流程 ============ -->
-<section class="section pipeline" id="pipeline">
-  <div class="s-head" data-rise>
-    <h2>九个专业环节，<br>三段式自动接力</h2>
-    <p class="s-sub">每个环节加载对应的专业 Skill 作为方法内核，产物逐级传递，环环自检。</p>
-  </div>
-  <div class="stages">
-    <div class="stage" data-rise>
-      <div class="stage-label">STAGE 01</div>
-      <h3>理解与建模</h3>
-      <p class="sd">读懂题目、确定方法、跑出结果，把一道开放赛题变成可计算的问题。</p>
-      <div class="steps">
-        <div class="step"><span class="n">1</span><span class="t">赛题分析</span></div>
-        <div class="step"><span class="n">2</span><span class="t">建模求解</span></div>
-        <div class="step"><span class="n">3</span><span class="t">编程实现</span></div>
-      </div>
-      <div class="stage-out">产物：<b>问题分析 · 建模报告 · 计算结果</b></div>
-    </div>
-    <div class="stage" data-rise data-delay="1">
-      <div class="stage-label">STAGE 02</div>
-      <h3>可视化与复核</h3>
-      <p class="sd">生成论文级图表与流程图，再以对抗视角审查逻辑漏洞，让结论站得住脚。</p>
-      <div class="steps">
-        <div class="step"><span class="n">4</span><span class="t">图表生成</span></div>
-        <div class="step"><span class="n">5</span><span class="t">流程与架构图</span></div>
-        <div class="step"><span class="n">6</span><span class="t">逻辑对抗复核</span></div>
-      </div>
-      <div class="stage-out">产物：<b>结果图表 · 架构图 · 逻辑审查报告</b></div>
-    </div>
-    <div class="stage" data-rise data-delay="2">
-      <div class="stage-label">STAGE 03</div>
-      <h3>成稿与打磨</h3>
-      <p class="sd">按竞赛模板写论文、编译 PDF、自动多轮改进，直到形成完整可交稿。</p>
-      <div class="steps">
-        <div class="step"><span class="n">7</span><span class="t">竞赛论文撰写</span></div>
-        <div class="step"><span class="n">8</span><span class="t">编译与合规检查</span></div>
-        <div class="step"><span class="n">9</span><span class="t">论文改进循环</span></div>
-      </div>
-      <div class="stage-out">产物：<b>main.tex · main.pdf · 改进稿</b></div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 多模型 ============ -->
-<section class="section models" id="models">
-  <div class="s-head" data-rise>
-    <h2>多模型自由切换，<br>API / CLI 双引擎</h2>
-    <p class="s-sub">不绑定单一模型。内置多家主流大模型，既可走云端 API，也可接入本地命令行模型，按环节分别指定"执行 / 审查 / 编辑"角色。</p>
-  </div>
-  <div class="chips" data-rise>
-    <div class="chip"><span class="dot" style="background:#d97757"></span>Claude</div>
-    <div class="chip"><span class="dot" style="background:#4a90d9"></span>DeepSeek</div>
-    <div class="chip"><span class="dot" style="background:#3370ff"></span>豆包</div>
-    <div class="chip"><span class="dot" style="background:#624de4"></span>通义千问</div>
-    <div class="chip"><span class="dot" style="background:#27ae60"></span>智谱 GLM</div>
-    <div class="chip"><span class="dot" style="background:#eb5e0b"></span>MiniMax</div>
-    <div class="chip"><span class="dot" style="background:#111"></span>Kimi</div>
-    <div class="chip"><span class="dot" style="background:#4285f4"></span>Gemini</div>
-    <div class="chip"><span class="dot" style="background:#10a37f"></span>OpenAI</div>
-    <div class="chip"><span class="dot" style="background:#8b5cf6"></span>LongCat</div>
-    <div class="chip"><span class="dot" style="background:#f59e0b"></span>Moonshot</div>
-    <div class="chip"><span class="dot" style="background:#06b6d4"></span>Groq</div>
-  </div>
-  <div class="mfeat">
-    <div class="mf" data-rise>
-      <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
-      <h4>按步骤分配角色模型</h4>
-      <p>执行、审查、编辑可分别选用不同模型，让强模型用在刀刃上。</p>
-    </div>
-    <div class="mf" data-rise data-delay="1">
-      <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-      <h4>云端 / 本地双通道</h4>
-      <p>API 与本地 CLI 引擎并存，断网或有本地模型时照样能跑。</p>
-    </div>
-    <div class="mf" data-rise data-delay="2">
-      <div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-      <h4>软件本身不售卖模型额度</h4>
-      <p>填入你自己的 API Key 即可运行，费用直接交给模型服务商，不经手、不抽成。</p>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 本地运行 ============ -->
-<section class="section local" id="local">
-  <div class="s-head" data-rise>
-    <h2>装在你电脑上，<br>数据握在手里</h2>
-    <p class="s-sub">桌面应用本地启动，浏览器只是操作界面，工作区文件全部保存在本机。</p>
-  </div>
-  <div class="local-grid">
-    <div class="lc" data-rise>
-      <div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-      <h4>本地运行</h4>
-      <p>双击启动，本机起服务、自动打开浏览器，无需部署服务器，不依赖在线编辑器。</p>
-    </div>
-    <div class="lc" data-rise data-delay="1">
-      <div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
-      <h4>文件留在本机</h4>
-      <p>赛题、代码、论文、图表全部存在本地工作区，不经过第三方服务器托管你的成果。</p>
-    </div>
-    <div class="lc" data-rise data-delay="2">
-      <div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg></div>
-      <h4>应用内在线更新</h4>
-      <p>设置里一键检查更新，自动下载、SHA-256 校验、静默升级，数据与授权完整保留。</p>
-    </div>
-  </div>
-</section>
-
-<!-- ============ FAQ ============ -->
-<section class="section faq" id="faq">
-  <div class="s-head" data-rise>
-    <h2>常见问题</h2>
-  </div>
-  <div class="faq-list">
-    <div class="fq" data-rise>
-      <div class="fq-q" onclick="toggleFaq(this)">支持什么操作系统？<span class="ic"></span></div>
-      <div class="fq-a"><div class="inner"><p>目前仅支持 Windows 10 / 11 的 64 位系统。下载后双击安装包即可安装，装到当前用户目录，无需管理员权限、不会弹 UAC。macOS 版本暂未提供。</p></div></div>
-    </div>
-    <div class="fq" data-rise>
-      <div class="fq-q" onclick="toggleFaq(this)">需要会编程吗？零基础能用吗？<span class="ic"></span></div>
-      <div class="fq-a"><div class="inner"><p>不需要手写代码。你只需填入赛题（文字 / PDF / 图片均可）、选好模型与模板，点击开始，建模、写代码、跑结果、画图、写论文都由流水线自动完成。具备建模基础能让你更好地审阅和修改中间产物。</p></div></div>
-    </div>
-    <div class="fq" data-rise>
-      <div class="fq-q" onclick="toggleFaq(this)">下载为什么需要授权码？<span class="ic"></span></div>
-      <div class="fq-a"><div class="inner"><p>ModelFlow 为小范围授权分发软件。点击「下载 Windows 版」会弹出一个小窗口，输入你获得的 5 位授权码即可解锁下载；该授权码同时用于软件首次启动时的激活（一码一机）。请向开发者索取。</p></div></div>
-    </div>
-    <div class="fq" data-rise>
-      <div class="fq-q" onclick="toggleFaq(this)">AI 模型要自己准备吗？怎么计费？<span class="ic"></span></div>
-      <div class="fq-a"><div class="inner"><p>软件本身不售卖模型额度。你在设置中填入自己的 API Key（或接入本地 CLI 模型）即可运行，费用直接交给你选择的模型服务商，软件不经手、不抽成。</p></div></div>
-    </div>
-    <div class="fq" data-rise>
-      <div class="fq-q" onclick="toggleFaq(this)">装了新版本，数据和授权会丢吗？<span class="ic"></span></div>
-      <div class="fq-a"><div class="inner"><p>不会。无论是应用内在线更新，还是下载新安装包覆盖安装，授权、工作区、模型配置与所有产物都会原样保留。</p></div></div>
-    </div>
-    <div class="fq" data-rise>
-      <div class="fq-q" onclick="toggleFaq(this)">如何确认安装包没被篡改？<span class="ic"></span></div>
-      <div class="fq-a"><div class="inner"><p>更新清单 latest.json 公布了安装包的 SHA-256 摘要。下载后可在文件目录执行 <code>certutil -hashfile 文件名 SHA256</code> 比对，一致即完整未被篡改；软件内自动更新也会强制校验。</p></div></div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 底部 CTA ============ -->
-<section class="final">
-  <div class="final-glow"></div>
-  <div class="final-inner" data-rise>
-    <h2>把熬夜赶稿，<br>交给 ModelFlow</h2>
-    <p>从赛题到可提交的论文 PDF，一条流水线跑完。</p>
-    <button class="pill" onclick="openModal()">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 3v7.5H3V5.5zM11.5 10.5V3L21 5.5v5h-9.5zM3 12h7.5v7.5L3 17.5V12zM11.5 19.5V12H21v5.5l-9.5 2z"/></svg>
-      <span class="psep"></span>
-      下载 Windows 版 · <span class="num-en" id="ctaVer">0.7.6</span>
-    </button>
-  </div>
-</section>
-
-<!-- ============ 页脚 ============ -->
-<footer class="footer">
-  <div class="footer-inner">
-    <a href="#top" class="brand">
-      <img src="./logo-64.png?v=transparent" alt="ModelFlow" style="width:28px;height:28px;border-radius:7px">
-      <b>ModelFlow</b>
-    </a>
-    <p>© 2026 ModelFlow · 智模流水线 · <a href="https://lxlrwxs.top">Voyra 个人工具中心</a></p>
-    <a href="./admin/" class="admin-entry">管理</a>
-  </div>
-</footer>
-
-<!-- ============ 授权码弹窗 ============ -->
-<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    </div>
-    <h3>输入授权码</h3>
-    <p class="modal-desc">ModelFlow 为授权分发软件，请输入你获得的 5 位授权码解锁下载。</p>
-    <input type="text" class="modal-input" id="licInput" maxlength="5" placeholder="XXXXX" autocomplete="off" oninput="this.value=this.value.toUpperCase();clearErr()">
-    <div class="modal-err" id="modalErr"></div>
-    <div class="modal-loading" id="modalLoading"><span class="spinner"></span>正在验证并准备下载…</div>
-    <button class="pill" id="modalBtn" onclick="submitCode()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="ptag" id="btnVer">0.7.6</span></button></div><div class="hero-note">最新版本 <span class="num-en" id="heroVer">0.7.6</span> · 适用于 Windows 10 / 11 x64</div></div><div class="hero-preview" id="heroPreview"><div class="hero-preview-in"><div class="pv-window"><div class="pv-app"><div class="pv-appbar"><div class="pv-ab-brand"><span class="lg">M</span>Model<span>Flow</span> 智模流水线</div><div class="pv-ab-nav"><b>工作流</b><span>新建</span><span>设置</span></div><div class="pv-ab-badge"><i></i>运行中</div></div><div class="pv-work"><div class="pv-job-head"><span class="pv-job-title">2024 国赛 A 题 · 板凳腿缠绕优化</span><span class="pv-job-id">#WF-003</span><span class="pv-job-btn">⟳ 重新运行</span></div><div class="pv-prog"><span class="pl">4 / 9 步骤</span><div class="pv-track"><div class="pv-fill"></div></div><span class="pp">44%</span></div><div class="pv-cols"><div class="pv-steps"><div class="pv-group"><div class="pv-group-t">前期分析</div><div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">赛题分析</div></div></div><div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">建模求解</div></div></div><div class="pv-ss done"><span class="pv-dot done">✓</span><div class="pv-ss-main"><div class="pv-ss-name">编程实现</div></div></div></div><div class="pv-group"><div class="pv-group-t">建模求解</div><div class="pv-ss run"><span class="pv-dot run">4</span><div class="pv-ss-main"><div class="pv-ss-name">图表生成</div></div></div><div class="pv-ss wait"><span class="pv-dot wait">5</span><div class="pv-ss-main"><div class="pv-ss-name">流程与架构图</div></div></div><div class="pv-ss wait"><span class="pv-dot wait">6</span><div class="pv-ss-main"><div class="pv-ss-name">逻辑对抗复核</div></div></div></div><div class="pv-group"><div class="pv-group-t">论文输出</div><div class="pv-ss wait"><span class="pv-dot wait">7</span><div class="pv-ss-main"><div class="pv-ss-name">竞赛论文撰写</div></div></div><div class="pv-ss wait"><span class="pv-dot wait">8</span><div class="pv-ss-main"><div class="pv-ss-name">编译与合规检查</div></div></div><div class="pv-ss wait"><span class="pv-dot wait">9</span><div class="pv-ss-main"><div class="pv-ss-name">论文改进循环</div></div></div></div><div class="pv-steps-foot"><div class="pv-sf-label">流水线总进度</div><div class="pv-sf-bar"><div class="pv-sf-fill"></div></div><div class="pv-sf-num"><b>4</b>/9 步 · 44%</div></div></div><div class="pv-right"><div class="pv-card"><div class="pv-card-t">实时输出</div><div class="pv-terminal"><div class="pv-term-bar"><i></i><i></i><i></i><span>run.log</span><span class="pv-term-live">● LIVE</span></div><div class="pv-term-body"><div class="pv-term-line"><span class="pt-time">12:01:03</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">问题分析.md · 子问题 3 个已结构化</span></div><div class="pv-term-line"><span class="pt-time">12:01:08</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">Q1_solve.py 求解收敛，残差 1.2e-4</span></div><div class="pv-term-line"><span class="pt-time">12:01:12</span><span class="pt-lv pt-ok">DONE</span><span class="pt-msg">约束校验通过，可行域已确认</span></div><div class="pv-term-line"><span class="pt-time">12:01:18</span><span class="pt-lv pt-info">INFO</span><span class="pt-msg">灵敏度热力图已生成 (2.4 MB)</span></div><div class="pv-term-line"><span class="pt-time">12:01:22</span><span class="pt-lv pt-info">INFO</span><span class="pt-msg">参数对比表已导出 (Excel)</span></div><div class="pv-term-line"><span class="pt-time">12:01:25</span><span class="pt-lv pt-run">RUN</span><span class="pt-msg">正在绘制模型对比折线图</span><span class="pv-caret"></span></div></div></div></div><div class="pv-card"><div class="pv-card-t">审稿分数曲线<span class="cnt">对抗轮次 → 分数</span></div><div class="pv-chart"><div class="pv-chart-y"><span>9.0</span><span>8.0</span><span>7.0</span><span>6.0</span></div><div class="pv-chart-main"><svg viewBox="0 0 360 190" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="pvChartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a227" stop-opacity=".30"/><stop offset="1" stop-color="#c9a227" stop-opacity="0"/></linearGradient><filter id="pvGlow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="pvDotGlow"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><line x1="20" y1="18" x2="340" y2="18" stroke="#f3f3f6" stroke-width="1" stroke-dasharray="3 3"/><line x1="20" y1="63" x2="340" y2="63" stroke="#f3f3f6" stroke-width="1" stroke-dasharray="3 3"/><line x1="20" y1="108" x2="340" y2="108" stroke="#f3f3f6" stroke-width="1" stroke-dasharray="3 3"/><line x1="20" y1="153" x2="340" y2="153" stroke="#f3f3f6" stroke-width="1"/><path d="M20 143 C52 136 68 124 84 113 C100 102 124 92 148 81 C172 70 188 65 212 59 C236 53 256 47 276 41 C296 35 320 30 340 27" fill="none" stroke="#c9a227" stroke-width="2.6" stroke-linecap="round" filter="url(#pvGlow)"/><path d="M20 143 C52 136 68 124 84 113 C100 102 124 92 148 81 C172 70 188 65 212 59 C236 53 256 47 276 41 C296 35 320 30 340 27 L340 158 L20 158 Z" fill="url(#pvChartGrad)"/><circle cx="20" cy="143" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/><circle cx="84" cy="113" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/><circle cx="148" cy="81" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/><circle cx="212" cy="59" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/><circle cx="276" cy="41" r="3.4" fill="#fff" stroke="#c9a227" stroke-width="2"/><circle cx="340" cy="27" r="4.6" fill="#c9a227" filter="url(#pvDotGlow)"/><text x="20" y="133" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">6.2</text><text x="84" y="103" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">6.9</text><text x="148" y="71" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">7.6</text><text x="212" y="49" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">8.1</text><text x="276" y="31" text-anchor="middle" font-family="Consolas,monospace" font-size="10" font-weight="700" fill="#b4b8c0">8.5</text><text x="340" y="13" text-anchor="middle" font-family="Consolas,monospace" font-size="11" font-weight="800" fill="#9a7515">8.8</text></svg><div class="pv-chart-x"><span>R1</span><span>R2</span><span>R3</span><span>R4</span><span>R5</span><span>R6</span></div></div></div><div class="pv-chart-stats"><div class="pv-cs"><b data-count="8.8" data-dec="1">8.8</b><span>最终分数</span></div><div class="pv-cs"><b data-count="2.6" data-dec="1" data-prefix="+">+2.6</b><span>累计提升</span></div><div class="pv-cs"><b data-count="6" data-dec="0">6</b><span>对抗轮次</span></div></div></div><div class="pv-card"><div class="pv-card-t">产物文件<span class="cnt">12 个 · 全部落盘</span></div><div class="pv-files pv-files-list"><div class="pv-file"><span class="pv-fic py">PY</span><div class="pv-finfo"><span class="pv-fname">Q1_solve.py</span><span class="pv-fcat">Python 源码</span></div><span class="pv-fsize">8.2 KB</span><span class="pv-fstat done">✓</span></div><div class="pv-file"><span class="pv-fic md">MD</span><div class="pv-finfo"><span class="pv-fname">建模报告.md</span><span class="pv-fcat">分析报告</span></div><span class="pv-fsize">14 KB</span><span class="pv-fstat done">✓</span></div><div class="pv-file"><span class="pv-fic img">IMG</span><div class="pv-finfo"><span class="pv-fname">Figure_2.png</span><span class="pv-fcat">灵敏度热力图</span></div><span class="pv-fsize">2.4 MB</span><span class="pv-fstat done">✓</span></div><div class="pv-file"><span class="pv-fic csv">CSV</span><div class="pv-finfo"><span class="pv-fname">参数对比表.csv</span><span class="pv-fcat">数据表格</span></div><span class="pv-fsize">3.1 KB</span><span class="pv-fstat done">✓</span></div><div class="pv-file"><span class="pv-fic html">HTML</span><div class="pv-finfo"><span class="pv-fname">架构流程图.html</span><span class="pv-fcat">交互可视化</span></div><span class="pv-fsize">1.8 MB</span><span class="pv-fstat done">✓</span></div><div class="pv-file pv-file-building"><span class="pv-fic pdf">PDF</span><div class="pv-finfo"><span class="pv-fname">main.pdf</span><span class="pv-fcat">最终论文</span><div class="pv-fprog"><div class="pv-fprog-fill"></div></div></div><span class="pv-fsize">编译中</span><span class="pv-fstat run">●</span></div></div></div></div></div></div></div></div></div></div></section><section class="section features" id="features"><div class="s-head" data-rise><h2>把三天的工作量，<br>压进一条流水线</h2><p class="s-sub">不再手动切换十几个工具、复制粘贴到凌晨。赛题丢进来，三个专业阶段自动接力，每一步都有产物、可检查、可回退。</p></div><div class="cards-stage"><div class="scard c1" data-rise><div class="scard-stage"><span class="scard-num">01</span><span class="scard-line"></span></div><h3 class="scard-h">赛题智能解析</h3><p class="scard-p">读懂题目，拆出子问题</p><div class="scard-visual"><div class="v-doc"><span class="v-doc-bar w80"></span><span class="v-doc-bar w60"></span><span class="v-doc-bar w70"></span></div><div class="v-split"><div class="v-chip"><i>1</i>目标函数</div><div class="v-chip"><i>2</i>约束条件</div><div class="v-chip"><i>3</i>求解策略</div></div></div><div class="scard-bottom">支持文字 / PDF / 图片赛题</div></div><div class="scard c2" data-rise data-delay="1"><div class="scard-stage"><span class="scard-num">02</span><span class="scard-line"></span></div><h3 class="scard-h">建模 · 求解 · 出图</h3><p class="scard-p">写代码、跑结果、画论文图</p><div class="scard-visual"><svg class="v-curve" viewBox="0 0 220 70" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="cardGrad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs><path d="M10 56 Q60 48 100 36 T210 12" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="2.5" stroke-linecap="round"/><path d="M10 56 Q60 48 100 36 T210 12 L210 68 L10 68 Z" fill="url(#cardGrad2)"/><circle cx="10" cy="56" r="3.5" fill="#fff"/><circle cx="100" cy="36" r="3.5" fill="#fff"/><circle cx="210" cy="12" r="3.8" fill="#fff"/></svg><div class="v-stats"><div class="v-stat"><b>R²</b><span>0.94</span></div><div class="v-stat"><b>耗时</b><span>2.3s</span></div><div class="v-stat"><b>图表</b><span>3 张</span></div></div></div><div class="scard-bottom">自动建模 · 代码运行 · 论文级图表</div></div><div class="scard c3" data-rise data-delay="2"><div class="scard-stage"><span class="scard-num">03</span><span class="scard-line"></span></div><h3 class="scard-h">论文一键成稿</h3><p class="scard-p">LaTeX 撰写、编译 PDF</p><div class="scard-visual"><div class="v-pages"><div class="v-page v-page-back"></div><div class="v-page v-page-mid"></div><div class="v-page v-page-front"><span class="v-pbar w90"></span><span class="v-pbar w70"></span><span class="v-pbar w80"></span><span class="v-pcheck">✓</span></div></div><div class="v-toc"><span>摘要</span><span>建模</span><span>求解</span><span>结论</span></div></div><div class="scard-bottom">LaTeX 编译 · 逻辑对抗复核</div></div></div></section><section class="section pipeline" id="pipeline"><div class="s-head" data-rise><h2>九个专业环节，<br>三段式自动接力</h2><p class="s-sub">每个环节加载对应的专业 Skill 作为方法内核，产物逐级传递，环环自检。</p></div><div class="stages"><div class="stage" data-rise><div class="stage-label">STAGE 01</div><h3>理解与建模</h3><p class="sd">读懂题目、确定方法、跑出结果，把一道开放赛题变成可计算的问题。</p><div class="steps"><div class="step"><span class="n">1</span><span class="t">赛题分析</span></div><div class="step"><span class="n">2</span><span class="t">建模求解</span></div><div class="step"><span class="n">3</span><span class="t">编程实现</span></div></div><div class="stage-out">产物：<b>问题分析 · 建模报告 · 计算结果</b></div></div><div class="stage" data-rise data-delay="1"><div class="stage-label">STAGE 02</div><h3>可视化与复核</h3><p class="sd">生成论文级图表与流程图，再以对抗视角审查逻辑漏洞，让结论站得住脚。</p><div class="steps"><div class="step"><span class="n">4</span><span class="t">图表生成</span></div><div class="step"><span class="n">5</span><span class="t">流程与架构图</span></div><div class="step"><span class="n">6</span><span class="t">逻辑对抗复核</span></div></div><div class="stage-out">产物：<b>结果图表 · 架构图 · 逻辑审查报告</b></div></div><div class="stage" data-rise data-delay="2"><div class="stage-label">STAGE 03</div><h3>成稿与打磨</h3><p class="sd">按竞赛模板写论文、编译 PDF、自动多轮改进，直到形成完整可交稿。</p><div class="steps"><div class="step"><span class="n">7</span><span class="t">竞赛论文撰写</span></div><div class="step"><span class="n">8</span><span class="t">编译与合规检查</span></div><div class="step"><span class="n">9</span><span class="t">论文改进循环</span></div></div><div class="stage-out">产物：<b>main.tex · main.pdf · 改进稿</b></div></div></div></section><section class="section models" id="models"><div class="s-head" data-rise><h2>多模型自由切换，<br>API / CLI 双引擎</h2><p class="s-sub">不绑定单一模型。内置多家主流大模型，既可走云端 API，也可接入本地命令行模型，按环节分别指定"执行 / 审查 / 编辑"角色。</p></div><div class="chips" data-rise><div class="chip"><span class="dot" style="background:#d97757"></span>Claude</div><div class="chip"><span class="dot" style="background:#4a90d9"></span>DeepSeek</div><div class="chip"><span class="dot" style="background:#3370ff"></span>豆包</div><div class="chip"><span class="dot" style="background:#624de4"></span>通义千问</div><div class="chip"><span class="dot" style="background:#27ae60"></span>智谱 GLM</div><div class="chip"><span class="dot" style="background:#eb5e0b"></span>MiniMax</div><div class="chip"><span class="dot" style="background:#111"></span>Kimi</div><div class="chip"><span class="dot" style="background:#4285f4"></span>Gemini</div><div class="chip"><span class="dot" style="background:#10a37f"></span>OpenAI</div><div class="chip"><span class="dot" style="background:#8b5cf6"></span>LongCat</div><div class="chip"><span class="dot" style="background:#f59e0b"></span>Moonshot</div><div class="chip"><span class="dot" style="background:#06b6d4"></span>Groq</div></div><div class="mfeat"><div class="mf" data-rise><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><h4>按步骤分配角色模型</h4><p>执行、审查、编辑可分别选用不同模型，让强模型用在刀刃上。</p></div><div class="mf" data-rise data-delay="1"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h4>云端 / 本地双通道</h4><p>API 与本地 CLI 引擎并存，断网或有本地模型时照样能跑。</p></div><div class="mf" data-rise data-delay="2"><div class="mi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><h4>软件本身不售卖模型额度</h4><p>填入你自己的 API Key 即可运行，费用直接交给模型服务商，不经手、不抽成。</p></div></div></section><section class="section local" id="local"><div class="s-head" data-rise><h2>装在你电脑上，<br>数据握在手里</h2><p class="s-sub">桌面应用本地启动，浏览器只是操作界面，工作区文件全部保存在本机。</p></div><div class="local-grid"><div class="lc" data-rise><div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h4>本地运行</h4><p>双击启动，本机起服务、自动打开浏览器，无需部署服务器，不依赖在线编辑器。</p></div><div class="lc" data-rise data-delay="1"><div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div><h4>文件留在本机</h4><p>赛题、代码、论文、图表全部存在本地工作区，不经过第三方服务器托管你的成果。</p></div><div class="lc" data-rise data-delay="2"><div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg></div><h4>应用内在线更新</h4><p>设置里一键检查更新，自动下载、SHA-256 校验、静默升级，数据与授权完整保留。</p></div></div></section><section class="section faq" id="faq"><div class="s-head" data-rise><h2>常见问题</h2></div><div class="faq-list"><div class="fq" data-rise><div class="fq-q" onclick="toggleFaq(this)">支持什么操作系统？<span class="ic"></span></div><div class="fq-a"><div class="inner"><p>目前仅支持 Windows 10 / 11 的 64 位系统。下载后双击安装包即可安装，装到当前用户目录，无需管理员权限、不会弹 UAC。macOS 版本暂未提供。</p></div></div></div><div class="fq" data-rise><div class="fq-q" onclick="toggleFaq(this)">需要会编程吗？零基础能用吗？<span class="ic"></span></div><div class="fq-a"><div class="inner"><p>不需要手写代码。你只需填入赛题（文字 / PDF / 图片均可）、选好模型与模板，点击开始，建模、写代码、跑结果、画图、写论文都由流水线自动完成。具备建模基础能让你更好地审阅和修改中间产物。</p></div></div></div><div class="fq" data-rise><div class="fq-q" onclick="toggleFaq(this)">下载为什么需要授权码？<span class="ic"></span></div><div class="fq-a"><div class="inner"><p>ModelFlow 为小范围授权分发软件。点击「下载 Windows 版」会弹出一个小窗口，输入你获得的 5 位授权码即可解锁下载；该授权码同时用于软件首次启动时的激活（一码一机）。请向开发者索取。</p></div></div></div><div class="fq" data-rise><div class="fq-q" onclick="toggleFaq(this)">AI 模型要自己准备吗？怎么计费？<span class="ic"></span></div><div class="fq-a"><div class="inner"><p>软件本身不售卖模型额度。你在设置中填入自己的 API Key（或接入本地 CLI 模型）即可运行，费用直接交给你选择的模型服务商，软件不经手、不抽成。</p></div></div></div><div class="fq" data-rise><div class="fq-q" onclick="toggleFaq(this)">装了新版本，数据和授权会丢吗？<span class="ic"></span></div><div class="fq-a"><div class="inner"><p>不会。无论是应用内在线更新，还是下载新安装包覆盖安装，授权、工作区、模型配置与所有产物都会原样保留。</p></div></div></div><div class="fq" data-rise><div class="fq-q" onclick="toggleFaq(this)">如何确认安装包没被篡改？<span class="ic"></span></div><div class="fq-a"><div class="inner"><p>更新清单 latest.json 公布了安装包的 SHA-256 摘要。下载后可在文件目录执行 <code>certutil -hashfile 文件名 SHA256</code> 比对，一致即完整未被篡改；软件内自动更新也会强制校验。</p></div></div></div></div></section><section class="final"><div class="final-glow"></div><div class="final-inner" data-rise><h2>把熬夜赶稿，<br>交给 ModelFlow</h2><p>从赛题到可提交的论文 PDF，一条流水线跑完。</p><button class="pill" onclick="openModal()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5L10.5 3v7.5H3V5.5zM11.5 10.5V3L21 5.5v5h-9.5zM3 12h7.5v7.5L3 17.5V12zM11.5 19.5V12H21v5.5l-9.5 2z"/></svg><span class="psep"></span>
+      下载 Windows 版 · <span class="num-en" id="ctaVer">0.7.6</span></button></div></section><footer class="footer"><div class="footer-inner"><a href="#top" class="brand"><img src="./logo-64.png?v=transparent" alt="ModelFlow" style="width:28px;height:28px;border-radius:7px"><b>ModelFlow</b></a><p>© 2026 ModelFlow · 智模流水线 · <a href="https://lxlrwxs.top">Voyra 个人工具中心</a></p><a href="./admin/" class="admin-entry">管理</a></div></footer><div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal"><button class="modal-close" onclick="closeModal()">✕</button><div class="modal-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>输入授权码</h3><p class="modal-desc">ModelFlow 为授权分发软件，请输入你获得的 5 位授权码解锁下载。</p><input type="text" class="modal-input" id="licInput" maxlength="5" placeholder="XXXXX" autocomplete="off" oninput="this.value=this.value.toUpperCase();clearErr()"><div class="modal-err" id="modalErr"></div><div class="modal-loading" id="modalLoading"><span class="spinner"></span>正在验证并准备下载…</div><button class="pill" id="modalBtn" onclick="submitCode()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       验证并下载
-    </button>
-    <p class="modal-note">授权码同时用于软件首次启动激活（一码一机）。<br>没有授权码？请联系开发者获取。</p>
-  </div>
-</div>
-
-<script>
-// ============ Scroll-linked 连续动效（随滚动位置连续淡入上移，非一次性） ============
-const riseEls = Array.from(document.querySelectorAll('[data-rise]'));
+    </button><p class="modal-note">授权码同时用于软件首次启动激活（一码一机）。<br>没有授权码？请联系开发者获取。</p></div></div><script>const riseEls = Array.from(document.querySelectorAll('[data-rise]'));
 function applyRise(){
   const vh = window.innerHeight;
   for (const el of riseEls){
@@ -877,19 +21,15 @@ function applyRise(){
   }
 }
 let ticking = false;
-// Hero 产品预览视差：外层只做视差位移（入场动画在内层，互不覆盖），线性平缓跟随、无跳变
 const preview = document.getElementById('heroPreview');
 function applyParallax(){
   if (!preview) return;
   const vh = window.innerHeight;
   const r = preview.getBoundingClientRect();
-  // translateY 视差：+30px → -6px 线性跟随
   const span = vh + r.height * 0.25;
   let p = (vh - r.top) / span;
   p = Math.min(1, Math.max(0, p));
   const ty = 30 - p * 36;
-  // rotateX 斜→平：基于预览窗口相对视口顶部的位置，提前平缓变平
-  // r.top>420 保持30°；从420→120 平缓 30°→0°；距视口顶部120px时已完全平铺
   const tiltP = Math.min(1, Math.max(0, (420 - r.top) / 300));
   const rx = 30 - tiltP * 30;
   preview.style.transform = `rotateX(${rx.toFixed(2)}deg) translate3d(0,${ty.toFixed(2)}px,0)`;
@@ -905,8 +45,6 @@ window.addEventListener('scroll', () => {
 window.addEventListener('resize', () => { applyRise(); applyParallax(); });
 applyRise();
 applyParallax();
-
-// ============ FAQ 折叠 ============
 function toggleFaq(el){
   const item = el.parentElement;
   const ans = item.querySelector('.fq-a');
@@ -917,8 +55,6 @@ function toggleFaq(el){
 window.addEventListener('resize', () => {
   document.querySelectorAll('.fq.open .fq-a').forEach(a => a.style.maxHeight = a.scrollHeight + 'px');
 });
-
-// ============ 授权码弹窗 ============
 function openModal(){
   document.getElementById('modalOverlay').classList.add('show');
   setTimeout(() => document.getElementById('licInput').focus(), 220);
@@ -931,20 +67,16 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
   if (e.key === 'Enter' && document.getElementById('modalOverlay').classList.contains('show')) submitCode();
 });
-
 async function submitCode(){
   const input = document.getElementById('licInput');
   const code = input.value.trim().toUpperCase();
   const errEl = document.getElementById('modalErr');
   const btn = document.getElementById('modalBtn');
   const loading = document.getElementById('modalLoading');
-
   if (code.length !== 5){ errEl.textContent = '请输入 5 位授权码'; return; }
-
   btn.style.visibility = 'hidden';
   loading.classList.add('show');
   errEl.textContent = '';
-
   try {
     const resp = await fetch('/modelflow/api/verify', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -952,7 +84,6 @@ async function submitCode(){
     });
     const data = await resp.json();
     if (!resp.ok || !data.ok) throw new Error(data.msg || '授权码无效');
-
     const dlUrl = data.download_url;
     if (dlUrl){
       const a = document.createElement('a');
@@ -968,8 +99,6 @@ async function submitCode(){
     loading.classList.remove('show');
   }
 }
-
-// ============ 从 COS latest.json 动态拉版本号 ============
 (async function loadVersion(){
   try {
     const resp = await fetch('https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/latest.json', {cache:'no-store'});
@@ -979,8 +108,6 @@ async function submitCode(){
     }
   } catch(e) {}
 })();
-
-// ============ 模拟终端实时输出（日志流轮换） ============
 (function(){
   const body = document.querySelector('.pv-term-body');
   if (!body) return;
@@ -1004,8 +131,6 @@ async function submitCode(){
     i++;
   }, 2600);
 })();
-
-// ============ 导航栏滚动阴影 ============
 (function(){
   const nav = document.querySelector('.nav');
   if (!nav) return;
@@ -1016,8 +141,6 @@ async function submitCode(){
   window.addEventListener('scroll', onScroll, {passive:true});
   onScroll();
 })();
-
-// ============ 审稿统计卡数字滚动计数 ============
 (function(){
   const els = Array.from(document.querySelectorAll('.pv-cs b[data-count]'));
   if (!els.length || !('IntersectionObserver' in window)) return;
@@ -1040,12 +163,7 @@ async function submitCode(){
   }, {threshold: .5});
   els.forEach(el => obs.observe(el));
 })();
-
-// 自动填入保存的授权码
 try {
   const saved = sessionStorage.getItem('mf_lic');
   if (saved && saved.length === 5) document.getElementById('licInput').value = saved;
-} catch(e) {}
-</script>
-</body>
-</html>
+} catch(e) {}</script></body></html>
