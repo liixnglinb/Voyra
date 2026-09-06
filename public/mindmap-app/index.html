@@ -6,6 +6,10 @@
 <title>Canvas — 思维导图 v3</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23151517'/%3E%3Cpath d='M8 9.5A2.5 2.5 0 0 1 10.5 7H15v4h-3v3H8V9.5Zm16 0V14h-4v-3h-3V7h4.5A2.5 2.5 0 0 1 24 9.5ZM24 22.5a2.5 2.5 0 0 1-2.5 2.5H17v-4h3v-3h4v4.5ZM8 22.5V18h4v3h3v4h-4.5A2.5 2.5 0 0 1 8 22.5Z' fill='%23F4F4F5'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="./mindmap.min.css">
+<style>
+  /* 导出/设置按钮：移至左上「未命名项目 · 画布」旁的小区域，避开右上角登录浮层 */
+  .topbar-left-actions { display: flex; align-items: center; gap: 6px; }
+</style>
 <link rel="preload" href="./mindmap-app.min.js" as="script">
 </head>
 <body>
@@ -211,13 +215,14 @@
         <input id="project-name-input" type="text" maxlength="120" value="未命名项目" aria-label="项目名称">
         <div class="v-divider"></div>
         <button id="canvas-tab-collapsed">画布 1 <svg class="tab-chevron"><use href="#icon-chevron-down"/></svg></button>
+        <div class="v-divider"></div>
+        <div class="topbar-left-actions">
+          <button class="btn-framed" id="btn-export" data-tooltip="导出思维导图 PNG"><svg><use href="#icon-export"/></svg></button>
+          <button class="btn-framed" id="btn-settings" data-tooltip="设置"><svg><use href="#icon-settings"/></svg></button>
+        </div>
       </div>
       <div id="topbar-center" class="pill-frost">
         <button class="tab-btn active" data-view="workflow"><svg><use href="#icon-branch"/></svg>思维导图</button>
-      </div>
-      <div id="topbar-right">
-        <button class="btn-framed" id="btn-export" data-tooltip="导出思维导图 PNG"><svg><use href="#icon-export"/></svg></button>
-        <button class="btn-framed" id="btn-settings" data-tooltip="设置"><svg><use href="#icon-settings"/></svg></button>
       </div>
     </div>
     <div id="center-hint">

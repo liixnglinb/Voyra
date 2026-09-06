@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import {
   Milk, Droplets, Moon, Thermometer, Scale, Sun, HeartPulse, Frown,
   Baby, ClipboardPlus, BarChart3, Sparkles, History, Zap,
@@ -1018,10 +1017,6 @@ export default function BabyCare() {
   const [feed, setFeed] = useState([]);
   const toastRef = useRef(null);
   const dataRef = useRef({ records: [], settings: DEFAULT_SETTINGS, profile: null, momDaily: [], babyDaily: [], diaper: [], feed: [] });
-  const [slotEl, setSlotEl] = useState(null);
-
-  /* 页头传送门口（Layout 的 tool-head-slot，用于注入问候与出生天数） */
-  useEffect(() => { setSlotEl(document.getElementById('tool-head-slot')); }, []);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -1258,10 +1253,6 @@ export default function BabyCare() {
   const timeline = useMemo(() => today.slice().sort((y, M) => new Date(y.time) - new Date(M.time)), [today]);
   const ref = useMemo(() => (settings.birth ? refTable(ageDays(settings.birth)) : null), [settings.birth]);
 
-  /* 顶栏问候语（按当前时段） */
-  const _h = new Date().getHours();
-  const greeting = _h < 6 ? '夜深了' : _h < 11 ? '早上好' : _h < 13 ? '中午好' : _h < 18 ? '下午好' : '晚上好';
-  const weekDay = ['日', '一', '二', '三', '四', '五', '六'][new Date().getDay()];
 
   const renderPredItem = (y) => y.v
     ? <span className="text-[13px] font-semibold tabular-nums" style={{ color: INK }}>{y.v}</span>
@@ -1310,18 +1301,6 @@ export default function BabyCare() {
         }
         @keyframes bc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-        /* ===== 页头注入（问候 + 出生天数，位于「数据服务可用」左侧） ===== */
-        .bc-headctl { display: flex; align-items: center; gap: 10px; }
-        .bc-head-greet { color: ${TEXT_2}; font-size: 12px; font-weight: 600; white-space: nowrap; }
-        .bc-day-pill {
-          padding: 5px 14px; border-radius: 999px;
-          background: linear-gradient(120deg, ${ACCENT}1C, ${ACCENT}0D);
-          border: 1px solid ${ACCENT}33;
-          color: ${ACCENT_DEEP}; font-size: 12px; font-weight: 700;
-          white-space: nowrap;
-          transition: transform .3s var(--bc-ease), box-shadow .3s var(--bc-ease);
-        }
-        .bc-day-pill:hover { transform: translateY(-1px); box-shadow: 0 8px 18px -10px rgba(232,131,94,.5); }
 
         /* ===== 顶部横向导航（吸顶） ===== */
         .bc-nav {
@@ -1522,15 +1501,6 @@ export default function BabyCare() {
           .bc-layout *, .bc-layout *::before, .bc-layout *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
         }
       `}</style>
-
-      {/* ===== 页头注入：问候 + 出生天数（与「数据服务可用」同排，整体上移） ===== */}
-      {slotEl && createPortal(
-        <div className="bc-headctl">
-          <span className="bc-head-greet">{greeting}</span>
-          <span className="bc-day-pill">出生第 {ageDaysPlus(settings.birth)} 天 · 周{weekDay}</span>
-        </div>,
-        slotEl
-      )}
 
       {/* ===== 顶部导航 ===== */}
       <nav className="bc-nav animate-fade-in">
