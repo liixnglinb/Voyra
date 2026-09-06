@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Milk, Droplets, Moon, Thermometer, Scale, Sun, HeartPulse, Frown,
   Baby, ClipboardPlus, BarChart3, Sparkles, History, Zap,
@@ -1017,6 +1018,10 @@ export default function BabyCare() {
   const [feed, setFeed] = useState([]);
   const toastRef = useRef(null);
   const dataRef = useRef({ records: [], settings: DEFAULT_SETTINGS, profile: null, momDaily: [], babyDaily: [], diaper: [], feed: [] });
+  const [slotEl, setSlotEl] = useState(null);
+
+  /* 页头传送门口（Layout 的 tool-head-slot，用于注入问候与出生天数） */
+  useEffect(() => { setSlotEl(document.getElementById('tool-head-slot')); }, []);
 
   const showToast = (msg) => {
     setToast(msg);
@@ -1305,28 +1310,14 @@ export default function BabyCare() {
         }
         @keyframes bc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-        /* ===== 顶栏：品牌问候 ===== */
-        .bc-topbar {
-          display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-          animation: bc-card-in .5s var(--bc-ease) both;
-        }
-        .bc-avatar {
-          width: 52px; height: 52px; border-radius: 18px;
-          display: flex; align-items: center; justify-content: center;
-          background: linear-gradient(135deg, ${ACCENT}, #F2AE8C);
-          color: #fff; box-shadow: 0 6px 16px -6px rgba(232,131,94,.55);
-          position: relative;
-        }
-        .bc-avatar::after { content:""; position:absolute; inset:-5px; border-radius:22px; border:1.5px solid ${ACCENT}2E; }
-        .bc-hello { min-width: 0; }
-        .bc-hello b { display:block; font-size: 19px; font-weight: 800; letter-spacing: -.01em; color: ${INK}; }
-        .bc-hello span { display:inline-flex; align-items:center; gap:6px; margin-top: 3px; font-size: 12px; color: ${TEXT_2}; }
+        /* ===== 页头注入（问候 + 出生天数，位于「数据服务可用」左侧） ===== */
+        .bc-headctl { display: flex; align-items: center; gap: 10px; }
+        .bc-head-greet { color: ${TEXT_2}; font-size: 12px; font-weight: 600; white-space: nowrap; }
         .bc-day-pill {
-          margin-left: auto;
-          padding: 8px 16px; border-radius: 999px;
+          padding: 5px 14px; border-radius: 999px;
           background: linear-gradient(120deg, ${ACCENT}1C, ${ACCENT}0D);
           border: 1px solid ${ACCENT}33;
-          color: ${ACCENT_DEEP}; font-size: 13px; font-weight: 700;
+          color: ${ACCENT_DEEP}; font-size: 12px; font-weight: 700;
           white-space: nowrap;
           transition: transform .3s var(--bc-ease), box-shadow .3s var(--bc-ease);
         }
@@ -1488,11 +1479,22 @@ export default function BabyCare() {
         }
         input.bc-input:hover { border-color: ${ACCENT}66; }
 
-        /* ===== 时间轴 ===== */
-        .bc-tl-row { position: relative; transition: transform .25s var(--bc-ease), background .2s ease; }
-        .bc-tl-row:hover { transform: translateX(3px); }
-        .bc-tl-dot { position:absolute; left: 47px; top: 50%; transform: translate(-50%,-50%); width: 9px; height: 9px; border-radius:50%; transition: transform .25s var(--bc-ease); }
-        .bc-tl-row:hover .bc-tl-dot { transform: translate(-50%,-50%) scale(1.35); }
+        /* ===== 时间轴（纵向轨道线 + 类型色节点） ===== */
+        .bc-timeline { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 6px 0; }
+        .bc-timeline::before { content: ""; position: absolute; left: 47px; top: 14px; bottom: 14px; width: 1.5px;
+          border-radius: 2px; background: linear-gradient(180deg, #F2C9B4, #EFE7DA 80%); z-index: 1; }
+        .bc-tl-row { position: relative; display: grid; grid-template-columns: 40px 14px 26px minmax(0,1fr);
+          align-items: center; gap: 8px; padding: 5px 8px 5px 0; border-radius: 10px;
+          transition: background .2s var(--bc-ease), transform .25s var(--bc-ease); }
+        .bc-tl-row:hover { background: #FBF7F0; transform: translateX(3px); }
+        .bc-tl-time { text-align: right; color: #B0A392; font: 600 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+          font-variant-numeric: tabular-nums; }
+        .bc-tl-dotcol { position: relative; z-index: 2; display: grid; place-items: center; }
+        .bc-tl-dot { display: block; width: 9px; height: 9px; border-radius: 50%; border: 2px solid #fff; box-sizing: content-box; }
+        .bc-tl-icon { z-index: 2; display: flex; align-items: center; justify-content: center;
+          width: 26px; height: 26px; border-radius: 8px; margin-left: 2px; }
+        .bc-tl-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+          color: ${INK}; font-size: 12.5px; }
 
         /* ===== Toast（暖色卡片 · 弹性滑入） ===== */
         .bc-toast {
@@ -1513,23 +1515,22 @@ export default function BabyCare() {
         @keyframes bc-toast-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(.92); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }
 
         @media (max-width: 720px) {
-          .bc-day-pill { width:100%; text-align:center; margin-left:0; }
           .bc-kpi-sub { display:none; }
+          .bc-head-greet { display:none; }
         }
         @media (prefers-reduced-motion: reduce) {
           .bc-layout *, .bc-layout *::before, .bc-layout *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
         }
       `}</style>
 
-      {/* ===== 顶栏问候 ===== */}
-      <header className="bc-topbar animate-fade-in">
-        <span className="bc-avatar"><Baby className="h-7 w-7" strokeWidth={1.7} /></span>
-        <div className="bc-hello">
-          <b>{settings.name || '宝宝'}的护理手册</b>
-          <span>{greeting} · 每一天的成长都值得被温柔记录</span>
-        </div>
-        <span className="bc-day-pill">出生第 {ageDaysPlus(settings.birth)} 天 · 周{weekDay}</span>
-      </header>
+      {/* ===== 页头注入：问候 + 出生天数（与「数据服务可用」同排，整体上移） ===== */}
+      {slotEl && createPortal(
+        <div className="bc-headctl">
+          <span className="bc-head-greet">{greeting}</span>
+          <span className="bc-day-pill">出生第 {ageDaysPlus(settings.birth)} 天 · 周{weekDay}</span>
+        </div>,
+        slotEl
+      )}
 
       {/* ===== 顶部导航 ===== */}
       <nav className="bc-nav animate-fade-in">
@@ -1588,17 +1589,21 @@ export default function BabyCare() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
             <div className="bc-card flex flex-col">
               <SectionHeader icon={Clock} title="今日作息时间轴" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{timeline.length} 条</span>} />
-              <div className="flex-1 min-h-0 mt-2 overflow-y-auto pr-1 space-y-1.5">
-                {timeline.map((y) => (
-                  <div key={y.id} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-[#FBF7F0] hover:bg-[#F7F0E4] transition-colors">
-                    <span className="text-[11px] tabular-nums w-11 shrink-0 font-mono" style={{ color: TEXT_2 }}>{formatTime(y.time)}</span>
-                    <span className="h-6 w-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${TYPES[y.type].color}22`, color: TYPES[y.type].color }}>
-                      {(() => { const Icon = TYPES[y.type].icon; return <Icon className="h-3.5 w-3.5" />; })()}
-                    </span>
-                    <span className="text-[12.5px] truncate" style={{ color: INK }}>{summarize(y)}</span>
-                  </div>
-                ))}
-                {timeline.length === 0 && <div className="bc-empty">今天还没有记录，从上方「快捷记录」开始</div>}
+              <div className="flex-1 min-h-0 mt-2 overflow-y-auto pr-1">
+                <div className="bc-timeline">
+                  {timeline.map((y) => {
+                    const Icon = TYPES[y.type].icon;
+                    return (
+                      <div key={y.id} className="bc-tl-row">
+                        <span className="bc-tl-time">{formatTime(y.time)}</span>
+                        <span className="bc-tl-dotcol"><i className="bc-tl-dot" style={{ background: TYPES[y.type].color, boxShadow: `0 0 0 3px ${TYPES[y.type].color}2E` }} /></span>
+                        <span className="bc-tl-icon" style={{ background: `${TYPES[y.type].color}22`, color: TYPES[y.type].color }}><Icon className="h-3.5 w-3.5" /></span>
+                        <span className="bc-tl-text">{summarize(y)}</span>
+                      </div>
+                    );
+                  })}
+                  {timeline.length === 0 && <div className="bc-empty">今天还没有记录，从上方「快捷记录」开始</div>}
+                </div>
               </div>
             </div>
 

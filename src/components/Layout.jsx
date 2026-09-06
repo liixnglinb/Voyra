@@ -26,7 +26,7 @@ const TOOL_META = {
     label: '思维导图', sub: '把想法展开成可编辑、可保存的结构', Icon: GitBranch, accent: '#A48830',
   },
   '/baby-care': {
-    label: '宝宝护理', sub: '记录宝宝成长，护理数据可视化', Icon: Baby, accent: '#5B8DEF',
+    label: '宝宝护理手册', sub: '每一天的成长都值得被温柔记录', Icon: Baby, accent: '#E8835E',
   },
   '/timetable': {
     label: '日程中心', sub: '课程表与日历日程二合一，每周课程与每日安排一站管理', Icon: CalendarRange, accent: '#0EA5E9',

@@ -47,6 +47,11 @@ export default function TrendChart({ data, labels, color = '#F97316', height = 1
   const innerH = Math.max(10, height - padT - padB);
   const maxVal = niceCeil(Math.max(...data, 0));
   const gradId = `tcg-${color.replace(/[^a-zA-Z0-9]/g, '')}`;
+  /* 数据签名：变化时折线重放画入动画 */
+  const sig = data.join('|');
+  /* 均值参考线 */
+  const avg = data.length ? data.reduce((a, b) => a + b, 0) / data.length : 0;
+  const showAvg = data.length >= 3 && avg > 0 && avg < maxVal;
 
   const pts = useMemo(() => data.map((v, i) => ([
     padL + (data.length === 1 ? innerW / 2 : (i / (data.length - 1)) * innerW),
@@ -73,6 +78,14 @@ export default function TrendChart({ data, labels, color = '#F97316', height = 1
   };
 
   const fmt = (v) => `${Math.round(v * 10) / 10}${unit}`;
+  const isEmpty = !data.length || data.every((v) => !v);
+  if (isEmpty) {
+    return (
+      <div style={{ height: fill ? '100%' : height, width: '100%', display: 'grid', placeItems: 'center' }}>
+        <span style={{ color: '#BFB5A6', fontSize: 12.5 }}>暂无数据 · 记录后自动生成图表</span>
+      </div>
+    );
+  }
   const xTickIdx = [];
   const step = Math.max(1, Math.ceil(data.length / 7));
   for (let i = 0; i < data.length; i += step) xTickIdx.push(i);
@@ -80,6 +93,7 @@ export default function TrendChart({ data, labels, color = '#F97316', height = 1
 
   return (
     <div style={{ height: fill ? '100%' : height, width: '100%', position: 'relative' }}>
+      <style>{'@keyframes tc-draw { from { stroke-dashoffset: 2400; } to { stroke-dashoffset: 0; } }'}</style>
       <div
         ref={wrapRef}
         style={{ position: 'absolute', inset: 0 }}
@@ -109,8 +123,21 @@ export default function TrendChart({ data, labels, color = '#F97316', height = 1
                 {labels ? labels[i] : i + 1}
               </text>
             ))}
+            {showAvg && (() => {
+              const ay = padT + (1 - Math.min(avg, maxVal) / maxVal) * innerH;
+              return (
+                <g>
+                  <line x1={padL} y1={ay} x2={width - padR} y2={ay} stroke={color} strokeOpacity="0.4" strokeWidth="1" strokeDasharray="4 4" />
+                  <text x={width - padR} y={ay - 4} textAnchor="end" fontSize="9" fill={color} opacity="0.75">均值 {fmt(avg)}</text>
+                </g>
+              );
+            })()}
+            {hover != null && pts[hover] && (
+              <line x1={pts[hover][0]} y1={padT} x2={pts[hover][0]} y2={padT + innerH} stroke={color} strokeOpacity="0.3" strokeWidth="1" strokeDasharray="3 3" />
+            )}
             {areaPath && <path d={areaPath} fill={`url(#${gradId})`} />}
-            <path d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path key={sig} d={linePath} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ strokeDasharray: 2400, animation: 'tc-draw 1s ease-out both' }} />
             {pts.map(([x, y], i) => (
               <circle key={i} cx={x} cy={y} r={hover === i ? 5 : 3.5} fill="#fff" stroke={color} strokeWidth="2" />
             ))}
