@@ -8,7 +8,11 @@
 <link rel="stylesheet" href="./mindmap.min.css">
 <style>
   /* 导出/设置按钮：移至左上「未命名项目 · 画布」旁的小区域，避开右上角登录浮层 */
-  .topbar-left-actions { display: flex; align-items: center; gap: 6px; }
+  .topbar-left-actions { display: flex; align-items: center; gap: 4px; }
+  /* 缩小尺寸，与顶栏左区胶囊（44px 高、16px 分隔线、14px 输入文字）协调 */
+  .topbar-left-actions .btn-framed { width: 28px; height: 28px; border-radius: 8px; box-shadow: none; }
+  .topbar-left-actions .btn-framed svg { width: 14px; height: 14px; }
+  .topbar-left-actions .btn-framed:hover { transform: none; }
 </style>
 <link rel="preload" href="./mindmap-app.min.js" as="script">
 </head>
