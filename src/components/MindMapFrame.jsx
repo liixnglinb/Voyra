@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { RefreshCw } from 'lucide-react';
+import RouteLoader from './RouteLoader';
 
 /**
  * MindMapFrame — 独立思维导图（全屏嵌入 /mindmap-app/）
@@ -72,7 +73,7 @@ export default function MindMapFrame() {
       />
       {!frameLoaded && (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFFFFF' }}>
-          <div style={{ color: '#9A9AA3', fontSize: 13 }}>正在加载思维导图…</div>
+          <RouteLoader variant="mindmap" />
         </div>
       )}
     </div>
