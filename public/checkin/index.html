@@ -206,6 +206,10 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 .big-dl .psep{width:1px;height:26px;background:rgba(255,255,255,.25)}
 .big-dl .ptag{font-size:14px;font-weight:500;opacity:.75;font-family:var(--en)}
 .big-dl-pulse{animation:pulseGlow 3s ease-in-out infinite}
+.dl-buttons{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:4px}
+.dl-recommend{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);margin-bottom:18px;font-family:var(--cn)}
+.dl-recommend .dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,.55);flex-shrink:0}
+.big-dl .rec-tag{position:absolute;top:-9px;right:-6px;background:#22c55e;color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:9999px;letter-spacing:.02em;z-index:2;box-shadow:0 2px 8px rgba(34,197,94,.4)}
 @keyframes pulseGlow{0%,100%{box-shadow:0 14px 36px rgba(255,107,53,.35)}50%{box-shadow:0 14px 50px rgba(255,107,53,.55)}}
 
 /* ============ 系统要求 ============ */
@@ -287,7 +291,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
     <h1>让签到，<span class="brand-text">成为习惯</span></h1>
     <p class="hero-sub">学习通自动签到助手，安装后常驻系统托盘，后台静默运行。普通签到、位置签到、二维码签到，三种类型全覆盖，从此不再错过。</p>
     <div class="hero-buttons">
-      <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="pill">
+      <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/SuperstarCheckin-Setup-3.1.0.exe" class="pill">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         立即下载
         <span class="psep"></span>
@@ -328,12 +332,22 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
         <b>0</b><span>广告捆绑</span>
       </div>
     </div>
-    <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/学习通自动签到-安装版-3.1.0.exe" class="big-dl big-dl-pulse reveal reveal-delay-2">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      下载安装包 v3.1.0
-      <span class="psep"></span>
-      <span class="ptag">.exe · 106MB</span>
-    </a>
+    <div class="dl-recommend reveal reveal-delay-2"><span class="dot"></span>本地网络加速 · 推荐 GitHub 直连下载</div>
+    <div class="dl-buttons reveal reveal-delay-2">
+      <a href="https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/SuperstarCheckin-Setup-3.1.0.exe" class="big-dl big-dl-pulse">
+        <span class="rec-tag">推荐</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        GitHub 直连下载
+        <span class="psep"></span>
+        <span class="ptag">v3.1.0 · 106MB</span>
+      </a>
+      <a href="https://gh-proxy.com/https://github.com/liixnglinb/superstar-checkin/releases/download/v3.1.0/SuperstarCheckin-Setup-3.1.0.exe" class="pill secondary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        国内镜像下载
+        <span class="psep"></span>
+        <span class="ptag">gh-proxy</span>
+      </a>
+    </div>
   </div>
 </section>
 
