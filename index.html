@@ -24,9 +24,30 @@
       }
     </script>
     <title>Voyra · 个人工具中心</title>
+    <style>
+      /* 站点级启动加载动画：位于 #root 内，React 首次渲染时自动替换，
+         展示时长 = 真实加载时间，无任何人为延时 */
+      .voyra-boot { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: #fff; }
+      .voyra-boot-mark { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 30px; font-weight: 800; color: #111; letter-spacing: 0.04em; margin-right: -0.04em; animation: vb-track 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+      .voyra-boot-mark sup { color: #a48830; font-size: 12px; font-weight: 700; margin-left: 2px; }
+      .voyra-boot-bar { width: 148px; height: 2px; border-radius: 99px; background: rgba(27, 27, 27, 0.08); overflow: hidden; }
+      .voyra-boot-bar i { display: block; width: 42%; height: 100%; border-radius: 99px; background: linear-gradient(90deg, rgba(164,136,48,0), #a48830 30%, #d4a930 70%, rgba(212,169,48,0)); animation: vb-sweep 1.1s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+      .voyra-boot-label { font: 600 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.34em; text-indent: 0.34em; color: #c9c9c9; animation: vb-fade 0.9s ease both 0.35s; }
+      @keyframes vb-track { from { letter-spacing: 0.42em; opacity: 0; filter: blur(2px); } to { letter-spacing: 0.04em; opacity: 1; filter: blur(0); } }
+      @keyframes vb-sweep { 0% { transform: translateX(-110%); } 100% { transform: translateX(260%); } }
+      @keyframes vb-fade { from { opacity: 0; } to { opacity: 1; } }
+      @media (prefers-reduced-motion: reduce) { .voyra-boot-mark, .voyra-boot-bar i, .voyra-boot-label { animation: none; } }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="voyra-boot" aria-hidden="true">
+        <div class="voyra-boot-mark">VOYRA<sup>®</sup></div>
+        <div class="voyra-boot-bar"><i></i></div>
+        <div class="voyra-boot-label">LOADING</div>
+      </div>
+    </div>
+    <noscript><style>.voyra-boot { display: none; }</style></noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
