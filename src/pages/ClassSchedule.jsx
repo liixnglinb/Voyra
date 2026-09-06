@@ -136,7 +136,7 @@ function inWeek(c, w) {
   return true;
 }
 
-export default function ClassSchedule() {
+export default function ClassSchedule({ stats = null }) {
   const { guard } = useAuth();
   const [courses, setCourses] = useState([]);
   const [settings, setSettings] = useState({ startDate: '', overrideWeek: null });
@@ -174,6 +174,11 @@ export default function ClassSchedule() {
   const currentWeek = settings.overrideWeek != null ? settings.overrideWeek : autoWeek;
 
   const weekCourses = useMemo(() => courses.filter((c) => inWeek(c, currentWeek)), [courses, currentWeek]);
+  /* 今日课程数：按今天星期几 + 当前周次实时统计（编辑课表立即生效） */
+  const todayCourseCount = useMemo(() => {
+    const dayIdx = (new Date().getDay() + 6) % 7 + 1;
+    return courses.filter((c) => c.day === dayIdx && inWeek(c, currentWeek)).length;
+  }, [courses, currentWeek]);
   const grid = useMemo(() => {
     const m = {};
     weekCourses.forEach((c) => {
@@ -217,7 +222,7 @@ export default function ClassSchedule() {
       <style>{`
         .cs-page { display:flex; flex-direction:column; gap:18px; }
         .cs-card { background:#fff;border:1px solid rgba(20,24,33,.09);border-radius:14px;box-shadow:0 1px 2px rgba(16,20,30,.04);padding:18px 20px; }
-        .cs-h { display:flex;align-items:center;gap:10px;margin-bottom:14px; }
+        .cs-h { display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;row-gap:8px; }
         .cs-h h3 { margin:0;font-size:15px;font-weight:700;color:#212529; }
         .cs-h .ico { width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:${ACCENT_SOFT};color:${ACCENT}; }
         .cs-h .sp { flex:1; }
@@ -228,6 +233,11 @@ export default function ClassSchedule() {
         .cs-btn.primary:hover { opacity:.92; }
         .cs-btn.danger:hover { border-color:rgba(239,68,68,.4);color:#EF4444; }
         .cs-chip { display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:${ACCENT_SOFT};color:${ACCENT}; }
+        .cs-today { display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:#555; }
+        .cs-today b { color:#1b1b1b;font-weight:750;font-variant-numeric:tabular-nums; }
+        .cs-today-date { display:inline-flex;align-items:baseline;gap:6px;color:#1b1b1b;font-size:13.5px;font-weight:750;white-space:nowrap; }
+        .cs-today-date i { color:${ACCENT};font:700 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-style:normal;letter-spacing:.08em; }
+        .cs-tdot { width:4px;height:4px;border-radius:50%;background:rgba(164,136,48,.55);flex:0 0 auto; }
         .cs-input { border:1px solid rgba(20,24,33,.13);border-radius:9px;padding:8px 11px;font-size:13px;background:#fff;color:#212529;outline:none; }
         .cs-input:focus { border-color:${ACCENT}; }
         label.cs-l { font-size:12px;color:#6c757d;font-weight:600;display:block;margin-bottom:5px; }
@@ -239,7 +249,7 @@ export default function ClassSchedule() {
         .cs-grid .per { background:#FBFBFC;color:#7b7f89;font-size:11.5px;width:86px;text-align:center;padding:10px 5px;line-height:1.5; }
         .cs-grid .per b { display:block;font-size:12.5px;color:#212529; }
         .cs-grid td.empty { background:#FCFCFD; }
-        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:24px 10px;display:flex;flex-direction:column;justify-content:center;gap:5px;min-height:112px; }
+        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:30px 10px;display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:136px; }
         .cs-cell .n { font-size:13px;font-weight:700;color:${ACCENT};line-height:1.3; }
         .cs-cell .t { font-size:11px;color:#7b7f89;margin-top:3px; }
         .cs-cell.night { background:rgba(99,102,241,.06);border-style:dashed; }
@@ -258,6 +268,15 @@ export default function ClassSchedule() {
           <div className="ico"><CalendarDays size={18} /></div>
           <h3>第 {currentWeek} 周</h3>
           <span className="cs-chip">{settings.overrideWeek != null ? '手动指定' : settings.startDate ? '自动更新' : '待设置'}</span>
+          {stats && (
+            <span className="cs-today">
+              <span className="cs-today-date"><i>TODAY</i>{stats.month}月{stats.date}日 周{stats.weekDay}</span>
+              <span className="cs-tdot" />
+              <span>今日 <b>{todayCourseCount}</b> 节课</span>
+              <span className="cs-tdot" />
+              <span><b>{stats.eventCount}</b> 项日程</span>
+            </span>
+          )}
           <div className="sp" />
           <div className="cs-row">
             <button className="cs-btn" onClick={() => goWeek(-1)}><ChevronLeft size={15} />上一周</button>

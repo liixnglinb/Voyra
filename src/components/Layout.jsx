@@ -94,9 +94,13 @@ export default function Layout({ children }) {
                   <p className="tool-sub">{sub}</p>
                 </div>
               </div>
-              <div className="tool-head-right">
-                <span className="tool-dot" />
-                <span>数据服务可用</span>
+              <div className="tool-head-actions">
+                {/* 工具页可通过 portal 向页头注入操作区（如日程中心的视图切换） */}
+                <div id="tool-head-slot" />
+                <div className="tool-head-right">
+                  <span className="tool-dot" />
+                  <span>数据服务可用</span>
+                </div>
               </div>
             </header>
           );
@@ -135,6 +139,8 @@ export default function Layout({ children }) {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          flex-wrap: wrap;
+          row-gap: 12px;
           gap: 16px;
           background: #fff;
           border: 1px solid rgba(20,24,33,.08);
@@ -373,6 +379,15 @@ export default function Layout({ children }) {
           color: #888;
           font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
         }
+        /* 页头操作区：portal 注入内容（如日程中心视图切换）+ 状态标签 */
+        .tool-head-actions {
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 16px;
+          flex-shrink: 0;
+        }
+        #tool-head-slot:empty { display: none; }
         .tool-dot { width: 5px; height: 5px; border-radius: 0; background: #a48830; }
         .tool-content {
           display: block;
