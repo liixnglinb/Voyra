@@ -92,6 +92,10 @@ async function writeMeta(uid, meta) {
     q.set('userKey', uid);
     q.set('key', META_KEY);
     q.set('value', JSON.stringify(meta));
+    // 行级 ACL（2026-09-06 安全修复）：_meta 行仅本人可读写（uid 即 Bmob 用户 objectId）
+    if (uid && uid !== 'local-user') {
+      q.set('ACL', { [uid]: { read: true, write: true } });
+    }
     await q.save();
   } catch { /* ignore */ }
 }

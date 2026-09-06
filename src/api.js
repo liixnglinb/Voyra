@@ -35,6 +35,12 @@ export async function saveData(key, value) {
   q.set('userKey', uid);
   q.set('key', key);
   q.set('value', JSON.stringify(value));
+  // 行级 ACL（2026-09-06 安全修复）：登录用户的数据仅本人可读写。
+  // SDK 无原生 ACL API，但 save() 会把 set 的字段原样透传到 REST（query.js saveData）。
+  // 未登录 local-user 行保持公开，访客只读不受影响。
+  if (uid !== 'local-user') {
+    q.set('ACL', { [uid]: { read: true, write: true } });
+  }
   await q.save();
   return { ok: true };
 }
