@@ -14,7 +14,10 @@ export function useAuth() {
   return useContext(AuthCtx);
 }
 
-export default function AuthGate({ children }) {
+/**
+ * variant: 'light'（白底页面，默认） | 'dark'（深色页面，如思维导图）
+ */
+export default function AuthGate({ children, variant = 'light' }) {
   const [authed, setAuthed] = useState(isAuthed());
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState('');
@@ -55,11 +58,11 @@ export default function AuthGate({ children }) {
       {children}
 
       {/* ===== 右上角登录 / 用户按钮 ===== */}
-      <div className="ag-fab">
+      <div className={variant === 'dark' ? 'ag-fab ag-fab--dark' : 'ag-fab'}>
         {authed ? (
           <div className="ag-fab-user">
             <span className="ag-fab-name">{session ? session.username : '已登录'}</span>
-            <button className="ag-fab-btn" onClick={handleLogout} title="退出登录"><LogOut size={14} /></button>
+            <button className="ag-fab-btn" onClick={handleLogout} title="退出登录"><LogOut size={12} /></button>
           </div>
         ) : (
           <button className="ag-fab-btn ag-fab-login" onClick={() => setOpen(true)}>
@@ -81,27 +84,35 @@ export default function AuthGate({ children }) {
       <style>{`
         /* ===== 设计系统 · 融合 Voyra 首页（黑白极简 + 等宽点缀 + 金色标记） ===== */
 
-        /* ===== 右上角按钮 ===== */
+        /* ===== 右上角按钮（紧凑版） ===== */
         .ag-fab {
-          position: fixed; top: 14px; right: 14px; z-index: 1000;
-          display: flex; align-items: center; gap: 8px;
+          position: fixed; top: 12px; right: 12px; z-index: 1000;
+          display: flex; align-items: center; gap: 6px;
         }
         .ag-fab-user {
-          display: flex; align-items: center; gap: 6px;
-          background: #fff; border: 1px solid rgba(27,27,27,.14); border-radius: 7px;
-          padding: 5px 5px 5px 12px;
+          display: flex; align-items: center; gap: 5px;
+          background: #fff; border: 1px solid rgba(27,27,27,.14); border-radius: 999px;
+          padding: 3px 3px 3px 10px;
         }
-        .ag-fab-name { font-size: 12px; color: #1b1b1b; font-weight: 700; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ag-fab-name { font-size: 11px; color: #1b1b1b; font-weight: 700; max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .ag-fab-btn {
-          display: inline-flex; align-items: center; gap: 6px;
-          border: 1px solid rgba(27,27,27,.18); border-radius: 7px; background: #fff;
-          padding: 7px 13px; font-size: 12.5px; font-weight: 700; color: #1b1b1b;
+          display: inline-flex; align-items: center; gap: 5px;
+          border: 1px solid rgba(27,27,27,.18); border-radius: 999px; background: #fff;
+          padding: 5px 11px; font-size: 11.5px; font-weight: 700; color: #1b1b1b;
           cursor: pointer; font-family: inherit;
           transition: background .16s ease, color .16s ease, border-color .16s ease;
         }
         .ag-fab-btn:hover { background: #1b1b1b; color: #fff; border-color: #1b1b1b; }
         .ag-fab-login { background: #fff; color: #A48830; border-color: #A48830; }
         .ag-fab-login:hover { background: #A48830; border-color: #A48830; color: #fff; }
+
+        /* ===== 深色页面变体（思维导图 #0A0A0A 底） ===== */
+        .ag-fab--dark .ag-fab-user { background: rgba(24,24,24,.9); border-color: rgba(255,255,255,.16); }
+        .ag-fab--dark .ag-fab-name { color: #f2f2f2; }
+        .ag-fab--dark .ag-fab-btn { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.16); color: #ececec; }
+        .ag-fab--dark .ag-fab-btn:hover { background: #fff; color: #111; border-color: #fff; }
+        .ag-fab--dark .ag-fab-login { background: rgba(24,24,24,.9); color: #ffe08a; border-color: rgba(255,224,138,.45); }
+        .ag-fab--dark .ag-fab-login:hover { background: #A48830; border-color: #A48830; color: #fff; }
 
         /* ===== 弹窗遮罩（亮底虚化，极简风） ===== */
         .ag-overlay {
@@ -287,7 +298,7 @@ function LoginModal({ onClose, onSuccess }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="至少 6 位密码"
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                autoComplete={mode === 'login' ? 'off' : 'new-password'}
               />
             </div>
           </div>

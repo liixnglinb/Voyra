@@ -30,7 +30,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/articles/:slug" element={<ArticleDetail />} />
-                <Route path="/mindmap" element={<AuthGate><MindMap /></AuthGate>} />
+                <Route path="/mindmap" element={<AuthGate variant="dark"><MindMap /></AuthGate>} />
                 <Route path="/prompts" element={<PromptLibrary />} />
                 <Route path="/learning" element={<LearningHub />} />
                 <Route path="/baby-care" element={<AuthGate><BabyCare /></AuthGate>} />
