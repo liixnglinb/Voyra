@@ -36,7 +36,7 @@ export async function onRequestPost({ request, env }) {
   } else {
     // 普通码：必须已绑定机器，且 token 与 bound_mid 计算出的一致
     if (!r.bound_mid) return json({ ok: false, msg: "该授权码尚未激活，请先在软件内激活" }, 403);
-    const expected = await tokenFor(code, r.bound_mid);
+    const expected = await tokenFor(code, r.bound_mid, env);
     if (token !== expected) return json({ ok: false, msg: "令牌无效，请重新激活" }, 403);
   }
 

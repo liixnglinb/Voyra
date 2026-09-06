@@ -23,8 +23,8 @@ export async function onRequestPost({ request, env }) {
   const token = (d.token || "").trim();
   if (!code || !mid || !token) return json({ ok: false, msg: "参数缺失" }, 400);
 
-  // 1. token 格式校验（HMAC-SHA256(SECRET, code|mid) 前32位）
-  const expectToken = await tokenFor(code, mid);
+  // 1. token 格式校验（HMAC-SHA256(MF_LICENSE_SECRET, code|mid) 前32位）
+  const expectToken = await tokenFor(code, mid, env);
   if (token !== expectToken) {
     return json({ ok: false, msg: "令牌无效", reason: "bad_token" }, 403);
   }

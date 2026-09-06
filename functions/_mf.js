@@ -8,8 +8,16 @@
 //   COS_SECRET_ID / COS_SECRET_KEY — 腾讯云 COS 密钥，用于生成预签名下载 URL
 //   （未配置时 verify 返回 ok 但不带 download_url，前端回退到 manifest.url）
 
-// 与桌面端 app/licensing.py 保持一致的 HMAC 密钥（客户端内置同值，仅用于离线令牌校验）
-export const SECRET = "1adee14c497b3b976a3beb1aa602744a8a54b04782e2b2526ccb0800924b9af3";
+// 与桌面端 app/licensing.py 保持一致的 HMAC 密钥（客户端构建时注入同值，仅用于离线令牌校验）。
+// 密钥不再写进源码（旧值曾随本公开仓库泄露）：从 Pages 环境变量 MF_LICENSE_SECRET 读取，
+// 在 Cloudflare 控制台 Pages → Settings → Environment variables 配置（生产 + 预览都配）。
+export function licenseSecret(env) {
+  const s = env && env.MF_LICENSE_SECRET;
+  if (!s) {
+    throw new Error("Missing environment variable MF_LICENSE_SECRET (Pages → Settings → Environment variables)");
+  }
+  return s;
+}
 export const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 去除易混 I O 0 1
 // 注意：不再硬编码初始授权码（SEED_CODES 已移除）。
 // 固定码写在源码中有泄露风险；首次部署后请通过管理后台 setup → 登录 → 生成授权码。
@@ -43,13 +51,13 @@ export async function hmacSha1Hex(keyStr, msgStr) {
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(msgStr));
   return bufToHex(sig);
 }
-export async function tokenFor(code, mid) {
-  return (await hmacHex(SECRET, `${code}|${mid}`)).slice(0, 32);
+export async function tokenFor(code, mid, env) {
+  return (await hmacHex(licenseSecret(env), `${code}|${mid}`)).slice(0, 32);
 }
 
 // ========== 授权码对称加密（AES-GCM） ==========
 // 数据库 code 字段存 SHA-256 哈希（用于验证），code_enc 字段存 AES-GCM 密文（用于管理员查看明文）。
-// 加密密钥从 COS_SECRET_KEY 派生（SHA-256 取 32 字节），无需额外配置环境变量。
+// 加密密钥从 CODE_ENC_KEY 派生（SHA-256 取 32 字节），未配置时回退 COS_SECRET_KEY。
 // 5 位码哈希可暴力破解（32^5≈3355万），加密比哈希更安全：数据库泄露无密钥无法解密。
 function b64encode(bytes) {
   let bin = "";
@@ -63,7 +71,12 @@ function b64decode(str) {
   return bytes;
 }
 async function getCodeKey(env) {
-  const secret = env.CODE_ENC_KEY || env.COS_SECRET_KEY || "modelflow-fallback-key";
+  // 优先 CODE_ENC_KEY，回退 COS_SECRET_KEY；都未配置直接报错（fail closed），
+  // 不再回退到写死字符串（固定兜底曾随公开仓库泄露）。
+  const secret = env.CODE_ENC_KEY || env.COS_SECRET_KEY;
+  if (!secret) {
+    throw new Error("Missing environment variable CODE_ENC_KEY or COS_SECRET_KEY");
+  }
   const raw = await crypto.subtle.digest("SHA-256", enc.encode(secret));
   return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
 }
