@@ -184,14 +184,27 @@ function getToolUrl(path) {
   return `${window.location.origin}${window.location.pathname}#${path}`;
 }
 
+/* 各卡片演示的节点数——驱动自动轮播 */
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4 };
+
 function FeatureArt({ type }) {
   const [active, setActive] = useState(0);
   const [checked, setChecked] = useState(false);
+  const artRef = useRef(null);
+  const pausedRef = useRef(false);
+
+  /* 自动轮播：每 2.6s 推进一个节点；指针悬停时暂停，让演示"可读" */
+  useEffect(() => {
+    const n = ART_CYCLE[type];
+    if (!n) return undefined;
+    const timer = setInterval(() => { if (!pausedRef.current) setActive((a) => (a + 1) % n); }, 2600);
+    return () => clearInterval(timer);
+  }, [type]);
 
   if (type === 'api') {
     const protocols = ['Chat', 'Responses', 'Claude', 'Gemini'];
     const endpoints = ['/v1/chat/completions', '/v1/responses', '/v1/messages', '/v1beta/models'];
-    return <div className="vr-art vr-tool-art vr-api-art">
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-api-art">
       <div className="vr-api-tabs" role="tablist" aria-label="API 协议预览">{protocols.map((protocol, index) => <button type="button" key={protocol} role="tab" aria-selected={active === index} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}>{protocol}</button>)}</div>
       <div className="vr-api-route"><span><i /> 200 OK</span><b>POST</b><code>{endpoints[active]}</code></div>
       <div className="vr-api-pane"><div><span>REQUEST</span><code>{active === 2 ? 'model: claude-sonnet-4' : active === 3 ? 'model: gemini-2.5-pro' : 'model: gpt-5'}</code></div><div><span>RESPONSE</span><code>stream: connected</code></div></div>
@@ -199,13 +212,13 @@ function FeatureArt({ type }) {
     </div>;
   }
 
-  if (type === 'prompts') return <div className="vr-art vr-tool-art vr-prompts-art">
+  if (type === 'prompts') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-prompts-art">
     <div className="vr-preview-top"><Code2 size={15} /><span>Prompt.md</span><b>模板</b></div>
     <div className="vr-prompt-copy"><span>请基于以下资料</span><mark>{['提炼结构', '给出行动项', '保留语气'][active]}</mark><span>输出一份清晰的回答。</span></div>
     <div className="vr-preview-actions">{['结构', '行动', '语气'].map((item, index) => <button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)} key={item}>{item}</button>)}</div>
   </div>;
 
-  if (type === 'agents') return <div className="vr-art vr-tool-art vr-agents-art">
+  if (type === 'agents') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-agents-art">
     <div className="vr-preview-top"><Bot size={15} /><span>工作流</span><b>{active + 1}/3</b></div>
     <div className="vr-agent-flow">{['检索', '分析', '交付'].map((item, index) => <React.Fragment key={item}><button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''}><i>{String(index + 1).padStart(2, '0')}</i>{item}</button>{index < 2 && <span />}</React.Fragment>)}</div>
     <p>当前节点：{['收集资料', '整理判断', '输出结果'][active]}</p>
@@ -215,7 +228,7 @@ function FeatureArt({ type }) {
     const days = ['一', '二', '三', '四', '五'];
     const courses = ['高数', '算法', '英语', '数据结构', '自习'];
     const plans = ['09:30 课程资料整理', '15:00 项目复盘', '20:30 晚间阅读', '12:00 图书馆还书', '18:00 篮球局'];
-    return <div className="vr-art vr-tool-art vr-timetable-art">
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-timetable-art">
       <div className="vr-preview-top"><CalendarRange size={15} /><span>第 3 周 · 课程 + 日程</span><b>2 合 1</b></div>
       <div className="vr-week-strip">{days.map((d, i) => <button key={d} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><b>周{d}</b><span>{courses[i]}</span></button>)}</div>
       <div className="vr-day-line"><i>{active === 1 ? <Check size={11} /> : ''}</i><span>{plans[active]}</span><em>日程</em></div>
@@ -224,27 +237,27 @@ function FeatureArt({ type }) {
 
   if (type === 'skills') {
     const rows = [['anthropics/skills', '44.2k'], ['obra/superpowers', '17.9k'], ['fastmcp', '11.6k']];
-    return <div className="vr-art vr-tool-art vr-skills-art">
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-skills-art">
       <div className="vr-preview-top"><Sparkles size={15} /><span>GitHub Skill 热榜</span><b>每日更新</b></div>
       <div className="vr-skill-rank">{rows.map((r, i) => <button key={r[0]} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><i>{String(i + 1).padStart(2, '0')}</i><span>{r[0]}</span><em>{r[1]}</em></button>)}</div>
       <div className="vr-skill-foot"><Star size={11} />优质精选 · 每周热点</div>
     </div>;
   }
 
-  if (type === 'learning') return <div className="vr-art vr-tool-art vr-learning-art">
+  if (type === 'learning') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-learning-art">
     <div className="vr-preview-top"><LayoutGrid size={15} /><span>资料库</span><b>24 条</b></div>
     <div className="vr-material-stack">{['论文精读', '课程笔记', '代码片段'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}><i>{String(index + 1).padStart(2, '0')}</i><span>{item}</span><em>{['PDF', 'MD', 'JS'][index]}</em></button>)}</div>
   </div>;
 
-  if (type === 'mindmap') return <div className="vr-art vr-tool-art vr-mindmap-art">
+  if (type === 'mindmap') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-mindmap-art">
     <div className="vr-preview-top"><ListTree size={15} /><span>项目规划</span><b>导图</b></div>
     <div className="vr-map-stage"><button className="vr-map-root" onClick={() => setActive(0)}>Voyra</button>{['内容', '产品', '迭代'].map((item, index) => <button className={`vr-map-node n${index}${active === index + 1 ? ' is-active' : ''}`} onClick={() => setActive(index + 1)} key={item}>{item}</button>)}</div>
   </div>;
 
   if (type === 'uikit') {
     const rows = [['变形胶囊导航', 'Morphing Navbar'], ['状态开关', 'Toggle Switch'], ['分页控件', 'Pagination']];
-    return <div className="vr-art vr-tool-art vr-uikit-art">
-      <div className="vr-preview-top"><Shapes size={15} /><span>UI 组件图鉴</span><b>11 组件</b></div>
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-uikit-art">
+      <div className="vr-preview-top"><Shapes size={15} /><span>UI 组件图鉴</span><b>52 组件</b></div>
       <div className="vr-uikit-list">{rows.map((r, i) => <button key={r[0]} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><span>{r[0]}</span><em>{r[1]}</em></button>)}</div>
       <div className="vr-uikit-foot">点击卡片 · 展开原理</div>
     </div>;
@@ -253,7 +266,7 @@ function FeatureArt({ type }) {
 
   if (type === 'modelflow') {
     const steps = ['题意', '假设', '建模', '求解', '检验', '论文'];
-    return <div className="vr-art vr-tool-art vr-modelflow-art">
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-modelflow-art">
       <div className="vr-preview-top"><Sparkles size={15} /><span>ModelFlow 流水线</span><b>9 步</b></div>
       <div className="vr-model-flow">{steps.map((step, index) => <React.Fragment key={step}><button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><i>{String(index + 1).padStart(2, '0')}</i>{step}</button>{index < steps.length - 1 && <span />}</React.Fragment>)}</div>
       <div className="vr-model-flow-status"><span>当前阶段：{['解析题目', '建立假设', '构建模型', '求解计算', '结果检验', '撰写论文'][active]}</span><b>{active + 1}/6</b></div>
@@ -263,7 +276,7 @@ function FeatureArt({ type }) {
   if (type === 'checkin') {
     const courses = ['自动控制原理', '电力电子技术', '单片机原理'];
     const statuses = ['监听中', '已签到', '监听中'];
-    return <div className="vr-art vr-tool-art vr-checkin-art">
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-checkin-art">
       <div className="vr-preview-top"><CalendarRange size={15} /><span>签到监控</span><b>18 门课</b></div>
       <div className="vr-checkin-stats"><span><b>6</b> 今日成功</span><span><b>1</b> 待处理</span><span><b>156</b> 累计</span></div>
       <div className="vr-checkin-list">{courses.map((course, index) => <button key={course} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><span>{course}</span><em className={statuses[index] === '已签到' ? 'done' : 'monitoring'}>{statuses[index]}</em></button>)}</div>
@@ -272,7 +285,7 @@ function FeatureArt({ type }) {
 
   if (type === 'toolbox') {
     const cats = [['系统文件', '12.4G'], ['软件缓存', '8.1G'], ['下载文件', '3.2G'], ['大文件', '1.9G']];
-    return <div className="vr-art vr-tool-art vr-toolbox-art">
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-toolbox-art">
       <div className="vr-preview-top"><HardDrive size={15} /><span>磁盘扫描</span><b>{active ? '已清理 3.6G' : '24 万+ 文件'}</b></div>
       <div className="vr-toolbox-drive"><span>C: 系统盘</span><i className={active ? 'is-done' : ''} style={{ '--fill': '62%' }}><b /></i><em>{active ? '已清理 3.6 GB' : '已用 62% · 可清理 18.4 GB'}</em></div>
       <div className="vr-toolbox-cats">{cats.map((c, index) => <button key={c[0]} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><span>{c[0]}</span><em>{c[1]}</em></button>)}</div>
@@ -280,7 +293,7 @@ function FeatureArt({ type }) {
     </div>;
   }
 
-  return <div className="vr-art vr-tool-art vr-care-art">
+  return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-care-art">
     <div className="vr-preview-top"><Sparkles size={15} /><span>今日护理</span><b>{checked ? '已记录' : '待记录'}</b></div>
     <div className="vr-care-stats"><span><b>02</b> 喂养</span><span><b>03</b> 睡眠</span><span><b>01</b> 护理</span></div>
     <button className={`vr-care-check${checked ? ' is-active' : ''}`} onClick={() => setChecked((value) => !value)}>{checked ? <Check size={14} /> : '+'}{checked ? ' 今日记录完成' : ' 标记一条护理记录'}</button>

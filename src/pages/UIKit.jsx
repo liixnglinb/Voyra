@@ -288,7 +288,7 @@ export default function UIKit() {
       .d-stat { text-align:left; }
       .d-stat b { display:inline-block; font-size:24px; font-weight:800; color:#1b1b1b; font-variant-numeric:tabular-nums; }
       .d-stat .d-nums { display:inline-flex; overflow:hidden; height:24px; vertical-align:bottom; }
-      .d-stat .d-nums i { display:block; font-style:normal; animation:dk-num 2.4s cubic-bezier(.16,1,.3,1) infinite; }
+      .d-stat .d-nums i { display:block; line-height:24px; height:24px; font-style:normal; animation:dk-num 2.4s cubic-bezier(.16,1,.3,1) infinite; }
       @keyframes dk-num { 0%, 12% { transform:translateY(0); } 45%, 78% { transform:translateY(-24px); } 100% { transform:translateY(-48px); } }
       .d-stat .d-trend { margin-left:6px; font:700 10px/1 ui-monospace,monospace; color:#3a8a4d; }
       .d-tl { position:relative; padding-left:16px; display:grid; gap:9px; }
@@ -439,6 +439,102 @@ export default function UIKit() {
         animation:dk-ring 3s ease-in-out infinite; }
       @keyframes dk-ring { 50% { transform:scale(1.09) rotate(6deg); } }
 
+      /* ===== 补充组件演示（41-52） ===== */
+      .d-search { display:grid; gap:6px; }
+      .d-search-input { display:flex; align-items:center; gap:7px; border:1.5px solid #d4a930; border-radius:8px; background:#fff; padding:8px 11px; font-size:10.5px; color:#333; box-shadow:0 0 0 3px rgba(255,224,138,.4); }
+      .d-search-input::after { content:"|"; color:#a48830; animation:dk-caret 1s steps(1) infinite; }
+      .d-search-pop { border:1px solid rgba(164,136,48,.4); border-radius:8px; background:#fff; box-shadow:0 8px 18px -10px rgba(164,136,48,.4); overflow:hidden; }
+      .d-search-pop span { display:flex; align-items:center; padding:5px 10px; font-size:9.5px; color:#666; }
+      .d-search-pop span.on { background:#fff9df; color:#8a6d1c; font-weight:700; }
+      .d-search-pop span em { margin-left:auto; color:#c2c2c2; font:9px/1 ui-monospace,monospace; font-style:normal; }
+
+      .d-seg { position:relative; display:grid; grid-template-columns:repeat(3,1fr); border:1px solid #e2e2e2; border-radius:9px; background:#f1f1ef; padding:3px; width:78%; margin:0 auto; }
+      .d-seg-thumb { position:absolute; top:3px; bottom:3px; left:3px; width:calc((100% - 6px)/3); border-radius:7px; background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.16); animation:dk-seg 3.6s cubic-bezier(.22,1,.36,1) infinite; }
+      .d-seg button { position:relative; z-index:1; border:0; background:transparent; padding:6px 0; font-size:10px; color:#777; }
+      @keyframes dk-seg { 0%,30% { transform:translateX(0); } 37%,63% { transform:translateX(100%); } 70%,95% { transform:translateX(200%); } 100% { transform:translateX(0); } }
+
+      .d-otp { display:flex; gap:6px; justify-content:center; }
+      .d-otp i { display:grid; place-items:center; width:26px; height:32px; border-radius:8px; border:1.5px solid #d9d9d4; background:#fff; font:700 13px/1 ui-monospace,monospace; color:#333; font-style:normal; }
+      .d-otp i:nth-child(-n+4) { border-color:#d4a930; }
+      .d-otp i:nth-child(5) { border-color:#d4a930; }
+      .d-otp i:nth-child(5)::after { content:"|"; color:#a48830; animation:dk-caret 1s steps(1) infinite; }
+
+      .d-upload { display:grid; place-items:center; gap:7px; }
+      .d-drop { width:82%; display:grid; place-items:center; gap:3px; border:1.5px dashed rgba(164,136,48,.5); border-radius:10px; background:#fffdf6; padding:11px 8px; color:#a0a0a0; font-size:9.5px; animation:dk-dropzone 3s ease-in-out infinite; }
+      .d-drop b { color:#a48830; font-size:12px; }
+      @keyframes dk-dropzone { 50% { border-color:rgba(164,136,48,.85); background:#fff9e8; transform:scale(1.02); } }
+      .d-file { width:82%; display:flex; align-items:center; gap:7px; border:1px solid #e5e5e5; border-radius:8px; background:#fff; padding:6px 9px; font-size:9.5px; color:#555; }
+      .d-file .d-filebar { flex:1; height:4px; border-radius:99px; background:#eee; overflow:hidden; }
+      .d-file .d-filebar i { display:block; height:100%; border-radius:99px; background:#4fa97c; animation:dk-fileup 2.8s ease-in-out infinite; }
+      .d-file em { color:#4fa97c; font-style:normal; font-size:9px; font-variant-numeric:tabular-nums; }
+      @keyframes dk-fileup { 0% { width:8%; } 70%, 85% { width:100%; } 100% { width:8%; } }
+
+      .d-stepper { display:flex; align-items:center; width:70%; margin:0 auto; border:1px solid #e0e0e0; border-radius:9px; background:#fff; overflow:hidden; }
+      .d-stepper i { display:grid; place-items:center; width:30px; height:30px; color:#a48830; font:700 14px/1 sans-serif; font-style:normal; background:#faf8f2; }
+      .d-stepper b { flex:1; text-align:center; font-size:13px; color:#1b1b1b; font-variant-numeric:tabular-nums; }
+      .d-stepper b em { color:#a0a0a0; font-size:9px; font-style:normal; margin-left:3px; }
+
+      .d-tags { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; }
+      .d-tags span { display:inline-flex; align-items:center; gap:4px; padding:3px 8px; border-radius:99px; font-size:9.5px; font-weight:600; }
+      .d-tags span i { font-style:normal; opacity:.55; }
+      .d-tags .d-tag-add { border:1px dashed #cfc9ba; color:#a0a0a0; background:transparent; }
+      .d-tags span:nth-child(3) { animation:dk-tagpop 3s ease-in-out infinite; }
+      @keyframes dk-tagpop { 0%,68% { transform:scale(1); } 76%,90% { transform:scale(1.1); } 100% { transform:scale(1); } }
+
+      .d-badge { display:flex; align-items:center; justify-content:center; gap:24px; }
+      .d-b-avatar { position:relative; width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,#efe6d4,#dccfb6); display:grid; place-items:center; color:#8a7a5e; font:700 12px/1 sans-serif; }
+      .d-b-avatar::after { content:""; position:absolute; top:1px; right:1px; width:9px; height:9px; border-radius:50%; background:#e0554a; border:2px solid #fff; animation:dk-pulse 1.6s ease-in-out infinite; }
+      .d-b-bell { position:relative; width:36px; height:36px; border:1px solid #e2e2e2; border-radius:10px; display:grid; place-items:center; color:#777; font-size:13px; background:#fff; }
+      .d-b-bell::after { content:"99+"; position:absolute; top:-7px; right:-9px; padding:1px 4px; border-radius:99px; background:#e0554a; color:#fff; font:700 8px/1.5 sans-serif; }
+      .d-b-dot { position:relative; width:30px; height:30px; border-radius:50%; border:1.5px solid #d9d9d4; background:#fff; }
+      .d-b-dot::after { content:""; position:absolute; top:-2px; right:-2px; width:8px; height:8px; border-radius:50%; background:#3a8a4d; border:2px solid #fff; }
+
+      .d-table { border:1px solid #e5e5e5; border-radius:9px; background:#fff; overflow:hidden; font-size:9.5px; }
+      .d-table .t-head, .d-table .t-row { display:grid; grid-template-columns:1.3fr 1fr .8fr; padding:5px 9px; align-items:center; }
+      .d-table .t-head { background:#faf8f2; color:#a0a0a0; font-weight:700; border-bottom:1px solid #eee; }
+      .d-table .t-head em { font-style:normal; color:#a48830; }
+      .d-table .t-row { color:#555; border-top:1px solid #f2f2f0; animation:dk-trow 3.6s ease-in-out infinite; }
+      .d-table .t-row:nth-child(3) { animation-delay:1.2s; }
+      .d-table .t-row:nth-child(4) { animation-delay:2.4s; }
+      .d-table .t-row b { text-align:right; font-variant-numeric:tabular-nums; color:#333; }
+      .d-table .pill { padding:1px 7px; border-radius:99px; font-size:8.5px; }
+      .d-table .pill.ok { background:#e6f4ec; color:#2f9e6e; }
+      .d-table .pill.warn { background:#fdf3dc; color:#c08a1e; }
+      .d-table .pill.err { background:#fdecea; color:#d05a52; }
+      @keyframes dk-trow { 0%,88% { background:transparent; } 92%, 96% { background:#fff9df; } 100% { background:transparent; } }
+
+      .d-code { position:relative; border-radius:9px; background:#1b1b1b; padding:10px 12px; color:#d8e0c8; font:9.5px/1.75 ui-monospace,monospace; white-space:nowrap; overflow:hidden; }
+      .d-code .syn-k { color:#c792ea; }
+      .d-code .syn-s { color:#a5d6a7; }
+      .d-code .cp { position:absolute; top:7px; right:8px; font-style:normal; font-size:8.5px; padding:1px 7px; border-radius:5px; }
+      .d-code .cp1 { color:#ffe08a; border:1px solid rgba(255,224,138,.4); animation:dk-cp1 3.4s steps(1) infinite; }
+      .d-code .cp2 { color:#7ee2a8; background:rgba(74,169,124,.22); opacity:0; animation:dk-cp2 3.4s steps(1) infinite; }
+      @keyframes dk-cp1 { 0%,62% { opacity:1; } 68%, 96% { opacity:0; } 100% { opacity:1; } }
+      @keyframes dk-cp2 { 0%,62% { opacity:0; } 68%, 96% { opacity:1; } 100% { opacity:0; } }
+
+      .d-cmdk { width:84%; margin:0 auto; border:1px solid rgba(164,136,48,.4); border-radius:10px; background:#fff; box-shadow:0 14px 30px -14px rgba(0,0,0,.3); overflow:hidden; }
+      .d-cmdk-input { display:flex; align-items:center; gap:6px; padding:7px 10px; font-size:10px; color:#333; border-bottom:1px solid #f0ede4; }
+      .d-cmdk-input b { color:#a48830; }
+      .d-cmdk-input kbd { margin-left:auto; padding:1px 5px; border:1px solid #e2e2e2; border-radius:4px; font:8.5px/1.4 ui-monospace,monospace; color:#a0a0a0; }
+      .d-cmdk-item { display:flex; align-items:center; gap:7px; padding:5px 10px; font-size:9.5px; color:#666; animation:dk-cmdk 3.6s ease-in-out infinite; }
+      .d-cmdk-item i { font-style:normal; color:#b9a97e; }
+      .d-cmdk-item em { margin-left:auto; font-style:normal; color:#c2c2c2; font-size:8.5px; }
+      .d-cmdk-item:nth-child(3) { animation-delay:1.2s; }
+      .d-cmdk-item:nth-child(4) { animation-delay:2.4s; }
+      @keyframes dk-cmdk { 0%,88% { background:transparent; color:#666; } 92%, 96% { background:#fff9df; color:#8a6d1c; font-weight:700; } 100% { background:transparent; color:#666; } }
+
+      .d-tabbar { display:flex; justify-content:space-around; align-items:center; border:1px solid #e5e5e5; border-radius:12px; background:#fff; padding:8px 6px; }
+      .d-tabbar span { display:grid; justify-items:center; gap:3px; font-size:8px; color:#b5b5b5; padding:0 10px; position:relative; }
+      .d-tabbar span i { width:16px; height:16px; border-radius:5px; background:#e5e5e5; display:block; }
+      .d-tabbar span.on { color:#a48830; font-weight:700; }
+      .d-tabbar span.on i { background:#d4a930; animation:dk-float 2.6s ease-in-out infinite; }
+      .d-tabbar span .dot { position:absolute; top:-2px; right:4px; width:6px; height:6px; border-radius:50%; background:#e0554a; border:1.5px solid #fff; }
+
+      .d-type { border-radius:9px; background:#fff; border:1px solid #e5e5e5; padding:11px 13px; display:flex; justify-content:center; }
+      .d-type-t { display:inline-block; overflow:hidden; white-space:nowrap; vertical-align:bottom; border-right:1.5px solid #a48830; padding-right:2px; font:10.5px/1.7 ui-monospace,monospace; color:#555;
+        width:23ch; animation:dk-type 3.8s steps(23) infinite, dk-caret 1s steps(1) infinite; }
+      @keyframes dk-type { 0% { width:0; } 55%, 82% { width:23ch; } 100% { width:0; } }
+
       /* ===== Footer ===== */
       .ui-footer { width:min(100% - 48px, 1160px); margin:0 auto; padding:0 0 46px; color:#b5b5b5; font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
 
@@ -481,7 +577,7 @@ export default function UIKit() {
           <span><b>{UI_COMPONENTS.length}</b>个组件</span>
           <span><b>{UI_CATS.length - 1}</b>大分类</span>
           <span><b>5</b>个讲解维度</span>
-          <span><b>40+</b>个循环动效</span>
+          <span><b>{UI_COMPONENTS.length}</b>个循环动效</span>
         </div>
         <span className="ui-hero-cue">↓ 向下滚动，导航会变形为胶囊</span>
       </div>
@@ -834,6 +930,108 @@ function Demo({ type }) {
       return <div className="ui-demo">
         <div className="d-fade"><i>内容淡入淡出</i></div>
         <p>透明度 + 位移循环</p>
+      </div>;
+    case 'search':
+      return <div className="ui-demo">
+        <div className="d-search">
+          <div className="d-search-input">搜索：提示词…</div>
+          <div className="d-search-pop">
+            <span className="on">提示词库 · 56 条结果</span>
+            <span>提示词工程指南</span>
+            <span>结构化提示词模板<em>↵</em></span>
+          </div>
+        </div>
+        <p>输入联想 · 键盘上下选择</p>
+      </div>;
+    case 'segmented':
+      return <div className="ui-demo">
+        <div className="d-seg">
+          <i className="d-seg-thumb" />
+          <button type="button">日付</button>
+          <button type="button">周付</button>
+          <button type="button">月付</button>
+        </div>
+        <p>白色滑块平滑滑向选中项</p>
+      </div>;
+    case 'otp':
+      return <div className="ui-demo">
+        <div className="d-otp"><i>4</i><i>8</i><i>2</i><i>9</i><i /><i /></div>
+        <p>输完自动跳格 · 粘贴自动拆分</p>
+      </div>;
+    case 'upload':
+      return <div className="ui-demo">
+        <div className="d-upload">
+          <div className="d-drop"><b>⇪</b>拖入文件或点击上传</div>
+          <div className="d-file"><span>体检报告.pdf</span><i className="d-filebar"><i /></i><em>86%</em></div>
+        </div>
+        <p>拖放高亮 · 上传进度循环</p>
+      </div>;
+    case 'stepper':
+      return <div className="ui-demo">
+        <div className="d-stepper"><i>−</i><b>2<em>张</em></b><i>＋</i></div>
+        <p>点击加减 · 长按连续 · 越界夹紧</p>
+      </div>;
+    case 'tags':
+      return <div className="ui-demo">
+        <div className="d-tags">
+          <span style={{ background: '#fff9df', color: '#8a6d1c' }}>React<i>×</i></span>
+          <span style={{ background: '#e6f2f1', color: '#4fa39c' }}>CSS<i>×</i></span>
+          <span style={{ background: '#eef5e8', color: '#5f8f52' }}>动效<i>×</i></span>
+          <span className="d-tag-add">＋ 添加</span>
+        </div>
+        <p>回车新增 · 点 × 移除</p>
+      </div>;
+    case 'badge':
+      return <div className="ui-demo">
+        <div className="d-badge">
+          <span className="d-b-avatar">V</span>
+          <span className="d-b-bell">✉</span>
+          <span className="d-b-dot" />
+        </div>
+        <p>红点脉冲 · 99+ 胶囊 · 在线状态</p>
+      </div>;
+    case 'table':
+      return <div className="ui-demo">
+        <div className="d-table">
+          <div className="t-head"><span>项目</span><span>状态 <em>↕</em></span><span>额度</span></div>
+          <div className="t-row"><span>voyra-api</span><span><i className="pill ok">运行中</i></span><b>$ 36.5</b></div>
+          <div className="t-row"><span>modelflow</span><span><i className="pill warn">限流中</i></span><b>$ 12.0</b></div>
+          <div className="t-row"><span>relay-cdn</span><span><i className="pill err">已暂停</i></span><b>$ 0.0</b></div>
+        </div>
+        <p>表头可排序 · 行高亮循环</p>
+      </div>;
+    case 'code':
+      return <div className="ui-demo">
+        <div className="d-code">
+          <em className="cp cp1">复制</em><em className="cp cp2">✓ 已复制</em>
+          <div><span className="syn-k">const</span> api = <span className="syn-s">'lxlrwxs.top'</span>;</div>
+          <div>fetch(api + <span className="syn-s">'/v1/chat'</span>);</div>
+        </div>
+        <p>一键复制 · 成功态反馈循环</p>
+      </div>;
+    case 'cmdk':
+      return <div className="ui-demo">
+        <div className="d-cmdk">
+          <div className="d-cmdk-input"><b>⌘K</b>输入指令或搜索…<kbd>ESC</kbd></div>
+          <div className="d-cmdk-item on"><i>▷</i>跳转到组件图鉴<em>↵</em></div>
+          <div className="d-cmdk-item"><i>▷</i>新建提示词<em>G G</em></div>
+          <div className="d-cmdk-item"><i>▷</i>切换深色模式<em>D</em></div>
+        </div>
+        <p>↑↓ 选择 · 回车执行 · Esc 关闭</p>
+      </div>;
+    case 'tabbar':
+      return <div className="ui-demo">
+        <div className="d-tabbar">
+          <span><i />首页</span>
+          <span className="on"><i />图鉴</span>
+          <span><i />我的<b className="dot" /></span>
+        </div>
+        <p>选中上浮染色 · 未读红点提醒</p>
+      </div>;
+    case 'type':
+      return <div className="ui-demo">
+        <div className="d-type"><span className="d-type-t">npm create voyra@latest</span></div>
+        <p>逐字打出 · 光标闪烁 · 循环重播</p>
       </div>;
     default:
       return null;
