@@ -1,19 +1,50 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, ChevronDown, Home } from 'lucide-react';
+import { Check, ChevronDown, Copy, Home } from 'lucide-react';
 import { UI_CATS, UI_COMPONENTS } from '../data/uikit-components';
 
 /* ============================================================
    UI 组件图鉴 · 开发者查阅工具页
    - 页面自身即 01 号组件的活演示：顶部通栏导航，滚动后变形为悬浮胶囊吸顶
    - 40 个组件 × 6 分类，每张卡片：中文名 / 英文专业名 / 外观 / 场景 / 原理
-   - 每张卡片内嵌循环动效演示，点击卡片展开 / 收起
+   - 卡片默认展开、两列排布，每张卡可一键复制"喂给 AI 的同款风格提示词"
+   - 性能：视口外的动效演示自动暂停 + content-visibility 跳过屏外渲染
    ============================================================ */
+
+function copyText(value) {
+  if (navigator.clipboard?.writeText) return navigator.clipboard.writeText(value);
+  return new Promise((resolve, reject) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try { document.execCommand('copy') ? resolve() : reject(new Error('copy failed')); }
+    catch (error) { reject(error); }
+    finally { textarea.remove(); }
+  });
+}
+
+/* 组装"让 AI 生成同款风格组件"的提示词 */
+function buildPrompt(c) {
+  const catLabel = UI_CATS.find((x) => x.key === c.cat)?.label || c.cat;
+  return [
+    `请实现一个「${c.name}（${c.en}）」网页界面组件，分类：${catLabel}。`,
+    '视觉风格：黑白灰极简 + 金色点缀（主金 #a48830、高亮 #ffe08a），白底细网格纹理，卡片圆角 14px、1px 浅灰描边、柔和低扩散阴影。',
+    `外观描述：${c.look}`,
+    `使用场景：${c.scene}`,
+    `实现原理：${c.how}`,
+    '要求：附带一个约 3 秒的循环演示动效；输出 React + CSS 实现，交互与细节尽量贴近上述描述。',
+  ].join('\n');
+}
 
 export default function UIKit() {
   const [shrunk, setShrunk] = useState(false);
-  const [openId, setOpenId] = useState(null);
+  const [closedIds, setClosedIds] = useState(() => new Set());
   const [cat, setCat] = useState('all');
+  const [copiedNo, setCopiedNo] = useState(null);
   const rootRef = useRef(null);
+  const copyTimerRef = useRef(null);
 
   useEffect(() => {
     const findScroller = (el) => {
@@ -39,10 +70,42 @@ export default function UIKit() {
     };
   }, []);
 
-  const toggle = (no) => setOpenId((cur) => (cur === no ? null : no));
+  /* 性能优化：视口外的动效演示全部暂停（40 个演示同时跑布局型动画会卡顿）。
+     用 data-inview 而不是 class，避免 React 重渲染 className 时把标记冲掉 */
+  useEffect(() => {
+    const targets = rootRef.current?.querySelectorAll('.ui-card, .ui-hero-show');
+    if (!targets || !targets.length || !('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.setAttribute('data-inview', '1');
+        else entry.target.removeAttribute('data-inview');
+      });
+    }, { rootMargin: '160px 0px' });
+    targets.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [cat]);
+
+  useEffect(() => () => clearTimeout(copyTimerRef.current), []);
+
+  /* 卡片默认全部展开，点击可单卡收起/展开 */
+  const toggle = (no) => setClosedIds((cur) => {
+    const next = new Set(cur);
+    if (next.has(no)) next.delete(no); else next.add(no);
+    return next;
+  });
+
   const jump = (catKey) => {
     setCat(catKey);
-    window.setTimeout(() => document.getElementById(`cat-${catKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+    window.setTimeout(() => document.querySelector('.ui-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  };
+
+  const copyPrompt = async (c) => {
+    try {
+      await copyText(buildPrompt(c));
+      setCopiedNo(c.no);
+      clearTimeout(copyTimerRef.current);
+      copyTimerRef.current = setTimeout(() => setCopiedNo(null), 1600);
+    } catch { /* ignore */ }
   };
 
   const shown = cat === 'all' ? UI_COMPONENTS : UI_COMPONENTS.filter((c) => c.cat === cat);
@@ -79,16 +142,25 @@ export default function UIKit() {
       .ui-nav.is-shrunk .ui-nav-home { background:transparent; }
       .ui-nav.is-shrunk .ui-nav-home:hover { background:#ffe08a; }
 
-      /* ===== Hero ===== */
-      .ui-hero { width:min(100% - 48px, 1160px); margin:0 auto; padding:150px 0 40px; text-align:left; }
+      /* ===== Hero（左文案 + 右侧实时演示窗，填充右侧留白） ===== */
+      .ui-hero { width:min(100% - 48px, 1160px); margin:0 auto; padding:150px 0 44px;
+        display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:56px; align-items:center; text-align:left; }
       .ui-hero-kicker { color:#a0a0a0; font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.14em; }
-      .ui-hero h1 { margin:18px 0 0; font-size:clamp(52px, 8vw, 96px); font-weight:800; line-height:.98; letter-spacing:-.02em; }
+      .ui-hero h1 { margin:18px 0 0; font-size:clamp(52px, 7.2vw, 88px); font-weight:800; line-height:.98; letter-spacing:-.02em; }
       .ui-hero h1 span { color:transparent; -webkit-text-stroke:2px #1b1b1b; text-shadow:6px 6px 0 rgba(255,224,138,.45); }
-      .ui-hero p { max-width:560px; margin:26px 0 0; color:#5c5c5c; font-size:15.5px; line-height:1.9; }
-      .ui-hero-stats { display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:30px; color:#666; font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .ui-hero p { max-width:560px; margin:24px 0 0; color:#5c5c5c; font-size:15px; line-height:1.9; }
+      .ui-hero-stats { display:flex; flex-wrap:wrap; gap:10px 26px; margin-top:28px; color:#666; font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
       .ui-hero-stats b { color:#1b1b1b; font-size:15px; font-weight:750; margin-right:6px; }
-      .ui-hero-cue { display:inline-flex; align-items:center; gap:7px; margin-top:30px; color:#999; font-size:12.5px; animation:ui-cue 1.8s ease-in-out infinite; }
+      .ui-hero-cue { display:inline-flex; align-items:center; gap:7px; margin-top:26px; color:#999; font-size:12.5px; animation:ui-cue 1.8s ease-in-out infinite; }
       @keyframes ui-cue { 50% { transform:translateY(5px); } }
+      .ui-hero-show { min-width:0; }
+      .ui-hero-show-frame { border:1px solid rgba(27,27,27,.12); border-radius:16px; background:rgba(255,255,255,.92);
+        box-shadow:0 34px 64px -44px rgba(20,20,20,.5); padding:13px; display:grid; gap:9px; }
+      .ui-hero-show-head { display:flex; align-items:center; gap:5px; padding:0 2px 1px; }
+      .ui-hero-show-head i { width:8px; height:8px; border-radius:50%; background:#e2e2e2; }
+      .ui-hero-show-head i:first-child { background:#f0c9c9; }
+      .ui-hero-show-head span { margin-left:auto; color:#b5b5b5; font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.08em; }
+      .ui-hero-show-cap { margin:2px 2px 0; color:#a0a0a0; font:11px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; text-align:center; }
 
       /* ===== 分类筛选 ===== */
       .ui-cats { position:sticky; top:0; z-index:40; width:min(100% - 48px, 1160px); margin:0 auto;
@@ -101,29 +173,43 @@ export default function UIKit() {
       .ui-cat.is-active { border-color:#d7b846; background:#ffe08a; color:#1b1b1b; }
       .ui-cat.is-active b { color:rgba(27,27,27,.5); }
 
-      /* ===== 卡片列表 ===== */
-      .ui-list { width:min(100% - 48px, 880px); margin:0 auto; padding:16px 0 90px; display:grid; gap:16px; }
+      /* ===== 卡片列表（两列网格 · 默认展开 · 视口外暂停动效） ===== */
+      .ui-list { width:min(100% - 48px, 1160px); margin:0 auto; padding:16px 0 90px; display:grid;
+        grid-template-columns:repeat(2, minmax(0,1fr)); gap:18px; align-items:start; }
       .ui-card { position:relative; border:1px solid rgba(27,27,27,.12); border-radius:14px; background:rgba(255,255,255,.92);
-        padding:20px 22px 18px; cursor:pointer; overflow:hidden;
+        padding:18px 20px 16px; cursor:pointer; overflow:hidden;
+        content-visibility:auto; contain-intrinsic-size:auto 320px;
         transition:border-color .22s ease, box-shadow .22s ease, transform .22s cubic-bezier(.16,1,.3,1); }
       .ui-card:hover { border-color:rgba(164,136,48,.5); box-shadow:0 16px 32px -26px rgba(0,0,0,.4); transform:translateY(-2px); }
-      .ui-card.is-open { border-color:rgba(164,136,48,.65); box-shadow:0 22px 44px -30px rgba(0,0,0,.45); cursor:default; }
-      .ui-card-top { display:flex; align-items:flex-start; gap:14px; }
-      .ui-no { flex:0 0 auto; color:transparent; -webkit-text-stroke:1px rgba(164,136,48,.55); font:800 30px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .ui-card.is-open { cursor:default; }
+      .ui-card.is-open:hover { border-color:rgba(164,136,48,.65); }
+      /* 视口外：动效全部冻结（data-inview 由 IntersectionObserver 维护） */
+      .ui-card:not([data-inview]) :is(.ui-demo, .ui-demo *),
+      .ui-hero-show:not([data-inview]) :is(.ui-demo, .ui-demo *) { animation-play-state:paused !important; }
+      .ui-card-top { display:flex; align-items:center; gap:12px; }
+      .ui-no { flex:0 0 auto; color:transparent; -webkit-text-stroke:1px rgba(164,136,48,.55); font:800 24px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
       .ui-card-name { display:grid; gap:3px; min-width:0; }
-      .ui-card-name h3 { margin:0; font-size:19px; font-weight:760; letter-spacing:-.01em; }
-      .ui-card-name em { color:#a48830; font:650 12px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-style:normal; }
-      .ui-card-cat { margin-left:auto; flex:0 0 auto; padding:4px 11px; border:1px solid rgba(27,27,27,.12); border-radius:99px; color:#888; font-size:11px; font-weight:600; }
-      .ui-chevron { flex:0 0 auto; align-self:center; color:#999; transition:transform .35s cubic-bezier(.16,1,.3,1); }
-      .ui-card.is-open .ui-chevron { transform:rotate(180deg); color:#a48830; }
-      .ui-look { margin:13px 0 0; color:#5c5c5c; font-size:13.5px; line-height:1.85; }
-      .ui-detail { display:grid; grid-template-rows:0fr; transition:grid-template-rows .5s cubic-bezier(.16,1,.3,1); }
-      .ui-card.is-open .ui-detail { grid-template-rows:1fr; }
+      .ui-card-name h3 { margin:0; font-size:17px; font-weight:760; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .ui-card-name em { color:#a48830; font:650 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-style:normal; }
+      .ui-copy { display:inline-flex; align-items:center; gap:5px; flex:0 0 auto; margin-left:auto;
+        border:1px solid rgba(164,136,48,.45); border-radius:99px; padding:5px 10px; background:#fff9df; color:#8a6d1c;
+        font-size:11px; font-weight:650; white-space:nowrap;
+        transition:background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease; }
+      .ui-copy:hover { background:#ffe08a; transform:translateY(-1px); }
+      .ui-copy:active { transform:scale(.95); transition-duration:.08s; }
+      .ui-copy.is-copied { background:#3a8a4d; border-color:#3a8a4d; color:#fff; }
+      .ui-card-cat { flex:0 0 auto; padding:4px 11px; border:1px solid rgba(27,27,27,.12); border-radius:99px; color:#888; font-size:11px; font-weight:600; }
+      .ui-chevron { flex:0 0 auto; color:#999; transition:transform .35s cubic-bezier(.16,1,.3,1), color .35s ease; }
+      .ui-card:not(.is-open) .ui-chevron { transform:rotate(-90deg); }
+      .ui-card.is-open .ui-chevron { color:#a48830; }
+      .ui-look { margin:12px 0 0; color:#5c5c5c; font-size:13px; line-height:1.85; }
+      .ui-detail { display:grid; grid-template-rows:1fr; transition:grid-template-rows .5s cubic-bezier(.16,1,.3,1); }
+      .ui-card:not(.is-open) .ui-detail { grid-template-rows:0fr; }
       .ui-detail-inner { overflow:hidden; }
-      .ui-detail-body { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; padding-top:16px; }
+      .ui-detail-body { display:grid; grid-template-columns:1fr; gap:12px; padding-top:14px; }
       .ui-demo { border:1px solid rgba(27,27,27,.1); border-radius:11px; background:#fafaf8; padding:14px; align-self:start; overflow:hidden; }
       .ui-demo p { margin:11px 0 0; color:#a0a0a0; font-size:10.5px; text-align:center; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-      .ui-fields { display:grid; gap:14px; align-content:start; }
+      .ui-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px 18px; align-content:start; }
       .ui-field h4 { display:flex; align-items:center; gap:7px; margin:0; font-size:12px; font-weight:750; color:#1b1b1b; }
       .ui-field h4::before { content:""; width:8px; height:8px; border-radius:2px; background:#ffe08a; border:1px solid rgba(164,136,48,.5); }
       .ui-field p { margin:6px 0 0; color:#5c5c5c; font-size:12.5px; line-height:1.85; }
@@ -330,11 +416,17 @@ export default function UIKit() {
       @keyframes dk-sel { 50% { box-shadow:0 0 0 3px rgba(212,169,48,.3); } }
 
       /* ===== Footer ===== */
-      .ui-footer { width:min(100% - 48px, 880px); margin:0 auto; padding:0 0 46px; color:#b5b5b5; font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .ui-footer { width:min(100% - 48px, 1160px); margin:0 auto; padding:0 0 46px; color:#b5b5b5; font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
 
+      @media (max-width:1080px) {
+        .ui-hero { grid-template-columns:1fr; gap:0; }
+        .ui-hero-show { display:none; }
+        .ui-fields { grid-template-columns:1fr; }
+      }
       @media (max-width:820px) {
         .ui-hero { padding-top:130px; }
         .ui-hero h1 { font-size:clamp(40px, 11vw, 64px); }
+        .ui-list { grid-template-columns:1fr; }
         .ui-detail-body { grid-template-columns:1fr; }
         .ui-nav-links button { display:none; }
       }
@@ -354,19 +446,30 @@ export default function UIKit() {
     </nav>
 
     <header className="ui-hero">
-      <span className="ui-hero-kicker">UI COMPENDIUM · FOR DEVELOPERS</span>
-      <h1>界面组件<br /><span>图鉴</span></h1>
-      <p>
-        专门讲解网页与后台系统里常见界面组件的查阅手册：每个部件叫什么名字、长什么样子（动效演示）、
-        用在什么场景、又是怎么实现的。点击任意卡片展开完整讲解，再点一次收起。
-      </p>
-      <div className="ui-hero-stats">
-        <span><b>{UI_COMPONENTS.length}</b>个组件</span>
-        <span><b>{UI_CATS.length - 1}</b>大分类</span>
-        <span><b>5</b>个讲解维度</span>
-        <span><b>40+</b>个循环动效</span>
+      <div className="ui-hero-main">
+        <span className="ui-hero-kicker">UI COMPENDIUM · FOR DEVELOPERS</span>
+        <h1>界面组件<br /><span>图鉴</span></h1>
+        <p>
+          专门讲解网页与后台系统里常见界面组件的查阅手册：每个部件叫什么名字、长什么样子（动效演示）、
+          用在什么场景、又是怎么实现的。卡片默认全部展开，点卡片可收起；右上角「复制提示词」可以把同款风格直接喂给 AI。
+        </p>
+        <div className="ui-hero-stats">
+          <span><b>{UI_COMPONENTS.length}</b>个组件</span>
+          <span><b>{UI_CATS.length - 1}</b>大分类</span>
+          <span><b>5</b>个讲解维度</span>
+          <span><b>40+</b>个循环动效</span>
+        </div>
+        <span className="ui-hero-cue">↓ 向下滚动，导航会变形为胶囊</span>
       </div>
-      <span className="ui-hero-cue">↓ 向下滚动，导航会变形为胶囊</span>
+      <aside className="ui-hero-show" aria-hidden="true">
+        <div className="ui-hero-show-frame">
+          <div className="ui-hero-show-head"><i /><i /><i /><span>LIVE · 组件实时演示</span></div>
+          <Demo type="pillnav" />
+          <Demo type="dashboard" />
+          <Demo type="statistic" />
+        </div>
+        <p className="ui-hero-show-cap">演示全部真实运行 · 40 个组件见下方图鉴</p>
+      </aside>
     </header>
 
     <div className="ui-cats" role="tablist" aria-label="组件分类">
@@ -382,7 +485,7 @@ export default function UIKit() {
 
     <main className="ui-list">
       {shown.map((c) => {
-        const open = openId === c.no;
+        const open = !closedIds.has(c.no);
         return (
           <article
             key={c.no}
@@ -397,8 +500,18 @@ export default function UIKit() {
             <div className="ui-card-top">
               <span className="ui-no">{c.no}</span>
               <span className="ui-card-name"><h3>{c.name}</h3><em>{c.en}</em></span>
+              <button
+                type="button"
+                className={`ui-copy${copiedNo === c.no ? ' is-copied' : ''}`}
+                title="复制该组件的设计提示词，粘贴给 AI 即可生成同款风格"
+                onClick={(e) => { e.stopPropagation(); copyPrompt(c); }}
+                onKeyDown={(e) => e.stopPropagation()}
+              >
+                {copiedNo === c.no ? <Check size={13} /> : <Copy size={13} />}
+                {copiedNo === c.no ? '已复制' : '复制提示词'}
+              </button>
               <span className="ui-card-cat">{UI_CATS.find((x) => x.key === c.cat)?.label || c.cat}</span>
-              <ChevronDown size={18} className="ui-chevron" />
+              <ChevronDown size={17} className="ui-chevron" />
             </div>
             <p className="ui-look">{c.look}</p>
             <div className="ui-detail">
