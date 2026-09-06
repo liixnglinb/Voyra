@@ -419,16 +419,16 @@ export default function Layout({ children }) {
           border-color: #1b1b1b !important;
           box-shadow: 0 0 0 3px rgba(255,224,138,.52) !important;
         }
-        .tool-content :is(.glass, .sn-card, .pl-card, .cs-card, .ag-sec, .ag-card, .ag-skill, .ag-rank-row, .hub-box, .ak-group, .ak-key, .nw-bar, .nw-card, .nw-rank-row, .bookmark-card, .bc-card, .bc-kpi, .bc-sidenav, .pl-sidebar, .pl-empty, .pl-ev, .sn-item, .sn-note, .cs-review, .cs-review-item) {
+        .tool-content :is(.glass, .sn-card, .pl-card, .cs-card, .ag-sec, .ag-card, .ag-skill, .ag-rank-row, .hub-box, .ak-group, .ak-key, .nw-bar, .nw-card, .nw-rank-row, .bookmark-card, .pl-sidebar, .pl-empty, .pl-ev, .sn-item, .sn-note, .cs-review, .cs-review-item) {
           border-color: rgba(27,27,27,.13) !important;
           border-radius: 8px !important;
           background: rgba(255,255,255,.9) !important;
           box-shadow: none !important;
         }
-        .tool-content :is(.glass, .sn-card, .pl-card, .cs-card, .ag-sec, .hub-box, .ak-group, .nw-bar, .bookmark-card, .bc-card, .bc-sidenav, .pl-sidebar) {
+        .tool-content :is(.glass, .sn-card, .pl-card, .cs-card, .ag-sec, .hub-box, .ak-group, .nw-bar, .bookmark-card, .pl-sidebar) {
           box-shadow: 0 10px 25px -28px rgba(20,20,20,.55) !important;
         }
-        .tool-content :is(.sn-card, .pl-card, .cs-card, .ag-sec, .hub-box, .ak-group, .nw-bar, .bookmark-card, .bc-card, .bc-sidenav, .pl-sidebar):hover {
+        .tool-content :is(.sn-card, .pl-card, .cs-card, .ag-sec, .hub-box, .ak-group, .nw-bar, .bookmark-card, .pl-sidebar):hover {
           border-color: rgba(27,27,27,.22) !important;
           box-shadow: 0 16px 30px -28px rgba(20,20,20,.62) !important;
         }

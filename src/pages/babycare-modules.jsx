@@ -7,11 +7,11 @@ import DateTimePicker from '../components/DateTimePicker';
 
 /* ============ 母婴台账 · 数据模型 / 模拟纸质数据 / 通用 UI ============ */
 
-const ACCENT = '#5B8DEF';
-const ACCENT_SOFT = '#E8F0FF';
-const TEXT_1 = '#333F51';
-const TEXT_2 = '#86909C';
-const LINE = '#E5E6EB';
+const ACCENT = '#E8835E';
+const ACCENT_SOFT = '#FDEEE7';
+const TEXT_1 = '#40382E';
+const TEXT_2 = '#97897A';
+const LINE = '#EFE7DA';
 
 /* ---- 宝宝基础档案（空白模板） ---- */
 export const EMPTY_PROFILE = {
@@ -70,15 +70,15 @@ function StatBox({ value, label, unit, color, bg }) {
   return (
     <div className="rounded-[10px] border px-4 py-3 flex items-baseline gap-1" style={{ background: bg, borderColor: `${color}33` }}>
       <span className="text-[24px] font-semibold leading-none tabular-nums" style={{ color }}>{value}</span>
-      <span className="text-[12px] text-[#86909C] shrink-0">{unit}</span>
-      <span className="text-[12px] text-[#5A6474] ml-auto whitespace-nowrap">{label}</span>
+      <span className="text-[12px] text-[#97897A] shrink-0">{unit}</span>
+      <span className="text-[12px] text-[#6B6257] ml-auto whitespace-nowrap">{label}</span>
     </div>
   );
 }
 
 /* 通用信息芯片（用于备忘录式历史展示） */
 function Chip({ icon: Icon, color, children }) {
-  const c = color || '#5B8DEF';
+  const c = color || '#E8835E';
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[6px] text-[11.5px] font-medium" style={{ background: `${c}1F`, color }}>
       {Icon && <Icon className="h-3 w-3" strokeWidth={2} />}
@@ -154,17 +154,17 @@ export function importPaperData() {
 export function Field({ label, hint, children }) {
   return (
     <div className="min-w-0">
-      <label className="mb-1.5 block text-[12px] text-[#86909C] font-medium">
-        {label}{hint ? <span className="text-[#B4B8C0] ml-1">({hint})</span> : null}
+      <label className="mb-1.5 block text-[12px] text-[#97897A] font-medium">
+        {label}{hint ? <span className="text-[#C4BAA9] ml-1">({hint})</span> : null}
       </label>
       {children}
     </div>
   );
 }
 
-export const inputCls = `w-full px-3 py-2 rounded-[8px] border text-[13px] text-[#333F51] bg-white
-  placeholder:text-[#B4B8C0] transition-colors focus:outline-none
-  border-[#E5E6EB] focus:border-[#5B8DEF]`;
+export const inputCls = `w-full px-3 py-2 rounded-[10px] border text-[13px] text-[#40382E] bg-[#FDFAF5]
+  placeholder:text-[#C4BAA9] transition-all focus:outline-none
+  border-[#EFE7DA] hover:border-[#E0C9AE] focus:border-[#E8835E] focus:bg-white focus:shadow-[0_0_0_3px_rgba(232,131,94,.14)]`;
 
 export function PrimaryButton({ children, disabled, onClick, ...rest }) {
   return (
@@ -172,7 +172,7 @@ export function PrimaryButton({ children, disabled, onClick, ...rest }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-[8px] text-[13.5px] font-medium text-white bg-[#5B8DEF] hover:bg-[#4a7ee0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-[13.5px] font-semibold text-white bg-gradient-to-br from-[#E8835E] to-[#F09B72] shadow-[0_6px_16px_-6px_rgba(232,131,94,.5)] hover:shadow-[0_10px_22px_-6px_rgba(232,131,94,.6)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none transition-all"
       {...rest}
     >
       {children}
@@ -185,7 +185,7 @@ export function GhostButton({ children, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] text-[12px] text-[#86909C] hover:text-[#333F51] hover:bg-[#F2F4F7] transition-colors"
+      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-[8px] text-[12px] text-[#97897A] hover:text-[#40382E] hover:bg-[#F7F0E4] transition-colors"
     >
       {children}
     </button>
@@ -196,7 +196,7 @@ function CardTitle({ icon: Icon, title, right, color }) {
   const c = color || ACCENT;
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h3 className="flex items-center gap-2 text-[16px] font-medium text-[#333F51]">
+      <h3 className="flex items-center gap-2 text-[16px] font-medium text-[#40382E]">
         <span className="flex items-center justify-center h-[26px] w-[26px] rounded-[8px]" style={{ background: `${c}26`, color: c }}>
           <Icon className="h-4 w-4" strokeWidth={1.8} />
         </span>
@@ -219,16 +219,16 @@ export function PaginatedList({ items, pageSize = 8, renderRow, empty = '暂无�
       {slice.length ? (
         <div className="space-y-1.5">{slice.map((it) => renderRow(it))}</div>
       ) : (
-        <div className="py-8 text-center text-[13px] text-[#B4B8C0]">{empty}</div>
+        <div className="py-8 text-center text-[13px] text-[#C4BAA9]">{empty}</div>
       )}
       {pages > 1 && (
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-[12px] text-[#86909C]">共 {total} 条 · 第 {cur}/{pages} 页</span>
+          <span className="text-[12px] text-[#97897A]">共 {total} 条 · 第 {cur}/{pages} 页</span>
           <div className="flex items-center gap-1.5">
             <button type="button" disabled={cur <= 1} onClick={() => setPage(cur - 1)}
-              className="p-1.5 rounded-lg border border-[#E5E6EB] text-[#86909C] hover:text-[#333F51] disabled:opacity-40 disabled:pointer-events-none"><ChevronLeft className="h-4 w-4" /></button>
+              className="p-1.5 rounded-lg border border-[#EFE7DA] text-[#97897A] hover:text-[#40382E] disabled:opacity-40 disabled:pointer-events-none"><ChevronLeft className="h-4 w-4" /></button>
             <button type="button" disabled={cur >= pages} onClick={() => setPage(cur + 1)}
-              className="p-1.5 rounded-lg border border-[#E5E6EB] text-[#86909C] hover:text-[#333F51] disabled:opacity-40 disabled:pointer-events-none"><ChevronRight className="h-4 w-4" /></button>
+              className="p-1.5 rounded-lg border border-[#EFE7DA] text-[#97897A] hover:text-[#40382E] disabled:opacity-40 disabled:pointer-events-none"><ChevronRight className="h-4 w-4" /></button>
           </div>
         </div>
       )}
@@ -239,10 +239,10 @@ export function PaginatedList({ items, pageSize = 8, renderRow, empty = '暂无�
 /* 折叠卡片（用于导入说明等） */
 export function Collapse({ open, onToggle, title, children }) {
   return (
-    <div className="border border-[#E5E6EB] rounded-[12px] bg-white overflow-hidden">
-      <button type="button" onClick={onToggle} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F7F8FA] transition-colors">
-        <span className="text-[13.5px] font-medium text-[#333F51]">{title}</span>
-        <ChevronDown className="h-4 w-4 text-[#86909C] transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
+    <div className="border border-[#EFE7DA] rounded-[12px] bg-white overflow-hidden">
+      <button type="button" onClick={onToggle} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#FBF7F0] transition-colors">
+        <span className="text-[13.5px] font-medium text-[#40382E]">{title}</span>
+        <ChevronDown className="h-4 w-4 text-[#97897A] transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       {open && <div className="px-4 pb-4">{children}</div>}
     </div>
@@ -259,15 +259,15 @@ export function ProfilePage({ profile, onSave }) {
   ];
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <CardTitle icon={UserRound} title="宝宝基础档案" right={<span className="text-[12px] text-[#B4B8C0]">出生信息用于预测与导入换算，请填写完整</span>} />
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
+        <CardTitle icon={UserRound} title="宝宝基础档案" right={<span className="text-[12px] text-[#C4BAA9]">出生信息用于预测与导入换算，请填写完整</span>} />
         <div className="grid grid-cols-2 gap-4 max-w-3xl">
           <Field label="姓名"><input className={inputCls} value={form.name || ''} onChange={(e) => set('name', e.target.value)} placeholder="宝宝" /></Field>
           <Field label="性别">
             <div className="flex gap-2">
               {['男', '女'].map((g) => (
                 <button key={g} type="button" onClick={() => set('gender', g)}
-                  className={`px-3 py-2 rounded-[8px] text-[12.5px] border transition-colors ${form.gender === g ? 'bg-[#E8F0FF] text-[#5B8DEF] border-[#5B8DEF]/50' : 'bg-[#F7F8FA] text-[#86909C] border-[#E5E6EB] hover:text-[#333F51]'}`}>{g}</button>
+                  className={`px-3 py-2 rounded-[8px] text-[12.5px] border transition-colors ${form.gender === g ? 'bg-[#FDEEE7] text-[#E8835E] border-[#E8835E]/50' : 'bg-[#FBF7F0] text-[#97897A] border-[#EFE7DA] hover:text-[#40382E]'}`}>{g}</button>
               ))}
             </div>
           </Field>
@@ -278,7 +278,7 @@ export function ProfilePage({ profile, onSave }) {
         </div>
       </div>
 
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
         <CardTitle icon={Stethoscope} title="入院评估" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {items.map(([k, l]) => (
@@ -311,7 +311,7 @@ export function MomPage({ momDaily, onAdd, onDelete }) {
   const save = () => { if (!form.date) return; onAdd({ ...form, id: Date.now() }); setForm({ ...EMPTY_MOM, date: form.date }); };
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
         <CardTitle icon={Heart} title="新增妈妈每日记录"
           right={<GhostButton onClick={() => setOpen((v) => !v)}>{open ? '收起' : '展开'} <ChevronDown className="h-4 w-4" style={{ transform: open ? 'rotate(180deg)' : 'none' }} /></GhostButton>} />
         {open && (
@@ -329,17 +329,17 @@ export function MomPage({ momDaily, onAdd, onDelete }) {
         )}
       </div>
 
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <CardTitle icon={FileText} title="妈妈记录历史" right={<span className="text-[12px] text-[#86909C]">{sorted.length} 条</span>} />
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
+        <CardTitle icon={FileText} title="妈妈记录历史" right={<span className="text-[12px] text-[#97897A]">{sorted.length} 条</span>} />
         <PaginatedList items={sorted} pageSize={6} renderRow={(r) => (
-          <div className="p-3 rounded-lg bg-[#F7F8FA] border-l-[3px] border-[#F97316]">
+          <div className="p-3 rounded-lg bg-[#FBF7F0] border-l-[3px] border-[#F97316]">
             <div className="flex items-center gap-3">
-              <span className="text-[12px] text-[#86909C] tabular-nums shrink-0 w-[86px]">{fmtDate(r.date)}</span>
-              <span className="text-[12px] text-[#5A6474] flex-1">入住 {r.admitDay || '-'} 天 · 生产 {r.postpartumDay || '-'} 天</span>
+              <span className="text-[12px] text-[#97897A] tabular-nums shrink-0 w-[86px]">{fmtDate(r.date)}</span>
+              <span className="text-[12px] text-[#6B6257] flex-1">入住 {r.admitDay || '-'} 天 · 生产 {r.postpartumDay || '-'} 天</span>
               <GhostButton onClick={() => onDelete(r.id)}><Trash2 className="h-3.5 w-3.5 text-[#EF4444]" /></GhostButton>
             </div>
             <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-              <Chip icon={Heart} color="#5B8DEF">情绪 {r.emotion || '—'}</Chip>
+              <Chip icon={Heart} color="#E8835E">情绪 {r.emotion || '—'}</Chip>
               <Chip color="#40B57D">体温 {r.temp || '—'}℃</Chip>
               <Chip color="#7048E8">BP {r.bp || '—'}</Chip>
               <Chip color="#0CA678">HR {r.hr || '—'}</Chip>
@@ -371,7 +371,7 @@ export function BabyDailyPage({ babyDaily, onAdd, onDelete }) {
   ];
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
         <CardTitle icon={Sun} title="新增宝宝每日记录"
           right={<GhostButton onClick={() => setOpen((v) => !v)}>{open ? '收起' : '展开'} <ChevronDown className="h-4 w-4" style={{ transform: open ? 'rotate(180deg)' : 'none' }} /></GhostButton>} />
         {open && (
@@ -389,13 +389,13 @@ export function BabyDailyPage({ babyDaily, onAdd, onDelete }) {
         )}
       </div>
 
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <CardTitle icon={FileText} title="宝宝记录历史" right={<span className="text-[12px] text-[#86909C]">{sorted.length} 条</span>} />
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
+        <CardTitle icon={FileText} title="宝宝记录历史" right={<span className="text-[12px] text-[#97897A]">{sorted.length} 条</span>} />
         <PaginatedList items={sorted} pageSize={5} renderRow={(r) => (
-          <div className="p-3 rounded-lg bg-[#F7F8FA] border-l-[3px] border-[#5B8DEF]">
+          <div className="p-3 rounded-lg bg-[#FBF7F0] border-l-[3px] border-[#E8835E]">
             <div className="flex items-center gap-3">
-              <span className="text-[12px] text-[#86909C] tabular-nums shrink-0 w-[86px]">{fmtDate(r.date)}</span>
-              <span className="text-[12px] text-[#5A6474] flex-1">入住 {r.admitDay || '-'} 天 · 出生 {r.birthDay || '-'} 天</span>
+              <span className="text-[12px] text-[#97897A] tabular-nums shrink-0 w-[86px]">{fmtDate(r.date)}</span>
+              <span className="text-[12px] text-[#6B6257] flex-1">入住 {r.admitDay || '-'} 天 · 出生 {r.birthDay || '-'} 天</span>
               <GhostButton onClick={() => onDelete(r.id)}><Trash2 className="h-3.5 w-3.5 text-[#EF4444]" /></GhostButton>
             </div>
             <div className="mt-2 flex items-center gap-1.5 flex-wrap">
@@ -430,37 +430,37 @@ export function DiaperPage({ diaper, onAdd, onDelete }) {
   const save = () => { onAdd({ id: Date.now(), time: new Date(time).toISOString(), pee, poop }); };
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
         <CardTitle icon={Droplet} title="新增换尿布" />
         <div className="flex flex-wrap items-end gap-4 max-w-xl">
           <Field label="时间" hint="精确到分"><DateTimePicker value={time} onChange={setTime} /></Field>
           <div className="flex gap-2">
-            <button type="button" onClick={() => setPee(!pee)} className={`px-3 py-2 rounded-[8px] text-[12.5px] border transition-colors ${pee ? 'bg-[#C7D2FE] text-[#4C6EF5] border-[#C7D2FE]' : 'bg-[#F7F8FA] text-[#86909C] border-[#E5E6EB]'}`}>小便 {pee ? '✓' : ''}</button>
-            <button type="button" onClick={() => setPoop(!poop)} className={`px-3 py-2 rounded-[8px] text-[12.5px] border transition-colors ${poop ? 'bg-[#B7E4C7] text-[#2F9E44] border-[#B7E4C7]' : 'bg-[#F7F8FA] text-[#86909C] border-[#E5E6EB]'}`}>大便 {poop ? '✓' : ''}</button>
+            <button type="button" onClick={() => setPee(!pee)} className={`px-3 py-2 rounded-[8px] text-[12.5px] border transition-colors ${pee ? 'bg-[#C7D2FE] text-[#4C6EF5] border-[#C7D2FE]' : 'bg-[#FBF7F0] text-[#97897A] border-[#EFE7DA]'}`}>小便 {pee ? '✓' : ''}</button>
+            <button type="button" onClick={() => setPoop(!poop)} className={`px-3 py-2 rounded-[8px] text-[12.5px] border transition-colors ${poop ? 'bg-[#B7E4C7] text-[#2F9E44] border-[#B7E4C7]' : 'bg-[#FBF7F0] text-[#97897A] border-[#EFE7DA]'}`}>大便 {poop ? '✓' : ''}</button>
           </div>
           <PrimaryButton onClick={save}><Check className="h-4 w-4" />保存</PrimaryButton>
         </div>
       </div>
 
       {/* 今日汇总 */}
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <CardTitle icon={Droplet} title="今日换尿布" right={<span className="text-[12px] text-[#86909C]">{tCount} 次</span>} />
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
+        <CardTitle icon={Droplet} title="今日换尿布" right={<span className="text-[12px] text-[#97897A]">{tCount} 次</span>} />
         <div className="grid grid-cols-2 gap-3">
-          <StatBox value={tCount} label="今日合计" unit="次" color="#5B8DEF" bg="#EEF4FF" />
+          <StatBox value={tCount} label="今日合计" unit="次" color="#E8835E" bg="#FDEEE7" />
           <StatBox value={tPee} label="小便" unit="次" color="#0CA678" bg="#E7F7F2" />
           <StatBox value={tPoop} label="大便" unit="次" color="#40B57D" bg="#EAF6F1" />
         </div>
       </div>
 
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <CardTitle icon={FileText} title="换尿布记录" right={<span className="text-[12px] text-[#86909C]">共 {sorted.length} 条</span>} />
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
+        <CardTitle icon={FileText} title="换尿布记录" right={<span className="text-[12px] text-[#97897A]">共 {sorted.length} 条</span>} />
         <PaginatedList items={sorted} pageSize={10} renderRow={(r) => (
-          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#F7F8FA] border-l-[3px] border-[#B7E4C7]">
-            <span className="text-[13px] text-[#333F51] tabular-nums w-[120px] shrink-0">{fmtDateTime(r.time)}</span>
+          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#FBF7F0] border-l-[3px] border-[#B7E4C7]">
+            <span className="text-[13px] text-[#40382E] tabular-nums w-[120px] shrink-0">{fmtDateTime(r.time)}</span>
             <span className="flex items-center gap-1.5">
               {r.pee ? <Chip icon={Droplet} color="#4C6EF5">小便</Chip> : null}
               {r.poop ? <Chip color="#2F9E44">大便</Chip> : null}
-              {!r.pee && !r.poop && <span className="text-[12px] text-[#B4B8C0]">仅更换</span>}
+              {!r.pee && !r.poop && <span className="text-[12px] text-[#C4BAA9]">仅更换</span>}
             </span>
             <span className="flex-1" />
             <GhostButton onClick={() => onDelete(r.id)}><Trash2 className="h-3.5 w-3.5 text-[#EF4444]" /></GhostButton>
@@ -492,7 +492,7 @@ export function FeedPage({ feed, onAdd, onDelete }) {
   };
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
         <CardTitle icon={Sparkles} title="新增进食记录" />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
           <Field label="进食时间"><DateTimePicker value={time} onChange={setTime} /></Field>
@@ -504,26 +504,26 @@ export function FeedPage({ feed, onAdd, onDelete }) {
       </div>
 
       {/* 今日营养汇总 */}
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <CardTitle icon={Sparkles} title="今日营养摄入" right={<span className="text-[12px] text-[#86909C]">{fCount} 次</span>} />
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
+        <CardTitle icon={Sparkles} title="今日营养摄入" right={<span className="text-[12px] text-[#97897A]">{fCount} 次</span>} />
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatBox value={fBreast} label="母乳吸吮" unit="min" color="#5B8DEF" bg="#EEF4FF" />
+          <StatBox value={fBreast} label="母乳吸吮" unit="min" color="#E8835E" bg="#FDEEE7" />
           <StatBox value={fFormula} label="配方奶" unit="ml" color="#FFA94D" bg="#FFF3E6" />
           <StatBox value={fWater} label="饮水" unit="ml" color="#0CA678" bg="#E7F7F2" />
           <StatBox value={fCount} label="次数" unit="次" color="#7048E8" bg="#F0ECFC" />
         </div>
       </div>
 
-      <div className="rounded-[12px] border border-[#E5E6EB] bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-        <CardTitle icon={FileText} title="进食记录" right={<span className="text-[12px] text-[#86909C]">共 {sorted.length} 条</span>} />
+      <div className="rounded-[16px] border border-[#EFE7DA] bg-white p-5 shadow-[0_2px_12px_rgba(112,90,60,.05)]">
+        <CardTitle icon={FileText} title="进食记录" right={<span className="text-[12px] text-[#97897A]">共 {sorted.length} 条</span>} />
         <PaginatedList items={sorted} pageSize={8} renderRow={(r) => (
-          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#F7F8FA] border-l-[3px] border-[#FFD8A8]">
-            <span className="text-[13px] text-[#333F51] tabular-nums w-[120px] shrink-0">{fmtDateTime(r.time)}</span>
+          <div className="flex items-center gap-3 p-2.5 rounded-lg bg-[#FBF7F0] border-l-[3px] border-[#FFD8A8]">
+            <span className="text-[13px] text-[#40382E] tabular-nums w-[120px] shrink-0">{fmtDateTime(r.time)}</span>
             <div className="flex items-center gap-1.5 flex-wrap flex-1">
-              {r.breastMin != null && r.breastMin !== '' && <Chip icon={Milk} color="#5B8DEF">吸吮 {r.breastMin}min</Chip>}
+              {r.breastMin != null && r.breastMin !== '' && <Chip icon={Milk} color="#E8835E">吸吮 {r.breastMin}min</Chip>}
               {r.formulaMl != null && r.formulaMl !== '' && <Chip icon={Droplet} color="#FF9F43">配方 {r.formulaMl}ml</Chip>}
               {r.waterMl != null && r.waterMl !== '' && <Chip icon={Droplet} color="#12B8A6">水 {r.waterMl}ml</Chip>}
-              {!r.breastMin && !r.formulaMl && !r.waterMl && <span className="text-[12px] text-[#B4B8C0]">无记录值</span>}
+              {!r.breastMin && !r.formulaMl && !r.waterMl && <span className="text-[12px] text-[#C4BAA9]">无记录值</span>}
             </div>
             <GhostButton onClick={() => onDelete(r.id)}><Trash2 className="h-3.5 w-3.5 text-[#EF4444]" /></GhostButton>
           </div>
@@ -543,16 +543,16 @@ export function ImportPanel({ onImport, hasData }) {
     setOpen(false);
   };
   return (
-    <div className="border border-[#E5E6EB] rounded-[12px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+    <div className="border border-[#EFE7DA] rounded-[12px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
       <button type="button" onClick={() => setOpen((v) => !v)} className="w-full flex items-center justify-between px-4 py-3">
-        <span className="flex items-center gap-2 text-[13.5px] font-medium text-[#333F51]">
-          <CloudSun className="h-4 w-4 text-[#5B8DEF]" />导入历史纸质数据
+        <span className="flex items-center gap-2 text-[13.5px] font-medium text-[#40382E]">
+          <CloudSun className="h-4 w-4 text-[#E8835E]" />导入历史纸质数据
         </span>
-        <ChevronDown className="h-4 w-4 text-[#86909C] transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
+        <ChevronDown className="h-4 w-4 text-[#97897A] transition-transform" style={{ transform: open ? 'rotate(180deg)' : 'none' }} />
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-3">
-          <p className="text-[12px] text-[#86909C] leading-relaxed">
+          <p className="text-[12px] text-[#97897A] leading-relaxed">
             导入宝宝档案、妈妈每日记录、宝宝每日记录、换尿布记录与进食记录全部纸质条目。
             {hasData ? '当前已有数据，导入会<b>追加</b>合并（不会清除已有记录）。' : '当前为空，可直接导入。'}
           </p>
@@ -561,8 +561,8 @@ export function ImportPanel({ onImport, hasData }) {
           ) : (
             <div className="flex items-center gap-2">
               <span className="text-[12px] color-[#EF4444] text-[#EF4444]">确认追加导入？</span>
-              <button type="button" onClick={doImport} className="px-3 py-1.5 rounded-[8px] text-[12.5px] bg-[#5B8DEF] text-white">确认导入</button>
-              <button type="button" onClick={() => setConfirm(false)} className="px-3 py-1.5 rounded-[8px] text-[12.5px] border border-[#E5E6EB] text-[#86909C]">取消</button>
+              <button type="button" onClick={doImport} className="px-3 py-1.5 rounded-[8px] text-[12.5px] bg-[#E8835E] text-white">确认导入</button>
+              <button type="button" onClick={() => setConfirm(false)} className="px-3 py-1.5 rounded-[8px] text-[12.5px] border border-[#EFE7DA] text-[#97897A]">取消</button>
             </div>
           )}
         </div>

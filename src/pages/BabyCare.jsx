@@ -596,7 +596,7 @@ function Field({ label, children }) {
 function KpiCard({ type, label, value, sub, color, onClick }) {
   const Icon = TYPES[type].icon;
   return (
-    <button onClick={onClick} className="bc-kpi group">
+    <button onClick={onClick} className="bc-kpi group" style={{ '--kpi-c': color }}>
       <div className="flex items-start justify-between w-full">
         <div className="min-w-0">
           <div className="bc-kpi-label">{label}</div>
@@ -1253,12 +1253,17 @@ export default function BabyCare() {
   const timeline = useMemo(() => today.slice().sort((y, M) => new Date(y.time) - new Date(M.time)), [today]);
   const ref = useMemo(() => (settings.birth ? refTable(ageDays(settings.birth)) : null), [settings.birth]);
 
+  /* 顶栏问候语（按当前时段） */
+  const _h = new Date().getHours();
+  const greeting = _h < 6 ? '夜深了' : _h < 11 ? '早上好' : _h < 13 ? '中午好' : _h < 18 ? '下午好' : '晚上好';
+  const weekDay = ['日', '一', '二', '三', '四', '五', '六'][new Date().getDay()];
+
   const renderPredItem = (y) => y.v
     ? <span className="text-[13px] font-semibold tabular-nums" style={{ color: INK }}>{y.v}</span>
     : <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${y.lv === 'danger' ? 'bg-[var(--danger-soft)] text-[var(--danger)]' : 'bg-[rgba(232,180,75,0.18)] text-[#C08A1E]'}`}>{y.tag}</span>;
 
   const PredRow = (y, M) => (
-    <div key={y.n} className="flex items-center justify-between gap-3 p-3 rounded-[12px] bg-[#FBF7F0] hover:bg-[#F7F0E4] transition-colors">
+    <div key={y.n} className="flex items-center justify-between gap-3 p-3 rounded-[12px] bg-[#FBF7F0] hover:bg-[#F7F0E4] transition-colors" style={{ borderLeft: `3px solid ${y.lv === 'danger' ? '#E06A5A' : y.lv === 'warn' ? '#E8B84B' : ACCENT + '4D' }` }}>
       <div className="min-w-0">
         <div className="flex items-center gap-2 text-[13px] font-semibold" style={{ color: INK }}>
           {y.n}
@@ -1285,18 +1290,34 @@ export default function BabyCare() {
           font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
           color: ${INK};
           --sel: rgba(232, 131, 94, 0.13);
+          --bc-ease: cubic-bezier(.22, 1, .36, 1);
+          background:
+            radial-gradient(52% 34% at 88% -6%, rgba(232,131,94,.07), transparent 70%),
+            radial-gradient(40% 30% at -6% 30%, rgba(255,224,138,.08), transparent 70%);
         }
+        .bc-layout ::selection { background: rgba(232,131,94,.24); }
+        .bc-layout ::-webkit-scrollbar { width: 8px; height: 8px; }
+        .bc-layout ::-webkit-scrollbar-track { background: transparent; }
+        .bc-layout ::-webkit-scrollbar-thumb { background: #E3D3BE; border-radius: 99px; border: 2px solid transparent; background-clip: padding-box; }
+        .bc-layout ::-webkit-scrollbar-thumb:hover { background: #D2BFA4; border: 2px solid transparent; background-clip: padding-box; }
+        .bc-layout button:focus-visible, .bc-layout a:focus-visible, .bc-layout input:focus-visible, .bc-layout select:focus-visible, .bc-layout textarea:focus-visible {
+          outline: 2px solid rgba(232,131,94,.6); outline-offset: 2px;
+        }
+        @keyframes bc-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
         /* ===== 顶栏：品牌问候 ===== */
         .bc-topbar {
           display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+          animation: bc-card-in .5s var(--bc-ease) both;
         }
         .bc-avatar {
           width: 52px; height: 52px; border-radius: 18px;
           display: flex; align-items: center; justify-content: center;
           background: linear-gradient(135deg, ${ACCENT}, #F2AE8C);
           color: #fff; box-shadow: 0 6px 16px -6px rgba(232,131,94,.55);
+          position: relative;
         }
+        .bc-avatar::after { content:""; position:absolute; inset:-5px; border-radius:22px; border:1.5px solid ${ACCENT}2E; }
         .bc-hello { min-width: 0; }
         .bc-hello b { display:block; font-size: 19px; font-weight: 800; letter-spacing: -.01em; color: ${INK}; }
         .bc-hello span { display:inline-flex; align-items:center; gap:6px; margin-top: 3px; font-size: 12px; color: ${TEXT_2}; }
@@ -1307,7 +1328,9 @@ export default function BabyCare() {
           border: 1px solid ${ACCENT}33;
           color: ${ACCENT_DEEP}; font-size: 13px; font-weight: 700;
           white-space: nowrap;
+          transition: transform .3s var(--bc-ease), box-shadow .3s var(--bc-ease);
         }
+        .bc-day-pill:hover { transform: translateY(-1px); box-shadow: 0 8px 18px -10px rgba(232,131,94,.5); }
 
         /* ===== 顶部横向导航（吸顶） ===== */
         .bc-nav {
@@ -1329,12 +1352,13 @@ export default function BabyCare() {
           border: 1px solid transparent; background: transparent;
           font-size: 13px; font-weight: 600; color: ${TEXT_2};
           cursor: pointer; white-space: nowrap; font-family: inherit;
-          transition: background .16s ease, color .16s ease;
+          transition: background .22s var(--bc-ease), color .18s ease, transform .25s var(--bc-ease), box-shadow .25s var(--bc-ease);
         }
-        .bc-nav-item:hover { background: rgba(232,131,94,.08); color: ${INK}; }
+        .bc-nav-item:hover { background: rgba(232,131,94,.09); color: ${INK}; transform: translateY(-1px); }
+        .bc-nav-item:active { transform: translateY(0) scale(.97); transition-duration: .08s; }
         .bc-nav-item.active {
           background: linear-gradient(120deg, ${ACCENT}, #F2A583);
-          color: #fff; box-shadow: 0 4px 12px -4px rgba(232,131,94,.5);
+          color: #fff; box-shadow: 0 4px 14px -4px rgba(232,131,94,.55);
         }
         .bc-nav-ic { width: 15px; height: 15px; flex-shrink: 0; }
 
@@ -1346,27 +1370,42 @@ export default function BabyCare() {
           box-shadow: 0 2px 10px rgba(112,90,60,.04);
           padding: 20px;
           box-sizing: border-box;
+          animation: bc-card-in .5s var(--bc-ease) both;
+          transition: border-color .25s var(--bc-ease), box-shadow .25s var(--bc-ease);
         }
+        .bc-card:hover { border-color: #E5D7C4; box-shadow: 0 10px 26px -14px rgba(112,90,60,.16); }
         .bc-title-icon {
           display: flex; align-items: center; justify-content: center;
           height: 27px; width: 27px; border-radius: 9px;
+        }
+
+        /* ===== 空状态 ===== */
+        .bc-empty {
+          display: flex; flex-direction: column; align-items: center; gap: 4px;
+          padding: 30px 20px; border: 1.5px dashed #E5D7C4; border-radius: 14px;
+          background: #FDFBF7; color: ${TEXT_4}; font-size: 13px;
         }
 
         /* ===== KPI 卡 ===== */
         .bc-kpi {
           display: flex; align-items: center; text-align: left;
           height: 100%; width: 100%;
-          background: ${CARD}; border: 1px solid ${LINE}; border-radius: 18px;
+          background: #fff;
+          background: linear-gradient(150deg, color-mix(in srgb, var(--kpi-c, ${ACCENT}) 6%, #fff), #fff 62%);
+          border: 1px solid ${LINE}; border-radius: 18px;
           padding: 18px; cursor: pointer; min-height: 108px;
-          transition: transform .22s cubic-bezier(.16,1,.3,1), border-color .2s ease, box-shadow .2s ease;
+          transition: transform .28s var(--bc-ease), border-color .25s var(--bc-ease), box-shadow .28s var(--bc-ease);
           font-family: inherit;
+          animation: bc-card-in .5s var(--bc-ease) both;
         }
         .bc-kpi:hover {
           transform: translateY(-3px);
+          border-color: rgba(232,131,94,.45); box-shadow: 0 14px 28px -12px rgba(232,131,94,.3);
           border-color: color-mix(in srgb, var(--kpi-c, ${ACCENT}) 42%, transparent);
-          box-shadow: 0 12px 26px -12px color-mix(in srgb, var(--kpi-c, ${ACCENT}) 34%, transparent);
+          box-shadow: 0 14px 28px -12px color-mix(in srgb, var(--kpi-c, ${ACCENT}) 36%, transparent);
         }
         .bc-kpi:hover .bc-kpi-value { color: var(--kpi-c, ${ACCENT}); }
+        .bc-kpi:hover .bc-kpi-icon { transform: translateY(-2px) scale(1.06) rotate(-4deg); }
         .bc-kpi-label { font-size: 12px; color: ${TEXT_2}; }
         .bc-kpi-value { font-size: 27px; font-weight: 800; color: ${INK}; font-variant-numeric: tabular-nums; line-height: 1.15; margin-top: 3px; transition: color .2s ease; }
         .bc-kpi-sub { font-size: 11.5px; color: ${TEXT_4}; margin-top: 5px; max-width: 150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -1383,15 +1422,18 @@ export default function BabyCare() {
           padding: 14px 6px; border-radius: 16px;
           background: #FDFAF5; border: 1px solid ${LINE};
           cursor: pointer; text-align: center; font-family: inherit;
-          transition: transform .2s cubic-bezier(.16,1,.3,1), border-color .2s ease, background .2s ease;
+          transition: transform .28s var(--bc-ease), border-color .25s var(--bc-ease), background .25s var(--bc-ease), box-shadow .28s var(--bc-ease);
         }
-        .bc-quick:hover { transform: translateY(-3px); border-color: color-mix(in srgb, var(--qc, ${ACCENT}) 45%, transparent); background: #fff; }
+        .bc-quick:hover { transform: translateY(-3px); border-color: rgba(232,131,94,.45); background: #fff; box-shadow: 0 12px 22px -14px rgba(232,131,94,.35); border-color: color-mix(in srgb, var(--qc, ${ACCENT}) 45%, transparent); box-shadow: 0 12px 22px -14px color-mix(in srgb, var(--qc, ${ACCENT}) 40%, transparent); }
+        .bc-quick:active { transform: translateY(-1px) scale(.96); transition-duration: .08s; }
         .bc-quick-icon {
           width: 44px; height: 44px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
           background: color-mix(in srgb, var(--qc, ${ACCENT}) 15%, #fff);
           color: var(--qc, ${ACCENT});
+          transition: transform .3s var(--bc-ease);
         }
+        .bc-quick:hover .bc-quick-icon { transform: scale(1.1) rotate(-5deg); }
         .bc-quick-name { font-size: 12px; font-weight: 600; color: ${INK}; }
 
         /* ===== 按钮 ===== */
@@ -1401,11 +1443,11 @@ export default function BabyCare() {
           background: linear-gradient(120deg, ${ACCENT}, #F09B72); color: #fff;
           font-size: 14px; font-weight: 600; border: 0; cursor: pointer;
           box-shadow: 0 6px 16px -6px rgba(232,131,94,.5);
-          transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+          transition: transform .22s var(--bc-ease), box-shadow .22s var(--bc-ease), opacity .2s ease;
           font-family: inherit;
         }
-        .bc-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 9px 20px -6px rgba(232,131,94,.55); }
-        .bc-btn-primary:active { transform: translateY(0); }
+        .bc-btn-primary:hover { transform: translateY(-1.5px); box-shadow: 0 10px 22px -6px rgba(232,131,94,.6); }
+        .bc-btn-primary:active { transform: translateY(0) scale(.98); transition-duration: .08s; }
         .bc-btn-primary:disabled { opacity: .45; cursor: not-allowed; transform:none; box-shadow:none; }
 
         .bc-chip-btn {
@@ -1413,9 +1455,9 @@ export default function BabyCare() {
           padding: 4px 10px; border-radius: 999px;
           font-size: 11px; font-weight: 600; color: ${ACCENT_DEEP};
           border: 1px solid ${ACCENT}44; background: #fff;
-          cursor: pointer; transition: background .16s ease; font-family: inherit;
+          cursor: pointer; transition: background .2s var(--bc-ease), transform .2s var(--bc-ease); font-family: inherit;
         }
-        .bc-chip-btn:hover { background: ${ACCENT_SOFT}; }
+        .bc-chip-btn:hover { background: ${ACCENT_SOFT}; transform: translateY(-1px); }
         .bc-chip-static {
           display:inline-flex; align-items:center; padding: 3px 10px;
           border-radius: 999px; font-size: 11px; font-weight: 600;
@@ -1447,12 +1489,35 @@ export default function BabyCare() {
         input.bc-input:hover { border-color: ${ACCENT}66; }
 
         /* ===== 时间轴 ===== */
-        .bc-tl-row { position: relative; }
-        .bc-tl-dot { position:absolute; left: 47px; top: 50%; transform: translate(-50%,-50%); width: 9px; height: 9px; border-radius:50%; }
+        .bc-tl-row { position: relative; transition: transform .25s var(--bc-ease), background .2s ease; }
+        .bc-tl-row:hover { transform: translateX(3px); }
+        .bc-tl-dot { position:absolute; left: 47px; top: 50%; transform: translate(-50%,-50%); width: 9px; height: 9px; border-radius:50%; transition: transform .25s var(--bc-ease); }
+        .bc-tl-row:hover .bc-tl-dot { transform: translate(-50%,-50%) scale(1.35); }
+
+        /* ===== Toast（暖色卡片 · 弹性滑入） ===== */
+        .bc-toast {
+          position: fixed; left: 50%; bottom: 30px; z-index: 90;
+          transform: translateX(-50%);
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 10px 18px; border-radius: 999px;
+          background: rgba(255,255,255,.97); border: 1px solid ${ACCENT}3D;
+          color: ${INK}; font-size: 13px; font-weight: 600;
+          box-shadow: 0 14px 34px -12px rgba(112,90,60,.35);
+          animation: bc-toast-in .4s cubic-bezier(.34,1.56,.64,1) both;
+        }
+        .bc-toast i {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+          background: #4FA97C; color: #fff;
+        }
+        @keyframes bc-toast-in { from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(.92); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }
 
         @media (max-width: 720px) {
           .bc-day-pill { width:100%; text-align:center; margin-left:0; }
           .bc-kpi-sub { display:none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .bc-layout *, .bc-layout *::before, .bc-layout *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
         }
       `}</style>
 
@@ -1461,9 +1526,9 @@ export default function BabyCare() {
         <span className="bc-avatar"><Baby className="h-7 w-7" strokeWidth={1.7} /></span>
         <div className="bc-hello">
           <b>{settings.name || '宝宝'}的护理手册</b>
-          <span>每一天的成长都值得被温柔记录</span>
+          <span>{greeting} · 每一天的成长都值得被温柔记录</span>
         </div>
-        <span className="bc-day-pill">出生第 {ageDaysPlus(settings.birth)} 天</span>
+        <span className="bc-day-pill">出生第 {ageDaysPlus(settings.birth)} 天 · 周{weekDay}</span>
       </header>
 
       {/* ===== 顶部导航 ===== */}
@@ -1515,7 +1580,7 @@ export default function BabyCare() {
               <SectionHeader icon={Sparkles} title="智能预测" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{predictions.length} 条</span>} />
               <div className="space-y-2 mt-2 flex-1">
                 {predictions.slice(0, 4).map((y) => PredRow(y, renderPredItem))}
-                {predictions.length === 0 && <div className="py-8 text-center text-sm" style={{ color: TEXT_4 }}>记录后自动生成预测</div>}
+                {predictions.length === 0 && <div className="bc-empty">记录后自动生成预测</div>}
               </div>
             </div>
           </div>
@@ -1533,7 +1598,7 @@ export default function BabyCare() {
                     <span className="text-[12.5px] truncate" style={{ color: INK }}>{summarize(y)}</span>
                   </div>
                 ))}
-                {timeline.length === 0 && <div className="py-8 text-center text-sm" style={{ color: TEXT_4 }}>今天还没有记录</div>}
+                {timeline.length === 0 && <div className="bc-empty">今天还没有记录，从上方「快捷记录」开始</div>}
               </div>
             </div>
 
@@ -1599,7 +1664,7 @@ export default function BabyCare() {
             <SectionHeader icon={Sparkles} title="喂养 / 护理预测" right={<span className="text-[12px]" style={{ color: TEXT_2 }}>{predictions.length} 条</span>} />
             <div className="space-y-2">
               {predictions.map((y) => PredRow(y, renderPredItem))}
-              {predictions.length === 0 && <div className="py-8 text-center text-sm" style={{ color: TEXT_4 }}>记录越多，预测越准</div>}
+              {predictions.length === 0 && <div className="bc-empty">记录越多，预测越准</div>}
             </div>
           </div>
 
@@ -1677,11 +1742,11 @@ export default function BabyCare() {
 
           <div className="overflow-y-auto max-h-[60vh] rounded-[14px] border" style={{ borderColor: LINE }}>
             {historyGroups.length === 0 && (
-              <div className="py-12 text-center text-sm" style={{ color: TEXT_4 }}>没有符合条件的记录</div>
+              <div className="bc-empty" style={{ borderWidth: 0, background: 'transparent' }}>没有符合条件的记录</div>
             )}
             {historyGroups.map((g) => (
-              <div key={g.date} className="border-b last:border-b-0" style={{ borderColor: '#F5EFE6' }}>
-                <div className="flex items-center justify-between gap-3 px-4 py-2.5" style={{ background: '#FBF7F0' }}>
+              <div key={g.date} className="border-b last:border-b-0" style={{ borderColor: '#F5EFE6', contentVisibility: 'auto', containIntrinsicSize: 'auto 220px' }}>
+                <div className="flex items-center justify-between gap-3 px-4 py-2.5" style={{ background: '#FBF7F0', position: 'sticky', top: 0, zIndex: 2, backdropFilter: 'blur(6px)' }}>
                   <span className="flex items-center gap-3">
                     <span className="text-[13px] font-bold" style={{ color: INK }}>{dayTitle(g.date)}</span>
                     <span className="text-[11px]" style={{ color: TEXT_2 }}>{g.items.length} 条</span>
@@ -1725,7 +1790,7 @@ export default function BabyCare() {
       {quickType && <QuickModal type={quickType} onClose={() => setQuickType(null)} onSave={addRecord} settings={settings} />}
 
       {/* Toast */}
-      {toast && <div className="toast toast-success">{toast}</div>}
+      {toast && <div className="bc-toast"><i><Check className="h-3 w-3" strokeWidth={3} /></i>{toast}</div>}
     </div>
   );
 }
