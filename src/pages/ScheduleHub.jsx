@@ -119,7 +119,7 @@ export default function ScheduleHub() {
     )}
 
     <div className="shub-panel">
-      <div hidden={tab !== 'courses'}><ClassSchedule stats={stats} /></div>
+      <div hidden={tab !== 'courses'}><ClassSchedule stats={stats} active={tab === 'courses'} /></div>
       <div hidden={tab !== 'planner'}><Planner /></div>
     </div>
   </div>;

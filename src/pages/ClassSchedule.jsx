@@ -136,7 +136,7 @@ function inWeek(c, w) {
   return true;
 }
 
-export default function ClassSchedule({ stats = null }) {
+export default function ClassSchedule({ stats = null, active = true }) {
   const { guard } = useAuth();
   const [courses, setCourses] = useState([]);
   const [settings, setSettings] = useState({ startDate: '', overrideWeek: null });
@@ -147,6 +147,49 @@ export default function ClassSchedule({ stats = null }) {
   const [toast, setToast] = useState('');
   const [form, setForm] = useState({ name: '', teacher: '', day: 1, slot: '1-2', f: 1, t: 16, type: 'every' });
   const toastRef = useRef(null);
+  const gridCardRef = useRef(null);
+  const [rowH, setRowH] = useState(null);
+
+  /* 课表行高自适应：把视口内剩余高度均摊到 6 个节次行，
+     使「第 X 周课表」卡片底边正好贴住可视区底端（明细卡被推出首屏） */
+  const fitGrid = () => {
+    const card = gridCardRef.current;
+    if (!card || !card.offsetWidth || !card.offsetHeight) return; // 视图隐藏时不测量
+    const tbody = card.querySelector('tbody');
+    if (!tbody) return;
+
+    // 找真正滚动的容器（.tool-wrap 或 window），换算出卡片在文档中的位置与可见底界
+    let scroller = null;
+    for (let n = card.parentElement; n && n !== document.body; n = n.parentElement) {
+      const oy = getComputedStyle(n).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && n.scrollHeight > n.clientHeight + 1) { scroller = n; break; }
+    }
+    const rect = card.getBoundingClientRect();
+    const scrollTop = scroller ? scroller.scrollTop : (window.scrollY || 0);
+    const limit = scroller ? Math.min(scroller.getBoundingClientRect().bottom, window.innerHeight) : window.innerHeight;
+    const docTop = rect.top + scrollTop;
+    const deficit = limit - docTop - card.offsetHeight;
+    if (Math.abs(deficit) < 2) return;
+    const cur = tbody.offsetHeight / SLOTS.length;
+    const next = Math.max(72, Math.min(380, cur + deficit / SLOTS.length));
+    setRowH(Math.round(next));
+  };
+
+  useEffect(() => {
+    const raf = requestAnimationFrame(fitGrid);
+    const t = setTimeout(fitGrid, 400); // 字体/懒加载稳定后兜底校准
+    window.addEventListener('resize', fitGrid);
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); window.removeEventListener('resize', fitGrid); };
+  }, []);
+
+  useEffect(() => {
+    if (active) requestAnimationFrame(fitGrid);
+  }, [active]);
+
+  /* 增删课程 / 周次设置面板展开收起都会改变卡片高度，联动重算 */
+  useEffect(() => {
+    requestAnimationFrame(fitGrid);
+  }, [showSettings, courses.length]);
 
   const say = (msg) => { setToast(msg); clearTimeout(toastRef.current); toastRef.current = setTimeout(() => setToast(''), 1800); };
 
@@ -245,11 +288,12 @@ export default function ClassSchedule({ stats = null }) {
         .cs-grid { overflow-x:auto; }
         .cs-grid table { width:100%;border-collapse:collapse;table-layout:fixed; }
         .cs-grid th,.cs-grid td { border:1px solid rgba(20,24,33,.09); }
+        .cs-grid tbody td { height:var(--cs-row-h,auto); }
         .cs-grid th { background:#F7F8FA;color:#6c757d;font-size:12px;font-weight:700;padding:10px 4px; }
         .cs-grid .per { background:#FBFBFC;color:#7b7f89;font-size:11.5px;width:86px;text-align:center;padding:10px 5px;line-height:1.5; }
         .cs-grid .per b { display:block;font-size:12.5px;color:#212529; }
         .cs-grid td.empty { background:#FCFCFD; }
-        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:30px 10px;display:flex;flex-direction:column;justify-content:center;gap:6px;min-height:136px; }
+        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:12px 10px;display:flex;flex-direction:column;justify-content:center;gap:5px; }
         .cs-cell .n { font-size:13px;font-weight:700;color:${ACCENT};line-height:1.3; }
         .cs-cell .t { font-size:11px;color:#7b7f89;margin-top:3px; }
         .cs-cell.night { background:rgba(99,102,241,.06);border-style:dashed; }
@@ -308,7 +352,7 @@ export default function ClassSchedule({ stats = null }) {
       </div>
 
       {/* 周网格课表 */}
-      <div className="cs-card">
+      <div className="cs-card" ref={gridCardRef} style={{ '--cs-row-h': rowH ? `${rowH}px` : undefined }}>
         <div className="cs-h">
           <div className="ico"><CalendarRange size={18} /></div>
           <h3>第 {currentWeek} 周课表</h3>
