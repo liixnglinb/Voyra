@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
-  ArrowUpRight, Check, Copy, Flame, RefreshCw, Search, Sparkles, Star, Trophy, X,
+  ArrowUpRight, BookOpen, Check, Copy, Flame, RefreshCw, Rocket, Search, Sparkles, Star, Trophy, X,
 } from 'lucide-react';
 
 /* ============================================================
@@ -11,7 +12,7 @@ import {
    - 优质精选：人工策展，含一键复制安装命令
    ============================================================ */
 
-const HOT_CACHE_KEY = 'voyra.skills-hot-v4';
+const HOT_CACHE_KEY = 'voyra.skills-hot-v5';
 const RANK_BASE = [
   { repo: 'anthropics/skills', base: 44200, desc: 'Anthropic 官方技能库：docx · pptx · xlsx · pdf 与编写规范', area: '官方' },
   { repo: 'x1xhlol/system-prompts-and-models-of-ai-tools', base: 52000, desc: '主流 AI 工具系统提示词大合集，逆向工程参考宝库', area: '提示词' },
@@ -224,6 +225,32 @@ async function fetchRankStars() {
   }).sort((a, b) => b.stars - a.stars);
 }
 
+async function fetchRising(since) {
+  const url = `https://api.github.com/search/repositories?q=topic%3Aclaude-skills%20created%3A%3E${since}&sort=stars&order=desc&per_page=12`;
+  const res = await fetchJson(url);
+  return (res.items || [])
+    .filter((it) => !it.archived && !it.fork)
+    .slice(0, 9)
+    .map((it) => ({
+      repo: it.full_name,
+      desc: it.description || '',
+      stars: it.stargazers_count || 0,
+      lang: it.language || '',
+      pushedAt: it.pushed_at || '',
+      topics: Array.isArray(it.topics) ? it.topics : [],
+      url: it.html_url,
+    }));
+}
+
+/* 入门指南：静态策展内容（无 API 依赖） */
+const GUIDE = [
+  { no: '01', title: '什么是 Skill', desc: '一个文件夹 + 一份 SKILL.md：模型按需加载的「说明书」，教会 Agent 一项具体能力。触发靠描述写得准，而不是靠手动调用。', link: 'https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills', linkLabel: '官方设计理念' },
+  { no: '02', title: '三步安装', desc: '复制安装命令到终端即可：npx skills add 仓库路径；或手动把技能文件夹放进 ~/.claude/skills 目录。', link: 'https://github.com/anthropics/skills', linkLabel: '官方技能库' },
+  { no: '03', title: 'SKILL.md 怎么写', desc: 'YAML frontmatter（name / description）+ 正文步骤。description 写得越具体，触发就越准；长正文按需分文件。', link: 'https://github.com/anthropics/skills', linkLabel: '编写规范范例' },
+  { no: '04', title: '搭配 MCP 扩能力', desc: 'Skill 教会 Agent「怎么做」，MCP 接上「用什么做」：文件、数据库、浏览器等外部工具经 MCP 接入。', link: 'https://github.com/modelcontextprotocol/servers', linkLabel: 'MCP 服务器集' },
+  { no: '05', title: '学习路径', desc: '先跑通官方示例 → 读优质精选里的源码 → 模仿结构写自己的第一枚 Skill → 用评测集验证触发。', link: 'https://github.com/anthropics/claude-cookbooks', linkLabel: '官方用例集' },
+];
+
 function formatStars(n) {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 }
@@ -247,11 +274,10 @@ function SectionHead({ icon: Icon, title, en, right }) {
 }
 
 function HotCard({ item, index, onCopy, copied }) {
-  return <a className="sk-hot" href={item.url} target="_blank" rel="noreferrer">
+  return <a className="sk-hot" href={item.url} target="_blank" rel="noreferrer" style={{ animationDelay: `${Math.min(index * 55, 400)}ms` }} title={item.desc || undefined}>
     <span className={`sk-hot-rank${index < 3 ? ' is-top' : ''}`}>{String(index + 1).padStart(2, '0')}</span>
     <span className="sk-hot-repo">{item.repo}<ArrowUpRight size={14} /></span>
     <span className="sk-hot-zh">{zhExplain(item)}</span>
-    {item.desc && <span className="sk-hot-desc">{item.desc}</span>}
     {item.topics && item.topics.length > 0 && (
       <span className="sk-hot-topics">
         {item.topics.slice(0, 3).map((topic) => <i key={topic}>{TOPIC_ZH[topic] || topic}</i>)}
@@ -288,7 +314,31 @@ export default function SkillHub() {
   const [query, setQuery] = useState('');
   const [copied, setCopied] = useState('');
   const [tab, setTab] = useState('hot');
-  const lastRefreshRef = useRef(0);
+  const [rising, setRising] = useState([]);
+  const [slotEl, setSlotEl] = useState(null);
+  const searchRef = useRef(null);
+  const lastRefreshRef = useRef(null);
+
+  /* 页头传送门口（Layout 的 tool-head-slot） */
+  useEffect(() => { setSlotEl(document.getElementById('tool-head-slot')); }, []);
+
+  /* 性能：预热 GitHub API 连接（首次数据拉取更快） */
+  useEffect(() => {
+    const l = document.createElement('link');
+    l.rel = 'preconnect'; l.href = 'https://api.github.com';
+    document.head.appendChild(l);
+    return () => document.head.removeChild(l);
+  }, []);
+
+  /* 按 / 快速聚焦搜索 */
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (document.activeElement?.tagName || '').toLowerCase();
+      if (e.key === '/' && tag !== 'input' && tag !== 'textarea') { e.preventDefault(); searchRef.current?.focus(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const load = async (force = false) => {
     const now = Date.now();
@@ -299,6 +349,7 @@ export default function SkillHub() {
     if (!force && cached && cached.date === today && Array.isArray(cached.hot)) {
       setHot(cached.hot);
       if (Array.isArray(cached.rank) && cached.rank.length) setRank(cached.rank);
+      if (Array.isArray(cached.rising) && cached.rising.length) setRising(cached.rising);
       setUpdatedAt(cached.updatedAt || null);
       setStatus('ok');
       return;
@@ -306,17 +357,20 @@ export default function SkillHub() {
     if (!force) setStatus('loading');
     setRefreshing(true);
     const since = dayStr(new Date(Date.now() - 7 * 864e5));
-    const [hotRes, rankRes] = await Promise.allSettled([fetchWeeklyHot(since), fetchRankStars()]);
+    const since30 = dayStr(new Date(Date.now() - 30 * 864e5));
+    const [hotRes, rankRes, risingRes] = await Promise.allSettled([fetchWeeklyHot(since), fetchRankStars(), fetchRising(since30)]);
     const hotItems = hotRes.status === 'fulfilled' ? hotRes.value : [];
     const rankItems = rankRes.status === 'fulfilled' ? rankRes.value : null;
+    const risingItems = risingRes.status === 'fulfilled' ? risingRes.value : [];
     const ok = hotItems.length > 0 || !!rankItems;
     if (hotItems.length) setHot(hotItems);
     if (rankItems) setRank(rankItems);
+    if (risingItems.length) setRising(risingItems);
     const stamp = Date.now();
     if (ok) {
       setUpdatedAt(stamp);
       setStatus('ok');
-      writeCache({ date: today, hot: hotItems, rank: rankItems || cached?.rank || [], updatedAt: stamp });
+      writeCache({ date: today, hot: hotItems, rank: rankItems || cached?.rank || [], rising: risingItems, updatedAt: stamp });
     } else {
       if (cached?.hot) { setHot(cached.hot); setUpdatedAt(cached.updatedAt || null); }
       setStatus('error');
@@ -330,6 +384,7 @@ export default function SkillHub() {
   const hotFiltered = useMemo(() => (q ? hot.filter((h) => `${h.repo} ${h.desc} ${h.lang}`.toLowerCase().includes(q)) : hot), [hot, q]);
   const curatedFiltered = useMemo(() => (q ? CURATED.filter((c) => `${c.repo} ${c.name} ${c.desc} ${c.area}`.toLowerCase().includes(q)) : CURATED), [q]);
   const rankFiltered = useMemo(() => (q ? rank.filter((r) => `${r.repo} ${r.desc} ${r.area}`.toLowerCase().includes(q)) : rank), [rank, q]);
+  const risingFiltered = useMemo(() => (q ? rising.filter((h) => `${h.repo} ${h.desc} ${h.lang}`.toLowerCase().includes(q)) : rising), [rising, q]);
   const maxRankStars = useMemo(() => Math.max(...rankFiltered.map((r) => r.stars), 1), [rankFiltered]);
 
   const copyInstall = async (text, id) => {
@@ -351,20 +406,22 @@ export default function SkillHub() {
     { key: 'hot', label: '每周热点', en: 'WEEKLY HOT', Icon: Flame, count: hotFiltered.length },
     { key: 'cur', label: '优质精选', en: 'CURATED', Icon: Sparkles, count: curatedFiltered.length },
     { key: 'rank', label: '星数排行', en: 'ALL-TIME', Icon: Trophy, count: rankFiltered.length },
+    { key: 'new', label: '本周新星', en: 'NEW & RISING', Icon: Rocket, count: risingFiltered.length },
+    { key: 'guide', label: '入门指南', en: 'GET STARTED', Icon: BookOpen, count: GUIDE.length },
   ];
 
   return <div className="sk-page">
     <style>{`
-      .sk-page { --ink:#1b1b1b; --line:rgba(27,27,27,.12); --gold:#a48830; --hl:#ffe08a; --soft:#fff9df;
-        color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; display:flex; flex-direction:column; gap:34px; }
+      .sk-page { --ink:#1b1b1b; --line:rgba(27,27,27,.12); --gold:#a48830; --hl:#ffe08a; --soft:#fff9df; --sk-ease:cubic-bezier(.22,1,.36,1);
+        color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif; display:flex; flex-direction:column; gap:18px; }
       .sk-page * { box-sizing:border-box; }
       .sk-page button { cursor:pointer; font:inherit; }
       .sk-page a { text-decoration:none; }
       .sk-page button:focus-visible, .sk-page a:focus-visible { outline:1.5px solid var(--ink); outline-offset:2px; }
 
-      /* ===== 顶部工具条 ===== */
+      /* ===== 顶部工具条（仅品牌；搜索/刷新已上移页头） ===== */
       .sk-top { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
-        padding-bottom:16px; border-bottom:1px solid var(--line); }
+        padding-bottom:12px; border-bottom:1px solid var(--line); }
       .sk-brand { display:inline-flex; align-items:center; gap:10px; }
       .sk-brand-ico { display:grid; width:38px; height:38px; place-items:center; border:1px solid rgba(164,136,48,.45); border-radius:9px; background:var(--soft); color:var(--gold); }
       .sk-brand-copy { display:grid; gap:2px; }
@@ -387,20 +444,27 @@ export default function SkillHub() {
       .sk-refresh:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); transform:translateY(-1px); }
       .sk-refresh:disabled { opacity:.5; cursor:not-allowed; }
 
-      /* ===== 三大板块 Tab 栏 ===== */
-      .sk-tabs { position:sticky; top:0; z-index:30; display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
-        padding:11px 0; margin-bottom:-14px;
+      /* ===== 页头控件（Portal 注入，位于「数据服务可用」左侧） ===== */
+      .sk-headctl { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+      .sk-headctl .sk-search { width:216px; height:34px; }
+      .sk-headctl .sk-search input { font-size:12.5px; }
+      .sk-headctl .sk-refresh, .sk-headctl .sk-status { height:34px; padding-top:0; padding-bottom:0; }
+      .sk-headctl .sk-status { font-size:11px; }
+
+      /* ===== 五大板块 Tab 栏（紧凑横排） ===== */
+      .sk-tabs { position:sticky; top:0; z-index:30; display:flex; gap:8px; flex-wrap:wrap;
+        padding:10px 0; margin-bottom:-10px;
         background:linear-gradient(180deg, rgba(247,247,245,.97) 82%, transparent); }
-      .sk-tab { display:flex; align-items:center; gap:11px; border:1px solid var(--line); border-radius:13px;
-        padding:15px 18px; background:#fff; color:#666; text-align:left;
-        transition:border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease, box-shadow .16s ease; }
-      .sk-tab-ico { display:grid; width:38px; height:38px; flex:0 0 38px; place-items:center; border-radius:10px;
-        background:#f1f3f5; color:#777; transition:background .16s ease, color .16s ease; }
+      .sk-tab { display:flex; align-items:center; gap:9px; border:1px solid var(--line); border-radius:12px;
+        padding:9px 14px; background:#fff; color:#666; text-align:left;
+        transition:border-color .2s var(--sk-ease), background .2s var(--sk-ease), color .16s ease, transform .2s var(--sk-ease), box-shadow .2s var(--sk-ease); }
+      .sk-tab-ico { display:grid; width:30px; height:30px; flex:0 0 30px; place-items:center; border-radius:9px;
+        background:#f1f3f5; color:#777; transition:background .2s var(--sk-ease), color .2s ease; }
       .sk-tab-copy { display:grid; gap:2px; min-width:0; }
-      .sk-tab-copy b { font-size:15px; font-weight:760; color:inherit; }
-      .sk-tab-copy span { color:#a0a0a0; font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.06em; }
-      .sk-tab-count { margin-left:auto; flex:0 0 auto; padding:3px 10px; border-radius:99px; background:#f1f3f5; color:#777;
-        font:700 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace; transition:background .16s ease, color .16s ease; }
+      .sk-tab-copy b { font-size:13.5px; font-weight:740; color:inherit; }
+      .sk-tab-copy span { color:#a0a0a0; font:9px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.06em; }
+      .sk-tab-count { margin-left:2px; flex:0 0 auto; padding:3px 9px; border-radius:99px; background:#f1f3f5; color:#777;
+        font:700 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; transition:background .16s ease, color .16s ease; }
       .sk-tab:hover { border-color:rgba(164,136,48,.5); transform:translateY(-1px); }
       .sk-tab.is-active { border-color:rgba(164,136,48,.6); background:var(--soft); color:var(--ink);
         box-shadow:0 10px 22px -16px rgba(164,136,48,.55); }
@@ -419,7 +483,9 @@ export default function SkillHub() {
       .sk-hot-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
       .sk-hot { position:relative; display:flex; min-width:0; min-height:196px; flex-direction:column; gap:8px; overflow:hidden;
         border:1px solid var(--line); border-radius:12px; padding:16px 16px 13px; background:#fff;
-        box-shadow:0 1px 2px rgba(16,20,30,.04); transition:border-color .2s ease, box-shadow .2s ease, transform .2s cubic-bezier(.16,1,.3,1); }
+        box-shadow:0 1px 2px rgba(16,20,30,.04); animation:sk-in .45s var(--sk-ease) both;
+        transition:border-color .2s var(--sk-ease), box-shadow .2s var(--sk-ease), transform .2s var(--sk-ease); }
+      @keyframes sk-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
       .sk-hot::before { content:""; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg, var(--gold), transparent 70%); opacity:.55; transition:opacity .2s ease; }
       .sk-hot:hover { border-color:rgba(164,136,48,.5); box-shadow:0 18px 34px -24px rgba(0,0,0,.4); transform:translateY(-3px); }
       .sk-hot:hover::before { opacity:1; }
@@ -430,8 +496,12 @@ export default function SkillHub() {
       .sk-hot:hover .sk-hot-repo svg { color:var(--gold); transform:translate(1px,-1px); }
       .sk-hot-zh { display:-webkit-box; overflow:hidden; color:#333; font-size:12.5px; font-weight:650; line-height:1.65; -webkit-line-clamp:2; -webkit-box-orient:vertical; min-height:41px; }
       .sk-hot-desc { display:-webkit-box; overflow:hidden; color:#9c9c9c; font-size:11px; line-height:1.6; -webkit-line-clamp:1; -webkit-box-orient:vertical; }
-      .sk-hot-topics { display:flex; flex-wrap:wrap; gap:5px; }
-      .sk-hot-topics i { font-style:normal; padding:2.5px 9px; border:1px solid rgba(164,136,48,.26); border-radius:99px; background:rgba(255,249,223,.55); color:#8a6d1c; font-size:10px; font-weight:600; white-space:nowrap; }
+      .sk-hot-topics { display:flex; flex-wrap:wrap; gap:6px; }
+      .sk-hot-topics i { font-style:normal; display:inline-flex; align-items:center; justify-content:center;
+        min-height:24px; min-width:56px; padding:3px 12px; border:1px solid rgba(164,136,48,.26); border-radius:99px;
+        background:rgba(255,249,223,.55); color:#8a6d1c; font-size:11px; font-weight:650; white-space:nowrap;
+        transition:transform .2s var(--sk-ease), background .2s ease; }
+      .sk-hot:hover .sk-hot-topics i { background:rgba(255,249,223,.9); }
       .sk-hot-meta { display:flex; align-items:center; gap:10px; margin-top:auto; padding-top:10px; border-top:1px dashed rgba(27,27,27,.09); color:#999; font-size:11px; }
       .sk-hot-meta b { display:inline-flex; align-items:center; gap:4px; color:var(--gold); font-weight:700; font-variant-numeric:tabular-nums; }
       .sk-hot-meta em { font-style:normal; }
@@ -480,52 +550,73 @@ export default function SkillHub() {
       .sk-empty { display:grid; min-height:160px; place-items:center; border:1px dashed rgba(27,27,27,.24); border-radius:12px; color:#999; font-size:13px; }
       .sk-note { margin:0; color:#adb5bd; font-size:11.5px; }
 
+      /* ===== 入门指南 ===== */
+      .sk-guide-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+      .sk-guide { position:relative; display:flex; flex-direction:column; gap:9px; border:1px solid var(--line); border-radius:14px;
+        padding:20px 20px 18px; background:#fff; overflow:hidden; animation:sk-in .45s var(--sk-ease) both;
+        transition:border-color .2s var(--sk-ease), box-shadow .2s var(--sk-ease), transform .2s var(--sk-ease); }
+      .sk-guide:hover { border-color:rgba(164,136,48,.5); box-shadow:0 16px 30px -22px rgba(0,0,0,.4); transform:translateY(-3px); }
+      .sk-guide::before { content:""; position:absolute; top:0; left:0; bottom:0; width:3px; background:linear-gradient(180deg, var(--gold), transparent 85%); opacity:.6; }
+      .sk-guide-no { position:absolute; top:14px; right:16px; color:transparent; -webkit-text-stroke:1px rgba(164,136,48,.4); font:800 24px/1 ui-monospace,SFMono-Regular,Menlo,monospace; }
+      .sk-guide h3 { margin:0; font-size:15.5px; font-weight:750; }
+      .sk-guide p { margin:0; color:#6d6d6d; font-size:12.5px; line-height:1.8; flex:1; }
+      .sk-guide a { display:inline-flex; align-items:center; gap:5px; width:fit-content; color:var(--gold); font-size:12px; font-weight:700; transition:gap .2s var(--sk-ease), color .16s ease; }
+      .sk-guide a:hover { gap:9px; color:#8a6d1c; }
+
       /* ===== 响应式 ===== */
       @media (max-width:1080px) { .sk-hot-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
       @media (max-width:900px) {
         .sk-cur-grid { grid-template-columns:1fr; }
+        .sk-guide-grid { grid-template-columns:1fr; }
         .sk-rank-row { grid-template-columns:34px minmax(0,1fr) 74px auto; }
         .sk-rank-bar { display:none; }
+        .sk-headctl .sk-search { width:170px; }
       }
       @media (max-width:640px) {
         .sk-hot-grid { grid-template-columns:1fr; }
         .sk-top { flex-direction:column; align-items:stretch; }
-        .sk-top-right { width:100%; }
-        .sk-search { flex:1; width:auto; }
+        .sk-headctl { width:100%; }
+        .sk-headctl .sk-search { flex:1; width:auto; }
+        .sk-headctl .sk-status { display:none; }
         .sk-rank-row { grid-template-columns:34px minmax(0,1fr) auto; }
         .sk-rank-stars { display:none; }
-        .sk-tabs { grid-template-columns:1fr; gap:7px; }
-        .sk-tab { padding:11px 14px; }
-        .sk-tab-ico { width:32px; height:32px; flex-basis:32px; }
+        .sk-tabs { gap:6px; }
+        .sk-tab { padding:9px 11px; gap:7px; }
+        .sk-tab-ico { width:28px; height:28px; flex-basis:28px; }
+        .sk-tab-copy span { display:none; }
       }
       @media (prefers-reduced-motion:reduce) { .sk-page *, .sk-page *::before, .sk-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>
+
+    {slotEl && createPortal(
+      <div className="sk-headctl">
+        <label className="sk-search">
+          <Search size={15} />
+          <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索仓库名 / 描述 / 领域…" aria-label="搜索 Skill" />
+          {query && <button type="button" onClick={() => setQuery('')} style={{ border: 0, background: 'transparent', display: 'grid', placeItems: 'center', color: '#999', padding: 2 }} aria-label="清空搜索"><X size={14} /></button>}
+        </label>
+        <button type="button" className="sk-refresh" disabled={refreshing || status === 'loading'} onClick={() => load(true)}>
+          <RefreshCw size={13} className={refreshing ? 'sk-spin' : ''} />手动刷新
+        </button>
+        {statusNode}
+      </div>,
+      slotEl
+    )}
 
     <div className="sk-top">
       <div className="sk-brand">
         <span className="sk-brand-ico"><Sparkles size={19} strokeWidth={1.8} /></span>
         <span className="sk-brand-copy">
           <b>Skill 热榜</b>
-          <span>GITHUB SKILL RADAR</span>
+          <span>GITHUB SKILL RADAR · 100% 官方入口</span>
         </span>
-      </div>
-      <div className="sk-top-right">
-        <label className="sk-search">
-          <Search size={15} />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索仓库名 / 描述 / 领域…" aria-label="搜索 Skill" />
-          {query && <button type="button" onClick={() => setQuery('')} style={{ border: 0, background: 'transparent', display: 'grid', placeItems: 'center', color: '#999', padding: 2 }} aria-label="清空搜索"><X size={14} /></button>}
-        </label>
-        {statusNode}
-        <button type="button" className="sk-refresh" disabled={refreshing || status === 'loading'} onClick={() => load(true)}>
-          <RefreshCw size={13} className={refreshing ? 'sk-spin' : ''} />手动刷新
-        </button>
       </div>
     </div>
 
-    <div className="sk-tabs" role="tablist" aria-label="Skill 三大板块">
+    <div className="sk-tabs" role="tablist" aria-label="Skill 五大板块">
       {TABS.map(({ key, label, en, Icon, count }) => (
         <button key={key} type="button" role="tab" aria-selected={tab === key} className={`sk-tab${tab === key ? ' is-active' : ''}`} onClick={() => setTab(key)}>
-          <span className="sk-tab-ico"><Icon size={19} strokeWidth={1.9} /></span>
+          <span className="sk-tab-ico"><Icon size={17} strokeWidth={1.9} /></span>
           <span className="sk-tab-copy"><b>{label}</b><span>{en}</span></span>
           <span className="sk-tab-count">{count}</span>
         </button>
@@ -533,7 +624,6 @@ export default function SkillHub() {
     </div>
 
     {tab === 'hot' && <section>
-      <SectionHead icon={Flame} title="每周热点" en="WEEKLY HOT · PUSHED IN 7 DAYS" right={<span className="sk-sec-count">{hotFiltered.length} 个仓库</span>} />
       {status === 'loading' ? (
         <div className="sk-hot-grid"><Skeletons n={6} /></div>
       ) : hotFiltered.length === 0 ? (
@@ -545,7 +635,6 @@ export default function SkillHub() {
     </section>}
 
     {tab === 'cur' && <section>
-      <SectionHead icon={Sparkles} title="优质 Skill 精选" en="CURATED PICKS" right={<span className="sk-sec-count">{curatedFiltered.length} 个</span>} />
       <div className="sk-cur-grid">
         {curatedFiltered.map((c) => (
           <article key={c.repo} className="sk-cur">
@@ -567,7 +656,6 @@ export default function SkillHub() {
     </section>}
 
     {tab === 'rank' && <section>
-      <SectionHead icon={Trophy} title="GitHub 星数排行榜" en="ALL-TIME STARS" right={<span className="sk-sec-count">{rankFiltered.length} 个</span>} />
       <div className="sk-rank-list">
         {rankFiltered.map((r, i) => (
           <div key={r.repo} className="sk-rank-row">
@@ -586,6 +674,29 @@ export default function SkillHub() {
         ))}
       </div>
       <p className="sk-note">星数为每天自动拉取的 GitHub 实时值（LIVE 标记），拉取失败时回退到收录基准值。</p>
+    </section>}
+
+    {tab === 'new' && <section>
+      {risingFiltered.length === 0 ? (
+        <div className="sk-empty">近 30 天创建的 Skill 仓库暂无数据，稍后点「手动刷新」重试</div>
+      ) : (
+        <div className="sk-hot-grid">{risingFiltered.map((item, i) => <HotCard key={item.repo} item={item} index={i} onCopy={copyInstall} copied={copied} />)}</div>
+      )}
+      <p className="sk-note">「本周新星」= 最近 30 天内创建、带 claude-skills 主题的仓库，按星数排序——发现下一个爆款 Skill 的地方。</p>
+    </section>}
+
+    {tab === 'guide' && <section>
+      <div className="sk-guide-grid">
+        {GUIDE.map((g) => (
+          <article key={g.no} className="sk-guide">
+            <span className="sk-guide-no">{g.no}</span>
+            <h3>{g.title}</h3>
+            <p>{g.desc}</p>
+            <a href={g.link} target="_blank" rel="noreferrer">{g.linkLabel} <ArrowUpRight size={13} /></a>
+          </article>
+        ))}
+      </div>
+      <p className="sk-note">入门内容人工整理、长期有效；配合上方三大板块的实战仓库食用更佳。</p>
     </section>}
   </div>;
 }
