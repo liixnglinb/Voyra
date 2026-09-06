@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react'
+import React, { Suspense, lazy, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -17,6 +17,17 @@ const AgentSkills = lazy(() => import('./pages/AgentSkills'))
 
 
 function App() {
+  /* 首页空闲时预载提示词库分包，消除进入 /prompts 时的加载白屏 */
+  useEffect(() => {
+    const warm = () => { import('./pages/PromptLibrary'); };
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(warm, { timeout: 3000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = setTimeout(warm, 1500);
+    return () => clearTimeout(timer);
+  }, [])
+
   return (
     <ErrorBoundary>
       <Layout>
