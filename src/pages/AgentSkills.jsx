@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import {
   Bot, Search, X, Sparkles, ArrowUpRight,
   Cpu, Wrench, Palette, Briefcase, MessageCircleHeart, Workflow,
@@ -21,9 +21,26 @@ const FAVICONS = {
   Gamma: './agent-icons/fav-gamma.png',
   Replika: './agent-icons/fav-replika.png',
   Devin: './agent-icons/fav-devin.png',
+  'OpenHands': './agent-icons/fav-openhands.png',
+  Kiro: './agent-icons/fav-kiro.png',
+  'Replit Agent': './agent-icons/fav-replit.png',
+  Aider: './agent-icons/fav-aider.png',
+  Warp: './agent-icons/fav-warp.png',
+  Genspark: './agent-icons/fav-genspark.png',
+  Flowith: './agent-icons/fav-flowith.png',
+  Lindy: './agent-icons/fav-lindy.png',
+  Make: './agent-icons/fav-make.png',
+  OpenRouter: './agent-icons/fav-openrouter.png',
+  MetaGPT: './agent-icons/fav-metagpt.png',
+  Activepieces: './agent-icons/fav-activepieces.png',
+  Ideogram: './agent-icons/fav-ideogram.png',
+  Udio: './agent-icons/fav-udio.png',
   '千问办公': './agent-icons/fav-qwenwork.png',
 };
 const L2 = (name) => FAVICONS[name];
+
+/* 提取官网域名（hover 时展示，帮助用户预判跳转目标） */
+const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
 
 /* ---------- Agent 数据 ----------
    cat: general 通用助手 / coding 编程开发 / office 办公效率
@@ -48,6 +65,8 @@ const AGENTS = [
   { name: 'Manus', logo: L('manus'), cat: 'office', vendor: 'Monica（中国）', desc: '宣布恢复独立运营并限时免费；新上 Plan Mode 先审方案再执行、对话分支 Branch、智能 PPT 生成与 Auto-Publish 网站自动发布', url: 'https://manus.im', tags: ['通用自主', 'Plan Mode', '限时免费'] },
   { name: 'WorkBuddy', logo: L('hunyuan'), cat: 'office', vendor: '腾讯', desc: '国内桌面端 AI 办公智能体第一（日活破 1300 万），内置 20+ Skills 兼容 OpenClaw 技能体系，安全中心支持越权拦截与操作回滚', url: 'https://workbuddy.cn', tags: ['市占第一', '日活1300万', '企业级'] },
   { name: '千问办公', logo: L2('千问办公'), cat: 'office', vendor: '阿里巴巴', desc: '2026 年 8 月公测的企业级智能办公平台，整合 QoderWork/MuleRun/悟空三款 Agent，首款同时支持桌面/云端/协同 Agent，已过信通院首批评估', url: 'https://qwenwork.cn', tags: ['新发布', '企业级', '鸿蒙适配'] },
+  { name: 'Genspark', logo: FAVICONS['Genspark'] || L('genspark'), cat: 'office', vendor: 'MainFunc', desc: 'All-in-One AI 工作台：Super Agent 自主拆解多步任务，幻灯片、文档、表格、视频一站生成', url: 'https://www.genspark.ai', tags: ['Super Agent', '全能工作台'] },
+  { name: 'Flowith', logo: FAVICONS['Flowith'] || L('flowith'), cat: 'office', vendor: '深度赋智', desc: '画布式多线程 Agent 工作台，Agent Neo 可无限自主拆解任务，支持多模型混用', url: 'https://flowith.io', tags: ['画布多线程', 'Agent Neo'] },
 
   /* ===== 编程开发 ===== */
   { name: 'Cursor', logo: L('cursor'), cat: 'coding', vendor: 'Anysphere', desc: 'AI 原生代码编辑器销量第一，Composer 多文件自主改写，Agent 模式全自动编程', url: 'https://cursor.com', tags: ['AI IDE', 'Agent 模式'] },
@@ -63,6 +82,11 @@ const AGENTS = [
   { name: 'Lovable', logo: L('lovable'), cat: 'coding', vendor: 'Lovable', desc: '欧洲增长最快的 AI 应用构建器，对话式全栈开发', url: 'https://lovable.dev', tags: ['全栈', '对话构建'] },
   { name: 'Replit Agent', logo: L('replit'), cat: 'coding', vendor: 'Replit', desc: '自然语言描述任务，自动构建、迭代并部署完整项目', url: 'https://replit.com', tags: ['云端 IDE', '自动部署'] },
   { name: 'Cline', logo: L('cline'), cat: 'coding', vendor: '开源', desc: 'VSCode 开源自主编程插件，支持任意模型，插件生态丰富', url: 'https://cline.bot', tags: ['开源', 'VSCode'] },
+  { name: 'OpenHands', logo: FAVICONS['OpenHands'] || L('openhands'), cat: 'coding', vendor: 'All-Hands-AI', desc: '开源云端编程 Agent 平台（前身 OpenDevin），SWE-bench 榜单前列，模型无关、可私有化部署', url: 'https://www.openhands.dev', tags: ['开源', '云编码', '可自托管'] },
+  { name: 'Kiro', logo: FAVICONS['Kiro'] || L('kiro'), cat: 'coding', vendor: 'AWS', desc: '亚马逊出品的规格驱动 AI IDE：先写需求与设计文档再生成代码，配套 Kiro CLI 打通终端流水线', url: 'https://kiro.dev', tags: ['规格驱动', 'AWS 出品'] },
+  { name: 'Replit Agent', logo: FAVICONS['Replit Agent'] || L('replit'), cat: 'coding', vendor: 'Replit', desc: '对话生成可上线的完整应用：数据库、鉴权、部署一条龙，浏览器里全流程交付', url: 'https://replit.com', tags: ['零门槛', '一键上线'] },
+  { name: 'Aider', logo: FAVICONS['Aider'] || L('aider'), cat: 'coding', vendor: '开源', desc: '终端里的 AI 结对编程老牌劲旅，读懂整个 Git 仓库，改完自动提交', url: 'https://aider.chat', tags: ['终端结对', 'Git 原生'] },
+  { name: 'Warp', logo: FAVICONS['Warp'] || L('warp'), cat: 'coding', vendor: 'Warp', desc: '从终端进化而来的 Agent 开发平台，可并行编排 Claude Code、Codex、Gemini CLI 等多个智能体', url: 'https://www.warp.dev', tags: ['智能终端', '多Agent编排'] },
 
   /* ===== 办公效率 ===== */
   { name: 'Microsoft Copilot', logo: L('copilot'), cat: 'office', vendor: 'Microsoft', desc: 'Windows + Office 全生态 AI，文档、表格、邮件、会议全自动辅助', url: 'https://copilot.microsoft.com', tags: ['Office 整合', '系统级'] },
@@ -82,6 +106,8 @@ const AGENTS = [
   { name: '即梦 AI', logo: L('jimeng'), cat: 'creative', vendor: '字节跳动', desc: '即梦（Dreamina）图像与视频生成，深度整合剪映创作链路', url: 'https://jimeng.jianying.com', tags: ['图像视频', '剪映联动'] },
   { name: '可灵 AI', logo: L('klingai'), cat: 'creative', vendor: '快手', desc: '国产视频生成第一梯队，物理真实感与运动幅度领先', url: 'https://klingai.kuaishou.com', tags: ['视频生成', '物理真实'] },
   { name: 'HeyGen', logo: L2('HeyGen') || L('heygen'), cat: 'creative', vendor: 'HeyGen', desc: 'AI 数字人视频平台，口型同步与多语言翻译自然逼真', url: 'https://www.heygen.com', tags: ['数字人', '视频翻译'] },
+  { name: 'Ideogram', logo: FAVICONS['Ideogram'] || L('ideogram'), cat: 'creative', vendor: 'Ideogram AI', desc: '文字排版最准的文生图模型，海报、Logo、长标语渲染近乎零错字', url: 'https://ideogram.ai', tags: ['文字渲染', '海报设计'] },
+  { name: 'Udio', logo: FAVICONS['Udio'] || L('udio'), cat: 'creative', vendor: 'Udio', desc: '高保真 AI 音乐生成，人声还原自然，支持分段续写与局部重绘', url: 'https://www.udio.com', tags: ['AI 音乐', '人声合成'] },
 
   /* ===== 自动化工作流 ===== */
   { name: 'n8n', logo: L('n8n'), cat: 'automation', vendor: 'n8n', desc: '最流行的开源自动化平台，AI Agent 节点 + 400+ 应用集成，可自托管', url: 'https://n8n.io', tags: ['开源', '自托管', '工作流'] },
@@ -90,6 +116,9 @@ const AGENTS = [
   { name: 'Zapier', logo: L('zapier'), cat: 'automation', vendor: 'Zapier', desc: '自动化鼻祖，6000+ 应用集成，AI 动作让工作流自主决策', url: 'https://zapier.com', tags: ['6000+ 集成', 'AI 决策'] },
   { name: 'FastGPT', logo: L('fastgpt'), cat: 'automation', vendor: '开源', desc: '开源知识库问答系统，Flow 可视化编排，企业私有化部署首选', url: 'https://fastgpt.in', tags: ['知识库', '私有化'] },
   { name: 'Hugging Face', logo: L('huggingface'), cat: 'automation', vendor: 'Hugging Face', desc: '全球最大 AI 开源社区，Gradio Spaces 一键托管 AI 应用与 Agent Demo', url: 'https://huggingface.co', tags: ['开源社区', '模型托管'] },
+  { name: 'Lindy', logo: FAVICONS['Lindy'] || L('lindy'), cat: 'automation', vendor: 'Lindy AI', desc: '拖拽搭建你的 AI 员工：邮件、日程、CRM、会议纪要全自动打理，可嵌入 Slack 协作', url: 'https://www.lindy.ai', tags: ['AI 员工', '拖拽编排'] },
+  { name: 'Make', logo: FAVICONS['Make'] || L('make'), cat: 'automation', vendor: 'Make', desc: '老牌可视化自动化平台全面 AI 化：3000+ 应用集成，代理工作流零代码搭建', url: 'https://www.make.com', tags: ['3000+集成', '可视化'] },
+  { name: 'Activepieces', logo: FAVICONS['Activepieces'] || L('activepieces'), cat: 'automation', vendor: '开源', desc: '开源自动化平台，AI 步骤与人工审批节点自由组合，支持私有化部署', url: 'https://www.activepieces.com', tags: ['开源', '可自托管'] },
 
   /* ===== 开源框架与本地部署 ===== */
   { name: 'LangChain', logo: L('langchain'), cat: 'dev', vendor: 'LangChain', desc: '最流行的 LLM 应用开发框架，LangGraph 构建生产级状态机 Agent', url: 'https://www.langchain.com', tags: ['开发框架', 'LangGraph'] },
@@ -99,6 +128,8 @@ const AGENTS = [
   { name: 'CrewAI', logo: L('crewai'), cat: 'dev', vendor: 'CrewAI', desc: '多智能体角色分工框架，产品/开发/测试 Agent 组队干活', url: 'https://www.crewai.com', tags: ['角色分工', '多 Agent'] },
   { name: 'Mistral', logo: L('mistral'), cat: 'dev', vendor: 'Mistral AI', desc: '欧洲 AI 旗帜，开源模型权重开放，Agents API 构建自主智能体', url: 'https://mistral.ai', tags: ['开源权重', '欧洲'] },
   { name: 'Groq', logo: L('groq'), cat: 'dev', vendor: 'Groq', desc: 'LPU 推理芯片，全球最快的 LLM 推理速度，实时 Agent 首选', url: 'https://groq.com', tags: ['极速推理', 'LPU'] },
+  { name: 'OpenRouter', logo: FAVICONS['OpenRouter'] || L('openrouter'), cat: 'dev', vendor: 'OpenRouter', desc: '统一 API 网关聚合 500+ 大模型：单端点调用、自动故障转移与成本优选路由', url: 'https://openrouter.ai', tags: ['模型聚合', '统一端点'] },
+  { name: 'MetaGPT', logo: FAVICONS['MetaGPT'] || L('metagpt'), cat: 'dev', vendor: '开源', desc: '多智能体框架鼻祖：把产品经理、架构师、工程师分配给不同 GPT 协作产出完整软件', url: 'https://github.com/FoundationAgents/MetaGPT', tags: ['多智能体', '角色分工'] },
 
   /* ===== 情感陪伴 ===== */
   { name: 'Replika', logo: L2('Replika'), cat: 'companion', vendor: 'Luka', desc: '最知名的 AI 伴侣，长期记忆与情感联结，全球千万用户', url: 'https://replika.com', tags: ['AI 伴侣', '长期记忆'] },
@@ -143,6 +174,19 @@ const METEORS = [
 export default function AgentSkills() {
   const [cat, setCat] = useState('all');
   const [query, setQuery] = useState('');
+  const searchRef = useRef(null);
+  /* 按 / 快速聚焦搜索框（输入框内不劫持） */
+  useEffect(() => {
+    const onKey = (e) => {
+      const tag = (document.activeElement?.tagName || '').toLowerCase();
+      if (e.key === '/' && tag !== 'input' && tag !== 'textarea' && tag !== 'select') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   const filtered = useMemo(() => AGENTS.filter((a) => {
     const cf = cat === 'all' || a.cat === cat;
@@ -258,6 +302,11 @@ export default function AgentSkills() {
           border:1px solid color-mix(in srgb, var(--gc, #8ec5ff) 26%, transparent); border-radius:999px; padding:1.5px 8px; }
         .agx-go { position:absolute; top:12px; right:12px; color:#4d5878; opacity:0; transform:translate(-4px,4px); transition:all .2s ease; z-index:1; }
         .agx-card:hover .agx-go { opacity:1; transform:translate(0,0); color:var(--gc, #8ec5ff); }
+        .agx-domain { position:absolute; bottom:10px; right:12px; font:9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+          color:#64719c; opacity:0; transform:translateY(3px); transition:all .2s ease; z-index:1; }
+        .agx-card:hover .agx-domain { opacity:1; transform:none; }
+        .agx-kbd { margin-left:auto; padding:1px 8px; border:1px solid rgba(255,255,255,.14); border-radius:5px;
+          font:9.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace; color:#64719c; flex-shrink:0; }
 
         .agx-empty { text-align:center; padding:70px 0; color:#4d5878; font-size:14px; }
         .agx-foot { text-align:center; margin-top:44px; font-size:11.5px; color:#4d5878; line-height:1.8; }
@@ -315,8 +364,9 @@ export default function AgentSkills() {
         {/* ===== 搜索行 ===== */}
         <div className="agx-searchrow">
           <Search size={14} color="#4d5878" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索 Agent、厂商或能力…" />
+          <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="搜索 Agent、厂商或能力…" aria-label="搜索 AI Agent" />
           {query && <button onClick={() => setQuery('')} style={{ border: 0, background: 'transparent', cursor: 'pointer', color: '#4d5878', padding: 0 }}><X size={12} /></button>}
+          <span className="agx-kbd">/</span>
         </div>
 
         {/* ===== 分组展示 ===== */}
@@ -348,6 +398,7 @@ export default function AgentSkills() {
                       <div className="agx-desc">{a.desc}</div>
                       <div className="agx-tags">{a.tags.map((t) => <span key={t} className="agx-tag">{t}</span>)}</div>
                       <span className="agx-go"><ArrowUpRight size={15} /></span>
+                      <span className="agx-domain">{host(a.url)}</span>
                     </a>
                   ))}
                 </div>
@@ -357,7 +408,7 @@ export default function AgentSkills() {
         )}
 
         <footer className="agx-foot">
-          共收录 {AGENTS.length} 款 AI Agent · 图标来自各官方品牌 · 持续更新中 · <a href="https://lxlrwxs.top" target="_blank" rel="noopener noreferrer">Voyra</a> · 帅帅你阿历
+          共收录 {AGENTS.length} 款 AI Agent · 全部点击直达官方网站 · 链接核验于 2026-09 · 持续更新中 · <a href="https://lxlrwxs.top" target="_blank" rel="noopener noreferrer">Voyra</a> · 帅帅你阿历
         </footer>
       </div>
     </div>
