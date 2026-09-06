@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft, Check, Copy, Download, FolderPlus, Import, Lock, LockOpen, Pencil, Plus, Search, Star, Trash2, X, Cloud, CloudOff, RefreshCw,
-  PenLine, Briefcase, Code2, GraduationCap, Coffee, HeartPulse, Sparkles, LayoutGrid, List, MousePointerClick, RotateCcw,
+  ArrowLeft, ArrowUp, Check, Copy, Download, FolderPlus, Import, Lock, LockOpen, Pencil, Plus, Search, Star, Trash2, X, Cloud, CloudOff, RefreshCw,
+  PenLine, Briefcase, Code2, GraduationCap, Coffee, HeartPulse, Bot, Shuffle, LayoutGrid, List, MousePointerClick, RotateCcw,
 } from 'lucide-react';
 import {
   PROMPT_CATEGORIES, PROMPT_CATEGORY_META, PROMPT_PRESETS,
@@ -201,6 +201,7 @@ function PromptCard({ prompt, color, admin, copiedId, onOpen, onCopy, onToggleFa
 function PromptDetailModal({ prompt, color, onClose }) {
   const [vals, setVals] = useState({});
   const [copied, setCopied] = useState(false);
+  const [copiedRaw, setCopiedRaw] = useState(false);
   const vars = useMemo(() => extractVars(prompt.content), [prompt.content]);
   const segments = useMemo(() => prompt.content.split(VAR_SPLIT_RE), [prompt.content]);
   const filledCount = vars.filter((name) => (vals[name] || '').trim()).length;
@@ -209,12 +210,15 @@ function PromptDetailModal({ prompt, color, onClose }) {
     return value ? value : raw;
   }), [prompt.content, vals]);
 
+  const flash = (setter) => {
+    setter(true);
+    window.setTimeout(() => setter(false), 1500);
+  };
   const copyFilled = async () => {
-    try {
-      await copyText(composed);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1500);
-    } catch { /* ignore */ }
+    try { await copyText(composed); flash(setCopied); } catch { /* ignore */ }
+  };
+  const copyOriginal = async () => {
+    try { await copyText(prompt.content); flash(setCopiedRaw); } catch { /* ignore */ }
   };
 
   return <div className="pl-scrim" role="presentation" onMouseDown={onClose}>
@@ -233,7 +237,13 @@ function PromptDetailModal({ prompt, color, onClose }) {
       </header>
       {vars.length > 0 && (
         <div className="pl-detail-vars">
-          <div className="pl-detail-vars-head"><span>填写变量（也可直接在正文里点填）</span><em>{filledCount}/{vars.length}</em></div>
+          <div className="pl-detail-vars-head">
+            <span>填写变量（也可直接在正文里点填）</span>
+            <em>{filledCount}/{vars.length}</em>
+          </div>
+          <div className="pl-detail-bar" role="progressbar" aria-valuemin={0} aria-valuemax={vars.length} aria-valuenow={filledCount}>
+            <span style={{ width: `${(filledCount / vars.length) * 100}%` }} />
+          </div>
           {vars.map((name) => (
             <label key={name}>
               <span>{name}</span>
@@ -264,10 +274,15 @@ function PromptDetailModal({ prompt, color, onClose }) {
         );
       })}</pre>
       <footer>
-        <span className="pl-detail-note">{vars.length ? '未填写的变量会保留【】占位' : '可直接复制使用'}</span>
+        <span className="pl-detail-note">{vars.length ? '未填写的变量会保留【】占位' : '可直接复制使用'} · Esc 关闭</span>
         <div>
           {filledCount > 0 && (
-            <button type="button" className="pl-btn pl-btn-quiet" onClick={() => setVals({})}><RotateCcw size={13} />重置</button>
+            <>
+              <button type="button" className="pl-btn pl-btn-quiet" onClick={copyOriginal}>
+                {copiedRaw ? <Check size={13} /> : <Copy size={13} />}{copiedRaw ? '已复制' : '复制原文'}
+              </button>
+              <button type="button" className="pl-btn pl-btn-quiet" onClick={() => setVals({})}><RotateCcw size={13} />重置</button>
+            </>
           )}
           <button type="button" className={`pl-btn pl-btn-solid${copied ? ' is-copied' : ''}`} onClick={copyFilled}>
             {copied ? <Check size={14} /> : <Copy size={14} />}{copied ? '已复制' : '复制提示词'}
@@ -327,7 +342,7 @@ function DeleteDialog({ prompt, onClose, onConfirm }) {
 /* ============ 主页面 ============ */
 const CAT_ICONS = {
   写作: PenLine, 职场: Briefcase, 编程: Code2, 学习: GraduationCap,
-  生活: Coffee, 健康: HeartPulse, 'AI 提效': Sparkles,
+  生活: Coffee, 健康: HeartPulse, 'AI 开发': Bot,
 };
 const FAV_CAT = '收藏';
 
@@ -353,6 +368,29 @@ export default function PromptLibrary() {
   });
   const [pwDialog, setPwDialog] = useState(false);
   const [pwInput, setPwInput] = useState('');
+  const [showTop, setShowTop] = useState(false);
+
+  /* 回到顶部按钮：页面滚动超过一屏后出现（兼容 window 与 .tool-wrap 两种滚动容器） */
+  useEffect(() => {
+    const wrap = document.querySelector('.tool-wrap');
+    const onScroll = () => {
+      const y = wrap && wrap.scrollTop > 0 ? wrap.scrollTop : (window.scrollY || 0);
+      setShowTop(y > 600);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    wrap?.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      wrap?.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  const toTop = () => {
+    const wrap = document.querySelector('.tool-wrap');
+    if (wrap && wrap.scrollTop > 0) wrap.scrollTo({ top: 0, behavior: 'smooth' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   /* 首次加载：本地镜像/旧数据迁移同步完成 → 内置词库立即可浏览；
      云端数据后台静默拉取，到达后合并（不阻塞首屏） */
@@ -659,6 +697,16 @@ export default function PromptLibrary() {
     off: { text: '本地模式', Icon: CloudOff, cls: ' is-off', title: '云端暂时不可用，改动已保存在本机，恢复后自动同步' },
   }[cloudStatus];
 
+  /* 随机抽一个：从当前筛选结果里随机打开一条详情 */
+  const surprise = () => {
+    const pool = sortedPrompts.length ? sortedPrompts : allPrompts;
+    if (!pool.length) return;
+    setDetail(pool[Math.floor(Math.random() * pool.length)]);
+  };
+  const dotColor = (category) => (category === FAV_CAT
+    ? '#d4a930'
+    : PROMPT_CATEGORY_META[category]?.color || 'var(--gold)');
+
   return <div className="pl-page">
     <style>{`
       .pl-page { --ink:#1b1b1b; --muted:#8a8a8a; --line:rgba(27,27,27,.12); --paper:#fff; --gold:#a48830; --soft:#fff9df; --hl:#ffe08a;
@@ -749,6 +797,10 @@ export default function PromptLibrary() {
       .pl-side-item::before { content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit; background:#faf8f2; transform:scaleX(0); transform-origin:0 50%; transition:transform .32s var(--pl-ease); }
       .pl-side-item::after { content:''; position:absolute; left:0; top:50%; width:3px; height:16px; border-radius:0 3px 3px 0; background:var(--gold); transform:translateY(-50%) scaleY(0); transition:transform .32s var(--pl-ease); }
       .pl-side-item b { color:#b5b5b5; font:500 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums; transition:color .28s var(--pl-ease); }
+      .pl-side-name { display:inline-flex; align-items:center; gap:9px; min-width:0; }
+      .pl-side-dot { width:7px; height:7px; flex:0 0 7px; border-radius:2.5px; opacity:.75; transition:opacity .28s var(--pl-ease), transform .28s var(--pl-ease); }
+      .pl-side-item:hover .pl-side-dot { opacity:1; transform:scale(1.15); }
+      .pl-side-item.is-active .pl-side-dot { opacity:1; }
       .pl-side-item:hover { color:var(--ink); }
       .pl-side-item:hover::before { transform:scaleX(1); }
       .pl-side-item:active { transform:scale(.985); }
@@ -774,6 +826,9 @@ export default function PromptLibrary() {
       .pl-main-head .pl-favhint { margin-left:auto; color:#b68513; font-size:11.5px; }
       .pl-head-tools { margin-left:auto; display:inline-flex; align-items:center; gap:10px; }
       .pl-main-head .pl-favhint + .pl-head-tools { margin-left:0; }
+      .pl-random { min-height:32px; padding:0 12px; font-size:12.5px; border-radius:8px; color:#777; background:rgba(255,249,223,.6); border-color:rgba(164,136,48,.3); }
+      .pl-random svg { color:var(--gold); }
+      .pl-random:hover { color:var(--ink); background:var(--hl); border-color:rgba(164,136,48,.5); }
       .pl-viewtoggle { display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:8px; background:#fff; padding:2px; }
       .pl-viewtoggle button { display:inline-grid; width:30px; height:26px; place-items:center; border:0; border-radius:6px; background:transparent; color:#a0a0a0; transition:background .22s var(--pl-ease), color .22s var(--pl-ease); }
       .pl-viewtoggle button:hover { color:var(--ink); background:#f5f2e9; }
@@ -841,6 +896,8 @@ export default function PromptLibrary() {
       .pl-detail-vars { padding:13px 22px 3px; display:grid; gap:8px; border-bottom:1px dashed var(--line); }
       .pl-detail-vars-head { display:flex; align-items:center; justify-content:space-between; color:#8d8d8d; font:600 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.06em; }
       .pl-detail-vars-head em { font-style:normal; color:var(--gold); font-variant-numeric:tabular-nums; }
+      .pl-detail-bar { height:3px; border-radius:99px; background:rgba(27,27,27,.07); overflow:hidden; }
+      .pl-detail-bar span { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg, var(--gold), #d4a930); transition:width .35s var(--pl-ease); }
       .pl-detail-vars label { display:grid; grid-template-columns:96px minmax(0,1fr); align-items:center; gap:10px; color:#666; font-size:12px; }
       .pl-detail-vars label span { overflow:hidden; color:#8a8a8a; font-weight:600; text-align:right; text-overflow:ellipsis; white-space:nowrap; }
       .pl-page .pl-detail-vars input { border:1px solid var(--line) !important; border-radius:7px !important; padding:7px 10px !important; background:#fff !important; color:var(--ink); font-size:12.5px; }
@@ -855,7 +912,9 @@ export default function PromptLibrary() {
       .pl-detail > footer .pl-btn { min-height:34px; font-size:12.5px; }
 
       /* ===== Toast / 弹窗 ===== */
-      .pl-toast { position:fixed; right:28px; bottom:28px; z-index:60; display:inline-flex; align-items:center; gap:7px; border:1px solid rgba(27,27,27,.16); border-radius:8px; padding:10px 13px; color:#333; background:rgba(255,255,255,.97); box-shadow:0 12px 28px -15px rgba(0,0,0,.35); font-size:12px; animation:pl-toast-in .25s cubic-bezier(.16,1,.3,1) both; }
+      .pl-top-btn { position:fixed; right:28px; bottom:28px; z-index:55; display:grid; width:42px; height:42px; place-items:center; border:1px solid rgba(27,27,27,.18); border-radius:50%; background:rgba(255,255,255,.96); color:#666; box-shadow:0 10px 26px -14px rgba(0,0,0,.4); animation:pl-toast-in .25s cubic-bezier(.16,1,.3,1) both; transition:border-color .2s ease, color .2s ease, background .2s ease, transform .2s ease; }
+      .pl-top-btn:hover { border-color:var(--gold); color:var(--gold); background:var(--soft); transform:translateY(-2px); }
+      .pl-toast { position:fixed; right:28px; bottom:84px; z-index:60; display:inline-flex; align-items:center; gap:7px; border:1px solid rgba(27,27,27,.16); border-radius:8px; padding:10px 13px; color:#333; background:rgba(255,255,255,.97); box-shadow:0 12px 28px -15px rgba(0,0,0,.35); font-size:12px; animation:pl-toast-in .25s cubic-bezier(.16,1,.3,1) both; }
       .pl-toast i { width:7px; height:7px; border-radius:50%; background:var(--gold); }
       @keyframes pl-toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
       .pl-scrim { position:fixed; z-index:120; inset:0; display:grid; place-items:center; padding:24px; background:rgba(22,22,22,.28); backdrop-filter:blur(4px); animation:pl-fade-in .18s ease both; }
@@ -965,12 +1024,14 @@ export default function PromptLibrary() {
           ? <>
               {showFav && (
                 <button type="button" key={FAV_CAT} className={`pl-side-item${activeCat === FAV_CAT ? ' is-active' : ''}`} onClick={() => { setActiveCat(FAV_CAT); setActiveSub('全部'); setSearch(''); }}>
-                  收藏 <b>{favCount}</b>
+                  <span className="pl-side-name"><i className="pl-side-dot" style={{ background: dotColor(FAV_CAT) }} />收藏</span>
+                  <b>{favCount}</b>
                 </button>
               )}
               {allCategories.map((category) => (
                 <button type="button" key={category} className={`pl-side-item${activeCat === category ? ' is-active' : ''}`} onClick={() => { setActiveCat(category); setActiveSub('全部'); setSearch(''); }}>
-                  {category} <b>{catCount(category)}</b>
+                  <span className="pl-side-name"><i className="pl-side-dot" style={{ background: dotColor(category) }} />{category}</span>
+                  <b>{catCount(category)}</b>
                 </button>
               ))}
             </>
@@ -991,13 +1052,14 @@ export default function PromptLibrary() {
           <span>{sectionCount} 个条目</span>
           {userState.favorites.length > 0 && activeCat !== FAV_CAT && <span className="pl-favhint">收藏 {favCount} 条已置顶</span>}
           <div className="pl-head-tools">
+            <button type="button" className="pl-btn pl-random" onClick={surprise} title="从当前列表随机抽一条看看"><Shuffle size={13} />随机抽一个</button>
             <div className="pl-viewtoggle" role="group" aria-label="视图切换">
               <button type="button" className={view === 'card' ? 'is-active' : ''} aria-label="卡片视图" aria-pressed={view === 'card'} onClick={() => switchView('card')}><LayoutGrid size={14} /></button>
               <button type="button" className={view === 'list' ? 'is-active' : ''} aria-label="列表视图" aria-pressed={view === 'list'} onClick={() => switchView('list')}><List size={14} /></button>
             </div>
           </div>
         </div>
-        {sectionCount > 0 && <p className="pl-tip"><MousePointerClick size={12} />点击卡片可查看全文，【变量】填空后一键复制；按 <kbd>/</kbd> 快速搜索</p>}
+        {sectionCount > 0 && <p className="pl-tip"><MousePointerClick size={12} />点击卡片可查看全文，【变量】填空后一键复制；按 <kbd>/</kbd> 快速搜索，<kbd>Esc</kbd> 退出</p>}
 
         {sectionCount === 0 ? (
           <section className="pl-empty">
@@ -1034,6 +1096,7 @@ export default function PromptLibrary() {
     </div>
 
     <input ref={fileInputRef} type="file" accept="application/json,.json" hidden onChange={importPrompts} />
+    {showTop && <button type="button" className="pl-top-btn" aria-label="回到顶部" title="回到顶部" onClick={toTop}><ArrowUp size={16} /></button>}
     {toast && <div className="pl-toast" role="status"><i />{toast}</div>}
     {detail && (
       <PromptDetailModal prompt={detail} color={colorFor(detail)} onClose={() => setDetail(null)} />
