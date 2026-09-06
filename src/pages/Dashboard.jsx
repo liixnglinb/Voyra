@@ -166,11 +166,18 @@ function useScrollRoll(rootRef, activeTab) {
   }, [activeTab, rootRef]);
 }
 
+/* 光斑跟随：缓存卡片 rect（滚动后失效），避免每次 pointermove 都触发强制布局 */
+const spotlightCache = new WeakMap();
+let spotlightStamp = 0;
 function updateSpotlight(event) {
   const card = event.currentTarget;
-  const bounds = card.getBoundingClientRect();
-  card.style.setProperty('--spot-x', `${event.clientX - bounds.left}px`);
-  card.style.setProperty('--spot-y', `${event.clientY - bounds.top}px`);
+  let cached = spotlightCache.get(card);
+  if (!cached || cached.stamp !== spotlightStamp) {
+    cached = { stamp: spotlightStamp, rect: card.getBoundingClientRect() };
+    spotlightCache.set(card, cached);
+  }
+  card.style.setProperty('--spot-x', `${event.clientX - cached.rect.left}px`);
+  card.style.setProperty('--spot-y', `${event.clientY - cached.rect.top}px`);
 }
 
 function getToolUrl(path) {
@@ -387,6 +394,24 @@ export default function Dashboard() {
   useReveal(rootRef, activeTab);
   useScrollRoll(rootRef, activeTab);
 
+  /* 滚动后使光斑 rect 缓存失效 */
+  useEffect(() => {
+    const bump = () => { spotlightStamp += 1; };
+    document.addEventListener('scroll', bump, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', bump, { capture: true });
+  }, []);
+
+  /* Hero 移出视口后暂停人物呼吸/发丝动画（合成器开销归零，滚回来自动恢复） */
+  useEffect(() => {
+    const shell = rootRef.current?.querySelector('.vr-hero-shell');
+    if (!shell || !('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver(([entry]) => {
+      shell.classList.toggle('is-out', !entry.isIntersecting);
+    }, { rootMargin: '80px' });
+    io.observe(shell);
+    return () => io.disconnect();
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const show = () => { if (!cancelled) setPersonReady(true); };
@@ -533,6 +558,7 @@ export default function Dashboard() {
       .vr-home .vr-person-frame.is-ready { opacity: 1; transform: translate3d(0, 0, 0); }
       .vr-home .vr-person-motion { position: relative; transform: translateY(0) rotate(1deg); transform-origin: 51% 94%; }
       .vr-home .vr-person-frame.is-ready .vr-person-motion { animation: vr-person-breathe 5.4s ease-in-out .72s infinite; }
+      .vr-home .vr-hero-shell.is-out :is(.vr-person-motion, .vr-person-hair, .vr-scroll-cue) { animation-play-state: paused !important; }
       .vr-home .vr-person-motion img { width: 100%; height: auto; }
       .vr-home .vr-person-skin, .vr-home .vr-person-hair, .vr-home .vr-person-collar { position: absolute; inset: 0; display: block; pointer-events: none; }
       .vr-home .vr-person-skin { z-index: 0; }

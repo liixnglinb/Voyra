@@ -129,6 +129,8 @@ const STARS = Array.from({ length: 110 }, (_, i) => ({
   tw: 2.5 + ((i * 11) % 40) / 10,                 // 闪烁周期 2.5~6.5s
   o1: 0.12 + ((i * 13) % 20) / 100,               // 最暗透明度
   o2: 0.55 + ((i * 17) % 45) / 100,               // 最亮透明度
+  anim: i % 3 === 0,                              // 仅 1/3 星星参与闪烁，其余静态（性能：动画 115 → ~40）
+  os: 0.28 + ((i * 23) % 40) / 100,               // 静态星透明度
 }));
 const METEORS = [
   { x: 78, y: 4,  dur: 14,  delay: 0,    ang: -36, dx: -460, dy: 330 },
@@ -169,6 +171,7 @@ export default function AgentSkills() {
         .agx-stars { position:fixed; inset:0; z-index:0; pointer-events:none; }
         .agx-star { position:absolute; border-radius:50%; background:#fff;
           animation:agx-twinkle var(--tw, 4s) ease-in-out infinite; }
+        .agx-star.is-static { animation:none; opacity:var(--os, .4); }
         @keyframes agx-twinkle { 0%,100%{ opacity:var(--o1,.25); } 50%{ opacity:var(--o2,.9); } }
 
         /* ===== 流星（缓慢划过） ===== */
@@ -230,7 +233,8 @@ export default function AgentSkills() {
         /* ===== 卡片网格（紧凑） ===== */
         .agx-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(232px, 1fr)); gap:12px; }
         .agx-card { position:relative; display:flex; flex-direction:column; gap:8px; border:1px solid rgba(255,255,255,.1); border-radius:15px;
-          background:linear-gradient(170deg, rgba(22,27,46,.78), rgba(12,15,28,.66)); backdrop-filter:blur(10px); padding:15px; transition:all .22s cubic-bezier(.22,.68,.4,1); overflow:hidden; }
+          background:linear-gradient(170deg, rgba(22,27,46,.78), rgba(12,15,28,.66)); backdrop-filter:blur(10px); padding:15px; transition:all .22s cubic-bezier(.22,.68,.4,1); overflow:hidden;
+          content-visibility:auto; contain-intrinsic-size:auto 150px; }
         .agx-card::before { content:''; position:absolute; top:0; left:12%; right:12%; height:1px; opacity:0; transition:opacity .22s ease;
           background:linear-gradient(90deg, transparent, var(--gc, #8ec5ff), transparent); }
         .agx-card:hover { transform:translateY(-3px); border-color:color-mix(in srgb, var(--gc, #8ec5ff) 52%, transparent);
@@ -274,7 +278,7 @@ export default function AgentSkills() {
       {/* ===== 星空背景 ===== */}
       <div className="agx-stars" aria-hidden="true">
         {STARS.map((s, i) => (
-          <span key={'s' + i} className="agx-star" style={{ left: s.x + '%', top: s.y + '%', width: s.r + 'px', height: s.r + 'px', '--tw': s.tw + 's', '--o1': s.o1, '--o2': s.o2 }} />
+          <span key={'s' + i} className={'agx-star' + (s.anim ? '' : ' is-static')} style={{ left: s.x + '%', top: s.y + '%', width: s.r + 'px', height: s.r + 'px', '--tw': s.tw + 's', '--o1': s.o1, '--o2': s.o2, '--os': s.os }} />
         ))}
         {METEORS.map((m, i) => (
           <span key={'m' + i} className="agx-meteor" style={{ left: m.x + '%', top: m.y + '%', '--dur': m.dur + 's', '--delay': m.delay + 's', '--ang': m.ang + 'deg', '--dx': m.dx + 'px', '--dy': m.dy + 'px' }} />
@@ -332,8 +336,8 @@ export default function AgentSkills() {
                   {grouped[c.key].map((a) => (
                     <a key={a.name} className="agx-card" href={a.url} target="_blank" rel="noopener noreferrer" style={{ '--gc': c.color, textDecoration: 'none' }}>
                       <div className="agx-card-top">
-                        <div className="agx-logo" loading-eager="true">
-                          <img src={a.logo} alt={a.name + ' logo'} onError={logoFallback} />
+                        <div className="agx-logo">
+                          <img src={a.logo} alt={a.name + ' logo'} loading="lazy" decoding="async" onError={logoFallback} />
                           <div className="agx-logo-fb"><Bot size={20} /></div>
                         </div>
                         <div style={{ minWidth: 0 }}>
