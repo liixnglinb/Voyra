@@ -703,10 +703,6 @@ export default function PromptLibrary() {
     if (!pool.length) return;
     setDetail(pool[Math.floor(Math.random() * pool.length)]);
   };
-  const dotColor = (category) => (category === FAV_CAT
-    ? '#d4a930'
-    : PROMPT_CATEGORY_META[category]?.color || 'var(--gold)');
-
   return <div className="pl-page">
     <style>{`
       .pl-page { --ink:#1b1b1b; --muted:#8a8a8a; --line:rgba(27,27,27,.12); --paper:#fff; --gold:#a48830; --soft:#fff9df; --hl:#ffe08a;
@@ -718,8 +714,7 @@ export default function PromptLibrary() {
       .pl-page button:focus-visible, .pl-page a:focus-visible, .pl-page input:focus-visible { outline:1.5px solid var(--ink); outline-offset:2px; }
       .tool-content-prompt .pl-page :is(input,select,textarea):focus { border-color:rgba(27,27,27,.3) !important; background:#fff !important; box-shadow:none !important; outline:none; }
 
-      /* ===== 吸顶头部（顶栏 + 分类 chips） ===== */
-      .pl-head { position:sticky; top:-28px; z-index:30; margin:0 -4px; padding:0 4px; background:rgba(255,255,255,.92); backdrop-filter:blur(14px) saturate(1.4); -webkit-backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line); }
+      /* ===== 顶栏（自然滚走）+ 分类 chips（完整吸顶） ===== */
       .pl-topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:15px 0 12px; }
       .pl-topbar-left { display:inline-flex; align-items:center; gap:11px; min-width:0; }
       .pl-back { display:inline-grid; width:32px; height:32px; place-items:center; border:1px solid var(--line); border-radius:9px; color:#666; background:#fff; transition:color .3s var(--pl-ease), background .3s var(--pl-ease), border-color .3s var(--pl-ease), transform .3s var(--pl-ease); }
@@ -767,8 +762,8 @@ export default function PromptLibrary() {
       .pl-lock:hover { color:var(--ink); background:var(--soft); }
       .pl-lock.is-on { border-color:rgba(164,136,48,.5); background:var(--soft); color:var(--gold); }
 
-      /* ===== 分类 chips（顶部小卡片，丝滑动效） ===== */
-      .pl-chips { display:flex; gap:7px; align-items:center; padding:2px 0 14px; overflow-x:auto; scrollbar-width:none; }
+      /* ===== 分类 chips（吸顶筛选栏：顶栏滚走后完整停留，不留半截） ===== */
+      .pl-chips { position:sticky; top:0; z-index:30; display:flex; gap:7px; align-items:center; padding:11px 24px; margin:0 -24px; overflow-x:auto; scrollbar-width:none; background:rgba(255,255,255,.94); backdrop-filter:blur(14px) saturate(1.4); -webkit-backdrop-filter:blur(14px) saturate(1.4); border-bottom:1px solid var(--line); }
       .pl-chips::-webkit-scrollbar { display:none; }
       .pl-chip { position:relative; z-index:0; display:inline-flex; height:34px; flex:0 0 auto; align-items:center; gap:7px; border:1px solid var(--line); border-radius:99px; padding:0 15px; background:#fff; color:#666; font-size:13px; font-weight:600; transition:color .3s var(--pl-ease), border-color .3s var(--pl-ease), transform .3s var(--pl-ease), box-shadow .3s var(--pl-ease); }
       .pl-chip svg { color:#ababab; transition:color .3s var(--pl-ease); }
@@ -788,28 +783,9 @@ export default function PromptLibrary() {
       .pl-chip-add:hover { background:var(--hl); color:var(--ink); transform:rotate(90deg) scale(1.06); }
       .pl-chip-add:active { transform:rotate(90deg) scale(.96); transition-duration:.1s; }
 
-      /* ===== 主体两栏 ===== */
-      .pl-body { display:grid; grid-template-columns:200px minmax(0,1fr); gap:36px; align-items:start; padding-top:24px; }
-      .pl-side { position:sticky; top:150px; display:flex; flex-direction:column; gap:3px; }
-      .pl-side-label { display:flex; align-items:center; gap:7px; padding:0 12px 10px; color:#a0a0a0; font:600 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.08em; }
-      .pl-side-label::before { content:''; width:5px; height:5px; border-radius:1.5px; background:var(--gold); }
-      .pl-side-item { position:relative; z-index:0; display:flex; width:100%; align-items:center; justify-content:space-between; gap:8px; border:0; border-radius:9px; padding:9px 12px 9px 14px; background:transparent; color:#777; font-size:13.5px; text-align:left; transition:color .28s var(--pl-ease), transform .2s var(--pl-ease); }
-      .pl-side-item::before { content:''; position:absolute; inset:0; z-index:-1; border-radius:inherit; background:#faf8f2; transform:scaleX(0); transform-origin:0 50%; transition:transform .32s var(--pl-ease); }
-      .pl-side-item::after { content:''; position:absolute; left:0; top:50%; width:3px; height:16px; border-radius:0 3px 3px 0; background:var(--gold); transform:translateY(-50%) scaleY(0); transition:transform .32s var(--pl-ease); }
-      .pl-side-item b { color:#b5b5b5; font:500 10.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums; transition:color .28s var(--pl-ease); }
-      .pl-side-name { display:inline-flex; align-items:center; gap:9px; min-width:0; }
-      .pl-side-dot { width:7px; height:7px; flex:0 0 7px; border-radius:2.5px; opacity:.75; transition:opacity .28s var(--pl-ease), transform .28s var(--pl-ease); }
-      .pl-side-item:hover .pl-side-dot { opacity:1; transform:scale(1.15); }
-      .pl-side-item.is-active .pl-side-dot { opacity:1; }
-      .pl-side-item:hover { color:var(--ink); }
-      .pl-side-item:hover::before { transform:scaleX(1); }
-      .pl-side-item:active { transform:scale(.985); }
-      .pl-side-item.is-active { color:var(--ink); font-weight:650; }
-      .pl-side-item.is-active::before { transform:scaleX(1); background:var(--hl); }
-      .pl-side-item.is-active::after { transform:translateY(-50%) scaleY(1); }
-      .pl-side-item.is-active b { color:rgba(27,27,27,.55); }
-      .pl-side-foot { display:grid; gap:7px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); }
-      .pl-side-foot .pl-btn { min-height:34px; font-size:12.5px; justify-content:flex-start; padding:0 12px; }
+      /* ===== 主体（单栏满宽平铺；分类筛选全在顶部 chips，子分类在标题下横排） ===== */
+      .pl-body { padding-top:24px; }
+      .pl-admin-tools { display:inline-flex; align-items:center; gap:2px; margin-right:6px; }
 
       .pl-main { min-width:0; }
       .pl-main > * { animation:pl-rise .42s var(--pl-ease) both; }
@@ -934,25 +910,24 @@ export default function PromptLibrary() {
 
       /* ===== 响应式 ===== */
       @media (max-width:1080px) { .pl-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+      /* 子分类横排（原左侧栏内容，所有宽度可见） */
+      .pl-subrow { display:flex; gap:7px; margin:16px 0 2px; padding-bottom:13px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none; }
+      .pl-subrow::-webkit-scrollbar { display:none; }
+      .pl-subitem { display:inline-flex; height:32px; flex:0 0 auto; align-items:center; gap:6px; border:1px solid var(--line); border-radius:99px; padding:0 12px; background:#fff; color:#666; font-size:12.5px; transition:border-color .3s var(--pl-ease), background .3s var(--pl-ease), color .3s var(--pl-ease), transform .3s var(--pl-ease); }
+      .pl-subitem b { color:#b5b5b5; font:500 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums; }
+      .pl-subitem:hover { border-color:rgba(27,27,27,.28); color:var(--ink); transform:translateY(-1.5px); }
+      .pl-subitem:active { transform:translateY(0) scale(.96); transition-duration:.1s; }
+      .pl-subitem.is-active { border-color:#d7b846; background:var(--hl); color:var(--ink); font-weight:650; }
+      .pl-subitem.is-active b { color:rgba(27,27,27,.5); }
       @media (max-width:920px) {
-        .pl-body { grid-template-columns:1fr; gap:0; }
-        .pl-side { display:none; }
         .pl-stats { display:none; }
-        .pl-subrow { display:flex; gap:7px; margin:18px 0 0; padding-bottom:14px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none; }
-        .pl-subrow::-webkit-scrollbar { display:none; }
-        .pl-subitem { display:inline-flex; height:32px; flex:0 0 auto; align-items:center; gap:6px; border:1px solid var(--line); border-radius:99px; padding:0 12px; background:#fff; color:#666; font-size:12.5px; transition:border-color .3s var(--pl-ease), background .3s var(--pl-ease), color .3s var(--pl-ease), transform .3s var(--pl-ease); }
-        .pl-subitem b { color:#b5b5b5; font:500 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums; }
-        .pl-subitem:hover { border-color:rgba(27,27,27,.28); color:var(--ink); transform:translateY(-1.5px); }
-        .pl-subitem:active { transform:translateY(0) scale(.96); transition-duration:.1s; }
-        .pl-subitem.is-active { border-color:#d7b846; background:var(--hl); color:var(--ink); font-weight:650; }
-        .pl-subitem.is-active b { color:rgba(27,27,27,.5); }
         .pl-main-head { margin-top:16px; }
         .pl-main h1 { font-size:34px; }
         .pl-main h1 em { font-size:15px; margin-left:9px; }
         .pl-search kbd { display:none; }
       }
-      @media (min-width:921px) { .pl-subrow { display:none; } }
       @media (max-width:680px) {
+        .pl-chips { margin:0 -20px; padding:11px 20px; }
         .pl-topbar { flex-wrap:wrap; }
         .pl-topbar-right { width:100%; }
         .pl-search { width:100%; flex:1; }
@@ -969,8 +944,7 @@ export default function PromptLibrary() {
       @media (prefers-reduced-motion:reduce) { .pl-page *, .pl-page *::before, .pl-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>
 
-    <div className="pl-head">
-      <header className="pl-topbar">
+    <header className="pl-topbar">
         <div className="pl-topbar-left">
           <a className="pl-back" href="#/" aria-label="返回主页" title="返回主页"><ArrowLeft size={15} /></a>
           <span className="pl-brand"><i />VOYRA <em>提示词库</em></span>
@@ -980,6 +954,11 @@ export default function PromptLibrary() {
           </span>
         </div>
         <div className="pl-topbar-right">
+          {admin && <div className="pl-admin-tools">
+            <IconButton label="新建分类" title="新建分类" onClick={() => setDialog('category')}><FolderPlus size={14} /></IconButton>
+            <IconButton label="导入 JSON" title="导入 JSON" onClick={() => fileInputRef.current?.click()}><Import size={14} /></IconButton>
+            <IconButton label="导出我的数据" title="导出我的数据" onClick={exportPrompts}><Download size={14} /></IconButton>
+          </div>}
           <IconButton
             label={admin ? '退出管理模式' : '管理员解锁'}
             title={admin ? '退出管理模式' : '管理员解锁'}
@@ -997,8 +976,8 @@ export default function PromptLibrary() {
           </label>
           {admin && <button type="button" className="pl-btn pl-btn-solid" onClick={openNewPrompt}><Plus size={16} />新建提示词</button>}
         </div>
-      </header>
-      <nav className="pl-chips" aria-label="提示词分类">
+    </header>
+    <nav className="pl-chips" aria-label="提示词分类">
         <button type="button" className={`pl-chip${activeCat === '全部' ? ' is-active' : ''}`} onClick={() => { setActiveCat('全部'); setActiveSub('全部'); }}>全部 <b>{catCount('全部')}</b></button>
         {showFav && (
           <button type="button" className={`pl-chip is-fav${activeCat === FAV_CAT ? ' is-active' : ''}`} onClick={() => { setActiveCat(FAV_CAT); setActiveSub('全部'); }}>
@@ -1014,36 +993,9 @@ export default function PromptLibrary() {
           );
         })}
         {admin && <button type="button" className="pl-chip-add" title="新建分类" aria-label="新建分类" onClick={() => setDialog('category')}><Plus size={15} /></button>}
-      </nav>
-    </div>
+    </nav>
 
     <div className="pl-body">
-      <aside className="pl-side" aria-label="分类导航">
-        <div className="pl-side-label">{activeCat === '全部' || activeCat === FAV_CAT || searching ? 'DIVISIONS' : 'SUBCATEGORY'}</div>
-        {activeCat === '全部' || activeCat === FAV_CAT || searching
-          ? <>
-              {showFav && (
-                <button type="button" key={FAV_CAT} className={`pl-side-item${activeCat === FAV_CAT ? ' is-active' : ''}`} onClick={() => { setActiveCat(FAV_CAT); setActiveSub('全部'); setSearch(''); }}>
-                  <span className="pl-side-name"><i className="pl-side-dot" style={{ background: dotColor(FAV_CAT) }} />收藏</span>
-                  <b>{favCount}</b>
-                </button>
-              )}
-              {allCategories.map((category) => (
-                <button type="button" key={category} className={`pl-side-item${activeCat === category ? ' is-active' : ''}`} onClick={() => { setActiveCat(category); setActiveSub('全部'); setSearch(''); }}>
-                  <span className="pl-side-name"><i className="pl-side-dot" style={{ background: dotColor(category) }} />{category}</span>
-                  <b>{catCount(category)}</b>
-                </button>
-              ))}
-            </>
-          : renderSubButtons('pl-side-item')}
-        {admin && <div className="pl-side-foot">
-          <button type="button" className="pl-btn" onClick={openNewPrompt}><Plus size={14} />新建提示词</button>
-          <button type="button" className="pl-btn" onClick={() => fileInputRef.current?.click()}><Import size={14} />导入 JSON</button>
-          <button type="button" className="pl-btn" onClick={exportPrompts}><Download size={14} />导出我的数据</button>
-          <button type="button" className="pl-btn" onClick={() => setDialog('category')}><FolderPlus size={14} />新建分类</button>
-        </div>}
-      </aside>
-
       <main className="pl-main" key={sectionKey}>
         <h1>{mainTitle}{!searching && activeCat !== '全部' && activeCat !== FAV_CAT && <em>{enFor(activeCat)}</em>}</h1>
         {sideSubs.length > 0 && <div className="pl-subrow">{renderSubButtons('pl-subitem')}</div>}
