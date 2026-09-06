@@ -3,8 +3,13 @@
    数据读写走 Bmob user_data 表（按用户隔离）。
    接口签名与原 electronAPI 一致，页面代码无需改动。
    ============================================================ */
-import Bmob, { currentUserId, USER_TABLE } from './lib/bmob';
+import Bmob, { currentUserId, USER_TABLE, BMOB_READY } from './lib/bmob';
 import { currentUid } from './lib/auth';
+
+/* 云端未配置（缺环境变量）时快速失败，调用方已有 catch，页面自动降级为本地模式 */
+function ensureCloud() {
+  if (!BMOB_READY) throw new Error('Bmob 环境变量未配置，云端功能不可用');
+}
 
 async function requireUid() {
   // 登录体系：数据按登录账号隔离；未登录时回退本地 ID
@@ -22,6 +27,7 @@ async function findRow(uid, key) {
 }
 
 export async function saveData(key, value) {
+  ensureCloud();
   const uid = await requireUid();
   const row = await findRow(uid, key);
   const q = Bmob.Query(USER_TABLE);
@@ -34,6 +40,7 @@ export async function saveData(key, value) {
 }
 
 export async function loadData(key) {
+  ensureCloud();
   const uid = await requireUid();
   const row = await findRow(uid, key);
   if (!row) return null;
@@ -41,6 +48,7 @@ export async function loadData(key) {
 }
 
 export async function deleteData(key) {
+  ensureCloud();
   const uid = await requireUid();
   const row = await findRow(uid, key);
   if (row && row.objectId) { const q = Bmob.Query(USER_TABLE); await q.destroy(row.objectId); }
