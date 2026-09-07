@@ -13,7 +13,8 @@ import React, { useCallback } from 'react';
    ============================================================ */
 
 const ITEMS = [
-  { file: 'glm-5.3-flash.html',     model: 'GLM-5.3 Flash',     ratio: '880/460',  zoom: 1.4 },
+  { file: 'glm-5.3-flash.html',     model: 'GLM-5.3 Flash',     ratio: '880/460',  zoom: 1.4,
+    bg: 'linear-gradient(180deg,#6db6e8 0%,#6db6e8 50%,#000 50%,#000 100%)' },
   { file: 'deepseek-v4-pro.html',   model: 'DeepSeek-V4 Pro',   ratio: '900/520' },
   { file: 'deepseek-v4-flash.html', model: 'DeepSeek-V4 Flash', ratio: '900/520' },
   { file: 'gpt56-sol-ulter.html',   model: 'GPT-5.6 Sol Ulter', ratio: '1600/900' },
@@ -139,7 +140,7 @@ export default function PelicanGallery() {
               <span className="pg-seq">{String(index + 1).padStart(2, '0')}</span>
               <span className="pg-name">{item.model}</span>
             </div>
-            <div className="pg-frame">
+            <div className="pg-frame" style={item.bg ? { background: item.bg } : undefined}>
               <iframe
                 src={`/pelican-gallery/${item.file}`}
                 onLoad={onIframeLoad}
