@@ -274,6 +274,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
   const [settings, setSettings] = useState({ startDate: '', overrideWeek: null, timeSlots: null });
   const [showSettings, setShowSettings] = useState(false);
   const [showTimeSettings, setShowTimeSettings] = useState(false);
+  const [timeEdit, setTimeEdit] = useState(null); // { key, side: 's'|'e' } 正在滚动编辑的时段
   const [importText, setImportText] = useState('');
   const [parsed, setParsed] = useState([]);
   const [copied, setCopied] = useState(false);
@@ -487,6 +488,24 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-review { border:1px dashed ${ACCENT_LINE};border-radius:10px;background:${ACCENT_SOFT};padding:10px 12px;margin-top:10px; }
         .cs-review-item { display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 10px;margin:4px 4px 0 0;font-size:12px; }
         .cs-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12.5px;z-index:99; }
+        .tp-btn { border:1px solid rgba(20,24,33,.16);background:#fff;color:#212529;border-radius:9px;padding:7px 14px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;min-width:66px;transition:all .15s ease; }
+        .tp-btn:hover { border-color:${ACCENT_LINE};color:${ACCENT}; }
+        .tp-btn.active { border-color:${ACCENT};background:${ACCENT_SOFT};color:${ACCENT};box-shadow:0 0 0 3px rgba(164,136,48,.14); }
+        .tp-pop { position:absolute;top:calc(100% + 6px);left:0;z-index:30;background:#fff;border:1px solid rgba(20,24,33,.12);border-radius:12px;box-shadow:0 14px 36px rgba(16,20,30,.16);padding:10px 14px 12px; }
+        .tp-pop-head { display:flex;align-items:center;justify-content:space-between;margin-bottom:4px; }
+        .tp-pop-title { font-size:12px;color:#6c757d;font-weight:600;letter-spacing:.04em; }
+        .tp-pop-done { border:none;background:${ACCENT};color:#fff;border-radius:7px;padding:5px 16px;font-size:12.5px;font-weight:700;cursor:pointer;transition:opacity .15s ease; }
+        .tp-pop-done:hover { opacity:.9; }
+        .tp-wheels { position:relative;display:flex;justify-content:center;align-items:center;gap:2px; }
+        .tp-col { position:relative;height:180px;box-sizing:border-box;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;-ms-overflow-style:none;padding:72px 0; }
+        .tp-col::-webkit-scrollbar { display:none; }
+        .tp-item { height:36px;line-height:36px;text-align:center;font-size:15px;font-weight:600;color:#495057;scroll-snap-align:center;cursor:pointer;user-select:none;transition:transform .1s linear,opacity .1s linear,color .15s ease;will-change:transform,opacity; }
+        .tp-item.sel { color:${ACCENT};font-weight:800; }
+        .tp-sep { font-size:18px;font-weight:700;color:#adb5bd;padding:0 2px; }
+        .tp-mask { position:absolute;left:0;right:0;height:60px;pointer-events:none;z-index:2; }
+        .tp-mask-top { top:0;background:linear-gradient(180deg,#fff 20%,rgba(255,255,255,0)); }
+        .tp-mask-bottom { bottom:0;background:linear-gradient(0deg,#fff 20%,rgba(255,255,255,0)); }
+        .tp-preview { text-align:center;margin-top:4px;font-size:16px;font-weight:800;color:#212529;font-variant-numeric:tabular-nums;letter-spacing:.12em; }
         @keyframes spin { to { transform:rotate(360deg); } }
       `}</style>
 
@@ -536,19 +555,37 @@ export default function ClassSchedule({ stats = null, active = true }) {
         )}
         {showTimeSettings && (
           <div className="cs-card" style={{ boxShadow: 'none', borderColor: 'rgba(20,24,33,.12)' }}>
-            <div className="cs-row" style={{ alignItems: 'flex-end' }}>
+            <div className="cs-row" style={{ alignItems: 'flex-start' }}>
               {DEFAULT_SLOTS.map((s) => {
                 const [st, en] = (timeSlots[s.key].time || '08:00-09:45').split('-');
+                const editingThis = timeEdit && timeEdit.key === s.key;
                 return (
-                  <div key={s.key} className="cs-field" style={{ gap: 4 }}>
+                  <div key={s.key} className="cs-field" style={{ gap: 4, position: 'relative' }}>
                     <label className="cs-l">{s.label}{s.night ? '（晚自习）' : ''}</label>
                     <div className="cs-row" style={{ gap: 4 }}>
-                      <input type="time" className="cs-input" style={{ width: 96 }} value={st}
-                        onChange={(e) => setSlotTime(s.key, `${e.target.value}-${en}`)} />
+                      <button type="button" className={`tp-btn${editingThis && timeEdit.side === 's' ? ' active' : ''}`}
+                        onClick={() => setTimeEdit(editingThis && timeEdit.side === 's' ? null : { key: s.key, side: 's' })}>
+                        {st}
+                      </button>
                       <span style={{ color: '#adb5bd', fontSize: 12 }}>至</span>
-                      <input type="time" className="cs-input" style={{ width: 96 }} value={en}
-                        onChange={(e) => setSlotTime(s.key, `${st}-${e.target.value}`)} />
+                      <button type="button" className={`tp-btn${editingThis && timeEdit.side === 'e' ? ' active' : ''}`}
+                        onClick={() => setTimeEdit(editingThis && timeEdit.side === 'e' ? null : { key: s.key, side: 'e' })}>
+                        {en}
+                      </button>
                     </div>
+                    {editingThis && (
+                      <TimeWheel
+                        value={timeEdit.side === 's' ? st : en}
+                        onDone={(nv) => {
+                          const cur = timeSlots[s.key].time.split('-');
+                          const nst = timeEdit.side === 's' ? nv : cur[0];
+                          const nen = timeEdit.side === 'e' ? nv : cur[1];
+                          if (nst >= nen) { say('开始时间需早于结束时间'); return; }
+                          setSlotTime(s.key, `${nst}-${nen}`);
+                          setTimeEdit(null);
+                        }}
+                      />
+                    )}
                   </div>
                 );
               })}
@@ -557,7 +594,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
               </div>
             </div>
             <p style={{ margin: '8px 0 0', width: '100%', fontSize: 12, color: '#6c757d' }}>
-              自定义每节课起止时间（含晚自习），课表、明细与手动添加会同步更新；恢复默认使用标准大学作息。
+              点按时间即可弹出滚轮选择（小时 / 每 5 分钟），课表、明细与手动添加会同步更新；恢复默认使用标准大学作息。
             </p>
           </div>
         )}
@@ -723,6 +760,74 @@ export default function ClassSchedule({ stats = null, active = true }) {
       </div>
 
       {toast && <div className="cs-toast">{toast}</div>}
+    </div>
+  );
+}
+
+/* ============ iOS 风格滚轮时间选择器（小时 / 每 5 分钟） ============ */
+function TimeWheel({ value, onDone }) {
+  const [val, setVal] = useState(value);
+  const hRef = useRef(null);
+  const mRef = useRef(null);
+  const ITEM = 36;
+  const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
+  const MINS = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+
+  /* 根据滚动位置给每项做缩放 / 淡出，模拟滚轮柱面效果 */
+  const paint = (col) => {
+    if (!col) return;
+    const items = col.querySelectorAll('.tp-item');
+    const center = col.scrollTop + col.clientHeight / 2;
+    items.forEach((el) => {
+      const d = (el.offsetTop + ITEM / 2 - center) / ITEM;
+      const a = Math.abs(d);
+      el.style.transform = `scale(${Math.max(0.78, 1 - a * 0.1)})`;
+      el.style.opacity = String(Math.max(0.25, 1 - a * 0.34));
+      el.classList.toggle('sel', a < 0.45);
+    });
+  };
+
+  const handleScroll = (col, isHour) => {
+    paint(col);
+    const idx = Math.round(col.scrollTop / ITEM);
+    const v = isHour ? HOURS[idx] : MINS[idx];
+    if (v == null) return;
+    setVal(isHour ? `${v}:${val.slice(3, 5)}` : `${val.slice(0, 2)}:${v}`);
+  };
+
+  const jumpTo = (col, isHour, idx) => {
+    col.scrollTo({ top: idx * ITEM, behavior: 'auto' });
+    handleScroll(col, isHour);
+  };
+
+  useEffect(() => {
+    const hh = Math.min(Math.max(parseInt(value.slice(0, 2), 10) || 0, 0), 23);
+    const mm = Math.min(Math.round((parseInt(value.slice(3, 5), 10) || 0) / 5), 11);
+    if (hRef.current) hRef.current.scrollTop = hh * ITEM;
+    if (mRef.current) mRef.current.scrollTop = mm * ITEM;
+    paint(hRef.current);
+    paint(mRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="tp-pop">
+      <div className="tp-pop-head">
+        <span className="tp-pop-title">选择时间</span>
+        <button type="button" className="tp-pop-done" onClick={() => onDone(val)}>完成</button>
+      </div>
+      <div className="tp-wheels">
+        <div className="tp-col" ref={hRef} onScroll={(e) => handleScroll(e.currentTarget, true)}>
+          {HOURS.map((h, i) => <div key={h} className="tp-item" onClick={() => jumpTo(hRef.current, true, i)}>{h}</div>)}
+        </div>
+        <div className="tp-sep">:</div>
+        <div className="tp-col" ref={mRef} onScroll={(e) => handleScroll(e.currentTarget, false)}>
+          {MINS.map((m, i) => <div key={m} className="tp-item" onClick={() => jumpTo(mRef.current, false, i)}>{m}</div>)}
+        </div>
+        <div className="tp-mask tp-mask-top" />
+        <div className="tp-mask tp-mask-bottom" />
+      </div>
+      <div className="tp-preview">{val}</div>
     </div>
   );
 }
