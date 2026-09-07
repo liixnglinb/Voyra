@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="igpWolMQhh7XQqvv3RRhqM">
+<head data-page-node-id="h8A5ni3MQKLe5NatMvlBrH">
+    <meta charset="UTF-8" data-page-node-id="lkYpdBYeMHHkHoI0EechTX">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="XSLHAkoiFMF0b9maVm5bYD">
+    <title>鹈鹕骑自行车 - Kimi-k2.6</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 50%, #98FB98 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .scene-container {
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16/9;
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.1));
+        }
+
+        /* 云朵飘动 */
+        .cloud {
+            animation: float linear infinite;
+        }
+        .cloud1 { animation-duration: 25s; }
+        .cloud2 { animation-duration: 30s; animation-delay: -10s; }
+        .cloud3 { animation-duration: 20s; animation-delay: -5s; }
+
+        @keyframes float {
+            from { transform: translateX(-200px); }
+            to { transform: translateX(1000px); }
+        }
+
+        /* 路面移动 */
+        .road-line {
+            animation: roadMove 1s linear infinite;
+        }
+
+        @keyframes roadMove {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -40; }
+        }
+
+        /* 车轮旋转 */
+        .wheel {
+            animation: spin 1s linear infinite;
+            transform-origin: center;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 踏板旋转 */
+        .pedal-assembly {
+            animation: spin 1s linear infinite;
+            transform-origin: 380px 320px;
+        }
+
+        /* 鹈鹕身体上下颠簸 */
+        .pelican-body {
+            animation: bounce 0.5s ease-in-out infinite alternate;
+            transform-origin: 380px 280px;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0px) rotate(-1deg); }
+            to { transform: translateY(-3px) rotate(1deg); }
+        }
+
+        /* 翅膀扇动 */
+        .wing {
+            animation: flap 0.8s ease-in-out infinite alternate;
+            transform-origin: 360px 200px;
+        }
+
+        @keyframes flap {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(-15deg); }
+        }
+
+        /* 脚蹬动画 */
+        .left-leg {
+            animation: leftPedal 1s linear infinite;
+            transform-origin: 380px 320px;
+        }
+
+        .right-leg {
+            animation: rightPedal 1s linear infinite;
+            transform-origin: 380px 320px;
+        }
+
+        @keyframes leftPedal {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes rightPedal {
+            from { transform: rotate(180deg); }
+            to { transform: rotate(540deg); }
+        }
+
+        /* 树木移动 */
+        .tree {
+            animation: treeMove 4s linear infinite;
+        }
+
+        @keyframes treeMove {
+            from { transform: translateX(0); }
+            to { transform: translateX(-900px); }
+        }
+
+        /* 太阳光芒 */
+        .sun-ray {
+            animation: sunPulse 3s ease-in-out infinite;
+            transform-origin: 750px 80px;
+        }
+
+        @keyframes sunPulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* 信息面板 */
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: #333;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .info-panel strong {
+            color: #2c5aa0;
+        }
+    </style>
+</head>
+<body data-page-node-id="Lgk9fCG7ei05N9gBv5g2Mk">
+    <div class="scene-container" data-page-node-id="WHxcnHNW1EyS4Cu5Whi2ir">
+        <svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg" data-page-node-id="jZ0IEHhLdlHhR8LVxErejZ">
+            <defs data-page-node-id="CUG8tbZwRbPT6BNsCkQlrx">
+                <!-- 渐变定义 -->
+                <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%" data-page-node-id="tFWd9f5ZjkAXIAxqS9l9DW">
+                    <stop offset="0%" style="stop-color:#4FC3F7;stop-opacity:1" data-page-node-id="ReH9i9Rmvv3FLGYV3yQFU8" />
+                    <stop offset="50%" style="stop-color:#81D4FA;stop-opacity:1" data-page-node-id="ZCsvhDDEKlxOugH1SNGQmK" />
+                    <stop offset="100%" style="stop-color:#E1F5FE;stop-opacity:1" data-page-node-id="hD5jCu3UHOAGLmuNH6Gvjp" />
+                </linearGradient>
+                
+                <linearGradient id="groundGrad" x1="0%" y1="0%" x2="0%" y2="100%" data-page-node-id="dk4CuoH0TUS4K1AwNjeipk">
+                    <stop offset="0%" style="stop-color:#66BB6A;stop-opacity:1" data-page-node-id="s9jFwZl47gF0L4pNSwmojC" />
+                    <stop offset="100%" style="stop-color:#43A047;stop-opacity:1" data-page-node-id="FYIGjP9iGFGg7BTYGqvRFe" />
+                </linearGradient>
+
+                <linearGradient id="pelicanBody" x1="0%" y1="0%" x2="100%" y2="100%" data-page-node-id="CefI5RkW3VLtRJaGOVRCYS">
+                    <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" data-page-node-id="Bvway23HTsaRmOnt2cwH5W" />
+                    <stop offset="100%" style="stop-color:#F5F5F5;stop-opacity:1" data-page-node-id="bsCjZD9s04To6N20wuxAKw" />
+                </linearGradient>
+
+                <linearGradient id="beakGrad" x1="0%" y1="0%" x2="100%" y2="0%" data-page-node-id="lYd3iaH3wdgWci2xK2OCdM">
+                    <stop offset="0%" style="stop-color:#FFB74D;stop-opacity:1" data-page-node-id="3bP1xHuSaPB7Ls7p1lqnbn" />
+                    <stop offset="100%" style="stop-color:#FF9800;stop-opacity:1" data-page-node-id="vuJPuH0r47hVDDTw3ZIuJI" />
+                </linearGradient>
+
+                <linearGradient id="bikeFrame" x1="0%" y1="0%" x2="100%" y2="100%" data-page-node-id="3xrGM3EzbR8mad0TvFCBJ3">
+                    <stop offset="0%" style="stop-color:#E53935;stop-opacity:1" data-page-node-id="HF1OSOx9s88JcCNEYKmn1Y" />
+                    <stop offset="100%" style="stop-color:#C62828;stop-opacity:1" data-page-node-id="rQ26SRPeM4YD4DPmSWChwW" />
+                </linearGradient>
+
+                <!-- 轮子辐条图案 -->
+                <pattern id="spokes" width="100" height="100" patternUnits="userSpaceOnUse" data-page-node-id="mLsMhlfgJiCK0ohhYx1deZ">
+                    <line x1="50" y1="10" x2="50" y2="90" stroke="#ddd" stroke-width="1" data-page-node-id="HxGjHw8xgyjeIC5AoaURUG"/>
+                    <line x1="10" y1="50" x2="90" y2="50" stroke="#ddd" stroke-width="1" data-page-node-id="FQBjnPEWFLMu43jXYMdMDr"/>
+                    <line x1="20" y1="20" x2="80" y2="80" stroke="#ddd" stroke-width="1" data-page-node-id="FXtL1eW7HUB6FDDti41TLF"/>
+                    <line x1="80" y1="20" x2="20" y2="80" stroke="#ddd" stroke-width="1" data-page-node-id="Rdwt8rYXnbGITZD5XCfMaS"/>
+                </pattern>
+            </defs>
+
+            <!-- 天空背景 -->
+            <rect width="900" height="400" fill="url(#skyGrad)" data-page-node-id="iDe41mGY7HNbyS5FMbitUJ"/>
+
+            <!-- 太阳 -->
+            <g class="sun-ray" data-page-node-id="LPuUb4Nbgd8NzzjQPYnkaO">
+                <circle cx="750" cy="80" r="35" fill="#FFD54F" data-page-node-id="nEFbyMgLQTe4Q78bnZVqHM"/>
+                <circle cx="750" cy="80" r="45" fill="#FFD54F" opacity="0.3" data-page-node-id="kciH76uaKHBHQANqr2DS0f"/>
+                <circle cx="750" cy="80" r="55" fill="#FFD54F" opacity="0.15" data-page-node-id="LlaTo0leUhgz3Tg0oikoWK"/>
+                <!-- 光芒 -->
+                <g stroke="#FFD54F" stroke-width="3" opacity="0.6" data-page-node-id="GQFWsaF1zABbHwuISSr7HS">
+                    <line x1="750" y1="25" x2="750" y2="10" data-page-node-id="A7MVHJ1HnhwtYyJ15ZWtte"/>
+                    <line x1="750" y1="135" x2="750" y2="150" data-page-node-id="SnBPSvLJhawPUyj57n3VNI"/>
+                    <line x1="695" y1="80" x2="680" y2="80" data-page-node-id="PgcfCODHxy1IGagdQuI92Q"/>
+                    <line x1="805" y1="80" x2="820" y2="80" data-page-node-id="cr21Ie7vm0F93ggNhCXg2O"/>
+                    <line x1="710" y1="40" x2="700" y2="30" data-page-node-id="nW8DI36qqTGaLdVUZzYFoH"/>
+                    <line x1="790" y1="40" x2="800" y2="30" data-page-node-id="TKyG0jpWae1kH8oFdUzhxa"/>
+                    <line x1="710" y1="120" x2="700" y2="130" data-page-node-id="KCKUQoLJUVHTNpmf8V41tc"/>
+                    <line x1="790" y1="120" x2="800" y2="130" data-page-node-id="wkitqtFJhniCGLtBS3idqQ"/>
+                </g>
+            </g>
+
+            <!-- 云朵 -->
+            <g class="cloud cloud1" opacity="0.8" data-page-node-id="SoStfNPrLO4sB1ID5AjcCc">
+                <ellipse cx="100" cy="60" rx="40" ry="25" fill="white" data-page-node-id="1PNfFDQjZ85Kt54kks2Ohr"/>
+                <ellipse cx="130" cy="50" rx="35" ry="28" fill="white" data-page-node-id="UTlxm7tVi1L2BHHlCDFEvj"/>
+                <ellipse cx="160" cy="60" rx="38" ry="22" fill="white" data-page-node-id="kux1siHQKdLiNNZDFlTffo"/>
+                <ellipse cx="135" cy="70" rx="45" ry="18" fill="white" data-page-node-id="JcclHdB2R29wAe1c5jWRhJ"/>
+            </g>
+            <g class="cloud cloud2" opacity="0.7" data-page-node-id="jay2AF0FQF4BrIIOQKu2HI">
+                <ellipse cx="400" cy="100" rx="50" ry="30" fill="white" data-page-node-id="ibElxlMcQVnJJ7jmu89RqT"/>
+                <ellipse cx="440" cy="85" rx="40" ry="32" fill="white" data-page-node-id="FYxwsGZ7GJ0pW5uTSGDRR9"/>
+                <ellipse cx="480" cy="100" rx="48" ry="28" fill="white" data-page-node-id="3ddb5X0F6IOgHC056wgDtr"/>
+                <ellipse cx="445" cy="115" rx="55" ry="22" fill="white" data-page-node-id="W9rJc8ypeLZlqf2AjjyOf8"/>
+            </g>
+            <g class="cloud cloud3" opacity="0.6" data-page-node-id="9uVuzqYUBHTPCsIWLpIH9f">
+                <ellipse cx="700" cy="130" rx="35" ry="20" fill="white" data-page-node-id="cDqENoOnwSyGfk69cgUYa0"/>
+                <ellipse cx="730" cy="120" rx="30" ry="24" fill="white" data-page-node-id="2knVllJu2A1KATPi2QWBD5"/>
+                <ellipse cx="760" cy="130" rx="33" ry="18" fill="white" data-page-node-id="ZGvZN7AZEh2S4mTHrEK4Ee"/>
+            </g>
+
+            <!-- 远山 -->
+            <path d="M0,350 Q150,200 300,350 T600,320 T900,350 L900,400 L0,400 Z" fill="#A5D6A7" opacity="0.5" data-page-node-id="9wTtFypUNgalFR4hEZFigG"/>
+            <path d="M0,380 Q200,280 400,380 T900,360 L900,400 L0,400 Z" fill="#81C784" opacity="0.4" data-page-node-id="B3VKBVYxzFMIxtEJOViHMY"/>
+
+            <!-- 地面 -->
+            <rect y="380" width="900" height="120" fill="url(#groundGrad)" data-page-node-id="NMnWqBzH1ECs3viyybTz7b"/>
+
+            <!-- 道路 -->
+            <rect y="400" width="900" height="60" fill="#757575" data-page-node-id="haeH2zp7lccSRCGsLbhohL"/>
+            <rect y="400" width="900" height="4" fill="#616161" data-page-node-id="QOKyBAdH0EiRSAv04Bc1MU"/>
+            <rect y="456" width="900" height="4" fill="#616161" data-page-node-id="jhHgCRMKE3eefQKBMmpwHx"/>
+            
+            <!-- 道路中线 -->
+            <line x1="0" y1="430" x2="900" y2="430" stroke="#FFFFFF" stroke-width="3" 
+                  stroke-dasharray="20,20" class="road-line" data-page-node-id="cvBAU1wsUlqsXb1EE4hqGH"/>
+
+            <!-- 移动的树木 -->
+            <g class="tree" data-page-node-id="ZS3qV4FVt6jv96MKx5Cz6Q">
+                <g transform="translate(100, 360)" data-page-node-id="OAJU3pviF0SCmEAoEvGaqz">
+                    <rect x="15" y="0" width="10" height="40" fill="#8D6E63" data-page-node-id="UJDA7PLt33oktyDhvEs9Hh"/>
+                    <circle cx="20" cy="-5" r="25" fill="#4CAF50" data-page-node-id="N5zKjvKlKVQb4wQe8iuZYC"/>
+                    <circle cx="10" cy="5" r="20" fill="#43A047" data-page-node-id="QaXkjkfjfnPsRF97X6aLdk"/>
+                    <circle cx="30" cy="5" r="20" fill="#66BB6A" data-page-node-id="vzScx0g0kvRiPeSsRIoKqK"/>
+                </g>
+                <g transform="translate(350, 370)" data-page-node-id="QLM1DFgrDUOv4HOEof3aWa">
+                    <rect x="12" y="0" width="8" height="35" fill="#8D6E63" data-page-node-id="qT1ooMgZ4xk6KpOQSD88O5"/>
+                    <ellipse cx="16" cy="-5" rx="22" ry="30" fill="#388E3C" data-page-node-id="rSBPMWo25Gwzdn0EjuoQph"/>
+                </g>
+                <g transform="translate(600, 355)" data-page-node-id="oUdwtkVk7DH3H3NJXmKkVP">
+                    <rect x="18" y="0" width="12" height="45" fill="#8D6E63" data-page-node-id="BPC8ROK3kGUJLLmMqegN57"/>
+                    <circle cx="24" cy="-8" r="28" fill="#4CAF50" data-page-node-id="ChUZrIoTmv1TI9VBmkn8SM"/>
+                    <circle cx="10" cy="2" r="22" fill="#43A047" data-page-node-id="44SDFqgBqMpyPsTIYJrD1J"/>
+                    <circle cx="38" cy="2" r="22" fill="#66BB6A" data-page-node-id="KfiDFPlicsDlMrCYAmpaDp"/>
+                </g>
+                <g transform="translate(850, 365)" data-page-node-id="rwqTrB75uHO7TzgbihCYRx">
+                    <rect x="10" y="0" width="8" height="30" fill="#8D6E63" data-page-node-id="Jz1nuBtBK8iyRdGBTq9Caz"/>
+                    <ellipse cx="14" cy="-3" rx="18" ry="25" fill="#388E3C" data-page-node-id="toz6GFpKRl0KJKljDYhctS"/>
+                </g>
+            </g>
+
+            <!-- 自行车和鹈鹕组 -->
+            <g transform="translate(150, 50)" data-page-node-id="FFYbHql5EmgSX9VbpqMJsH">
+                
+                <!-- 后轮 -->
+                <g transform="translate(200, 350)" data-page-node-id="L8WiXGWvhAngDpPsr88ccu">
+                    <circle r="45" fill="none" stroke="#333" stroke-width="6" data-page-node-id="BjnByzfSHz2DjxCKRkHdhi"/>
+                    <circle r="40" fill="none" stroke="#ddd" stroke-width="1" data-page-node-id="4PoKjkTwNpY6r6qHnR3shs"/>
+                    <g class="wheel" data-page-node-id="Wyh0DPeMkJqtrwUNf5xiQU">
+                        <circle r="38" fill="none" stroke="#ddd" stroke-width="1" data-page-node-id="bSZ3Hm6mOxnxgEML2dzgWw"/>
+                        <line x1="0" y1="-38" x2="0" y2="38" stroke="#ddd" stroke-width="1" data-page-node-id="PZO7Gnyyx6seLqEEBjfKir"/>
+                        <line x1="-33" y1="-19" x2="33" y2="19" stroke="#ddd" stroke-width="1" data-page-node-id="vL4QuSPPoA7JhGqpbTFh0l"/>
+                        <line x1="-33" y1="19" x2="33" y2="-19" stroke="#ddd" stroke-width="1" data-page-node-id="K01ryhawt5U8ljSt8U5TSX"/>
+                        <line x1="-19" y1="-33" x2="19" y2="33" stroke="#ddd" stroke-width="1" data-page-node-id="VgzyY4auhvXTiSaZzjopTB"/>
+                        <line x1="-19" y1="33" x2="19" y2="-33" stroke="#ddd" stroke-width="1" data-page-node-id="xeKKfgtG3zj1EMjCSdfR5M"/>
+                        <circle r="5" fill="#555" data-page-node-id="cEYrqDZkBHzE25CAoE1B3l"/>
+                    </g>
+                </g>
+
+                <!-- 前轮 -->
+                <g transform="translate(500, 350)" data-page-node-id="qgAr6zEnxMRHfYxMZ5oKYo">
+                    <circle r="45" fill="none" stroke="#333" stroke-width="6" data-page-node-id="1DTewlOSMH3bWYW4BIcFCe"/>
+                    <circle r="40" fill="none" stroke="#ddd" stroke-width="1" data-page-node-id="9FAwzDHP4tlmiimoSu3863"/>
+                    <g class="wheel" data-page-node-id="nt0FYX3KdvWBsXg97QKUVX">
+                        <circle r="38" fill="none" stroke="#ddd" stroke-width="1" data-page-node-id="HFLUHHly6RZZMQaNV0CnLc"/>
+                        <line x1="0" y1="-38" x2="0" y2="38" stroke="#ddd" stroke-width="1" data-page-node-id="nhGzDsT8VNpr6T05QGCAKs"/>
+                        <line x1="-33" y1="-19" x2="33" y2="19" stroke="#ddd" stroke-width="1" data-page-node-id="9FFRP6ZzFg5PEF5hYW9EcT"/>
+                        <line x1="-33" y1="19" x2="33" y2="-19" stroke="#ddd" stroke-width="1" data-page-node-id="MO8vb1MIv2jFG4gj31u1yT"/>
+                        <line x1="-19" y1="-33" x2="19" y2="33" stroke="#ddd" stroke-width="1" data-page-node-id="sMiwG9SV6vS19B5CBABHH0"/>
+                        <line x1="-19" y1="33" x2="19" y2="-33" stroke="#ddd" stroke-width="1" data-page-node-id="dQaVlFyoNKq7Tp48wVbp4i"/>
+                        <circle r="5" fill="#555" data-page-node-id="P0DGYA4hGMsbDIzslCDadO"/>
+                    </g>
+                </g>
+
+                <!-- 自行车车架 -->
+                <g id="bicycle" data-page-node-id="O2hs1OINFrZmtRrB3rWdql">
+                    <!-- 车梁 -->
+                    <path d="M200,350 L300,350 L380,260 L460,260 L500,350" 
+                          fill="none" stroke="url(#bikeFrame)" stroke-width="7" stroke-linejoin="round" data-page-node-id="hFsFUoJqE9xQ1r9wJ2Vcm7"/>
+                    <!-- 上管 -->
+                    <line x1="300" y1="350" x2="460" y2="260" stroke="url(#bikeFrame)" stroke-width="6" data-page-node-id="IbedvRAjCClUe9MV6FufT2"/>
+                    <!-- 座管 -->
+                    <line x1="300" y1="350" x2="285" y2="240" stroke="url(#bikeFrame)" stroke-width="6" data-page-node-id="X7X8JC6bt3irY8bZqxsuX5"/>
+                    <!-- 前叉 -->
+                    <line x1="460" y1="260" x2="500" y2="350" stroke="#555" stroke-width="5" data-page-node-id="QoHb1CfIt4hJAXNlPt5IrI"/>
+                    <!-- 车把立管 -->
+                    <line x1="460" y1="260" x2="455" y2="220" stroke="#555" stroke-width="5" data-page-node-id="x5HdZvmsKxcELkE2LFyGKI"/>
+                    <!-- 车把 -->
+                    <path d="M440,220 Q460,210 480,225" fill="none" stroke="#333" stroke-width="5" stroke-linecap="round" data-page-node-id="n45BNKwtk08IkMAUbiX5R3"/>
+                    <circle cx="480" cy="225" r="4" fill="#333" data-page-node-id="42JyH8XeB8SOjF7aBW2LSf"/>
+                    
+                    <!-- 座椅 -->
+                    <ellipse cx="285" cy="235" rx="25" ry="8" fill="#5D4037" data-page-node-id="lk91ryo74DtRUq612CuHvr"/>
+                    <rect x="280" y="228" width="10" height="15" fill="#333" data-page-node-id="plGASUeCLVwaxvYdKFRLRB"/>
+                </g>
+
+                <!-- 踏板组件 -->
+                <g class="pedal-assembly" data-page-node-id="oFsmADq9tFyRy60F0OS32B">
+                    <circle cx="380" cy="320" r="15" fill="#555" data-page-node-id="QbpyN6AVu1Y3Fry0MzTinZ"/>
+                    <line x1="380" y1="320" x2="380" y2="360" stroke="#777" stroke-width="4" data-page-node-id="lLKLDN6Ly8OAMAjAYtOTHu"/>
+                    <line x1="380" y1="320" x2="380" y2="280" stroke="#777" stroke-width="4" data-page-node-id="H97Gus8CLqkOYFeiMJU2xI"/>
+                    <rect x="365" y="355" width="30" height="10" rx="3" fill="#333" data-page-node-id="HZWtASCFDsx5I1KocFClwf"/>
+                    <rect x="365" y="275" width="30" height="10" rx="3" fill="#333" data-page-node-id="EaGhhowZamfHAfYRdqlC2J"/>
+                </g>
+
+                <!-- 鹈鹕主体 -->
+                <g class="pelican-body" data-page-node-id="RSP6XlyR0aRgC1pUHDOUWe">
+                    <!-- 尾巴 -->
+                    <path d="M220,220 Q180,200 170,230 Q190,250 230,240 Z" fill="white" stroke="#E0E0E0" stroke-width="1" data-page-node-id="m6mhWdHP39QfFlOc5K0VSZ"/>
+
+                    <!-- 身体 -->
+                    <ellipse cx="300" cy="210" rx="65" ry="50" fill="url(#pelicanBody)" stroke="#E0E0E0" stroke-width="1" data-page-node-id="8nA3PfwUnOQzuoG9ZnN57Q"/>
+                    
+                    <!-- 胸部羽毛细节 -->
+                    <path d="M270,240 Q290,260 320,250" fill="none" stroke="#E8E8E8" stroke-width="2" data-page-node-id="GNrbNi2Vu1Ks7CWIwMTNvV"/>
+                    <path d="M275,245 Q295,265 315,255" fill="none" stroke="#E8E8E8" stroke-width="1.5" data-page-node-id="jHIMuBj9w8ESQoaJxMZl0X"/>
+
+                    <!-- 脖子 -->
+                    <path d="M350,180 Q370,150 360,120" fill="none" stroke="white" stroke-width="28" stroke-linecap="round" data-page-node-id="l3agEMjFEMN5SSG9T96EyZ"/>
+                    <path d="M350,180 Q370,150 360,120" fill="none" stroke="#F5F5F5" stroke-width="28" stroke-linecap="round" opacity="0.5" data-page-node-id="uov8ZnwzP5Nmpy0qDKwd1u"/>
+
+                    <!-- 头部 -->
+                    <ellipse cx="360" cy="105" rx="30" ry="25" fill="white" stroke="#E0E0E0" stroke-width="1" data-page-node-id="qntMEGLMhDxtosBHRpBdAN"/>
+                    
+                    <!-- 头顶羽毛 -->
+                    <path d="M340,85 Q330,70 345,80" fill="none" stroke="#FFB74D" stroke-width="2" stroke-linecap="round" data-page-node-id="tWEXpAp6QXJ3AxGXqlyV4N"/>
+                    <path d="M350,82 Q345,65 355,78" fill="none" stroke="#FFB74D" stroke-width="2" stroke-linecap="round" data-page-node-id="QnY8ATim7qX1p7aqwdwjij"/>
+
+                    <!-- 眼睛 -->
+                    <circle cx="370" cy="98" r="8" fill="white" stroke="#333" stroke-width="1" data-page-node-id="Kf2InQPY79HFTTY07oYZJg"/>
+                    <circle cx="372" cy="98" r="4" fill="#333" data-page-node-id="OCyvh2EGZ2ZCQ0EjegbGBY"/>
+                    <circle cx="373" cy="97" r="1.5" fill="white" data-page-node-id="2gOlEDsr9wFxpyAGw4bBL4"/>
+                    
+                    <!-- 眉毛 -->
+                    <path d="M365,88 Q372,85 378,90" fill="none" stroke="#333" stroke-width="1.5" stroke-linecap="round" data-page-node-id="wH88dBlpZbIzhkRD5LuBQ9"/>
+
+                    <!-- 大嘴 -->
+                    <path d="M385,105 Q450,100 480,115 Q450,130 385,125 Z" fill="url(#beakGrad)" stroke="#F57C00" stroke-width="1" data-page-node-id="2YZlggEXSEM3WX5vj6NK3D"/>
+                    <!-- 下嘴 -->
+                    <path d="M385,125 Q440,130 470,125 Q440,140 385,135 Z" fill="#FFB74D" stroke="#F57C00" stroke-width="1" data-page-node-id="akdtmCUKYGgEcyn5NVuqKk"/>
+                    <!-- 嘴部纹理 -->
+                    <line x1="400" y1="108" x2="400" y2="122" stroke="#F57C00" stroke-width="0.5" data-page-node-id="B7kXZpG1Nc0AZHJg8iCZgP"/>
+                    <line x1="420" y1="107" x2="420" y2="123" stroke="#F57C00" stroke-width="0.5" data-page-node-id="OikfMGcToLnTt81P1DjL4y"/>
+                    <line x1="440" y1="109" x2="440" y2="126" stroke="#F57C00" stroke-width="0.5" data-page-node-id="mmFUltu8NHDdrX6h4uUulB"/>
+                    <line x1="460" y1="113" x2="460" y2="128" stroke="#F57C00" stroke-width="0.5" data-page-node-id="aCew2SDZ2cEQskceIDcqxg"/>
+
+                    <!-- 翅膀 -->
+                    <g class="wing" data-page-node-id="ZltEeDFaBYsTjFQZQbDvJE">
+                        <path d="M320,190 Q280,160 240,180 Q260,220 310,210 Z" fill="white" stroke="#E0E0E0" stroke-width="1" data-page-node-id="m0jOVO5If2Pznfrvglobeg"/>
+                        <!-- 翅膀羽毛层次 -->
+                        <path d="M300,185 Q270,165 245,180" fill="none" stroke="#E8E8E8" stroke-width="1.5" data-page-node-id="VMYpxisdQre8jo3GWElIpX"/>
+                        <path d="M295,195 Q265,175 248,188" fill="none" stroke="#E8E8E8" stroke-width="1.5" data-page-node-id="QZXsYR6lPhiPXpWS0nMHgL"/>
+                        <path d="M305,205 Q275,185 255,195" fill="none" stroke="#E8E8E8" stroke-width="1.5" data-page-node-id="zSp9QxXBXkWWoIkiHiI5Ad"/>
+                    </g>
+
+                    <!-- 左脚（踩踏板） -->
+                    <g class="left-leg" data-page-node-id="3dm7PfA2p0eBV93HfhoVvf">
+                        <line x1="365" y1="250" x2="380" y2="320" stroke="#FF9800" stroke-width="10" stroke-linecap="round" data-page-node-id="4VyBlB3cNAK9qvGqN4mcFD"/>
+                        <ellipse cx="380" cy="325" rx="15" ry="8" fill="#FF9800" data-page-node-id="G1Nc4y8kUpgwETyvj0ARIq"/>
+                        <path d="M370,328 L390,328" stroke="#F57C00" stroke-width="2" data-page-node-id="USdWqg1nBz40IXQGtwqOis"/>
+                    </g>
+
+                    <!-- 右脚（踩踏板） -->
+                    <g class="right-leg" data-page-node-id="ZTcxyiteAsJHLTBJwSEo6T">
+                        <line x1="345" y1="250" x2="380" y2="320" stroke="#FF9800" stroke-width="10" stroke-linecap="round" data-page-node-id="PPu96dqlX6zAGBU3easmVg"/>
+                        <ellipse cx="380" cy="325" rx="15" ry="8" fill="#FF9800" data-page-node-id="phcLPFiUIASfzeZ6Q7ipRm"/>
+                        <path d="M370,328 L390,328" stroke="#F57C00" stroke-width="2" data-page-node-id="MqQJiLJo1kokpfjkeErxvr"/>
+                    </g>
+
+                    <!-- 腹部 -->
+                    <ellipse cx="300" cy="240" rx="35" ry="25" fill="#FAFAFA" opacity="0.6" data-page-node-id="SSTgF9OJ9TNTaOXsQI3YK2"/>
+                </g>
+
+            </g>
+
+            <!-- 前景草丛 -->
+            <g transform="translate(0, 450)" data-page-node-id="hPMtG5Ft6L2OKwckRhBEK6">
+                <path d="M50,50 Q55,20 60,50" stroke="#388E3C" stroke-width="3" fill="none" data-page-node-id="lzFPC3iVVmv72suHoIURPD"/>
+                <path d="M60,50 Q65,15 70,50" stroke="#4CAF50" stroke-width="2" fill="none" data-page-node-id="CAAgitzckUhYmqliFwvD6O"/>
+                <path d="M45,50 Q50,25 55,50" stroke="#66BB6A" stroke-width="2.5" fill="none" data-page-node-id="LsmQrFHrD6dd1SFZIzHsZI"/>
+                
+                <path d="M250,50 Q255,20 260,50" stroke="#388E3C" stroke-width="3" fill="none" data-page-node-id="U9jf5zoZDN0ftfFEm0qW70"/>
+                <path d="M260,50 Q265,15 270,50" stroke="#4CAF50" stroke-width="2" fill="none" data-page-node-id="0X4qSCv9D4WFC21WySdJOv"/>
+                
+                <path d="M450,50 Q455,20 460,50" stroke="#388E3C" stroke-width="3" fill="none" data-page-node-id="JlSm1gSHcM7gSxzx1mF6Y3"/>
+                <path d="M460,50 Q465,15 470,50" stroke="#66BB6A" stroke-width="2.5" fill="none" data-page-node-id="XKpdYn8v15qT4bQk8t0tQB"/>
+                <path d="M470,50 Q475,25 480,50" stroke="#4CAF50" stroke-width="2" fill="none" data-page-node-id="LsSJ81UOEJPu7I56DoaQCo"/>
+                
+                <path d="M650,50 Q655,20 660,50" stroke="#388E3C" stroke-width="3" fill="none" data-page-node-id="R26Q3ZJH12vBWFfaVrwsDA"/>
+                <path d="M660,50 Q665,15 670,50" stroke="#4CAF50" stroke-width="2" fill="none" data-page-node-id="1sbkQC75sp6CbpGhwBzk61"/>
+                
+                <path d="M800,50 Q805,20 810,50" stroke="#388E3C" stroke-width="3" fill="none" data-page-node-id="XbWs4HVh88wzurBYHoZv2e"/>
+                <path d="M810,50 Q815,15 820,50" stroke="#66BB6A" stroke-width="2.5" fill="none" data-page-node-id="Df9ElTbbvajQCYzy6tT5U4"/>
+                <path d="M820,50 Q825,25 830,50" stroke="#4CAF50" stroke-width="2" fill="none" data-page-node-id="Y9mDot7PrT6afzQbHimIaA"/>
+            </g>
+
+            <!-- 标题文字 -->
+            <text x="450" y="480" text-anchor="middle" font-size="16" fill="#2E7D32" font-weight="bold" opacity="0.8" data-page-node-id="AHH0yXh7xjmPg4USQCW7kM">
+                鹈鹕的骑行之旅 🚴‍♂️
+            </text>
+        </svg>
+
+        <div class="info-panel" data-page-node-id="nKDu60hzrRladhiU5BUB4o">
+            <strong data-page-node-id="vvaQge8eALGbWFDKXQ03hs">模型：</strong>Kimi-k2.6<br data-page-node-id="9ESbDGC7JKSYphmol32cbF">
+            <strong data-page-node-id="YiQj28B5iaCODRRw34FcOM">生成时间：</strong>2026-09-07<br data-page-node-id="vKJWR8awyi0UajCGyeaA0G">
+            <small data-page-node-id="Oz61w9GlNSjsuDawcRGGQd">纯 SVG + CSS 动画，无需 JavaScript</small>
+        </div>
+    </div>
+
+    <script>
+        // 添加一些简单的交互效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.querySelector('.scene-container');
+            
+            // 点击场景加速
+            let speedMultiplier = 1;
+            container.addEventListener('click', function() {
+                speedMultiplier = speedMultiplier === 1 ? 2 : 1;
+                
+                // 更新所有动画速度
+                const wheels = document.querySelectorAll('.wheel');
+                const pedals = document.querySelector('.pedal-assembly');
+                const legs = document.querySelectorAll('.left-leg, .right-leg');
+                const roadLines = document.querySelector('.road-line');
+                const trees = document.querySelector('.tree');
+                
+                const duration = speedMultiplier === 2 ? '0.5s' : '1s';
+                const roadDuration = speedMultiplier === 2 ? '0.5s' : '1s';
+                const treeDuration = speedMultiplier === 2 ? '2s' : '4s';
+                
+                wheels.forEach(wheel => wheel.style.animationDuration = duration);
+                if (pedals) pedals.style.animationDuration = duration;
+                legs.forEach(leg => leg.style.animationDuration = duration);
+                if (roadLines) roadLines.style.animationDuration = roadDuration;
+                if (trees) trees.style.animationDuration = treeDuration;
+            });
+
+            // 鼠标移动视差效果
+            document.addEventListener('mousemove', function(e) {
+                const mouseX = e.clientX / window.innerWidth;
+                const mouseY = e.clientY / window.innerHeight;
+                
+                const clouds = document.querySelectorAll('.cloud');
+                clouds.forEach((cloud, index) => {
+                    const offset = (index + 1) * 5;
+                    cloud.style.transform = `translateX(${mouseX * offset}px)`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

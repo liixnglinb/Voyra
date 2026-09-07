@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, GitBranch, Sparkles,
+  ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, GitBranch, Sparkles, Film,
 } from 'lucide-react';
 
 /**
@@ -13,7 +13,7 @@ import {
  */
 
 const FULLSCREEN_PATHS = ['/', '/articles', '/mindmap', '/agents', '/uikit'];
-const WIDE_WORKSPACE_PATHS = ['/mindmap', '/timetable', '/learning', '/baby-care', '/skills'];
+const WIDE_WORKSPACE_PATHS = ['/mindmap', '/timetable', '/learning', '/baby-care', '/skills', '/pelican-gallery'];
 
 const TOOL_META = {
   '/prompts': {
@@ -36,6 +36,9 @@ const TOOL_META = {
   },
   '/skills': {
     label: 'Skill 热榜', sub: 'GitHub 优质 Skill · 每周热点 · 星数排行，每日自动刷新', Icon: Sparkles, accent: '#D4A930',
+  },
+  '/pelican-gallery': {
+    label: 'AI 动画画廊', sub: '19 个 AI 模型生成的同题 SVG 动画，一页对比', Icon: Film, accent: '#A48830',
   },
 };
 

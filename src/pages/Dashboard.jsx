@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Github,
+  ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Film, Github,
   Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Shapes,
   NotebookPen, Route, Sparkles, Star,
 } from 'lucide-react';
@@ -12,12 +12,13 @@ import { ARTICLES } from '../data/articles';
 const FEATURED = [
   { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
   { to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
-  { to: '/prompts', no: '03', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
-  { to: '/uikit', no: '04', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
-  { to: '/skills', no: '05', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
-  { to: '/agents', no: '06', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
-  { to: '/mindmap', no: '07', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
-  { to: '/baby-care', no: '08', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
+  { to: '/pelican-gallery', no: '03', name: 'AI 动画画廊', desc: '同一题「鹈鹕骑自行车」交给 19 个 AI 模型分别生成，动效风格一页对比。', cta: '浏览画廊', Icon: Film, art: 'pelican' },
+  { to: '/prompts', no: '04', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
+  { to: '/uikit', no: '05', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
+  { to: '/skills', no: '06', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
+  { to: '/agents', no: '07', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
+  { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
+  { to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
 ];
 
 
@@ -185,7 +186,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4 };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3 };
 
 function FeatureArt({ type }) {
   const [active, setActive] = useState(0);
@@ -290,6 +291,51 @@ function FeatureArt({ type }) {
       <div className="vr-toolbox-drive"><span>C: 系统盘</span><i className={active ? 'is-done' : ''} style={{ '--fill': '62%' }}><b /></i><em>{active ? '已清理 3.6 GB' : '已用 62% · 可清理 18.4 GB'}</em></div>
       <div className="vr-toolbox-cats">{cats.map((c, index) => <button key={c[0]} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><span>{c[0]}</span><em>{c[1]}</em></button>)}</div>
       <div className="vr-toolbox-foot"><b>9 大功能</b><span>扫描 · 缓存清理 · 目录百科 · 重复文件</span></div>
+    </div>;
+  }
+
+  if (type === 'pelican') {
+    const models = ['豆包 2.1 Turbo', 'Qwen3.8-Max', 'GLM-5.1', 'Kimi-K3', 'DeepSeek-V4-Pro'];
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-pelican-art">
+      <style>{`
+        .vr-pelican-art .mini-spin{transform-box:view-box;transform-origin:center;animation:mini-spin 1s linear infinite}
+        @keyframes mini-spin{to{transform:rotate(360deg)}}
+        .vr-pelican-art .mini-cloud{animation:mini-drift 9s linear infinite}
+        @keyframes mini-drift{from{transform:translateX(-46px)}to{transform:translateX(330px)}}
+        .vr-pelican-art .mini-wing{transform-box:view-box;transform-origin:110px 58px;animation:mini-flap .85s ease-in-out infinite alternate}
+        @keyframes mini-flap{from{transform:rotate(-12deg)}to{transform:rotate(9deg)}}
+        .vr-pelican-art .vr-pelican-stage{display:grid;place-items:center;padding:10px 12px 12px}
+        .vr-pelican-art .vr-pelican-stage svg{display:block;width:100%;height:auto}
+        .vr-pelican-art .mini-bob{animation:mini-bob .8s ease-in-out infinite alternate}
+        @keyframes mini-bob{from{transform:translateY(0)}to{transform:translateY(-2.5px)}}
+      `}</style>
+      <div className="vr-preview-top"><Film size={15} /><span>同题动画对比</span><b>{models[active]} 等 {19} 个模型</b></div>
+      <div className="vr-pelican-stage">
+        <svg viewBox="0 0 300 150" role="img" aria-label="迷你鹈鹕骑自行车动画">
+          <defs><linearGradient id="miniSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#a5dcff"/><stop offset="1" stopColor="#eaf7ff"/></linearGradient></defs>
+          <rect width="300" height="150" rx="7" fill="url(#miniSky)"/>
+          <circle cx="272" cy="24" r="11" fill="#ffd84d"/>
+          <g className="mini-cloud" opacity=".9"><ellipse cx="40" cy="26" rx="20" ry="8" fill="#fff"/><ellipse cx="58" cy="20" rx="14" ry="8" fill="#fff"/></g>
+          <rect y="122" width="300" height="28" fill="#82c95a"/>
+          <rect y="128" width="300" height="22" fill="#707984"/>
+          <line x1="0" y1="140" x2="300" y2="140" stroke="#f6d74b" strokeWidth="3" strokeDasharray="16 10"/>
+          <g className="mini-spin" stroke="#9aa4b0" strokeWidth="2"><circle cx="70" cy="112" r="20" fill="#f7f9fb" stroke="#333" strokeWidth="4"/><line x1="70" y1="92" x2="70" y2="132"/><line x1="50" y1="112" x2="90" y2="112"/><line x1="56" y1="98" x2="84" y2="126"/><line x1="84" y1="98" x2="56" y2="126"/></g>
+          <g className="mini-spin" stroke="#9aa4b0" strokeWidth="2"><circle cx="218" cy="112" r="20" fill="#f7f9fb" stroke="#333" strokeWidth="4"/><line x1="218" y1="92" x2="218" y2="132"/><line x1="198" y1="112" x2="238" y2="112"/><line x1="204" y1="98" x2="232" y2="126"/><line x1="232" y1="98" x2="204" y2="126"/></g>
+          <g stroke="#d93636" strokeWidth="4" strokeLinecap="round" fill="none"><line x1="70" y1="112" x2="146" y2="112"/><line x1="70" y1="112" x2="108" y2="74"/><line x1="108" y1="74" x2="146" y2="112"/><line x1="108" y1="74" x2="206" y2="70"/><line x1="146" y1="112" x2="206" y2="70"/><line x1="206" y1="70" x2="218" y2="112"/></g>
+          <line x1="108" y1="74" x2="108" y2="66" stroke="#555" strokeWidth="3" strokeLinecap="round"/>
+          <ellipse cx="104" cy="70" rx="9" ry="3.4" fill="#2f333b"/>
+          <g className="mini-bob">
+            <g fill="#fff" stroke="#cfd7df" strokeWidth="1.2"><ellipse cx="112" cy="46" rx="27" ry="19"/><circle cx="140" cy="26" r="11"/></g>
+            <path d="M124,38 C122,26 128,18 137,16 L148,20 C141,30 138,38 134,44 Z" fill="#fff" stroke="#cfd7df" strokeWidth="1"/>
+            <path d="M137,24 Q165,19 182,30 Q183,33 178,34 Q162,30 137,33 Z" fill="#f9a825" stroke="#d98417" strokeWidth=".8"/>
+            <path d="M137,33 Q162,35 176,33 Q172,48 152,47 Q137,46 137,33 Z" fill="#ffd79a" stroke="#e09a3c" strokeWidth=".8"/>
+            <g className="mini-wing"><path d="M112,34 C120,22 140,24 142,38 C134,46 116,44 112,34 Z" fill="#eef3f8" stroke="#c3cdd6" strokeWidth="1"/></g>
+            <circle cx="143" cy="23" r="2" fill="#23272f"/>
+            <path d="M110,42 Q104,46 96,44" fill="none" stroke="#e63946" strokeWidth="3" strokeLinecap="round"/>
+          </g>
+          <g stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity=".7"><line x1="16" y1="52" x2="34" y2="52"/><line x1="10" y1="72" x2="30" y2="72"/></g>
+        </svg>
+      </div>
     </div>;
   }
 

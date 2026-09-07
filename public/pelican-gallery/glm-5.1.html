@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="z08VF5TkXCOdwcnIGXWTCq">
+<head data-page-node-id="EG3x1KBFoGPqV2pbIgH5xZ">
+    <meta charset="UTF-8" data-page-node-id="lXbCcsFwZ3ArVSVhqjZ6qB">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="f1EWcEDmtnltqtEc51gT6i">
+    <title>鹈鹕骑自行车 | SVG Animation | GLM-5.1</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #0d1117;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .scene-wrapper { width: 95vmin; max-width: 960px; }
+        svg { width: 100%; height: auto; display: block; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+        .model-tag { margin-top: 14px; color: #8b949e; font-size: 13px; text-align: center; letter-spacing: .5px; }
+        .model-tag span { color: #58a6ff; font-weight: 600; }
+
+        /* ===== Keyframes ===== */
+
+        @keyframes wheelSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes pedalSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        @keyframes bodyBob   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+        @keyframes wingFlap  { 0%,100%{transform:rotate(0deg)} 35%{transform:rotate(-12deg)} 70%{transform:rotate(4deg)} }
+        @keyframes cloudDrift{ from{transform:translateX(0)} to{transform:translateX(-1100px)} }
+        @keyframes dashScroll{ from{transform:translateX(0)} to{transform:translateX(-80px)} }
+        @keyframes pouchWobble{ 0%,100%{transform:scaleY(1) scaleX(1)} 50%{transform:scaleY(1.14) scaleX(.95)} }
+        @keyframes eyeBlink  { 0%,90%,100%{transform:scaleY(1)} 95%{transform:scaleY(.08)} }
+        @keyframes speedWhoosh{ 0%{transform:translateX(0);opacity:.55} 100%{transform:translateX(-130px);opacity:0} }
+        @keyframes fishWiggle{ 0%,100%{transform:rotate(0)} 25%{transform:rotate(5deg)} 75%{transform:rotate(-5deg)} }
+        @keyframes dustDrift { 0%{transform:translate(0,0);opacity:.45} 100%{transform:translate(-45px,-18px);opacity:0} }
+        @keyframes tailWag   { 0%,100%{transform:rotate(0)} 50%{transform:rotate(6deg)} }
+
+        /* ===== Animation classes ===== */
+
+        .wheel-rear   { animation: wheelSpin 1.2s linear infinite; transform-origin: 280px 430px; }
+        .wheel-front  { animation: wheelSpin 1.2s linear infinite; transform-origin: 560px 430px; }
+        .pedal-group  { animation: pedalSpin 1.2s linear infinite; transform-origin: 345px 425px; }
+        .pelican-group{ animation: bodyBob .6s ease-in-out infinite; }
+        .wing-anim    { animation: wingFlap 2s ease-in-out infinite; transform-origin: 348px 308px; }
+        .cloud-l1     { animation: cloudDrift 26s linear infinite; }
+        .cloud-l2     { animation: cloudDrift 36s linear infinite; animation-delay:-14s; }
+        .cloud-l3     { animation: cloudDrift 32s linear infinite; animation-delay:-22s; }
+        .road-marks   { animation: dashScroll .4s linear infinite; }
+        .beak-pouch   { animation: pouchWobble 1.2s ease-in-out infinite; transform-origin: 548px 248px; }
+        .pelican-eye  { animation: eyeBlink 3.5s ease-in-out infinite; transform-origin: 506px 215px; }
+        .whoosh-1     { animation: speedWhoosh .55s linear infinite; }
+        .whoosh-2     { animation: speedWhoosh .55s linear infinite .18s; }
+        .whoosh-3     { animation: speedWhoosh .55s linear infinite .36s; }
+        .basket-fish  { animation: fishWiggle .9s ease-in-out infinite; transform-origin: 548px 292px; }
+        .dust-1       { animation: dustDrift 1s ease-out infinite; }
+        .dust-2       { animation: dustDrift 1s ease-out infinite .3s; }
+        .dust-3       { animation: dustDrift 1s ease-out infinite .6s; }
+        .tail-wag     { animation: tailWag .8s ease-in-out infinite; transform-origin: 245px 328px; }
+    </style>
+</head>
+<body data-page-node-id="rnFmJRRwYwd1PemiNca8QF">
+<div class="scene-wrapper" data-page-node-id="EUdujegkgoj1qe9YZqRqpK">
+<svg viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" data-page-node-id="KRNFZFVfHtboCmsSp9C76u">
+<defs data-page-node-id="phMy741U4DCf1bEJdomY1A">
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1" data-page-node-id="1xHuRfKG6ADLqCy6HlZ9Zg">
+        <stop offset="0%"   stop-color="#29B6F6" data-page-node-id="fcRDled8BmXFjIIBt1Fqgp"/>
+        <stop offset="55%"  stop-color="#81D4FA" data-page-node-id="3GkJHtNTqFY0Wg6gJhMfiC"/>
+        <stop offset="100%" stop-color="#E1F5FE" data-page-node-id="6Vtln2NwUpx7ievENbwklo"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%" data-page-node-id="zY9drkb8o87HdjR1O6Nws5">
+        <stop offset="0%"   stop-color="#FFF9C4" data-page-node-id="soYUEBNnAIyS2nrqns9M7j"/>
+        <stop offset="50%"  stop-color="#FFE082" stop-opacity=".55" data-page-node-id="zOQFTaMernRKUOEWzDkjMX"/>
+        <stop offset="100%" stop-color="#FFD54F" stop-opacity="0" data-page-node-id="dHIPHMBPXyCDABJsdcBKy6"/>
+    </radialGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1" data-page-node-id="6rDXBeEbnGpLxyhyOn4LcH">
+        <stop offset="0%"   stop-color="#66BB6A" data-page-node-id="cBOwGEjmQWxZDYp78wzoU8"/>
+        <stop offset="100%" stop-color="#2E7D32" data-page-node-id="CghNQ4c98QXfWujp8mMOqN"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" y1="0" x2="0" y2="1" data-page-node-id="2hWAVl2VT8gipoiq9Be3YL">
+        <stop offset="0%"   stop-color="#8D6E63" data-page-node-id="yxKYCmpeSFVFHkXm0esRv7"/>
+        <stop offset="50%"  stop-color="#795548" data-page-node-id="KFEG8XOhC4YIjv0UMf4RAw"/>
+        <stop offset="100%" stop-color="#6D4C41" data-page-node-id="COMWDfXv98Z5y4pqSHvQow"/>
+    </linearGradient>
+    <linearGradient id="beak" x1="0" y1="0" x2="1" y2=".4" data-page-node-id="IsQJUpTkd8NUYUphVKWe5D">
+        <stop offset="0%"   stop-color="#FFB74D" data-page-node-id="XvMvss5t17sTh1zmmBiCDD"/>
+        <stop offset="100%" stop-color="#E65100" data-page-node-id="hFP6MQIUTKWQsK0CiT7Y9C"/>
+    </linearGradient>
+    <radialGradient id="body" cx="38%" cy="38%" r="62%" data-page-node-id="Uwr4a3wKi7pI6rBEFQTx1g">
+        <stop offset="0%"   stop-color="#FFFFFF" data-page-node-id="mcqzxNJcMzPRp8aWbeQ4v1"/>
+        <stop offset="100%" stop-color="#E0E0E0" data-page-node-id="HYd8VIki9WLOo5oT9CGg40"/>
+    </radialGradient>
+</defs>
+
+<!-- ==================== BACKGROUND ==================== -->
+
+<!-- Sky -->
+<rect width="900" height="600" fill="url(#sky)" data-page-node-id="HclEmLSYEbRlPLGFVlF6Zn"/>
+
+<!-- Sun -->
+<circle cx="790" cy="85" r="90" fill="url(#sunGlow)" data-page-node-id="FzeXXU3haenM5QM9lERbtT"/>
+<circle cx="790" cy="85" r="38" fill="#FFD54F" data-page-node-id="UFoGJeLqNrF6FltaUBk39b">
+    <animate attributeName="r" values="38;42;38" dur="3s" repeatCount="indefinite" data-page-node-id="wPv7Mq6yBEZSZvOihMeGOL"/>
+</circle>
+<circle cx="790" cy="85" r="28" fill="#FFECB3" opacity=".7" data-page-node-id="LhqhwUdG9zEkM2OKFE91Za"/>
+
+<!-- Clouds -->
+<g class="cloud-l1" opacity=".88" data-page-node-id="V3XA9DKoQ4lnF2w1hlQAJz">
+    <g transform="translate(90,65)" data-page-node-id="fY8SdIgEMeCSxceoj0aEfE">
+        <ellipse cx="0" cy="0" rx="48" ry="22" fill="#fff" data-page-node-id="VUHIBK26d7WNOwAAehSXK9"/>
+        <ellipse cx="38" cy="-9" rx="36" ry="20" fill="#fff" data-page-node-id="zxdfaIeIJKDkKrcIDqxBHb"/>
+        <ellipse cx="-28" cy="5" rx="32" ry="17" fill="#fff" data-page-node-id="ZbyqVetjHi3yD5AqJlw3HX"/>
+        <ellipse cx="10" cy="10" rx="40" ry="14" fill="#FAFAFA" data-page-node-id="6eGPM5yEnxFfmz24DqbVaC"/>
+    </g>
+    <g transform="translate(1190,55)" data-page-node-id="93mcoWT7sOAh22PKg3SzMv">
+        <ellipse cx="0" cy="0" rx="48" ry="22" fill="#fff" data-page-node-id="dPG4o1PT0biakHTlcDa0e5"/>
+        <ellipse cx="38" cy="-9" rx="36" ry="20" fill="#fff" data-page-node-id="FuQXKBCjHvu5fZlX8EMB4L"/>
+        <ellipse cx="-28" cy="5" rx="32" ry="17" fill="#fff" data-page-node-id="dccMETIpqh0T0n8YKFhjkZ"/>
+    </g>
+</g>
+<g class="cloud-l2" opacity=".68" data-page-node-id="3my2wgyvTFV5nGwccHU8hA">
+    <g transform="translate(360,118)" data-page-node-id="EUSOWVx8okaEOcgCfkFRIc">
+        <ellipse cx="0" cy="0" rx="40" ry="18" fill="#fff" data-page-node-id="dYOMXxYAgX5zGvsWGBYMdL"/>
+        <ellipse cx="30" cy="-5" rx="28" ry="15" fill="#fff" data-page-node-id="5xTDyWoryji0U3qE5qq7G9"/>
+        <ellipse cx="-20" cy="4" rx="24" ry="13" fill="#fff" data-page-node-id="W2U855sIqRcQ8v00GIII9i"/>
+    </g>
+    <g transform="translate(1460,112)" data-page-node-id="AyoMjDWTM6VpWBXZqJTATt">
+        <ellipse cx="0" cy="0" rx="40" ry="18" fill="#fff" data-page-node-id="64lp6HTKtXZoFtewUiM53V"/>
+        <ellipse cx="30" cy="-5" rx="28" ry="15" fill="#fff" data-page-node-id="H8f1DAntqxkgvySq1GekAQ"/>
+    </g>
+</g>
+<g class="cloud-l3" opacity=".52" data-page-node-id="uG5Qr04CqhXAIEnTxJRFdN">
+    <g transform="translate(620,48)" data-page-node-id="fX044V1xUilHaM112k9hqd">
+        <ellipse cx="0" cy="0" rx="32" ry="14" fill="#fff" data-page-node-id="j7x43LESIpiY04UP9SVTrl"/>
+        <ellipse cx="22" cy="-3" rx="22" ry="12" fill="#fff" data-page-node-id="bprbYUiDKnib9QF07HIEe8"/>
+    </g>
+    <g transform="translate(1720,42)" data-page-node-id="myp4GCwIUPczFq7Rjb9BXG">
+        <ellipse cx="0" cy="0" rx="32" ry="14" fill="#fff" data-page-node-id="VOALbnRMmE4F01FCT9gdQz"/>
+        <ellipse cx="22" cy="-3" rx="22" ry="12" fill="#fff" data-page-node-id="90rIb7Rf1RocwgKSafyORl"/>
+    </g>
+</g>
+
+<!-- Distant hills -->
+<path d="M-200 490 Q-50 440 100 470 Q250 425 400 458 Q550 415 700 450 Q850 430 1000 462 L1000 500 L-200 500Z" fill="#81C784" opacity=".38" data-page-node-id="77Px6P5iOaZ1dfYQWxAnoS"/>
+<path d="M-100 498 Q80 458 250 478 Q420 448 580 474 Q730 442 900 468 L900 500 L-100 500Z" fill="#66BB6A" opacity=".48" data-page-node-id="2Ag14cPcPh1GWsjcJTPC09"/>
+
+<!-- Background trees -->
+<g opacity=".52" data-page-node-id="UXYo26iphPvG8RoYizPwHh">
+    <rect x="118" y="455" width="8" height="36" rx="2" fill="#5D4037" data-page-node-id="dZDwADoDk4wXjVmYcZlqJV"/>
+    <circle cx="122" cy="440" r="20" fill="#43A047" data-page-node-id="0wIihL3CGJ2nh6S7mxN22K"/>
+    <circle cx="113" cy="446" r="15" fill="#388E3C" data-page-node-id="e9Kc1b0yRc7qwaKPRZZ2c4"/>
+    <circle cx="132" cy="442" r="14" fill="#2E7D32" data-page-node-id="LDHDgJEGvIG1eMSRwIQm5T"/>
+</g>
+<g opacity=".45" data-page-node-id="wHB5cm8lad240HcnTdlrHl">
+    <rect x="718" y="458" width="7" height="32" rx="2" fill="#5D4037" data-page-node-id="TiDoIipc8bDIuEXgn7LnJj"/>
+    <circle cx="722" cy="444" r="18" fill="#43A047" data-page-node-id="6Xfp1XjHUZEk59rfoaPIfv"/>
+    <circle cx="714" cy="449" r="13" fill="#388E3C" data-page-node-id="oG0Ab7rkNR1Fn2fasPRXTK"/>
+</g>
+<g opacity=".38" data-page-node-id="4jovMdtOOOGH7zfeEFgHs9">
+    <rect x="450" y="462" width="6" height="28" rx="2" fill="#5D4037" data-page-node-id="LvOVXCrDxclgZY5EI7xGRa"/>
+    <circle cx="453" cy="450" r="15" fill="#43A047" data-page-node-id="haE6eD6u4ld1hdaDy5Azi3"/>
+    <circle cx="446" cy="454" r="11" fill="#388E3C" data-page-node-id="x4YZDsXz9LQsMpYIQGvq3l"/>
+</g>
+
+<!-- Ground -->
+<rect x="0" y="485" width="900" height="115" fill="url(#grass)" data-page-node-id="E3IC3ZVPPxf3C7DEgPWQQE"/>
+
+<!-- Grass blades on top edge -->
+<path d="M0 485 Q15 478 30 485 Q45 478 60 485 Q75 478 90 485 Q105 478 120 485 Q135 478 150 485 Q165 478 180 485 Q195 478 210 485 Q225 478 240 485 Q255 478 270 485 Q285 478 300 485 Q315 478 330 485 Q345 478 360 485 Q375 478 390 485 Q405 478 420 485 Q435 478 450 485 Q465 478 480 485 Q495 478 510 485 Q525 478 540 485 Q555 478 570 485 Q585 478 600 485 Q615 478 630 485 Q645 478 660 485 Q675 478 690 485 Q705 478 720 485 Q735 478 750 485 Q765 478 780 485 Q795 478 810 485 Q825 478 840 485 Q855 478 870 485 Q885 478 900 485" fill="#4CAF50" opacity=".7" data-page-node-id="aGvpVB0IJ2DpNeAQCeImx2"/>
+
+<!-- Road -->
+<rect x="0" y="490" width="900" height="45" fill="url(#road)" data-page-node-id="DmBeGLB5wRjqYhAtXAsBRD"/>
+<line x1="0" y1="491" x2="900" y2="491" stroke="#A1887F" stroke-width="2.5" data-page-node-id="Kvk9mdNIo89BKqBy02xqrC"/>
+<line x1="0" y1="534" x2="900" y2="534" stroke="#A1887F" stroke-width="2.5" data-page-node-id="NGfuw106owsHpskL0HqQDN"/>
+
+<!-- Road center dashes (scrolling) -->
+<g class="road-marks" data-page-node-id="Niaw4jctB1Ddb4WV951BIl">
+    <rect x="-80"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="xWG4QTbvhQOAbQdaVwMDEA"/>
+    <rect x="-30"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="HcXqPr3XQVSSPsl7gxzpMr"/>
+    <rect x="20"   y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="e1WptwhP59RHheyCyU4eyr"/>
+    <rect x="70"   y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="FoiE7ASHJYFFPeQWHQXKAa"/>
+    <rect x="120"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="lfnkOEDgwhwhlSG0F8RmQc"/>
+    <rect x="170"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="KkkpjBi7yaKaCysoLbwQBk"/>
+    <rect x="220"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="1rSgwpxz5e9c3vzDfpCh9B"/>
+    <rect x="270"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="nr1mLxFgch59T9LMW4IhfQ"/>
+    <rect x="320"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="hOrWCmOuuZwCIAFCwPjpwX"/>
+    <rect x="370"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="W1ZdFkeeV0cWktOX2xhQwr"/>
+    <rect x="420"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="hhFDzgjDRxWJTZyM1kxs2X"/>
+    <rect x="470"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="cEA5NpwRBrQWHlUkOv4ctQ"/>
+    <rect x="520"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="kr1fapus4OVTk6AJZpwAsy"/>
+    <rect x="570"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="Y1pOltltjSAQsskP2LAcjN"/>
+    <rect x="620"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="ZNSzpw7zArWeiYDTQh6jgf"/>
+    <rect x="670"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="yMvNSrqhhN2jHnEKqHfkJB"/>
+    <rect x="720"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="lXcCBkXI8vDoRETv3MUCtQ"/>
+    <rect x="770"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="x0X1jtPgasAoVEmEVhJCDX"/>
+    <rect x="820"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="XGCtwDIeqxFu6q6HGkjYEh"/>
+    <rect x="870"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="sUdnSK1UEH0cLMCJpJE2Qg"/>
+    <rect x="920"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="UTSP3esEnmKHNsxECHKUgl"/>
+    <rect x="970"  y="511" width="30" height="3" rx="1.5" fill="#FFE082" opacity=".75" data-page-node-id="8NZDH2FTavMkh30icu6QrD"/>
+</g>
+
+<!-- Flowers -->
+<g opacity=".75" data-page-node-id="5kzt1EXTwsSoS2EX9cLEWB">
+    <circle cx="55"  cy="548" r="5"   fill="#F48FB1" data-page-node-id="wNDuaoFx8gDzcy9gXIRbRk"/><circle cx="57"  cy="546" r="2.5" fill="#FCE4EC" data-page-node-id="MaDDOUDs20PsCoxBPs9Oyl"/>
+    <circle cx="155" cy="555" r="4"   fill="#CE93D8" data-page-node-id="kFjgAFPu44cxKOZ9JJcQX9"/><circle cx="157" cy="553" r="2"   fill="#F3E5F5" data-page-node-id="LAtwsSblqHwJfaNuUFGZqu"/>
+    <circle cx="775" cy="550" r="5"   fill="#FFAB91" data-page-node-id="Mke0rR1PlYFvWUg28YgcsU"/><circle cx="777" cy="548" r="2.5" fill="#FBE9E7" data-page-node-id="ry7QmyOcAB0TL6GklOPEF7"/>
+    <circle cx="855" cy="558" r="4"   fill="#80DEEA" data-page-node-id="y8DIKDAKgRLmXgSwxcroTj"/><circle cx="857" cy="556" r="2"   fill="#E0F7FA" data-page-node-id="BW40HD3xjC8NSKi1kLHGXY"/>
+    <circle cx="380" cy="552" r="3.5" fill="#A5D6A7" data-page-node-id="7bmHOx0SUq4360HQlJsYTW"/><circle cx="382" cy="550" r="1.8" fill="#E8F5E9" data-page-node-id="AX4vxcPbCFzuz4XXztWx0i"/>
+</g>
+
+<!-- ==================== BICYCLE ==================== -->
+
+<!-- Shadow on road -->
+<ellipse cx="420" cy="532" rx="165" ry="8" fill="rgba(0,0,0,.12)" data-page-node-id="ESEGSTKJcpsXTLBXwejkFQ"/>
+
+<!-- Chain ring -->
+<circle cx="345" cy="425" r="18" fill="none" stroke="#888" stroke-width="3" data-page-node-id="YahgmCnOAv72Ah87Hv54B2"/>
+<circle cx="345" cy="425" r="12" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="3,3" data-page-node-id="Bp8iucgclREyZ7KFPFEF8c"/>
+<circle cx="345" cy="425" r="5"  fill="#AAA" stroke="#888" stroke-width="1.5" data-page-node-id="izMPReaEinK6CpmU8J5od3"/>
+
+<!-- Chain (simplified) -->
+<path d="M345 443 L280 438" fill="none" stroke="#777" stroke-width="2" stroke-dasharray="2,2" data-page-node-id="MfL8j2sOWmDKqS65zHLDKC"/>
+<path d="M345 407 L280 422" fill="none" stroke="#777" stroke-width="2" stroke-dasharray="2,2" data-page-node-id="QJZ4Wi0LARnAt5yojCDrEK"/>
+
+<!-- Rear wheel -->
+<g class="wheel-rear" data-page-node-id="TrxTEIT8GfJcIVDXYXZqB3">
+    <circle cx="280" cy="430" r="60" fill="none" stroke="#37474F" stroke-width="7" data-page-node-id="CCH0v1FFf8NWoLolenJRb9"/>
+    <circle cx="280" cy="430" r="56" fill="none" stroke="#546E7A" stroke-width="1.5" data-page-node-id="g0hOKAMOF8VHUnF3RIWjjv"/>
+    <circle cx="280" cy="430" r="52" fill="none" stroke="#455A64" stroke-width=".5" data-page-node-id="lMKUBLq4QIwL8CXZsAlEFE"/>
+    <!-- 8 spokes -->
+    <line x1="280" y1="370" x2="280" y2="490" stroke="#B0BEC5" stroke-width="1" data-page-node-id="6yCGu4Q7G1DdtF9E0yq2BY"/>
+    <line x1="220" y1="430" x2="340" y2="430" stroke="#B0BEC5" stroke-width="1" data-page-node-id="8yywECGX61VOpgv0VP0VS5"/>
+    <line x1="238" y1="388" x2="322" y2="472" stroke="#B0BEC5" stroke-width="1" data-page-node-id="RQuDmXuHKAKBE8c4jq86RF"/>
+    <line x1="322" y1="388" x2="238" y2="472" stroke="#B0BEC5" stroke-width="1" data-page-node-id="HQVimFXC1sLK7g1yRY0uRr"/>
+    <line x1="252" y1="378" x2="308" y2="482" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="0gNbGWwMjdUF1xXEfNyKH5"/>
+    <line x1="308" y1="378" x2="252" y2="482" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="CeTTPqqYzDftsrk8urGGCX"/>
+    <line x1="226" y1="408" x2="334" y2="452" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="pcy9ovBlFL8xT3F1tIeW26"/>
+    <line x1="334" y1="408" x2="226" y2="452" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="ecmLxSuf0VrZCDITZXvROW"/>
+    <circle cx="280" cy="430" r="7" fill="#90A4AE" stroke="#546E7A" stroke-width="2" data-page-node-id="SmTJgifDMGh8pTKgauOPvN"/>
+</g>
+
+<!-- Front wheel -->
+<g class="wheel-front" data-page-node-id="AeclDRxHWIceLVGdlfWLqR">
+    <circle cx="560" cy="430" r="60" fill="none" stroke="#37474F" stroke-width="7" data-page-node-id="v4OtVmvFuOLXYfRMaDGpgj"/>
+    <circle cx="560" cy="430" r="56" fill="none" stroke="#546E7A" stroke-width="1.5" data-page-node-id="w1oHgqx88pwjjL8QVsfhH0"/>
+    <circle cx="560" cy="430" r="52" fill="none" stroke="#455A64" stroke-width=".5" data-page-node-id="I3y4OAlsOTRcHg1gUnkWxx"/>
+    <line x1="560" y1="370" x2="560" y2="490" stroke="#B0BEC5" stroke-width="1" data-page-node-id="lGbFG1SxHhUlMd4sp4P44C"/>
+    <line x1="500" y1="430" x2="620" y2="430" stroke="#B0BEC5" stroke-width="1" data-page-node-id="o4LGa3wG6e9LMacIQp9ZFu"/>
+    <line x1="518" y1="388" x2="602" y2="472" stroke="#B0BEC5" stroke-width="1" data-page-node-id="3dJVN5UZob94i8bGQatlsx"/>
+    <line x1="602" y1="388" x2="518" y2="472" stroke="#B0BEC5" stroke-width="1" data-page-node-id="bLyPnPeYP6m4985yw5MZgK"/>
+    <line x1="532" y1="378" x2="588" y2="482" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="OQUAMO09JF6MKWzEy3lnVF"/>
+    <line x1="588" y1="378" x2="532" y2="482" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="yZmcQgAGV55ktMcYjfIFMW"/>
+    <line x1="506" y1="408" x2="614" y2="452" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="QNRRFdzq6cBoCdPefl77ds"/>
+    <line x1="614" y1="408" x2="506" y2="452" stroke="#CFD8DC" stroke-width=".8" data-page-node-id="jK4qHIkj7THPvgkbF9i3pT"/>
+    <circle cx="560" cy="430" r="7" fill="#90A4AE" stroke="#546E7A" stroke-width="2" data-page-node-id="MghP2p26CtuTtBrsrLFPjN"/>
+</g>
+
+<!-- Frame (red diamond) -->
+<g stroke="#E53935" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="UKyTpHVelzIkYjZfYLlwgV">
+    <line x1="345" y1="425" x2="310" y2="338" stroke-width="7" data-page-node-id="P92CBFXdwo68G8XxBsxTBn"/><!-- seat tube -->
+    <line x1="310" y1="338" x2="535" y2="335" stroke-width="7" data-page-node-id="Hng1woQzs7FZPpSdxYXXTc"/><!-- top tube -->
+    <line x1="345" y1="425" x2="535" y2="335" stroke-width="7" data-page-node-id="OKvwTET4mYG1t4Pho0ctDz"/><!-- down tube -->
+    <line x1="345" y1="425" x2="280" y2="430" stroke-width="5" data-page-node-id="jCHjW11boVKgotcp2HrlX7"/><!-- chain stays -->
+    <line x1="310" y1="338" x2="280" y2="430" stroke-width="4" data-page-node-id="OvHKcosFe4ZwQBbLGetmiP"/><!-- seat stays -->
+    <line x1="535" y1="335" x2="560" y2="430" stroke-width="6" data-page-node-id="xgTtYhw1GZYLMHBOvT20nt"/><!-- fork -->
+    <line x1="528" y1="392" x2="548" y2="392" stroke-width="3" stroke="#C62828" data-page-node-id="lDdI3aLCFVsQRkz3oQDTJz"/><!-- fork crown -->
+</g>
+
+<!-- Seat -->
+<ellipse cx="308" cy="330" rx="24" ry="9"  fill="#3E2723" data-page-node-id="uJVRCuwYLy9A5GGjevLv2K"/>
+<ellipse cx="308" cy="329" rx="22" ry="7"  fill="#4E342E" data-page-node-id="p8p9r2Rr54tHgYkjyRRCXL"/>
+<ellipse cx="308" cy="328" rx="17" ry="4.5" fill="#5D4037" opacity=".55" data-page-node-id="wZXHHVZmUpB8KvVEEm3JPB"/>
+<!-- Seat post clamp -->
+<circle cx="310" cy="338" r="3" fill="#888" stroke="#666" stroke-width="1" data-page-node-id="VOiKKE0ASE78CDKsnTgME3"/>
+
+<!-- Handlebars -->
+<line x1="535" y1="330" x2="538" y2="318" stroke="#78909C" stroke-width="4" stroke-linecap="round" data-page-node-id="vKhK217X979hIexQC9Wxjq"/><!-- stem -->
+<path d="M518 318 Q538 308 558 318" fill="none" stroke="#78909C" stroke-width="4" stroke-linecap="round" data-page-node-id="KbfS771TLLDMasrivuaqAT"/><!-- bar -->
+<rect x="512" y="315" width="9" height="7" rx="2" fill="#333" data-page-node-id="kXfDaM6c6GB2cDxiTmHLph"/><!-- left grip -->
+<rect x="555" y="315" width="9" height="7" rx="2" fill="#333" data-page-node-id="xdhgfPBJgUtg9ClsBFpqpM"/><!-- right grip -->
+<!-- Brake levers -->
+<line x1="516" y1="316" x2="513" y2="306" stroke="#666" stroke-width="2" stroke-linecap="round" data-page-node-id="dxLY9Xq7srg2zl6JEb1TiD"/>
+<line x1="560" y1="316" x2="563" y2="306" stroke="#666" stroke-width="2" stroke-linecap="round" data-page-node-id="bWu9dqHBzoZhRWn8DfaUqW"/>
+
+<!-- Bell -->
+<circle cx="538" cy="312" r="5" fill="#FFD54F" stroke="#FFC107" stroke-width="1" data-page-node-id="zrGRwNWKsb10J0Hei1MRUP"/>
+<circle cx="538" cy="311" r="2" fill="#FFECB3" data-page-node-id="h1RQkt1MJS3W8GSEK9F72D"/>
+<line x1="538" y1="307" x2="538" y2="304" stroke="#FFC107" stroke-width="1.5" stroke-linecap="round" data-page-node-id="a8A2ObmMskKeAFudTRkW4P"/>
+
+<!-- Pedals (rotating) -->
+<g class="pedal-group" data-page-node-id="jIlBgbwqzAsifgnJDiPUge">
+    <line x1="345" y1="425" x2="345" y2="403" stroke="#90A4AE" stroke-width="4" stroke-linecap="round" data-page-node-id="i4y08rkRA1iGyWtIlzjPJ8"/>
+    <line x1="345" y1="425" x2="345" y2="447" stroke="#90A4AE" stroke-width="4" stroke-linecap="round" data-page-node-id="B4dDErHRtXaXeOjrCdci0W"/>
+    <rect x="335" y="399" width="20" height="5" rx="1.5" fill="#607D8B" stroke="#455A64" stroke-width="1" data-page-node-id="peFUpD7Zhi0C32GbPCAZZl"/>
+    <rect x="335" y="445" width="20" height="5" rx="1.5" fill="#607D8B" stroke="#455A64" stroke-width="1" data-page-node-id="GpDVi4bBltjVKEnMVUY5x7"/>
+    <!-- grip lines -->
+    <line x1="338" y1="401" x2="338" y2="403" stroke="#455A64" stroke-width=".8" data-page-node-id="dY0YVPtN8HYl1MQCZsRZkh"/>
+    <line x1="342" y1="401" x2="342" y2="403" stroke="#455A64" stroke-width=".8" data-page-node-id="HoFiXjQzrMQeYZ6yvOREcr"/>
+    <line x1="347" y1="401" x2="347" y2="403" stroke="#455A64" stroke-width=".8" data-page-node-id="nVoWUl9eVSPtbiJTOQh4Ij"/>
+    <line x1="351" y1="401" x2="351" y2="403" stroke="#455A64" stroke-width=".8" data-page-node-id="ENVrVEkDXOiCRFLhuieYNQ"/>
+    <line x1="338" y1="447" x2="338" y2="449" stroke="#455A64" stroke-width=".8" data-page-node-id="GfSZZQBgY8fIlZWGhiO6DI"/>
+    <line x1="342" y1="447" x2="342" y2="449" stroke="#455A64" stroke-width=".8" data-page-node-id="Sezrt3ifqnyF0fDRZnBnJs"/>
+    <line x1="347" y1="447" x2="347" y2="449" stroke="#455A64" stroke-width=".8" data-page-node-id="aBSXmMJhDBP6JOeKif4WHa"/>
+    <line x1="351" y1="447" x2="351" y2="449" stroke="#455A64" stroke-width=".8" data-page-node-id="ZXKkFD0bEz2stHY0rouMVH"/>
+</g>
+
+<!-- Basket on handlebars -->
+<g transform="translate(545,280)" data-page-node-id="s3iv7Zq9hGe4tXfVNwQoaG">
+    <path d="M-18 0 L-14 22 L14 22 L18 0Z" fill="#A1887F" stroke="#6D4C41" stroke-width="1.5" data-page-node-id="jREKC18plXhAPzZ03kUbyF"/>
+    <line x1="-16" y1="7"  x2="16"  y2="7"  stroke="#6D4C41" stroke-width="1" data-page-node-id="ozW0GO5cMY2FO5mWNmlbNK"/>
+    <line x1="-15" y1="14" x2="15"  y2="14" stroke="#6D4C41" stroke-width="1" data-page-node-id="B6izhDb9fHnbNLHQh48HoD"/>
+    <line x1="-7"  y1="0"  x2="-5"  y2="22" stroke="#6D4C41" stroke-width="1" data-page-node-id="oq8H8d3lov1TqlsLzxNbaX"/>
+    <line x1="0"   y1="0"  x2="0"   y2="22" stroke="#6D4C41" stroke-width="1" data-page-node-id="jwcpikp9tTJzsJ2f4s9Mu3"/>
+    <line x1="7"   y1="0"  x2="5"   y2="22" stroke="#6D4C41" stroke-width="1" data-page-node-id="7Sm9wEveVB7clEGlKJpMN0"/>
+    <!-- Fish tail poking out -->
+    <path d="M13 4 Q19 -1 21 7 Q17 5 13 7" fill="#42A5F5" data-page-node-id="IXuOLEOwKYTNWhXU1R8CLE"/>
+</g>
+<!-- Fish in basket -->
+<g class="basket-fish" data-page-node-id="LkBAzGJ0hG0W3es8LQKy2y">
+    <ellipse cx="548" cy="292" rx="9" ry="4.5" fill="#64B5F6" data-page-node-id="eqgH60IBfznEZjdEXZrAi3"/>
+    <polygon points="557,292 563,287 563,297" fill="#64B5F6" data-page-node-id="idE16ZGEqeC97ND5oa08PX"/>
+    <circle cx="543" cy="291" r="1.5" fill="#1A237E" data-page-node-id="9gHOhNzNGpLFuDHviSbQT6"/>
+    <path d="M545 293 Q548 295 551 293" fill="none" stroke="#1A237E" stroke-width=".6" data-page-node-id="fdAEXO6Yfp7a4z7J7p13H4"/>
+</g>
+
+
+<!-- ==================== PELICAN ==================== -->
+<g class="pelican-group" data-page-node-id="vLUp1Tyc57uFdmRBuW4OvA">
+
+    <!-- Tail feathers (wagging) -->
+    <g class="tail-wag" data-page-node-id="ZKSsyx3V7THjvkSE4rQOps">
+        <path d="M238 325 Q215 308 210 332 Q226 316 238 325" fill="#E0E0E0" data-page-node-id="6WIsZ0zEpwer4LGDBgeudH"/>
+        <path d="M233 330 Q208 315 202 338 Q220 323 233 330" fill="#D0D0D0" data-page-node-id="OcFkGx4Ai85W7qYCY8RDMW"/>
+        <path d="M242 320 Q222 303 215 325 Q230 312 242 320" fill="#EEEEEE" data-page-node-id="q0RolFDwpdGuBa3XM3Ecs0"/>
+    </g>
+
+    <!-- Body -->
+    <ellipse cx="340" cy="315" rx="68" ry="38" fill="url(#body)" data-page-node-id="0JnHBprsRnq3HN2cahw9kn"/>
+    <ellipse cx="340" cy="322" rx="52" ry="22" fill="#EEE" opacity=".35" data-page-node-id="L50HowJB6r6VCZRTp87G57"/>
+    <ellipse cx="332" cy="306" rx="32" ry="14" fill="#fff" opacity=".25" data-page-node-id="EZVxCalICToL7NJsCcEZx3"/>
+
+    <!-- Wing (back, darker) -->
+    <g class="wing-anim" data-page-node-id="UvPIhoM2dz9rDtNgsOEFF4">
+        <path d="M305 310 Q268 286 252 314 Q274 298 300 316Z" fill="#D5D5D5" data-page-node-id="xG1KjBwSNsj5O9bfh6pk9U"/>
+        <path d="M310 305 Q278 282 262 310 Q282 294 306 312Z" fill="#C8C8C8" data-page-node-id="u2w5ZqCwEMf0htDrRrarPw"/>
+    </g>
+
+    <!-- Neck -->
+    <path d="M388 300 C406 278,422 256,442 240 C456 230,466 224,478 220"
+          fill="none" stroke="#F5F5F5" stroke-width="22" stroke-linecap="round" data-page-node-id="ybKuGd9c5XPW11mI1B9wlY"/>
+    <path d="M388 300 C406 278,422 256,442 240 C456 230,466 224,478 220"
+          fill="none" stroke="#ECECEC" stroke-width="18" stroke-linecap="round" data-page-node-id="c1NbQPfFQbdEQl4lsMnPa7"/>
+    <!-- Neck shadow -->
+    <path d="M394 304 C410 282,426 260,446 244 C458 236,468 230,478 226"
+          fill="none" stroke="#E0E0E0" stroke-width="7" stroke-linecap="round" opacity=".45" data-page-node-id="7owVuVO3oMY77geCmMimuI"/>
+
+    <!-- Head -->
+    <ellipse cx="490" cy="216" rx="26" ry="22" fill="#F5F5F5" data-page-node-id="FDO5AvsHG6zky04rWLVwA9"/>
+    <!-- Head crest -->
+    <path d="M482 196 Q488 185 495 196" stroke="#E0E0E0" stroke-width="2" fill="none" data-page-node-id="HLEo0BGnPF5z1riegqs5Tu"/>
+    <path d="M486 198 Q491 190 498 198" stroke="#EBEBEB" stroke-width="1.5" fill="none" data-page-node-id="eLXTUFToGtwpKSlXcgcdEM"/>
+
+    <!-- Eye -->
+    <g class="pelican-eye" data-page-node-id="ZppnheyG3CjlG8Yl7y0Cy1">
+        <circle cx="505" cy="215" r="7" fill="white" stroke="#455A64" stroke-width="1.5" data-page-node-id="xboKjpYDxlkxxhVA7E5LYx"/>
+        <circle cx="507" cy="214" r="4"   fill="#263238" data-page-node-id="LlCe1ccyAzPJksdBgogA8d"/>
+        <circle cx="508.5" cy="212.5" r="1.8" fill="white" data-page-node-id="ITWSBGNzOsVjLw4wggz4xF"/>
+    </g>
+    <!-- Eyebrow (cheeky) -->
+    <path d="M498 207 Q505 204 512 207" fill="none" stroke="#546E7A" stroke-width="1.5" stroke-linecap="round" data-page-node-id="NCEYSkRxiBkYo2UBJiaAC6"/>
+
+    <!-- Beak upper mandible -->
+    <path d="M514 218 L592 208 Q590 222 580 228 L514 228Z" fill="url(#beak)" stroke="#BF360C" stroke-width="1" data-page-node-id="7FlMGmoQutYfczF9rqB7dT"/>
+    <line x1="514" y1="223" x2="590" y2="215" stroke="#E65100" stroke-width=".8" opacity=".4" data-page-node-id="a66aFiUjeLrKz5m6bWqDsq"/>
+    <!-- Hook tip -->
+    <path d="M592 208 Q597 205 595 214 Q591 220 590 222" fill="#BF360C" data-page-node-id="zz2JncD2ezfNUnxsf7Qgif"/>
+
+    <!-- Beak lower mandible + Pouch -->
+    <g class="beak-pouch" data-page-node-id="ztbporHepvFCUAhnGzE3G8">
+        <path d="M514 228 Q540 265 580 228" fill="#FF8A65" stroke="#BF360C" stroke-width="1" data-page-node-id="DhEWlEPyv44jwMu4NPvniA"/>
+        <path d="M520 233 Q540 258 575 233" fill="#FFAB91" opacity=".45" data-page-node-id="M7nDvYbaTAKLAwV1eZblLb"/>
+        <path d="M528 240 Q542 255 568 240" fill="#FFCCBC" opacity=".25" data-page-node-id="FeCV1XZ2z142zjAGvgHoGL"/>
+    </g>
+
+    <!-- Nostril -->
+    <ellipse cx="525" cy="221" rx="2" ry="1" fill="#BF360C" opacity=".5" data-page-node-id="GrsxQP1QJmslPFaB2YrXqH"/>
+
+    <!-- Wing (front, lighter) -->
+    <g class="wing-anim" data-page-node-id="CqY5fuPByqNi8pEQKtlhWh">
+        <path d="M338 306 Q304 280 288 312 Q308 294 334 314Z" fill="#EBEBEB" stroke="#E0E0E0" stroke-width=".5" data-page-node-id="VM8JjHDEwlvzM18x77mxXs"/>
+        <path d="M328 308 Q302 288 292 310" fill="none" stroke="#D5D5D5" stroke-width=".8" data-page-node-id="oPeaDd5NhwfdPE1e9eCDdV"/>
+        <path d="M334 304 Q310 284 298 306" fill="none" stroke="#D5D5D5" stroke-width=".8" data-page-node-id="2cQ5EeI6G8qmzsXqGJzN8H"/>
+    </g>
+
+    <!-- Legs / Feet (reaching toward pedals) -->
+    <!-- Right leg -->
+    <path d="M355 348 L350 398 L342 412" fill="none" stroke="#FF8A65" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="EUgmBZfHJjKRIAcQBQ2Pva"/>
+    <path d="M342 412 L332 420 M342 412 L342 422 M342 412 L352 420" fill="none" stroke="#FF8A65" stroke-width="2.5" stroke-linecap="round" data-page-node-id="MUJHdnN46MPVWTIxA5Cgc6"/>
+    <!-- Left leg -->
+    <path d="M345 350 L350 402 L352 448" fill="none" stroke="#E5735A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="bRfzmlIu33kzEqUbWI2QYX"/>
+    <path d="M352 448 L342 456 M352 448 L352 458 M352 448 L362 456" fill="none" stroke="#E5735A" stroke-width="2" stroke-linecap="round" data-page-node-id="LdzGBdYpL1Mn33BHkvUrNm"/>
+
+</g>
+
+
+<!-- ==================== EFFECTS ==================== -->
+
+<!-- Speed lines -->
+<g opacity=".45" data-page-node-id="T53J1EDP7c3oGh8UvmxPkH">
+    <line x1="178" y1="298" x2="128" y2="298" stroke="#B0BEC5" stroke-width="2.5" stroke-linecap="round" class="whoosh-1" data-page-node-id="xYomP4BC3Wq9ZD20uS9KNC"/>
+    <line x1="168" y1="340" x2="108" y2="340" stroke="#B0BEC5" stroke-width="2"   stroke-linecap="round" class="whoosh-2" data-page-node-id="rxKlfQvWB03CG8ABWkBECT"/>
+    <line x1="182" y1="382" x2="132" y2="382" stroke="#B0BEC5" stroke-width="1.8" stroke-linecap="round" class="whoosh-3" data-page-node-id="BQcfjwqi05hcFsxf4bG1GG"/>
+    <line x1="162" y1="422" x2="112" y2="422" stroke="#90A4AE" stroke-width="1.5" stroke-linecap="round" class="whoosh-1" data-page-node-id="idbzPkHnJkratIBAlG0gfw"/>
+</g>
+
+<!-- Dust near rear wheel -->
+<g data-page-node-id="HpmO2cAoBrfFqbgCo299Hw">
+    <circle cx="252" cy="490" r="3"   fill="#A1887F" class="dust-1" data-page-node-id="kfkvKK2evC1AVBmiAh9uh3"/>
+    <circle cx="262" cy="486" r="2.2" fill="#8D6E63" class="dust-2" data-page-node-id="aGEEyk5VYRE7x62RpiDpP1"/>
+    <circle cx="242" cy="488" r="2.5" fill="#BCAAA4" class="dust-3" data-page-node-id="ZVB9MH2o04EMmgF6u1ypU2"/>
+</g>
+
+<!-- Wheel contact glow (subtle) -->
+<ellipse cx="280" cy="490" rx="8" ry="2" fill="#546E7A" opacity=".15" data-page-node-id="Ey8VwgZy4NmyAHkNyHqHBl"/>
+<ellipse cx="560" cy="490" rx="8" ry="2" fill="#546E7A" opacity=".15" data-page-node-id="UZ8pELZjnxcHPMBiLYM9Me"/>
+
+</svg>
+<p class="model-tag" data-page-node-id="GC9wpurzTN0XnWBiakyRQD">Generated by <span data-page-node-id="41Lz2rbT4QmlqzLRNVZ6qg">GLM-5.1</span></p>
+</div>
+</body>
+</html>
