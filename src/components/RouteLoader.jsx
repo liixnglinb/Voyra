@@ -16,6 +16,7 @@ const CFG = {
   agents: { label: 'AI AGENT RADAR', hint: '正在点亮 Agent 星空…', accent: '#a78bfa', dark: true, full: true },
   mindmap: { label: 'MIND MAPPING', hint: '正在加载思维导图…', accent: '#9a7515' },
   baby: { label: 'BABY CARE', hint: '宝宝护理加载中…', accent: '#E8835E' },
+  pelican: { label: 'AI MODEL SHOWCASE', hint: '动画画廊加载中…', accent: '#a48830' },
 };
 
 function Graphic({ variant }) {
@@ -84,6 +85,67 @@ function Graphic({ variant }) {
           <span className="rl-baby-shadow" />
         </div>
       );
+    case 'pelican':
+      return (
+        <figure className="rl-pelican" aria-hidden="true">
+          <svg viewBox="0 0 220 108" width="188" height="92">
+            {/* 后轮 */}
+            <g className="rl-pg-rear">
+              <circle cx="58" cy="78" r="24" fill="none" stroke="#1b1b1b" strokeWidth="3" />
+              <g className="rl-pg-spokes">
+                <line x1="58" y1="54" x2="58" y2="102" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="34" y1="78" x2="82" y2="78" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="41" y1="61" x2="75" y2="95" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="75" y1="61" x2="41" y2="95" stroke="#1b1b1b" strokeWidth="2" />
+              </g>
+            </g>
+            {/* 前轮 */}
+            <g className="rl-pg-front">
+              <circle cx="158" cy="78" r="24" fill="none" stroke="#1b1b1b" strokeWidth="3" />
+              <g className="rl-pg-spokes">
+                <line x1="158" y1="54" x2="158" y2="102" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="134" y1="78" x2="182" y2="78" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="141" y1="61" x2="175" y2="95" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="175" y1="61" x2="141" y2="95" stroke="#1b1b1b" strokeWidth="2" />
+              </g>
+            </g>
+            {/* 车架 */}
+            <g stroke="#1b1b1b" strokeWidth="4" strokeLinecap="round" fill="none">
+              <line x1="58" y1="78" x2="108" y2="78" />
+              <line x1="108" y1="78" x2="108" y2="46" />
+              <line x1="108" y1="46" x2="60" y2="40" />
+              <line x1="108" y1="46" x2="158" y2="50" />
+              <line x1="108" y1="78" x2="158" y2="78" />
+              <line x1="158" y1="50" x2="158" y2="78" />
+            </g>
+            {/* 曲柄 + 踏板 */}
+            <circle cx="108" cy="78" r="7" fill="none" stroke="#1b1b1b" strokeWidth="2" />
+            <g className="rl-pg-crank">
+              <line x1="108" y1="78" x2="108" y2="70" stroke="#888" strokeWidth="3" strokeLinecap="round" />
+              <path d="M 101 70 h 14" stroke="#a48830" strokeWidth="3" strokeLinecap="round" />
+            </g>
+            {/* 座管 + 座椅（金色） */}
+            <line x1="108" y1="48" x2="112" y2="40" stroke="#1b1b1b" strokeWidth="4" strokeLinecap="round" />
+            <path d="M 101 39 h 24" stroke="#a48830" strokeWidth="5" strokeLinecap="round" />
+            {/* 车把（金色） */}
+            <line x1="158" y1="50" x2="161" y2="42" stroke="#1b1b1b" strokeWidth="4" strokeLinecap="round" />
+            <path d="M 156 41 h 26" stroke="#a48830" strokeWidth="5" strokeLinecap="round" />
+            {/* 鹈鹕 */}
+            <g className="rl-pg-pel">
+              <path d="M 98 40 C 95 22, 122 14, 134 30 C 142 40, 138 52, 124 47 C 116 45, 104 47, 98 40 Z" fill="#f4f1e6" stroke="#1b1b1b" strokeWidth="3" strokeLinejoin="round" />
+              <path d="M 113 26 C 124 20, 133 28, 129 40" fill="#1b1b1b" />
+              <path d="M 132 28 C 140 22, 148 20, 151 18" stroke="#1b1b1b" strokeWidth="6" fill="none" strokeLinecap="round" />
+              <circle cx="158" cy="15" r="6.5" fill="#f4f1e6" stroke="#1b1b1b" strokeWidth="3" />
+              <circle cx="160" cy="13.5" r="1.6" fill="#1b1b1b" />
+              <g className="rl-pg-beak">
+                <path d="M 164 15 L 189 13 L 188 19 L 163 20 Z" fill="#e0b53a" stroke="#a48830" strokeWidth="2" strokeLinejoin="round" />
+                <line x1="164" y1="16.5" x2="187" y2="16.5" stroke="#a48830" strokeWidth="1.4" />
+                <path d="M 164 20 C 172 30, 184 26, 188 20 Z" fill="#f7d97a" stroke="#d9a832" strokeWidth="2" opacity="0.92" />
+              </g>
+            </g>
+          </svg>
+        </figure>
+      );
     default:
       return <span className="rl-dot" aria-hidden="true" />;
   }
@@ -149,6 +211,16 @@ export default function RouteLoader({ variant = 'timetable' }) {
         @keyframes rl-draw { 0% { stroke-dashoffset:64; opacity:0; } 12% { opacity:1; } 48%,78% { stroke-dashoffset:0; opacity:1; } 100% { stroke-dashoffset:0; opacity:0; } }
         @keyframes rl-node { 0%,20% { opacity:0; } 50%,78% { opacity:1; } 100% { opacity:0; } }
         @keyframes rl-core-pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.12); } }
+
+        /* AI 动画画廊：鹈鹕骑自行车（呼应页面核心意象，网格纸卡片底） */
+        .rl-pelican { margin:0; display:grid; place-items:center; width:236px; height:140px; border:1px solid rgba(27,27,27,.12); border-radius:14px; background-color:#fff; background-image:linear-gradient(rgba(0,0,0,.031) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.031) 1px,transparent 1px); background-size:32px 32px; box-shadow:0 16px 36px -28px rgba(20,20,20,.55); }
+        .rl-pg-spokes { transform-origin:center; transform-box:fill-box; animation:rl-pg-spin 0.9s linear infinite; }
+        @keyframes rl-pg-spin { to { transform:rotate(360deg); } }
+        .rl-pg-crank { transform-origin:center; transform-box:fill-box; animation:rl-pg-spin 0.55s linear infinite; }
+        .rl-pg-pel { animation:rl-pg-bob 0.8s ease-in-out infinite; }
+        @keyframes rl-pg-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+        .rl-pg-beak { transform-origin:18% 72%; transform-box:fill-box; animation:rl-pg-beak 0.7s ease-in-out infinite; }
+        @keyframes rl-pg-beak { 0%,100% { transform:rotate(0deg); } 50% { transform:rotate(-6deg); } }
 
         /* 宝宝护理：暖色小爱心弹跳 */
         .rl-baby-wrap { display:flex; flex-direction:column; align-items:center; gap:7px; }

@@ -54,7 +54,7 @@ function App() {
                 <Route path="/agents" element={<Suspense fallback={<RouteLoader variant="agents" />}><AgentSkills /></Suspense>} />
                 <Route path="/skills" element={<Suspense fallback={<RouteLoader variant="skills" />}><SkillHub /></Suspense>} />
                 <Route path="/uikit" element={<Suspense fallback={<RouteLoader variant="uikit" />}><UIKit /></Suspense>} />
-                <Route path="/pelican-gallery" element={<Suspense fallback={<RouteLoader variant="skills" />}><PelicanGallery /></Suspense>} />
+                <Route path="/pelican-gallery" element={<Suspense fallback={<RouteLoader variant="pelican" />}><PelicanGallery /></Suspense>} />
 
                 {/* 未知路径重定向回首页，避免空白页 */}
                 <Route path="*" element={<Navigate to="/" replace />} />
