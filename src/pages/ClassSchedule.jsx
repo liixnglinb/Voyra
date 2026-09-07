@@ -246,21 +246,29 @@ function parseSlotCell(v) {
   return out;
 }
 
-/* 周次单元格：区间 / 逗号列表 / 单个周 */
+/* 周次单元格：先定位「数字…(周)」周次子串（容忍 [01-02节] 等节次尾缀），再按 区间/逗号/单周 解析 */
 function parseWeeksCell(v) {
   const s = String(v).trim();
   if (!s) return [];
+  /* 先定位「数字…周」周次子串：优先「X周至Y周」，再「数字(区间/逗号)…([周]…)」；
+     容忍 [01-02节] 等节次尾缀，避免把节次误当周次 */
+  const mw = s.match(/\d{1,2}\s*周?\s*[-~—–至到]\s*(?:第)?\s*\d{1,2}\s*周/) || s.match(/\d{1,2}(?:\s*[-~—–至到]\s*\d{1,2})?(?:\s*[,，、]\s*\d{1,2})*\s*[\[（(]?\s*\[?周\]?/);
+  const base = mw ? mw[0] : s;
   const oe = /[（(]\s*(单|双)\s*周?\s*[)）]/.exec(s);
   const type = oe ? (oe[1] === '单' ? 'odd' : 'even') : 'every';
-  const w = s.match(/(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周?/);
+  const w = base.match(/(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周?/);
   if (w) return [{ kind: 'weeks', f: +w[1], t: +w[2], type }];
-  const nums = s.match(/\d{1,2}/g);
-  if (nums && nums.length >= 2 && /[,，、]/.test(s)) {
+  const nums = base.match(/\d{1,2}/g);
+  if (nums && nums.length >= 2 && /[,，、]/.test(base)) {
     const ns = nums.map(Number);
-    return [{ kind: 'weeks', f: Math.min(...ns), t: Math.max(...ns), type: 'every' }];
+    /* 逗号序列多为隔周（3,5,7,9=单周），全奇/全偶且≥3项时标注单/双周 */
+    const allOdd = ns.every((n) => n % 2 === 1);
+    const allEven = ns.every((n) => n % 2 === 0);
+    const seqType = (allOdd || allEven) && ns.length >= 3 ? (allOdd ? 'odd' : 'even') : 'every';
+    return [{ kind: 'weeks', f: Math.min(...ns), t: Math.max(...ns), type: seqType }];
   }
-  const w1 = s.match(/^(?:第)?\s*(\d{1,2})\s*周(?:[（(](单|双)周?[)）])?$/);
-  if (w1) return [{ kind: 'weeks', f: +w1[1], t: +w1[1], type }];
+  const single = base.match(/^\s*(\d{1,2})/);
+  if (single) return [{ kind: 'weeks', f: +single[1], t: +single[1], type: 'every' }];
   return [];
 }
 
@@ -288,29 +296,51 @@ function detectXlsHeader(row) {
   return hit >= 2 && map.name != null ? map : null;
 }
 
-/* 网格表头检测：行首为「节次/时间」，随后是≥3个星期列（如 节次|星期一|…|星期日） */
+/* 网格表头检测：≥3个星期列即视为网格表；首列为空/节次/时间/序号/大节皆可
+   （教务表常见首列为「第一大节(01,02)」或空） */
 function detectXlsGridHeader(row) {
-  let slotIdx = -1;
   const dayIdxs = [];
   row.forEach((raw, idx) => {
     const s = xlsCell(raw);
-    if (idx === 0 && /节次|时间/.test(s)) slotIdx = idx;
     const d = s.match(/^星期?([一二三四五六日天])$/);
     if (d) dayIdxs.push({ idx, day: XLS_WEEK[d[1]] });
   });
-  return slotIdx >= 0 && dayIdxs.length >= 3 ? { slotIdx, dayIdxs } : null;
+  if (dayIdxs.length < 3) return null;
+  const head = xlsCell(row[0]);
+  /* 首列若为课程/教师列，则不是网格表（防「课程名称|教师|周一|…」展开表误判） */
+  if (head && /课程|教师|科目/.test(head)) return null;
+  return { dayIdxs };
 }
 
-/* 网格格子内容：多行拆段 → 课程名 / 老师 / 教室（无职称人名按第二段兜底为老师） */
+/* 网格行首节次：「第一大节\n(01,02)」→1-2；晚自习→晚自习1；"3-4节"→3-4 */
+function parseRowSlot(v) {
+  const s = String(v);
+  const m = s.match(/[（(]\s*(\d{1,2})\s*[,，、]\s*\d{1,2}\s*[)）]/);
+  if (m) return slotForPeriod(+m[1]);
+  const n = s.match(/晚自习\s*(\d)?/);
+  if (n) return n[1] ? `晚自习${n[1]}` : '晚自习1';
+  const per = s.match(/(?:第)?\s*(\d{1,2})\s*[-~—–至到]\s*\d{1,2}\s*节/);
+  if (per) return slotForPeriod(+per[1]);
+  return '';
+}
+
+/* 网格格子内容：多行拆段 → 课程名 / 老师 / 教室 / 周次
+   （无职称人名按第二段兜底为老师；「2-17([周])[01-02节]」混写段提取周次） */
 function parseGridCell(s) {
   const parts = String(s).split(/\n|(?:；|;)/).map((t) => t.trim()).filter(Boolean);
-  const r = { name: '', teacher: '', room: '' };
+  const r = { name: '', teacher: '', room: '', f: 1, t: 16, type: 'every' };
   for (const p of parts) {
     if (!p) continue;
     if (/^\d{1,2}[:：]\d{2}\s*[-~—–至到]\s*\d{1,2}[:：]\d{2}$/.test(p)) continue; // 纯时间
     const cls = classifyXlsCell(p);
-    if (!cls) continue;
-    if (cls.kind === 'teacher') r.teacher = r.teacher || cls.val;
+    if (!cls) {
+      /* 周次混写段：如「2-17([周])[01-02节]」「8([周])」「3,5,7,9([周])」 */
+      const wk = parseWeeksCell(p);
+      if (wk.length) { r.f = wk[0].f; r.t = wk[0].t; r.type = wk[0].type; }
+      continue;
+    }
+    if (cls.kind === 'weeks') { r.f = cls.f; r.t = cls.t; r.type = cls.type; }
+    else if (cls.kind === 'teacher') r.teacher = r.teacher || cls.val;
     else if (cls.kind === 'room') r.room = r.room || cls.val;
     else if (cls.kind === 'slot' && cls.val.startsWith('晚自习') && !r.name) r.name = cls.val; /* 网格里的晚自习 */
     else if (cls.kind === 'name') {
@@ -337,10 +367,11 @@ function mergeXlsSegments(segs) {
     else if (seg.kind === 'weeks') { f = seg.f; t = seg.t; type = seg.type; }
   }
   if (!name || day == null || !slot) return null;
+  const wText = f === t ? `${f}周` : `${f}-${t}周`;
   return {
     id: Date.now() + Math.random().toString(36).slice(2, 7),
     name, teacher, room, day, slot, f, t, type,
-    weeksText: `${f}-${t}周${type !== 'every' ? `（${INC[type]}）` : ''}`,
+    weeksText: `${wText}${type !== 'every' ? `（${INC[type]}）` : ''}`,
   };
 }
 
@@ -375,19 +406,20 @@ function parseXlsRows(rows) {
       }
       if (dayVal != null) segs.push({ kind: 'day', val: dayVal });
     } else if (gridHeader) {
-      /* 网格表：行首=节次，星期列=格子内容 */
-      const slotVals = parseSlotCell(xlsCell(row[gridHeader.slotIdx]));
-      if (!slotVals.length) continue;
+      /* 网格表：行首=节次（第一大节(01,02)/晚自习…），星期列=格子内容 */
+      const slot = parseRowSlot(xlsCell(row[0]));
+      if (!slot) continue;
       for (const { idx, day } of gridHeader.dayIdxs) {
         const cell = xlsCell(row[idx]);
         if (!cell) continue;
         const parts = parseGridCell(cell);
         if (!parts.name) continue;
+        const wText = parts.f === parts.t ? `${parts.f}周` : `${parts.f}-${parts.t}周`;
         out.push({
           id: Date.now() + Math.random().toString(36).slice(2, 7),
           name: parts.name, teacher: parts.teacher, room: parts.room,
-          day, slot: slotVals[0], f: 1, t: 16, type: 'every',
-          weeksText: '1-16周',
+          day, slot, f: parts.f, t: parts.t, type: parts.type,
+          weeksText: `${wText}${parts.type !== 'every' ? `（${INC[parts.type]}）` : ''}`,
         });
       }
       continue;
