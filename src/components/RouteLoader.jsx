@@ -88,60 +88,55 @@ function Graphic({ variant }) {
     case 'pelican':
       return (
         <figure className="rl-pelican" aria-hidden="true">
-          <svg viewBox="0 0 220 108" width="188" height="92">
+          <svg viewBox="0 0 150 78" width="198" height="103">
             {/* 后轮 */}
             <g className="rl-pg-rear">
-              <circle cx="58" cy="78" r="24" fill="none" stroke="#1b1b1b" strokeWidth="3" />
+              <circle cx="34" cy="58" r="20" fill="none" stroke="#1b1b1b" strokeWidth="2.5" />
               <g className="rl-pg-spokes">
-                <line x1="58" y1="54" x2="58" y2="102" stroke="#1b1b1b" strokeWidth="2" />
-                <line x1="34" y1="78" x2="82" y2="78" stroke="#1b1b1b" strokeWidth="2" />
-                <line x1="41" y1="61" x2="75" y2="95" stroke="#1b1b1b" strokeWidth="2" />
-                <line x1="75" y1="61" x2="41" y2="95" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="34" y1="38" x2="34" y2="78" stroke="#1b1b1b" strokeWidth="1.6" />
+                <line x1="14" y1="58" x2="54" y2="58" stroke="#1b1b1b" strokeWidth="1.6" />
+                <line x1="20" y1="44" x2="48" y2="72" stroke="#1b1b1b" strokeWidth="1.6" />
+                <line x1="48" y1="44" x2="20" y2="72" stroke="#1b1b1b" strokeWidth="1.6" />
               </g>
+              <circle cx="34" cy="58" r="2" fill="#a48830" />
             </g>
             {/* 前轮 */}
             <g className="rl-pg-front">
-              <circle cx="158" cy="78" r="24" fill="none" stroke="#1b1b1b" strokeWidth="3" />
+              <circle cx="118" cy="58" r="20" fill="none" stroke="#1b1b1b" strokeWidth="2.5" />
               <g className="rl-pg-spokes">
-                <line x1="158" y1="54" x2="158" y2="102" stroke="#1b1b1b" strokeWidth="2" />
-                <line x1="134" y1="78" x2="182" y2="78" stroke="#1b1b1b" strokeWidth="2" />
-                <line x1="141" y1="61" x2="175" y2="95" stroke="#1b1b1b" strokeWidth="2" />
-                <line x1="175" y1="61" x2="141" y2="95" stroke="#1b1b1b" strokeWidth="2" />
+                <line x1="118" y1="38" x2="118" y2="78" stroke="#1b1b1b" strokeWidth="1.6" />
+                <line x1="98" y1="58" x2="138" y2="58" stroke="#1b1b1b" strokeWidth="1.6" />
+                <line x1="104" y1="44" x2="132" y2="72" stroke="#1b1b1b" strokeWidth="1.6" />
+                <line x1="132" y1="44" x2="104" y2="72" stroke="#1b1b1b" strokeWidth="1.6" />
               </g>
+              <circle cx="118" cy="58" r="2" fill="#a48830" />
             </g>
-            {/* 车架 */}
-            <g stroke="#1b1b1b" strokeWidth="4" strokeLinecap="round" fill="none">
-              <line x1="58" y1="78" x2="108" y2="78" />
-              <line x1="108" y1="78" x2="108" y2="46" />
-              <line x1="108" y1="46" x2="60" y2="40" />
-              <line x1="108" y1="46" x2="158" y2="50" />
-              <line x1="108" y1="78" x2="158" y2="78" />
-              <line x1="158" y1="50" x2="158" y2="78" />
+            {/* 车架：细墨线 */}
+            <g stroke="#1b1b1b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+              <line x1="34" y1="58" x2="76" y2="58" />
+              <line x1="76" y1="58" x2="76" y2="36" />
+              <line x1="76" y1="36" x2="40" y2="36" />
+              <line x1="76" y1="36" x2="118" y2="36" />
+              <line x1="118" y1="36" x2="118" y2="58" />
+              <line x1="76" y1="58" x2="118" y2="60" />
             </g>
+            {/* 座椅·车把（金色点睛） */}
+            <line x1="76" y1="36" x2="78" y2="29" stroke="#1b1b1b" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 69 29 h 20" stroke="#a48830" strokeWidth="4" strokeLinecap="round" />
+            <line x1="118" y1="36" x2="120" y2="29" stroke="#1b1b1b" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M 115 28 h 22" stroke="#a48830" strokeWidth="4" strokeLinecap="round" />
             {/* 曲柄 + 踏板 */}
-            <circle cx="108" cy="78" r="7" fill="none" stroke="#1b1b1b" strokeWidth="2" />
+            <circle cx="76" cy="58" r="4.5" fill="none" stroke="#1b1b1b" strokeWidth="2" />
             <g className="rl-pg-crank">
-              <line x1="108" y1="78" x2="108" y2="70" stroke="#888" strokeWidth="3" strokeLinecap="round" />
-              <path d="M 101 70 h 14" stroke="#a48830" strokeWidth="3" strokeLinecap="round" />
+              <line x1="76" y1="58" x2="76" y2="52" stroke="#888" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M 70 51.5 h 13" stroke="#a48830" strokeWidth="2.5" strokeLinecap="round" />
             </g>
-            {/* 座管 + 座椅（金色） */}
-            <line x1="108" y1="48" x2="112" y2="40" stroke="#1b1b1b" strokeWidth="4" strokeLinecap="round" />
-            <path d="M 101 39 h 24" stroke="#a48830" strokeWidth="5" strokeLinecap="round" />
-            {/* 车把（金色） */}
-            <line x1="158" y1="50" x2="161" y2="42" stroke="#1b1b1b" strokeWidth="4" strokeLinecap="round" />
-            <path d="M 156 41 h 26" stroke="#a48830" strokeWidth="5" strokeLinecap="round" />
-            {/* 鹈鹕 */}
+            {/* 极简鹈鹕：几何剪影，仅墨黑 + 金喙 */}
             <g className="rl-pg-pel">
-              <path d="M 98 40 C 95 22, 122 14, 134 30 C 142 40, 138 52, 124 47 C 116 45, 104 47, 98 40 Z" fill="#f4f1e6" stroke="#1b1b1b" strokeWidth="3" strokeLinejoin="round" />
-              <path d="M 113 26 C 124 20, 133 28, 129 40" fill="#1b1b1b" />
-              <path d="M 132 28 C 140 22, 148 20, 151 18" stroke="#1b1b1b" strokeWidth="6" fill="none" strokeLinecap="round" />
-              <circle cx="158" cy="15" r="6.5" fill="#f4f1e6" stroke="#1b1b1b" strokeWidth="3" />
-              <circle cx="160" cy="13.5" r="1.6" fill="#1b1b1b" />
-              <g className="rl-pg-beak">
-                <path d="M 164 15 L 189 13 L 188 19 L 163 20 Z" fill="#e0b53a" stroke="#a48830" strokeWidth="2" strokeLinejoin="round" />
-                <line x1="164" y1="16.5" x2="187" y2="16.5" stroke="#a48830" strokeWidth="1.4" />
-                <path d="M 164 20 C 172 30, 184 26, 188 20 Z" fill="#f7d97a" stroke="#d9a832" strokeWidth="2" opacity="0.92" />
-              </g>
+              <ellipse cx="76" cy="26" rx="15.5" ry="9.5" fill="#1b1b1b" transform="rotate(30 76 26)" />
+              <circle cx="94" cy="14" r="4.5" fill="#1b1b1b" />
+              <path d="M 98.5 12.5 L 121 10.5 L 119.5 16 Z" fill="#a48830" />
+              <circle cx="119" cy="13" r="0" fill="#a48830" />
             </g>
           </svg>
         </figure>
@@ -217,10 +212,8 @@ export default function RouteLoader({ variant = 'timetable' }) {
         .rl-pg-spokes { transform-origin:center; transform-box:fill-box; animation:rl-pg-spin 0.9s linear infinite; }
         @keyframes rl-pg-spin { to { transform:rotate(360deg); } }
         .rl-pg-crank { transform-origin:center; transform-box:fill-box; animation:rl-pg-spin 0.55s linear infinite; }
-        .rl-pg-pel { animation:rl-pg-bob 0.8s ease-in-out infinite; }
-        @keyframes rl-pg-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
-        .rl-pg-beak { transform-origin:18% 72%; transform-box:fill-box; animation:rl-pg-beak 0.7s ease-in-out infinite; }
-        @keyframes rl-pg-beak { 0%,100% { transform:rotate(0deg); } 50% { transform:rotate(-6deg); } }
+        .rl-pg-pel { animation:rl-pg-bob 0.85s ease-in-out infinite; }
+        @keyframes rl-pg-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-2.5px); } }
 
         /* 宝宝护理：暖色小爱心弹跳 */
         .rl-baby-wrap { display:flex; flex-direction:column; align-items:center; gap:7px; }
