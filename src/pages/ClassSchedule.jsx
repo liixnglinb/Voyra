@@ -24,8 +24,8 @@ const ACCENT_LINE = 'rgba(164,136,48,.42)';
 const WEEKDAY = ['一', '二', '三', '四', '五', '六', '日'];
 const MAX_WEEK = 20;
 
-/* 连堂节次块（大学课表按此组织，含晚自习） */
-const SLOTS = [
+/* 连堂节次块（大学课表按此组织，含晚自习）；用户可在「时间设置」中覆盖 time */
+const DEFAULT_SLOTS = [
   { key: '1-2',    label: '1-2 节',   time: '08:00-09:45', start: 1,  night: false },
   { key: '3-4',    label: '3-4 节',   time: '10:00-11:45', start: 3,  night: false },
   { key: '5-6',    label: '5-6 节',   time: '13:30-15:15', start: 5,  night: false },
@@ -33,8 +33,9 @@ const SLOTS = [
   { key: '晚自习1', label: '晚自习 1', time: '19:00-20:40', start: 9,  night: true },
   { key: '晚自习2', label: '晚自习 2', time: '20:50-22:15', start: 11, night: true },
 ];
-const SLOT_BY_START = Object.fromEntries(SLOTS.map((s) => [s.start, s.key]));
-const SLOT_META = Object.fromEntries(SLOTS.map((s) => [s.key, s]));
+const SLOTS = DEFAULT_SLOTS;
+const SLOT_BY_START = Object.fromEntries(DEFAULT_SLOTS.map((s) => [s.start, s.key]));
+const SLOT_META = Object.fromEntries(DEFAULT_SLOTS.map((s) => [s.key, s]));
 
 const INC = { every: '每周', odd: '单周', even: '双周' };
 
@@ -270,8 +271,9 @@ function inWeek(c, w) {
 export default function ClassSchedule({ stats = null, active = true }) {
   const { guard } = useAuth();
   const [courses, setCourses] = useState([]);
-  const [settings, setSettings] = useState({ startDate: '', overrideWeek: null });
+  const [settings, setSettings] = useState({ startDate: '', overrideWeek: null, timeSlots: null });
   const [showSettings, setShowSettings] = useState(false);
+  const [showTimeSettings, setShowTimeSettings] = useState(false);
   const [importText, setImportText] = useState('');
   const [parsed, setParsed] = useState([]);
   const [copied, setCopied] = useState(false);
@@ -320,17 +322,17 @@ export default function ClassSchedule({ stats = null, active = true }) {
     if (active) requestAnimationFrame(fitGrid);
   }, [active]);
 
-  /* 增删课程 / 周次设置面板展开收起都会改变卡片高度，联动重算 */
+  /* 增删课程 / 设置面板展开收起都会改变卡片高度，联动重算 */
   useEffect(() => {
     requestAnimationFrame(fitGrid);
-  }, [showSettings, courses.length]);
+  }, [showSettings, showTimeSettings, courses.length]);
 
   const say = (msg) => { setToast(msg); clearTimeout(toastRef.current); toastRef.current = setTimeout(() => setToast(''), 1800); };
 
   useEffect(() => {
     try {
       const raw = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
-      if (raw) { setCourses(raw.courses || []); setSettings(raw.settings || { startDate: '', overrideWeek: null }); }
+      if (raw) { setCourses(raw.courses || []); setSettings(raw.settings || { startDate: '', overrideWeek: null, timeSlots: null }); }
     } catch { /* ignore */ }
   }, []);
 
@@ -340,6 +342,23 @@ export default function ClassSchedule({ stats = null, active = true }) {
     const s = nextSettings ?? settings;
     setCourses(c); setSettings(s);
     try { localStorage.setItem(LS_READ(), JSON.stringify({ courses: c, settings: s })); } catch { /* ignore */ }
+  };
+
+  /* 节次时间：默认值 + 用户在「时间设置」中的覆盖（只覆盖 time，label/夜间标志仍用默认） */
+  const timeSlots = useMemo(() => {
+    const base = Object.fromEntries(DEFAULT_SLOTS.map((s) => [s.key, { ...s }]));
+    const ov = settings.timeSlots || {};
+    for (const k of Object.keys(ov)) {
+      const t = String(ov[k] || '').trim();
+      if (base[k] && /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(t)) base[k].time = t;
+    }
+    return base;
+  }, [settings.timeSlots]);
+  const setSlotTime = (key, time) => {
+    if (!/^\d{2}:\d{2}-\d{2}:\d{2}$/.test(time)) return;
+    const ov = { ...(settings.timeSlots || {}) };
+    ov[key] = time;
+    persist(null, { ...settings, timeSlots: ov });
   };
 
   const autoWeek = useMemo(() => {
@@ -448,20 +467,22 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-field { display:flex;flex-direction:column; }
         .cs-grid { overflow-x:auto; }
         .cs-grid table { width:100%;border-collapse:collapse;table-layout:fixed; }
-        .cs-grid th,.cs-grid td { border:1px solid rgba(20,24,33,.09); }
+        .cs-grid th,.cs-grid td { border:1px solid rgba(20,24,33,.075); }
         .cs-grid tbody td { height:var(--cs-row-h,auto); }
-        .cs-grid th { background:#F7F8FA;color:#6c757d;font-size:12px;font-weight:700;padding:10px 4px; }
-        .cs-grid .per { background:#FBFBFC;color:#7b7f89;font-size:11.5px;width:86px;text-align:center;padding:10px 5px;line-height:1.5; }
-        .cs-grid .per b { display:block;font-size:12.5px;color:#212529; }
+        .cs-grid thead th { background:#F6F7F9;color:#5A5F69;font-size:12px;font-weight:700;letter-spacing:.06em;padding:11px 4px; }
+        .cs-grid thead th.per { background:#FAFAFB; }
+        .cs-grid .per { background:#FBFBFC;color:#9095A0;font-size:11px;width:88px;text-align:center;padding:10px 5px;line-height:1.5;font-variant-numeric:tabular-nums; }
+        .cs-grid .per b { display:block;font-size:12.5px;color:#212529;letter-spacing:.02em;margin-bottom:2px; }
         .cs-grid td.empty { background:#FCFCFD; }
-        .cs-cell { background:${ACCENT_SOFT};border:1px solid ${ACCENT_LINE};border-radius:8px;height:100%;padding:12px 10px;display:flex;flex-direction:column;justify-content:center;gap:5px; }
-        .cs-cell .n { font-size:13px;font-weight:700;color:${ACCENT};line-height:1.3; }
-        .cs-cell .r { display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:#9a7515;margin-top:1px;line-height:1.3; }
-        .cs-cell .t { font-size:11px;color:#7b7f89;margin-top:3px;line-height:1.35; }
-        .cs-cell.night { background:rgba(99,102,241,.06);border-style:dashed; }
+        .cs-cell { background:linear-gradient(180deg, ${ACCENT_SOFT}, #FFFDF2);border:1px solid ${ACCENT_LINE};border-radius:10px;height:100%;padding:12px 11px;display:flex;flex-direction:column;justify-content:center;gap:5px;transition:border-color .15s ease,box-shadow .15s ease;box-shadow:0 1px 2px rgba(164,136,48,.05); }
+        .cs-cell:hover { border-color:rgba(164,136,48,.62);box-shadow:0 2px 8px rgba(164,136,48,.14); }
+        .cs-cell .n { font-size:13.5px;font-weight:750;color:#8A7327;line-height:1.35;letter-spacing:.02em;word-break:break-word; }
+        .cs-cell .r { display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:#9A7515;margin-top:1px;line-height:1.3;word-break:break-word; }
+        .cs-cell .t { font-size:11px;color:#7B7F89;margin-top:3px;line-height:1.35;letter-spacing:.01em;word-break:break-word; }
+        .cs-cell.night { background:linear-gradient(180deg, rgba(99,102,241,.07), rgba(99,102,241,.03));border-style:dashed;border-color:rgba(99,102,241,.3); }
         .cs-empty { text-align:center;padding:26px 0;color:#adb5bd;font-size:13px; }
         .cs-list-row { display:flex;align-items:center;gap:12px;border-top:1px solid rgba(20,24,33,.07);padding:10px 4px;flex-wrap:wrap; }
-        .cs-tag { display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#495057;background:#F1F3F5;border-radius:7px;padding:4px 9px; }
+        .cs-tag { display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#3D424C;background:#F1F3F5;border-radius:7px;padding:4px 10px;letter-spacing:.01em; }
         .cs-tag.night { color:#5F3DC4;background:#F1EEFF; }
         .cs-review { border:1px dashed ${ACCENT_LINE};border-radius:10px;background:${ACCENT_SOFT};padding:10px 12px;margin-top:10px; }
         .cs-review-item { display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 10px;margin:4px 4px 0 0;font-size:12px; }
@@ -490,6 +511,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
             <input type="number" min={1} max={MAX_WEEK} value={currentWeek} onChange={(e) => setWeekInput(e.target.value)} className="cs-input no-spin" style={{ width: 68 }} />
             <button className="cs-btn" onClick={() => goWeek(1)}>下一周<ChevronRight size={15} /></button>
             <button className="cs-btn" onClick={() => setShowSettings((v) => !v)}><RefreshCw size={14} />周次设置</button>
+            <button className="cs-btn" onClick={() => setShowTimeSettings((v) => !v)}><Clock size={14} />时间设置</button>
           </div>
         </div>
         {showSettings && (
@@ -512,6 +534,33 @@ export default function ClassSchedule({ stats = null, active = true }) {
             </div>
           </div>
         )}
+        {showTimeSettings && (
+          <div className="cs-card" style={{ boxShadow: 'none', borderColor: 'rgba(20,24,33,.12)' }}>
+            <div className="cs-row" style={{ alignItems: 'flex-end' }}>
+              {DEFAULT_SLOTS.map((s) => {
+                const [st, en] = (timeSlots[s.key].time || '08:00-09:45').split('-');
+                return (
+                  <div key={s.key} className="cs-field" style={{ gap: 4 }}>
+                    <label className="cs-l">{s.label}{s.night ? '（晚自习）' : ''}</label>
+                    <div className="cs-row" style={{ gap: 4 }}>
+                      <input type="time" className="cs-input" style={{ width: 96 }} value={st}
+                        onChange={(e) => setSlotTime(s.key, `${e.target.value}-${en}`)} />
+                      <span style={{ color: '#adb5bd', fontSize: 12 }}>至</span>
+                      <input type="time" className="cs-input" style={{ width: 96 }} value={en}
+                        onChange={(e) => setSlotTime(s.key, `${st}-${e.target.value}`)} />
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="cs-field" style={{ alignSelf: 'flex-end' }}>
+                <button className="cs-btn" onClick={() => { persist(null, { ...settings, timeSlots: null }); say('已恢复默认作息'); }}>恢复默认</button>
+              </div>
+            </div>
+            <p style={{ margin: '8px 0 0', width: '100%', fontSize: 12, color: '#6c757d' }}>
+              自定义每节课起止时间（含晚自习），课表、明细与手动添加会同步更新；恢复默认使用标准大学作息。
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 周网格课表 */}
@@ -531,7 +580,9 @@ export default function ClassSchedule({ stats = null, active = true }) {
               </tr>
             </thead>
             <tbody>
-              {SLOTS.map((slot) => (
+              {DEFAULT_SLOTS.map((s) => {
+                const slot = timeSlots[s.key];
+                return (
                 <tr key={slot.key}>
                   <td className="per"><b>{slot.label}</b>{slot.time}</td>
                   {WEEKDAY.map((_, di) => {
@@ -551,7 +602,8 @@ export default function ClassSchedule({ stats = null, active = true }) {
                     return <td key={d} className="empty">{(slot.night && <Moon size={13} style={{ opacity: .4 }} />) || ''}</td>;
                   })}
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -578,11 +630,11 @@ export default function ClassSchedule({ stats = null, active = true }) {
           </div>
         ) : (
           weekCourses.map((c) => {
-            const meta = SLOT_META[c.slot];
+            const meta = timeSlots[c.slot] || SLOT_META[c.slot];
             return (
               <div key={c.id} className="cs-list-row">
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#212529' }}>{c.name}</div>
+                  <div style={{ fontSize: 14.5, fontWeight: 750, color: '#212529', letterSpacing: '.02em' }}>{c.name}</div>
                   <span className="cs-tag" style={{ marginTop: 5, display: 'inline-flex' }}>{c.weeksText}</span>
                 </div>
                 <span className="cs-tag"><CalendarDays size={12} />周{WEEKDAY[c.day - 1]}</span>
@@ -655,7 +707,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
             </select></div>
           <div className="cs-field"><label className="cs-l">节次（连堂块）</label>
             <select className="cs-input" value={form.slot} onChange={(e) => setForm({ ...form, slot: e.target.value })}>
-              {SLOTS.map((s) => <option key={s.key} value={s.key}>{s.label}（{s.time}）{s.night ? '晚自习' : ''}</option>)}
+              {DEFAULT_SLOTS.map((s) => <option key={s.key} value={s.key}>{timeSlots[s.key].label}（{timeSlots[s.key].time}）{s.night ? '晚自习' : ''}</option>)}
             </select></div>
           <div className="cs-field"><label className="cs-l">周次</label>
             <div className="cs-row">
