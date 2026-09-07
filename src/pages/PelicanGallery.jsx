@@ -2,13 +2,15 @@ import React from 'react';
 
 /* ============================================================
    AI 动画画廊 · PelicanGallery
-   13 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
+   15 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
    排序：按各 HTML 生成时间从新到旧（不分厂商大类）
    卡片：一个大框 = 模型名称 + 生成的画面，无多余元素
    画面：iframe 按各自 viewBox 比例适配，完整展示、不留黑边
    ============================================================ */
 
 const ITEMS = [
+  { file: 'deepseek-v4-pro.html',   model: 'DeepSeek-V4 Pro 正式版',  ratio: '900/520' },
+  { file: 'deepseek-v4-flash.html', model: 'DeepSeek-V4 Flash 正式版', ratio: '900/520' },
   { file: 'gpt56-sol-ulter.html',   model: 'gpt 5.6 sol Ulter',      ratio: '1600/900' },
   { file: 'qwen38-max.html',        model: 'Qwen3.8-Max',            ratio: '800/480' },
   { file: 'qwen3.7-plus.html',      model: 'Qwen3.7-Plus',           ratio: '600/400' },
@@ -71,7 +73,7 @@ export default function PelicanGallery() {
           </div>
           <div className="pg-stats">
             <span className="pg-stat"><b>{TOTAL}</b> 个模型</span>
-            <span className="pg-stat"><b>7</b> 家厂商</span>
+            <span className="pg-stat"><b>8</b> 家厂商</span>
             <span className="pg-stat is-gold"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>全部实时播放</span>
           </div>
         </div>

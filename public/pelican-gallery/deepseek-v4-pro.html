@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="RapaSvYgaxNt0CnZDB7i09">
+<head data-page-node-id="nZ8elZgN0LQeVWG9tIFBXI">
+<meta charset="UTF-8" data-page-node-id="uFi0rDrLtSC5KJNWtL9q2b">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="z54AVLP4TzdBYx2IjRFBka">
+<title>鹈鹕骑自行车 · DeepSeek v4 pro 正式版1</title>
+<style>
+  :root {
+    --card-bg: #f5f9fc;
+    --ink: #2c3e50;
+    --accent: #e67e22;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 28px 16px;
+    background: radial-gradient(1200px 700px at 50% 0%, #dfeefb 0%, #c9ddf0 55%, #b6cfe8 100%);
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  }
+
+  .stage {
+    width: min(920px, 100%);
+    background: var(--card-bg);
+    border-radius: 22px;
+    box-shadow: 0 18px 50px rgba(40, 70, 110, 0.22);
+    overflow: hidden;
+    padding: 8px;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .caption {
+    text-align: center;
+    color: var(--ink);
+  }
+
+  .caption h1 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .caption p {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: #5c7186;
+  }
+
+  .badge {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #dbe6f0;
+    color: #46607c;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .badge b { color: var(--accent); font-weight: 700; }
+
+  /* ---------- 动画关键帧 ---------- */
+  @keyframes spin   { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+  @keyframes crank  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+  @keyframes bob    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes flap   { 0%,100% { transform: rotate(-16deg); } 50% { transform: rotate(20deg); } }
+  @keyframes legFront { 0%,100% { transform: rotate(-13deg); } 50% { transform: rotate(13deg); } }
+  @keyframes legBack  { 0%,100% { transform: rotate(13deg); } 50% { transform: rotate(-13deg); } }
+  @keyframes pouch  { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.09); } }
+  @keyframes cloud1 { 0%,100% { transform: translateX(0); } 50% { transform: translateX(46px); } }
+  @keyframes cloud2 { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-38px); } }
+  @keyframes sunPulse { 0%,100% { opacity: 0.35; } 50% { opacity: 0.12; } }
+
+  .wheel, .crank, .leg, .wing, .pouch, .bob, .cloud {
+    transform-box: view-box;
+  }
+  .wheel  { animation: spin 1.1s linear infinite; }
+  .crank  { animation: crank 1.1s linear infinite; }
+  .bob    { animation: bob 0.55s ease-in-out infinite; }
+  .wing   { animation: flap 0.8s ease-in-out infinite; }
+  .legF   { animation: legFront 1.1s ease-in-out infinite; }
+  .legB   { animation: legBack 1.1s ease-in-out infinite; }
+  .pouch  { animation: pouch 0.55s ease-in-out infinite; }
+  .cloudA { animation: cloud1 9s ease-in-out infinite; }
+  .cloudB { animation: cloud2 12s ease-in-out infinite; }
+  .halo   { animation: sunPulse 3.4s ease-in-out infinite; }
+</style>
+</head>
+<body data-page-node-id="Y35Wlb4U4iGghrwZjQbtnp">
+  <div class="caption" data-page-node-id="loQ76FoijIKcBDrsAEknd7">
+    <h1 data-page-node-id="7Y0sJT5GbvfH867MgqTIDA">鹈鹕骑自行车 🐦🚲</h1>
+    <p data-page-node-id="k0A8UaQXGb3LmR7lh54cip">Pelican Riding a Bicycle · 2D SVG Animation</p>
+    <span class="badge" data-page-node-id="VISMCVf3ANWBVDZp5AX8GA">模型：<b data-page-node-id="K3mlzXFr7SqYYiGd9vDsTY">DeepSeek v4 pro 正式版1</b></span>
+  </div>
+
+  <div class="stage" data-page-node-id="mSXU40sHbLSfXTZWskPMr1">
+    <svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="一只鹈鹕骑着自行车的 2D 动画" data-page-node-id="VMvItYkZaY3IU8BSw1dk2M">
+      <defs data-page-node-id="pjcIoF795z3sSQqEzidKPq">
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1" data-page-node-id="QBePteAzYBjO3GBK9aTVDZ">
+          <stop offset="0%" stop-color="#a8d8f0" data-page-node-id="rOILL0Of2Cuh2MTQGdG5ju"/>
+          <stop offset="62%" stop-color="#dceffb" data-page-node-id="QFzAVF02M55buc7FmPJWxn"/>
+          <stop offset="100%" stop-color="#f2fafe" data-page-node-id="dYa6H1xA5LsFgnJV842SeR"/>
+        </linearGradient>
+        <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1" data-page-node-id="2q03hXdV97Pfzz6J3UdGQe">
+          <stop offset="0%" stop-color="#ffe27a" data-page-node-id="b4TugV7CqvD6LUElwckadw"/>
+          <stop offset="100%" stop-color="#ffbf3d" data-page-node-id="kOuao68dlZmQlP46ijmakD"/>
+        </linearGradient>
+        <linearGradient id="hillBack" x1="0" y1="0" x2="0" y2="1" data-page-node-id="CWHmHmZPH1xG6Tae9dumO3">
+          <stop offset="0%" stop-color="#b9e0a8" data-page-node-id="4WteKFIFFmx4F8IlAyLRXs"/>
+          <stop offset="100%" stop-color="#9ad38d" data-page-node-id="IRDp3EPbMm7UWQoM8JLvdn"/>
+        </linearGradient>
+        <linearGradient id="hillFront" x1="0" y1="0" x2="0" y2="1" data-page-node-id="hGD9pK7Sq3ySNm9LIBJzyH">
+          <stop offset="0%" stop-color="#9fd48b" data-page-node-id="OqIUf3Fjhaq2adLHEcKk52"/>
+          <stop offset="100%" stop-color="#7cbf6b" data-page-node-id="r8c9kWaebn7SwHRXLoXoWT"/>
+        </linearGradient>
+        <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1" data-page-node-id="6UoUha2ZkwwN9uPg4NcDYU">
+          <stop offset="0%" stop-color="#8ccd5f" data-page-node-id="GDwWxzZ5BqEAdRtDgj7pmH"/>
+          <stop offset="100%" stop-color="#5aa63d" data-page-node-id="YR25xaHQuPfxEZ0cO14ew4"/>
+        </linearGradient>
+        <linearGradient id="body" x1="0" y1="0" x2="0" y2="1" data-page-node-id="A1RnLRJCTyzQPXfzx0QKy8">
+          <stop offset="0%" stop-color="#ffffff" data-page-node-id="toBaaNnm1TaHVj1efbh2eU"/>
+          <stop offset="100%" stop-color="#dfe9f0" data-page-node-id="mDsUPvVSzYvUUk8okpoOee"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 天空 -->
+      <rect x="0" y="0" width="900" height="520" fill="url(#sky)" data-page-node-id="puL9tLsi8FcpHlC7gbD5G9"/>
+
+      <!-- 太阳 -->
+      <circle class="halo" cx="770" cy="92" r="64" fill="#fff2b8" data-page-node-id="LlWIJMgVlWdjzfrFoL0lCT"/>
+      <circle cx="770" cy="92" r="40" fill="url(#sun)" data-page-node-id="APj0ZYNsFjSw5Jc4em9EuA"/>
+
+      <!-- 远景山丘 -->
+      <path d="M0,430 Q120,330 260,400 Q360,448 520,392 Q680,340 900,410 L900,520 L0,520 Z" fill="url(#hillBack)" opacity="0.9" data-page-node-id="14Lo1PtKVeD7m4eCV5kkNr"/>
+      <path d="M0,442 Q180,368 380,424 Q540,462 720,414 Q820,392 900,430 L900,520 L0,520 Z" fill="url(#hillFront)" data-page-node-id="H87sBBtCBAVYnPQa1eH1So"/>
+
+      <!-- 云朵 A -->
+      <g class="cloudA" style="transform-origin: 200px 90px;" data-page-node-id="2bT7Cs1MmtKCxFNjFnUOQC">
+        <g fill="#ffffff" opacity="0.95" data-page-node-id="nPPi4kMhApeSjliXzKBMZr">
+          <ellipse cx="150" cy="92" rx="46" ry="22" data-page-node-id="NKG4jLGMjGCvkWNGHmwe0I"/>
+          <ellipse cx="195" cy="80" rx="40" ry="26" data-page-node-id="463c4XEmTdY3ybrNS5nSqx"/>
+          <ellipse cx="240" cy="94" rx="42" ry="20" data-page-node-id="f4OdLahJtkmGt4lMV0Rr4Y"/>
+        </g>
+      </g>
+
+      <!-- 云朵 B -->
+      <g class="cloudB" style="transform-origin: 560px 60px;" data-page-node-id="hyBHzwZBUpUgBX6n9qC5pA">
+        <g fill="#ffffff" opacity="0.85" data-page-node-id="CuXYbsve0OhAmQhcEsVX0e">
+          <ellipse cx="520" cy="66" rx="38" ry="19" data-page-node-id="ghFPxUGiHTr84vaMIQt1fb"/>
+          <ellipse cx="562" cy="54" rx="34" ry="23" data-page-node-id="vHR8SNGYJk5desXRoXUaRt"/>
+          <ellipse cx="600" cy="68" rx="36" ry="17" data-page-node-id="qE9UGwFJiioiSp71SYpBPt"/>
+        </g>
+      </g>
+
+      <!-- 地面 -->
+      <rect x="0" y="435" width="900" height="85" fill="url(#ground)" data-page-node-id="YNXXbgpkMtVCiof1qZRBkC"/>
+
+      <!-- 地面细节：小草 / 小花 -->
+      <g stroke="#4d9433" stroke-width="2.5" stroke-linecap="round" data-page-node-id="TyPWkcLv9dglHfErUQvHXc">
+        <path d="M120,452 Q124,442 128,452" fill="none" data-page-node-id="1edBHsWEO28QhTWCMYszvJ"/>
+        <path d="M132,452 Q136,438 140,452" fill="none" data-page-node-id="aIndkDiSIcxDsiwVp4qV0h"/>
+        <path d="M520,452 Q525,440 530,452" fill="none" data-page-node-id="uS8ihoiAzI4FqUkDWXAt8p"/>
+        <path d="M770,450 Q775,438 780,450" fill="none" data-page-node-id="IM5LJFNB3Vd45KRpoq0Vtp"/>
+      </g>
+      <g fill="#f6d55c" data-page-node-id="dB2Qco9rMXlXEiwD3ekH35">
+        <circle cx="360" cy="452" r="3.4" data-page-node-id="9tzJ6wRRq8LbNW1rbDgJWD"/>
+        <circle cx="368" cy="448" r="2.6" data-page-node-id="fxZiTJdtvED5xo1DJqxgtU"/>
+        <circle cx="700" cy="452" r="3.2" data-page-node-id="eWvgVlh2z7BzYoElote0nK"/>
+      </g>
+
+      <!-- 车身下方阴影 -->
+      <ellipse cx="425" cy="438" rx="230" ry="11" fill="rgba(0,0,0,0.13)" data-page-node-id="IQ8t7UZuX3YonBNcvaneFa"/>
+
+      <!-- ============ 自行车 ============ -->
+      <!-- 后轮 -->
+      <g class="wheel" style="transform-origin: 240px 385px;" data-page-node-id="7wQcIUgYDkPITyDCHL544D">
+        <circle cx="240" cy="385" r="50" fill="none" stroke="#2f3542" stroke-width="9" data-page-node-id="lG3AsbcuXZW48yt0BBCH6D"/>
+        <circle cx="240" cy="385" r="45" fill="none" stroke="#5a6472" stroke-width="2" data-page-node-id="8ui3a8koelAxmoa61kqdYR"/>
+        <circle cx="240" cy="385" r="9" fill="#8a94a6" data-page-node-id="Lk2cPIZZFEwIcOUNgDk4Og"/>
+        <g stroke="#9aa4b5" stroke-width="2" data-page-node-id="1JC5HfdudFK1M7KrrAWBYx">
+          <line x1="240" y1="385" x2="240" y2="335" data-page-node-id="2FBs5lFZYOB1kSuyqfdDyj"/>
+          <line x1="240" y1="385" x2="240" y2="435" data-page-node-id="dPpVNGqORgoiR5SBv7IbCM"/>
+          <line x1="240" y1="385" x2="190" y2="385" data-page-node-id="KaaIUzWNM82sDNsFwsGzAb"/>
+          <line x1="240" y1="385" x2="290" y2="385" data-page-node-id="jDxDIjZWOSsqRRlmzv9wt5"/>
+          <line x1="240" y1="385" x2="204" y2="349" data-page-node-id="5gYCk3avo5DOCgMSQipEqX"/>
+          <line x1="240" y1="385" x2="276" y2="421" data-page-node-id="gWuFoTaQAeA0gvUK2h9PjX"/>
+          <line x1="240" y1="385" x2="276" y2="349" data-page-node-id="wyb3J1OpE03SiCTEGgK2V3"/>
+          <line x1="240" y1="385" x2="204" y2="421" data-page-node-id="JSBe4xQ7r1HMd7BHQ27GPq"/>
+        </g>
+      </g>
+
+      <!-- 前轮 -->
+      <g class="wheel" style="transform-origin: 615px 385px;" data-page-node-id="aKhi9HgvbL40hCA3IfDAeo">
+        <circle cx="615" cy="385" r="50" fill="none" stroke="#2f3542" stroke-width="9" data-page-node-id="e0kHBMCBdQKe0PMlWsIOsI"/>
+        <circle cx="615" cy="385" r="45" fill="none" stroke="#5a6472" stroke-width="2" data-page-node-id="OoQojKZWPfohii4vYbYKGW"/>
+        <circle cx="615" cy="385" r="9" fill="#8a94a6" data-page-node-id="4NuWqiBejFbJr5AdgSEEgJ"/>
+        <g stroke="#9aa4b5" stroke-width="2" data-page-node-id="qep9NLzNYKq4FRqn1nQqci">
+          <line x1="615" y1="385" x2="615" y2="335" data-page-node-id="4AAfNN41c6xJtpjWhs0zRM"/>
+          <line x1="615" y1="385" x2="615" y2="435" data-page-node-id="A4PEB9Afxv5DFBG1aLxz54"/>
+          <line x1="615" y1="385" x2="565" y2="385" data-page-node-id="h2Z1M1UMEI51zB7jubFG3C"/>
+          <line x1="615" y1="385" x2="665" y2="385" data-page-node-id="nKrq5sHYmkCqZoFcBxzOQc"/>
+          <line x1="615" y1="385" x2="579" y2="349" data-page-node-id="E91SzNBQRBli2tqFQicRTN"/>
+          <line x1="615" y1="385" x2="651" y2="421" data-page-node-id="YJlA5LhBhMb7JSOswSDbi0"/>
+          <line x1="615" y1="385" x2="651" y2="349" data-page-node-id="gXrP3cP3UhtLMgPYpNYizq"/>
+          <line x1="615" y1="385" x2="579" y2="421" data-page-node-id="mnYbGdaBiotMDHeQWFys62"/>
+        </g>
+      </g>
+
+      <!-- 车架 -->
+      <g stroke="#e67e22" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none" data-page-node-id="CSgZthwCLrCFjCBhjS4cBA">
+        <!-- 后下叉 -->
+        <line x1="240" y1="385" x2="420" y2="385" data-page-node-id="btouanTqhxp8CTVeee8xcQ"/>
+        <!-- 坐管 -->
+        <line x1="420" y1="385" x2="395" y2="290" data-page-node-id="d833wEQ8W68y9CMWx4AEqv"/>
+        <!-- 上管 -->
+        <line x1="395" y1="292" x2="585" y2="300" data-page-node-id="iu6reuwGbd9xTI7JA0qHet"/>
+        <!-- 下管 -->
+        <line x1="420" y1="385" x2="585" y2="300" data-page-node-id="9odw0E2mhDnmJJAhxJpGAC"/>
+        <!-- 前叉 -->
+        <line x1="585" y1="300" x2="615" y2="385" data-page-node-id="i8jQpwKogybW0OBfHVRN7A"/>
+      </g>
+
+      <!-- 坐垫 -->
+      <ellipse cx="390" cy="283" rx="32" ry="10" fill="#2f3542" data-page-node-id="OWB80O7KaHCExBLPjRqykE"/>
+      <rect x="383" y="283" width="14" height="7" rx="2" fill="#2f3542" data-page-node-id="taCoXiKX3Z6LsOCvg6UHZc"/>
+
+      <!-- 车把 -->
+      <g stroke="#2f3542" stroke-width="6" stroke-linecap="round" data-page-node-id="zFkHYxGPmOrSQsxTvWFtzO">
+        <line x1="585" y1="300" x2="585" y2="268" data-page-node-id="WWNHjnBZIG0c2wCwep6qr0"/>
+        <line x1="572" y1="268" x2="598" y2="268" data-page-node-id="ZWY7w3GKAoWgEvOxER9gRv"/>
+      </g>
+      <circle cx="572" cy="268" r="5" fill="#e74c3c" data-page-node-id="iQXGrSTpZEffesBqyaH6j2"/>
+      <circle cx="598" cy="268" r="5" fill="#e74c3c" data-page-node-id="79CeAococVrwUmci7TCjg5"/>
+
+      <!-- 曲柄 + 踏板 -->
+      <g class="crank" style="transform-origin: 420px 385px;" data-page-node-id="HTjcOHqFEQk2jCEEGiHUVi">
+        <circle cx="420" cy="385" r="8" fill="#2f3542" data-page-node-id="LCLhpWud3UYayX5QazXCAC"/>
+        <line x1="420" y1="385" x2="449" y2="385" stroke="#2f3542" stroke-width="6" stroke-linecap="round" data-page-node-id="5g2GOSPZd1pYee4GTZ8zrB"/>
+        <rect x="439" y="378" width="21" height="8" rx="2.5" fill="#2f3542" data-page-node-id="Aebnz8rb5sGDNq5w5HU4zf"/>
+        <line x1="420" y1="385" x2="391" y2="385" stroke="#2f3542" stroke-width="6" stroke-linecap="round" data-page-node-id="SoXjzyr0x9PHv3qFThDl1J"/>
+        <rect x="370" y="378" width="21" height="8" rx="2.5" fill="#2f3542" data-page-node-id="QQC9GSgeOvyzDXPPIywQ4S"/>
+      </g>
+
+      <!-- ============ 鹈鹕 ============ -->
+      <g class="bob" data-page-node-id="p9TdNfZAzr1AgKE9dEdXw8">
+        <!-- 尾羽 -->
+        <g fill="#eef4f8" stroke="#c9d6df" stroke-width="2" data-page-node-id="K5k8YASMFlWzrhlVmGyaqK">
+          <path d="M330,224 L296,208 L316,228 L294,234 L328,238 Z" data-page-node-id="FSRTRivDvkyOhgFHDuXDh9"/>
+        </g>
+
+        <!-- 身体 -->
+        <ellipse cx="392" cy="228" rx="72" ry="48" fill="url(#body)" stroke="#c9d6df" stroke-width="2" transform="rotate(-8 392 228)" data-page-node-id="Tm3AsXo5ZvJ2n5CSlzmN13"/>
+
+        <!-- 翅膀（扑动） -->
+        <g class="wing" style="transform-origin: 378px 204px;" data-page-node-id="O2DRpgYyEblA4dbbFgvsn6">
+          <path d="M378,204 Q336,176 316,184 Q346,192 376,206 Q398,158 432,152 Q452,176 420,198 Q410,202 378,204 Z"
+                fill="#e9eff4" stroke="#c1cfda" stroke-width="2" data-page-node-id="DnBc5ZCfnHQ4U2v6ipYQeY"/>
+        </g>
+
+        <!-- 脖子 + 头 -->
+        <path d="M444,204 Q488,184 516,170" fill="none" stroke="#ffffff" stroke-width="27" stroke-linecap="round" data-page-node-id="p86jfnd8zrk0a3uUiNla1V"/>
+        <path d="M444,204 Q488,184 516,170" fill="none" stroke="#e6edf3" stroke-width="27" stroke-linecap="round" opacity="0.35" data-page-node-id="xh8U7wfjBTMLMbQ9ND10Uw"/>
+        <circle cx="522" cy="164" r="26" fill="#ffffff" stroke="#e0e9ef" stroke-width="2" data-page-node-id="habzQc6Qs3WcnCLDYYLtau"/>
+
+        <!-- 头顶羽冠 -->
+        <path d="M506,142 Q509,126 517,130 Q514,139 519,144 Z" fill="#ffffff" stroke="#e0e9ef" stroke-width="1.6" data-page-node-id="Ixs4Ngp6A4F3bSlxPbn17n"/>
+
+        <!-- 眼睛 -->
+        <circle cx="532" cy="155" r="4.6" fill="#22262c" data-page-node-id="MX4ndPHx9uvKyRbDI0WTHb"/>
+        <circle cx="533.6" cy="153.4" r="1.6" fill="#ffffff" data-page-node-id="1GlG4kbEQ6DuIHYZbEsVNk"/>
+
+        <!-- 上喙 -->
+        <path d="M543,157 L657,181 L543,180 Z" fill="#f4a13c" stroke="#e07b24" stroke-width="2" stroke-linejoin="round" data-page-node-id="RCYPru2AbdhKw1hc52P4kG"/>
+        <line x1="545" y1="169" x2="654" y2="179" stroke="#e07b24" stroke-width="1.4" opacity="0.6" data-page-node-id="nGKeSvHzMd1ksLUPUtCcvV"/>
+
+        <!-- 喉囊（呼吸鼓动） -->
+        <g class="pouch" style="transform-origin: 545px 182px;" data-page-node-id="kAQ5SmOJXS1X5swWizh7aM">
+          <path d="M545,181 Q605,216 642,240 Q582,250 545,209 Z" fill="#f6b84e" stroke="#e8953a" stroke-width="2" stroke-linejoin="round" data-page-node-id="wvtjHSg9pAxfsNPCZ4Qoak"/>
+        </g>
+
+        <!-- 远侧腿（暗色） -->
+        <g class="legB" style="transform-origin: 398px 252px;" data-page-node-id="C7WV1yCSnEEvBHJys9b8Kf">
+          <path d="M398,252 L407,320 L421,383" fill="none" stroke="#e08e0b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="q0xk7CvUJ4gFrNISAUIyh3"/>
+          <ellipse cx="421" cy="385" rx="9" ry="4" fill="#e08e0b" data-page-node-id="GB0MDxOGVdV5lBsxiGxHgb"/>
+        </g>
+
+        <!-- 近侧腿（亮色） -->
+        <g class="legF" style="transform-origin: 398px 252px;" data-page-node-id="36TJrVyopjRriW0kGPolZk">
+          <path d="M398,252 L411,320 L434,385" fill="none" stroke="#f39c12" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" data-page-node-id="CmD47kSHyo2aGEThjHRMYK"/>
+          <ellipse cx="435" cy="387" rx="10" ry="4.5" fill="#f39c12" data-page-node-id="EDVwGBgeJctJQPPK6EzA3p"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="caption" data-page-node-id="o3mOWBlAuBlnfONqwe8C9V">
+    <span class="badge" data-page-node-id="5l49ijRvY7VsUMXat5F4Rz">模型：<b data-page-node-id="HDtqlktWcxa7Wwe1owAJWK">DeepSeek v4 pro 正式版1</b></span>
+  </div>
+</body>
+</html>

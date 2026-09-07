@@ -12,7 +12,7 @@ import { ARTICLES } from '../data/articles';
 const FEATURED = [
   { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
   { to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
-  { to: '/pelican-gallery', no: '03', name: 'AI 动画画廊', desc: '同一题「鹈鹕骑自行车」交给 13 个 AI 模型分别生成，动效风格一页对比。', cta: '浏览画廊', Icon: Film, art: 'pelican' },
+  { to: '/pelican-gallery', no: '03', name: 'AI 动画画廊', desc: '同一题「鹈鹕骑自行车」交给 15 个 AI 模型分别生成，动效风格一页对比。', cta: '浏览画廊', Icon: Film, art: 'pelican' },
   { to: '/prompts', no: '04', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
   { to: '/uikit', no: '05', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
   { to: '/skills', no: '06', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
@@ -295,7 +295,7 @@ function FeatureArt({ type }) {
   }
 
   if (type === 'pelican') {
-    const models = ['豆包 2.1 Turbo', 'Qwen3.8-Max', 'GLM-5.1', 'Kimi-K3'];
+    const models = ['豆包 2.1 Turbo', 'Qwen3.8-Max', 'GLM-5.1', 'Kimi-K3', 'DeepSeek-V4 Pro'];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-pelican-art">
       <style>{`
         .vr-pelican-art .mini-spin{transform-box:view-box;transform-origin:center;animation:mini-spin 1s linear infinite}
@@ -309,7 +309,7 @@ function FeatureArt({ type }) {
         .vr-pelican-art .mini-bob{animation:mini-bob .8s ease-in-out infinite alternate}
         @keyframes mini-bob{from{transform:translateY(0)}to{transform:translateY(-2.5px)}}
       `}</style>
-      <div className="vr-preview-top"><Film size={15} /><span>同题动画对比</span><b>{models[active]} 等 {13} 个模型</b></div>
+      <div className="vr-preview-top"><Film size={15} /><span>同题动画对比</span><b>{models[active]} 等 {15} 个模型</b></div>
       <div className="vr-pelican-stage">
         <svg viewBox="0 0 300 150" role="img" aria-label="迷你鹈鹕骑自行车动画">
           <defs><linearGradient id="miniSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#a5dcff"/><stop offset="1" stopColor="#eaf7ff"/></linearGradient></defs>
