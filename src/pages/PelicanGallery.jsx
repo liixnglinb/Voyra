@@ -100,8 +100,7 @@ async function syncCount(file, delta) {
   } catch { /* 写失败不影响本地已呈现的状态 */ }
 }
 
-/* ---------- iframe 适配 ---------- */
-/* 把 iframe 内部的页头/页脚/控件隐藏，让 SVG 撑满并贴合卡片比例；
+/* ---------- iframe 适配 ---------- *//* 把 iframe 内部的页头/页脚/控件隐藏，让 SVG 撑满并贴合卡片比例；
    只动样式不动 DOM，不破坏 SMIL/CSS/rAF 动画。 */
 function fitFrame(ifr) {
   try {
@@ -146,9 +145,22 @@ function fitFrame(ifr) {
 }
 
 export default function PelicanGallery() {
-  const onIframeLoad = useCallback((e) => fitFrame(e.currentTarget), []);
+  const [ready, setReady] = useState(() => new Set());   // 已加载完成的 iframe（用于淡入）
 
-  const [sort, setSort] = useState('default');       // 'default' | 'likes'
+  const onIframeLoad = useCallback((e) => {
+    fitFrame(e.currentTarget);
+    const f = e.currentTarget.getAttribute('data-file');
+    if (f) setReady((prev) => (prev.has(f) ? prev : new Set(prev).add(f)));
+  }, []);
+
+  const [sort, setSort] = useState(() => {
+    const v = readLS('voyra:pelican:sort', 'default');   // 记住上次的排序选择
+    return v === 'likes' ? 'likes' : 'default';
+  });
+  const changeSort = useCallback((s) => {
+    setSort(s);
+    writeLS('voyra:pelican:sort', s);
+  }, []);
   const [liked, setLiked] = useState(() => {
     const v = readLS(LS_LIKED, []);
     return Array.isArray(v) ? v : [];
@@ -194,6 +206,11 @@ export default function PelicanGallery() {
       .sort((a, b) => (b._c - a._c) || (a._i - b._i));
   }, [sort, counts]);
 
+  /* 当前排序下可见的累计点赞数 */
+  const totalLikes = useMemo(
+    () => ordered.reduce((sum, it) => sum + (counts[it.file] || 0), 0),
+    [ordered, counts],
+  );
 
   return <div className="pg-page">
     <style>{`
@@ -217,6 +234,9 @@ export default function PelicanGallery() {
       /* —— 排序工具条（右上角） —— */
       .pg-tools{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:22px}
       .pg-tools .pg-tools-label{color:#8a8a8a;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em}
+      .pg-total{display:inline-flex;align-items:center;gap:6px;margin-right:auto;color:#8a8a8a;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
+      .pg-total svg{color:#d8a92e}
+      .pg-total b{color:#8a6d12;font-weight:700;font-variant-numeric:tabular-nums}
       .pg-sort{display:inline-flex;gap:4px;padding:4px;border:1px solid rgba(27,27,27,.11);border-radius:99px;background:rgba(255,255,255,.75)}
       .pg-sort button{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 14px;border:0;border-radius:99px;background:transparent;color:#626262;font:12px/1 inherit;font-weight:500;cursor:pointer;transition:background .2s ease,color .2s ease}
       .pg-sort button:hover{color:var(--ink)}
@@ -240,7 +260,8 @@ export default function PelicanGallery() {
       /* 画面：固定 3:2，iframe 撑满；item.zoom 用 transform 居中放大个别偏的源 */
       .pg-frame{position:relative;background:#f2f3f5;overflow:hidden;border-radius:0 0 12px 12px}
       .pg-frame::before{content:"";display:block;aspect-ratio:3/2}
-      .pg-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;transform-origin:center center}
+      .pg-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;transform-origin:center center;opacity:0;transition:opacity .5s ease}
+      .pg-frame iframe.is-ready{opacity:1}
       @media(max-width:900px){.pg-head-row{flex-direction:column;align-items:flex-start;gap:18px}.pg-stats{justify-content:flex-start;max-width:none}.pg-head h1{font-size:42px}.pg-grid{grid-template-columns:1fr}.pg-tools{justify-content:flex-start}}
     `}</style>
 
@@ -261,12 +282,13 @@ export default function PelicanGallery() {
       </header>
 
       <div className="pg-tools">
+        <span className="pg-total"><Heart size={12} /> 累计 <b>{totalLikes}</b></span>
         <span className="pg-tools-label">SORT</span>
         <div className="pg-sort" role="group" aria-label="排序方式">
-          <button type="button" className={sort === 'default' ? 'is-on' : ''} onClick={() => setSort('default')} aria-pressed={sort === 'default'}>
+          <button type="button" className={sort === 'default' ? 'is-on' : ''} onClick={() => changeSort('default')} aria-pressed={sort === 'default'}>
             默认排序
           </button>
-          <button type="button" className={sort === 'likes' ? 'is-on' : ''} onClick={() => setSort('likes')} aria-pressed={sort === 'likes'}>
+          <button type="button" className={sort === 'likes' ? 'is-on' : ''} onClick={() => changeSort('likes')} aria-pressed={sort === 'likes'}>
             <Heart size={12} /> 点赞排序
           </button>
         </div>
@@ -295,8 +317,10 @@ export default function PelicanGallery() {
               <div className="pg-frame" style={item.bg ? { background: item.bg } : undefined}>
                 <iframe
                   src={`/pelican-gallery/${item.file}`}
+                  data-file={item.file}
                   onLoad={onIframeLoad}
                   loading="lazy"
+                  className={ready.has(item.file) ? 'is-ready' : ''}
                   title={`${item.model} 生成的动画`}
                   scrolling="no"
                   style={item.zoom ? { transform: `scale(${item.zoom})` } : undefined}
