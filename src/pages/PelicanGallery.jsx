@@ -22,7 +22,7 @@ const ITEMS = [
     bg: 'linear-gradient(180deg,#6db6e8 0%,#6db6e8 50%,#000 50%,#000 100%)' },
   { file: 'deepseek-v4-pro.html',   model: 'DeepSeek-V4 Pro',   ratio: '900/520' },
   { file: 'deepseek-v4-flash.html', model: 'DeepSeek-V4 Flash', ratio: '900/520' },
-  { file: 'gpt56-sol-ulter.html',   model: 'GPT-5.6 Sol Ulter', ratio: '1600/900' },
+  { file: 'gpt56-sol-ulter.html',   model: 'GPT 5.6 sol',        ratio: '1600/900' },
   { file: 'qwen38-max.html',        model: 'Qwen3.8-Max',       ratio: '800/480' },
   { file: 'qwen3.7-plus.html',      model: 'Qwen3.7-Plus',      ratio: '600/400' },
   { file: 'kimi-k3.html',           model: 'Kimi-K3',           ratio: '800/480' },
