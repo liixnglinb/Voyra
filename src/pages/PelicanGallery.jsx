@@ -1,7 +1,7 @@
 import React from 'react';
 
 /* ============================================================
-   AI 动画画廊 · PelicanGallery
+   AI 模型对比秀 · PelicanGallery
    15 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
    排序：按各 HTML 生成时间从新到旧（不分厂商大类）
    卡片：一个大框 = 模型名称 + 生成的画面，无多余元素
@@ -12,7 +12,7 @@ const ITEMS = [
   { file: 'deepseek-v4-pro.html',   model: 'DeepSeek-V4 Pro 正式版',  ratio: '900/520' },
   { file: 'deepseek-v4-flash.html', model: 'DeepSeek-V4 Flash 正式版', ratio: '900/520' },
   { file: 'gpt56-sol-ulter.html',   model: 'gpt 5.6 sol Ulter',      ratio: '1600/900' },
-  { file: 'qwen38-max.html',        model: 'Qwen3.8-Max',            ratio: '800/480' },
+  { file: 'qwen38-max.html',        model: 'Qwen3.8-Max',            ratio: '800/480', zoom: 1.62 },
   { file: 'qwen3.7-plus.html',      model: 'Qwen3.7-Plus',           ratio: '600/400' },
   { file: 'kimi-k3.html',           model: 'Kimi-K3',                ratio: '800/480' },
   { file: 'kimi-k2.6.html',         model: 'Kimi-k2.6',              ratio: '900/500' },
@@ -50,7 +50,7 @@ export default function PelicanGallery() {
       .pg-stat svg{flex:0 0 auto}
       /* —— 网格：一行两个，向下排列 —— */
       .pg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:42px}
-      .pg-card{position:relative;display:flex;flex-direction:column;border:1px solid rgba(27,27,27,.12);border-radius:12px;background:#fff;overflow:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}
+      .pg-card{position:relative;display:flex;flex-direction:column;border:1px solid rgba(27,27,27,.12);border-radius:12px;background:#fff;overflow:hidden;content-visibility:auto;contain-intrinsic-size:auto 380px;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}
       .pg-card:hover{transform:translateY(-4px);border-color:rgba(164,136,48,.6);box-shadow:0 20px 38px rgba(34,30,15,.12)}
       /* 模型名行：唯一文字信息 */
       .pg-bar{display:flex;align-items:baseline;gap:10px;padding:14px 16px 13px}
@@ -58,8 +58,8 @@ export default function PelicanGallery() {
       .pg-name{font-size:16px;font-weight:760;line-height:1;letter-spacing:-.01em;transition:color .2s ease}
       .pg-card:hover .pg-name{color:#a48830}
       /* 画面：iframe 按各自 viewBox 比例适配，无黑边 */
-      .pg-frame{position:relative;background:#f2f3f5;overflow:hidden}
-      .pg-frame iframe{display:block;width:100%;height:100%;position:absolute;inset:0;border:0;background:#fff}
+      .pg-frame{position:relative;background:#f2f3f5;overflow:hidden;border-radius:12px}
+      .pg-frame iframe{display:block;width:100%;height:100%;position:absolute;inset:0;border:0;background:#fff;border-radius:12px}
       @media(max-width:900px){.pg-head-row{flex-direction:column;align-items:flex-start;gap:18px}.pg-stats{justify-content:flex-start;max-width:none}.pg-head h1{font-size:42px}.pg-grid{grid-template-columns:1fr}}
     `}</style>
 
@@ -68,7 +68,7 @@ export default function PelicanGallery() {
         <span className="pg-kicker">VOYRA · AI MODEL SHOWCASE</span>
         <div className="pg-head-row">
           <div>
-            <h1>AI 动画<em>画廊</em></h1>
+            <h1>AI 模型<em>对比秀</em></h1>
             <p>同一个题目「鹈鹕骑自行车 · SVG 2D 动画」，交给 <b>{TOTAL} 个 AI 模型</b>分别生成，按生成时间从新到旧排列。<br />每一份都是原文件通过 iframe 原样运行，<b>全部动效同时播放</b>，画面按原始比例完整呈现。</p>
           </div>
           <div className="pg-stats">
@@ -87,7 +87,7 @@ export default function PelicanGallery() {
               <span className="pg-name">{item.model}</span>
             </div>
             <div className="pg-frame" style={{ aspectRatio: item.ratio }}>
-              <iframe src={`/pelican-gallery/${item.file}`} loading="lazy" title={`${item.model} 生成的动画`} scrolling="no" />
+              <iframe src={`/pelican-gallery/${item.file}`} loading="lazy" title={`${item.model} 生成的动画`} scrolling="no" style={item.zoom ? { transform: `scale(${item.zoom})`, transformOrigin: 'center' } : undefined} />
             </div>
           </article>
         ))}
