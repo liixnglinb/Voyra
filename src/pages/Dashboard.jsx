@@ -12,7 +12,7 @@ import { ARTICLES } from '../data/articles';
 const FEATURED = [
   { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
   { to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
-  { to: '/pelican-gallery', no: '03', name: 'AI 动画画廊', desc: '同一题「鹈鹕骑自行车」交给 15 个 AI 模型分别生成，动效风格一页对比。', cta: '浏览画廊', Icon: Film, art: 'pelican' },
+  { to: '/pelican-gallery', no: '03', name: 'AI 模型对比秀', desc: '同一题「鹈鹕骑自行车」交给 15 个 AI 模型分别生成，效果一页对比。', cta: '查看对比', Icon: Film, art: 'pelican' },
   { to: '/prompts', no: '04', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
   { to: '/uikit', no: '05', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
   { to: '/skills', no: '06', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
@@ -325,10 +325,10 @@ function FeatureArt({ type }) {
           <line x1="108" y1="74" x2="108" y2="66" stroke="#555" strokeWidth="3" strokeLinecap="round"/>
           <ellipse cx="104" cy="70" rx="9" ry="3.4" fill="#2f333b"/>
           <g className="mini-bob">
-            <g fill="#fff" stroke="#cfd7df" strokeWidth="1.2"><ellipse cx="112" cy="46" rx="27" ry="19"/><circle cx="140" cy="26" r="11"/></g>
-            <path d="M124,38 C122,26 128,18 137,16 L148,20 C141,30 138,38 134,44 Z" fill="#fff" stroke="#cfd7df" strokeWidth="1"/>
-            <path d="M137,24 Q165,19 182,30 Q183,33 178,34 Q162,30 137,33 Z" fill="#f9a825" stroke="#d98417" strokeWidth=".8"/>
-            <path d="M137,33 Q162,35 176,33 Q172,48 152,47 Q137,46 137,33 Z" fill="#ffd79a" stroke="#e09a3c" strokeWidth=".8"/>
+            <g fill="#f7f1e3" stroke="#cfd7df" strokeWidth="1.2"><ellipse cx="112" cy="46" rx="27" ry="19"/><circle cx="140" cy="26" r="11"/></g>
+            <path d="M124,38 C122,26 128,18 137,16 L148,20 C141,30 138,38 134,44 Z" fill="#f7f1e3" stroke="#cfd7df" strokeWidth="1"/>
+            <path d="M137,24 Q165,19 182,30 Q183,33 178,34 Q162,30 137,33 Z" fill="#f2a23a" stroke="#d98417" strokeWidth=".8"/>
+            <path d="M137,33 Q162,35 176,33 Q172,48 152,47 Q137,46 137,33 Z" fill="#f8c35f" stroke="#e09a3c" strokeWidth=".8"/>
             <g className="mini-wing"><path d="M112,34 C120,22 140,24 142,38 C134,46 116,44 112,34 Z" fill="#eef3f8" stroke="#c3cdd6" strokeWidth="1"/></g>
             <circle cx="143" cy="23" r="2" fill="#23272f"/>
             <path d="M110,42 Q104,46 96,44" fill="none" stroke="#e63946" strokeWidth="3" strokeLinecap="round"/>
