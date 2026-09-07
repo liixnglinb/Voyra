@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 
 /* ============================================================
    AI 模型对比秀 · PelicanGallery
    16 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
    排序：按各 HTML 生成时间从新到旧（不分厂商大类）
-   卡片：一个大框 = 模型名称 + 生成的画面，无多余元素
-   画面：iframe 按各自 viewBox 比例适配，完整展示、不留黑边
+   卡片：统一 3:2 大小，模型名条 + iframe；iframe 通过 fitFrame() 自适应：
+     - html/body 撑满 100%、去默认边距与滚动条
+     - 隐藏所有不含 svg 的兄弟节点（页头标题/副标题/页脚/控件等）
+     - 将 svg 沿 DOM 链一路撑到 100%×100%，并强制
+       preserveAspectRatio="xMidYMid slice" —— 消除黑边，按卡片比例填满
+   画面对齐：所有卡片 aspect-ratio 锁死 3/2（覆盖源 1.5~1.91 都安全，
+     仅横向裁切边缘背景，鹈鹕与主场景始终居中可见）
    ============================================================ */
 
 const ITEMS = [
@@ -31,7 +36,50 @@ const TOTAL = ITEMS.length;
 
 export const PELICAN_MODEL_COUNT = ITEMS.length;
 
+/* 把 iframe 内部的页头/页脚/控件隐藏，让 SVG 撑满；
+   只动样式不动 DOM，避免破坏 SMIL/CSS/rAF 动画。 */
+function fitFrame(ifr) {
+  try {
+    const d = ifr.contentDocument;
+    if (!d) return;
+    const svg = d.querySelector('svg');
+    if (!svg) return;
+    // 1. 把 html/body 一律撑满、去边距、隐藏滚动条
+    const reset = d.createElement('style');
+    reset.textContent =
+      'html,body{margin:0!important;padding:0!important;width:100%!important;height:100%!important;' +
+      'min-height:0!important;overflow:hidden!important;background:transparent!important}';
+    d.head && d.head.appendChild(reset);
+    // 2. 隐藏所有「不包含 svg」的兄弟节点（h1/h2/p/header/footer/控件等）
+    Array.from(d.body.querySelectorAll('*')).forEach((el) => {
+      if (el === svg) return;
+      if (el.contains(svg)) return;          // svg 的祖先链：保留
+      if (svg.contains(el)) return;          // svg 内部（defs/use/...）：保留
+      const tag = el.tagName;
+      if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'HEAD' || tag === 'META') return;
+      el.style.setProperty('display', 'none', 'important');
+    });
+    // 3. svg 沿祖先链一路撑到 100%×100%
+    let n = svg;
+    while (n && n.nodeName !== 'HTML') {
+      const cs = n.style;
+      cs.setProperty('margin', '0', 'important');
+      cs.setProperty('padding', '0', 'important');
+      cs.setProperty('width', '100%', 'important');
+      cs.setProperty('height', '100%', 'important');
+      cs.setProperty('max-width', 'none', 'important');
+      cs.setProperty('max-height', 'none', 'important');
+      cs.setProperty('display', 'block', 'important');
+      n = n.parentElement;
+    }
+    // 4. 强制 slice：消除黑边、让画面按卡片比例铺满（仅裁切边缘背景，主体始终居中可见）
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+  } catch (e) { /* 同源即可访问；任何异常静默，不影响页面 */ }
+}
+
 export default function PelicanGallery() {
+  const onIframeLoad = useCallback((e) => fitFrame(e.currentTarget), []);
+
   return <div className="pg-page">
     <style>{`
       .pg-page{--ink:#1b1b1b;--gold:#a48830;min-height:100%;color:var(--ink);background-color:#fff;background-image:linear-gradient(rgba(0,0,0,.031) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.031) 1px,transparent 1px);background-size:32px 32px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;padding:34px 0 90px}
@@ -51,18 +99,18 @@ export default function PelicanGallery() {
       .pg-stat.is-gold{border-color:#e7c750;background:#fff4c8;color:#6b5b13}
       .pg-stat.is-gold b{color:#5c4d10}
       .pg-stat svg{flex:0 0 auto}
-      /* —— 网格：一行两个，向下排列 —— */
+      /* —— 网格：所有卡片统一 3:2 大小 —— */
       .pg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:42px}
-      .pg-card{position:relative;display:flex;flex-direction:column;border:1px solid rgba(27,27,27,.12);border-radius:12px;background:#fff;overflow:hidden;content-visibility:auto;contain-intrinsic-size:auto 380px;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}
+      .pg-card{position:relative;display:flex;flex-direction:column;border:1px solid rgba(27,27,27,.12);border-radius:12px;background:#fff;overflow:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}
       .pg-card:hover{transform:translateY(-4px);border-color:rgba(164,136,48,.6);box-shadow:0 20px 38px rgba(34,30,15,.12)}
-      /* 模型名行：唯一文字信息 */
       .pg-bar{display:flex;align-items:baseline;gap:10px;padding:14px 16px 13px}
       .pg-seq{color:#c0b07a;font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em}
       .pg-name{font-size:16px;font-weight:760;line-height:1;letter-spacing:-.01em;transition:color .2s ease}
       .pg-card:hover .pg-name{color:#a48830}
-      /* 画面：iframe 按各自 viewBox 比例适配，无黑边 */
-      .pg-frame{position:relative;background:#f2f3f5;overflow:hidden;border-radius:12px}
-      .pg-frame iframe{display:block;width:100%;height:100%;position:absolute;inset:0;border:0;background:#fff;border-radius:12px}
+      /* 画面：固定 3:2，iframe 撑满；fitFrame() 把内嵌 SVG 同步撑满并切到 slice */
+      .pg-frame{position:relative;background:#f2f3f5;overflow:hidden;border-radius:0 0 12px 12px}
+      .pg-frame::before{content:"";display:block;aspect-ratio:3/2}
+      .pg-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
       @media(max-width:900px){.pg-head-row{flex-direction:column;align-items:flex-start;gap:18px}.pg-stats{justify-content:flex-start;max-width:none}.pg-head h1{font-size:42px}.pg-grid{grid-template-columns:1fr}}
     `}</style>
 
@@ -89,15 +137,21 @@ export default function PelicanGallery() {
               <span className="pg-seq">{String(index + 1).padStart(2, '0')}</span>
               <span className="pg-name">{item.model}</span>
             </div>
-            <div className="pg-frame" style={{ aspectRatio: item.ratio }}>
-              <iframe src={`/pelican-gallery/${item.file}`} loading="lazy" title={`${item.model} 生成的动画`} scrolling="no" style={item.zoom ? { transform: `scale(${item.zoom})`, transformOrigin: 'center' } : undefined} />
+            <div className="pg-frame">
+              <iframe
+                src={`/pelican-gallery/${item.file}`}
+                onLoad={onIframeLoad}
+                loading="lazy"
+                title={`${item.model} 生成的动画`}
+                scrolling="no"
+              />
             </div>
           </article>
         ))}
       </section>
 
       <footer className="pg-foot" style={{ marginTop: '48px', paddingTop: '18px', borderTop: '1px solid rgba(27,27,27,.11)', color: '#999', fontSize: '12px', lineHeight: 1.9 }}>
-        <p>模型署名均取自各 HTML 文件内部的标题 / meta / 注释 / 画面落款；排序依据为各文件的生成时间。部分版本自带控制按钮（暂停 / 变速 / 昼夜切换 / 滑块），直接在画面内操作即可体验。© 2026 Voyra®</p>
+        <p>模型署名均取自各 HTML 文件内部的标题 / meta / 注释 / 画面落款；排序依据为各文件的生成时间。© 2026 Voyra®</p>
       </footer>
     </div>
   </div>;
