@@ -1,10 +1,15 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Heart } from 'lucide-react';
+import Bmob, { BMOB_READY } from '../lib/bmob';
 
 /* ============================================================
    AI 模型对比秀 · PelicanGallery
    16 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
-   排序：按本地原始 HTML 的生成时间从新到旧（已对照 mtime 核对）
-   卡片：统一 3:2 大小，模型名条 + iframe；fitFrame() 处理内嵌页：
+   排序：默认 = 按本地原始 HTML 的生成时间从新到旧（已对照 mtime 核对）
+         点赞 = 按点赞数从高到低，票数相同时保持默认次序
+   点赞：每张卡片一颗心，一个浏览器对同一模型只能点一次（再点即取消，无法叠加）
+         计数优先走 Bmob 全局表 pelican_like；Bmob 不可用时退化为本地计数
+   卡片：统一 3:2，模型名条 + iframe；fitFrame() 处理内嵌页：
      - html/body 撑满 100%、去默认边距与滚动条
      - 隐藏所有不含 svg 的兄弟节点（页头标题/副标题/页脚/控件等）
      - svg 沿祖先链撑到 100%×100%，强制去 border-radius / box-shadow / 背景
@@ -36,6 +41,53 @@ const TOTAL = ITEMS.length;
 
 export const PELICAN_MODEL_COUNT = ITEMS.length;
 
+/* ---------- 点赞存储 ---------- */
+const LIKE_TABLE = 'pelican_like';
+const LS_LIKED = 'voyra:pelican:liked';    // 本浏览器已点赞的 file 列表
+const LS_COUNTS = 'voyra:pelican:counts';  // Bmob 不可用时的本地兜底计数
+
+function readLS(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
+  catch { return fallback; }
+}
+function writeLS(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* 隐私模式忽略 */ }
+}
+
+/** 从 Bmob 拉取全局点赞数；失败返回 null 由调用方退化 */
+async function fetchCounts() {
+  if (!BMOB_READY) return null;
+  try {
+    const q = Bmob.Query(LIKE_TABLE);
+    q.limit(1000);
+    const rows = await q.find();
+    const map = {};
+    (rows || []).forEach((r) => { if (r && r.file) map[r.file] = Number(r.count) || 0; });
+    return map;
+  } catch { return null; }
+}
+
+/** 把一次 +1 / -1 写回 Bmob（原子性不保证，个人站点量级足够） */
+async function syncCount(file, delta) {
+  if (!BMOB_READY) return;
+  try {
+    const q = Bmob.Query(LIKE_TABLE);
+    q.equalTo('file', '==', file);
+    const rows = await q.find();
+    if (rows && rows.length) {
+      const row = rows[0];
+      row.set('count', Math.max(0, (Number(row.count) || 0) + delta));
+      await row.save();
+    } else if (delta > 0) {
+      const nq = Bmob.Query(LIKE_TABLE);
+      nq.set('file', file);
+      nq.set('count', delta);
+      await nq.save();
+    }
+  } catch { /* 写失败不影响本地已呈现的状态 */ }
+}
+
+/* ---------- iframe 适配 ---------- */
 /* 把 iframe 内部的页头/页脚/控件隐藏，让 SVG 撑满并贴合卡片比例；
    只动样式不动 DOM，不破坏 SMIL/CSS/rAF 动画。 */
 function fitFrame(ifr) {
@@ -83,6 +135,53 @@ function fitFrame(ifr) {
 export default function PelicanGallery() {
   const onIframeLoad = useCallback((e) => fitFrame(e.currentTarget), []);
 
+  const [sort, setSort] = useState('default');       // 'default' | 'likes'
+  const [liked, setLiked] = useState(() => {
+    const v = readLS(LS_LIKED, []);
+    return Array.isArray(v) ? v : [];
+  });
+  const [counts, setCounts] = useState(() => readLS(LS_COUNTS, {}));
+
+  /* 挂载时拉取全局点赞数；Bmob 不可用则沿用本地计数 */
+  useEffect(() => {
+    let alive = true;
+    fetchCounts().then((map) => {
+      if (!alive || map == null) return;
+      setCounts((prev) => {
+        const merged = { ...prev, ...map };
+        // 本浏览器已点赞过的，至少保证显示 ≥ 1（Bmob 未及时同步时也呈现正确）
+        liked.forEach((f) => { merged[f] = Math.max(Number(merged[f] || 0), 1); });
+        return merged;
+      });
+    });
+    return () => { alive = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* 点赞 / 取消：一个浏览器对同一模型恒为 0 或 1，无法叠加 */
+  const toggleLike = useCallback((file) => {
+    setLiked((prevLiked) => {
+      const has = prevLiked.includes(file);
+      const nextLiked = has ? prevLiked.filter((f) => f !== file) : [...prevLiked, file];
+      writeLS(LS_LIKED, nextLiked);
+      setCounts((prevCounts) => {
+        const next = { ...prevCounts, [file]: Math.max(0, (prevCounts[file] || 0) + (has ? -1 : 1)) };
+        if (!BMOB_READY) writeLS(LS_COUNTS, next);
+        return next;
+      });
+      syncCount(file, has ? -1 : 1);
+      return nextLiked;
+    });
+  }, []);
+
+  /* 排序：默认保持生成时间序；点赞序按票数降序，同票保持默认次序 */
+  const ordered = useMemo(() => {
+    if (sort === 'default') return ITEMS.map((it, i) => ({ ...it, _i: i }));
+    return ITEMS
+      .map((it, i) => ({ ...it, _i: i, _c: counts[it.file] || 0 }))
+      .sort((a, b) => (b._c - a._c) || (a._i - b._i));
+  }, [sort, counts]);
+
+
   return <div className="pg-page">
     <style>{`
       .pg-page{--ink:#1b1b1b;--gold:#a48830;min-height:100%;color:var(--ink);background-color:#fff;background-image:linear-gradient(rgba(0,0,0,.031) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.031) 1px,transparent 1px);background-size:32px 32px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;padding:34px 0 90px}
@@ -102,19 +201,34 @@ export default function PelicanGallery() {
       .pg-stat.is-gold{border-color:#e7c750;background:#fff4c8;color:#6b5b13}
       .pg-stat.is-gold b{color:#5c4d10}
       .pg-stat svg{flex:0 0 auto}
+      /* —— 排序工具条（右上角） —— */
+      .pg-tools{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:22px}
+      .pg-tools .pg-tools-label{color:#8a8a8a;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em}
+      .pg-sort{display:inline-flex;gap:4px;padding:4px;border:1px solid rgba(27,27,27,.11);border-radius:99px;background:rgba(255,255,255,.75)}
+      .pg-sort button{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 14px;border:0;border-radius:99px;background:transparent;color:#626262;font:12px/1 inherit;font-weight:500;cursor:pointer;transition:background .2s ease,color .2s ease}
+      .pg-sort button:hover{color:var(--ink)}
+      .pg-sort button.is-on{background:var(--ink);color:#fff}
+      .pg-sort button.is-on svg{color:#ffd75e}
       /* —— 网格：所有卡片统一 3:2 大小 —— */
-      .pg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:42px}
+      .pg-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:18px}
       .pg-card{position:relative;display:flex;flex-direction:column;border:1px solid rgba(27,27,27,.12);border-radius:12px;background:#fff;overflow:hidden;transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}
       .pg-card:hover{transform:translateY(-4px);border-color:rgba(164,136,48,.6);box-shadow:0 20px 38px rgba(34,30,15,.12)}
-      .pg-bar{display:flex;align-items:baseline;gap:10px;padding:14px 16px 13px}
+      .pg-bar{display:flex;align-items:center;gap:10px;padding:14px 16px 13px}
       .pg-seq{color:#c0b07a;font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em}
       .pg-name{font-size:16px;font-weight:760;line-height:1;letter-spacing:-.01em;transition:color .2s ease}
       .pg-card:hover .pg-name{color:#a48830}
+      /* 点赞按钮 */
+      .pg-like{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border:1px solid rgba(27,27,27,.12);border-radius:99px;background:#fff;color:#8a8a8a;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;cursor:pointer;transition:border-color .2s ease,color .2s ease,background .2s ease,transform .12s ease}
+      .pg-like:hover{border-color:rgba(164,136,48,.55);color:var(--ink)}
+      .pg-like:active{transform:scale(.94)}
+      .pg-like.is-on{border-color:#e7c750;background:#fff8dd;color:#8a6d12}
+      .pg-like.is-on svg{fill:#e8b923;color:#e8b923}
+      .pg-like b{font-weight:700;font-variant-numeric:tabular-nums}
       /* 画面：固定 3:2，iframe 撑满；item.zoom 用 transform 居中放大个别偏的源 */
       .pg-frame{position:relative;background:#f2f3f5;overflow:hidden;border-radius:0 0 12px 12px}
       .pg-frame::before{content:"";display:block;aspect-ratio:3/2}
       .pg-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;transform-origin:center center}
-      @media(max-width:900px){.pg-head-row{flex-direction:column;align-items:flex-start;gap:18px}.pg-stats{justify-content:flex-start;max-width:none}.pg-head h1{font-size:42px}.pg-grid{grid-template-columns:1fr}}
+      @media(max-width:900px){.pg-head-row{flex-direction:column;align-items:flex-start;gap:18px}.pg-stats{justify-content:flex-start;max-width:none}.pg-head h1{font-size:42px}.pg-grid{grid-template-columns:1fr}.pg-tools{justify-content:flex-start}}
     `}</style>
 
     <div className="pg-shell">
@@ -133,25 +247,51 @@ export default function PelicanGallery() {
         </div>
       </header>
 
+      <div className="pg-tools">
+        <span className="pg-tools-label">SORT</span>
+        <div className="pg-sort" role="group" aria-label="排序方式">
+          <button type="button" className={sort === 'default' ? 'is-on' : ''} onClick={() => setSort('default')} aria-pressed={sort === 'default'}>
+            默认排序
+          </button>
+          <button type="button" className={sort === 'likes' ? 'is-on' : ''} onClick={() => setSort('likes')} aria-pressed={sort === 'likes'}>
+            <Heart size={12} /> 点赞排序
+          </button>
+        </div>
+      </div>
+
       <section className="pg-grid">
-        {ITEMS.map((item, index) => (
-          <article className="pg-card" key={item.file}>
-            <div className="pg-bar">
-              <span className="pg-seq">{String(index + 1).padStart(2, '0')}</span>
-              <span className="pg-name">{item.model}</span>
-            </div>
-            <div className="pg-frame" style={item.bg ? { background: item.bg } : undefined}>
-              <iframe
-                src={`/pelican-gallery/${item.file}`}
-                onLoad={onIframeLoad}
-                loading="lazy"
-                title={`${item.model} 生成的动画`}
-                scrolling="no"
-                style={item.zoom ? { transform: `scale(${item.zoom})` } : undefined}
-              />
-            </div>
-          </article>
-        ))}
+        {ordered.map((item) => {
+          const isLiked = liked.includes(item.file);
+          const n = counts[item.file] || 0;
+          return (
+            <article className="pg-card" key={item.file}>
+              <div className="pg-bar">
+                <span className="pg-seq">{String(item._i + 1).padStart(2, '0')}</span>
+                <span className="pg-name">{item.model}</span>
+                <button
+                  type="button"
+                  className={`pg-like${isLiked ? ' is-on' : ''}`}
+                  onClick={() => toggleLike(item.file)}
+                  aria-pressed={isLiked}
+                  title={isLiked ? '取消点赞' : '点赞（每个模型只能点一次）'}
+                >
+                  <Heart size={13} />
+                  <b>{n}</b>
+                </button>
+              </div>
+              <div className="pg-frame" style={item.bg ? { background: item.bg } : undefined}>
+                <iframe
+                  src={`/pelican-gallery/${item.file}`}
+                  onLoad={onIframeLoad}
+                  loading="lazy"
+                  title={`${item.model} 生成的动画`}
+                  scrolling="no"
+                  style={item.zoom ? { transform: `scale(${item.zoom})` } : undefined}
+                />
+              </div>
+            </article>
+          );
+        })}
       </section>
 
       <footer className="pg-foot" style={{ marginTop: '48px', paddingTop: '18px', borderTop: '1px solid rgba(27,27,27,.11)', color: '#999', fontSize: '12px', lineHeight: 1.9 }}>
