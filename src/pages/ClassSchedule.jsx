@@ -895,7 +895,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>识别到 {parsed.length} 门课程：</div>
             {parsed.map((c) => (
               <span key={c.id} className="cs-review-item">
-                {c.name} · 周{WEEKDAY[c.day - 1]} · {SLOT_META[c.slot]?.label} · {c.f}-{c.t}周{c.type !== 'every' ? `(${INC[c.type]})` : ''} · {c.teacher || '—'}{c.room ? ` · ${c.room}` : ''}
+                {c.name} · 周{WEEKDAY[c.day - 1]} · {SLOT_META[c.slot]?.label} · {c.f}{c.t > c.f ? `-${c.t}` : ''}周{c.type !== 'every' ? `(${INC[c.type]})` : ''} · {c.teacher || '—'}{c.room ? ` · ${c.room}` : ''}
               </span>
             ))}
           </div>
