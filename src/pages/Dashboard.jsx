@@ -189,6 +189,25 @@ function getToolUrl(path) {
 /* 各卡片演示的节点数——驱动自动轮播 */
 const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3 };
 
+/* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
+   天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
+function GlmSceneStage() {
+  const [scene, setScene] = useState('');
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch('/pelican-gallery/glm-5.3.html');
+        const html = await res.text();
+        const m = html.match(/<svg[^>]*>[\s\S]*?<\/svg>/);
+        if (m && alive) setScene(m[0]);
+      } catch { /* 拉取失败则保持轻色占位 */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+  return <div className="vr-pelican-stage" dangerouslySetInnerHTML={{ __html: scene }} />;
+}
+
 function FeatureArt({ type }) {
   const [active, setActive] = useState(0);
   const [checked, setChecked] = useState(false);
@@ -298,16 +317,11 @@ function FeatureArt({ type }) {
   if (type === 'pelican') {
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-pelican-art">
       <style>{`
-        .vr-pelican-art .vr-pelican-stage{position:relative;width:100%;aspect-ratio:10/6;border-radius:12px;overflow:hidden;border:1px solid rgba(27,27,27,.12);background:#0d1420}
-        .vr-pelican-art .vr-pelican-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;transform:scale(1.03);transform-origin:center}
-        .vr-cmp-tag{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:rgba(10,16,26,.55);color:#ffe9c2;font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;backdrop-filter:blur(4px)}
-        .vr-cmp-tag i{width:6px;height:6px;border-radius:50%;background:#f2a23a}
+        .vr-pelican-art .vr-pelican-stage{position:relative;width:100%;aspect-ratio:10/6;border-radius:12px;overflow:hidden;border:1px solid rgba(27,27,27,.12);background:#a5dbf2}
+        .vr-pelican-art .vr-pelican-stage svg{display:block;width:100%;height:100%}
       `}</style>
-      <div className="vr-preview-top"><Film size={15} /><span>同题动画对比</span><b>GLM-5.3 等 {PELICAN_MODEL_COUNT} 个模型</b></div>
-      <div className="vr-pelican-stage">
-        <iframe src="/pelican-gallery/glm-5.3.html" title="GLM-5.3 生成的鹈鹕骑自行车动画" loading="lazy" scrolling="no" />
-        <span className="vr-cmp-tag"><i />GLM-5.3 现场生成</span>
-      </div>
+      <div className="vr-preview-top"><Film size={15} /><span>同题动画对比</span><b>{PELICAN_MODEL_COUNT} 个模型</b></div>
+      <GlmSceneStage />
     </div>;
   }
 
