@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
+import { PELICAN_MODEL_COUNT } from './PelicanGallery';
 
 const FEATURED = [
   { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
@@ -295,46 +296,17 @@ function FeatureArt({ type }) {
   }
 
   if (type === 'pelican') {
-    const models = ['豆包 2.1 Turbo', 'Qwen3.8-Max', 'GLM-5.1', 'Kimi-K3', 'DeepSeek-V4 Pro'];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-pelican-art">
       <style>{`
-        .vr-pelican-art .mini-spin{transform-box:view-box;transform-origin:center;animation:mini-spin 1s linear infinite}
-        @keyframes mini-spin{to{transform:rotate(360deg)}}
-        .vr-pelican-art .mini-cloud{animation:mini-drift 9s linear infinite}
-        @keyframes mini-drift{from{transform:translateX(-46px)}to{transform:translateX(330px)}}
-        .vr-pelican-art .mini-wing{transform-box:view-box;transform-origin:110px 58px;animation:mini-flap .85s ease-in-out infinite alternate}
-        @keyframes mini-flap{from{transform:rotate(-12deg)}to{transform:rotate(9deg)}}
-        .vr-pelican-art .vr-pelican-stage{display:grid;place-items:center;padding:10px 12px 12px}
-        .vr-pelican-art .vr-pelican-stage svg{display:block;width:100%;height:auto}
-        .vr-pelican-art .mini-bob{animation:mini-bob .8s ease-in-out infinite alternate}
-        @keyframes mini-bob{from{transform:translateY(0)}to{transform:translateY(-2.5px)}}
+        .vr-pelican-art .vr-pelican-stage{position:relative;width:100%;aspect-ratio:10/6;border-radius:12px;overflow:hidden;border:1px solid rgba(27,27,27,.12);background:#0d1420}
+        .vr-pelican-art .vr-pelican-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;transform:scale(1.03);transform-origin:center}
+        .vr-cmp-tag{position:absolute;left:10px;top:10px;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:rgba(10,16,26,.55);color:#ffe9c2;font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em;backdrop-filter:blur(4px)}
+        .vr-cmp-tag i{width:6px;height:6px;border-radius:50%;background:#f2a23a}
       `}</style>
-      <div className="vr-preview-top"><Film size={15} /><span>同题动画对比</span><b>{models[active]} 等 {16} 个模型</b></div>
+      <div className="vr-preview-top"><Film size={15} /><span>同题动画对比</span><b>GLM-5.3 等 {PELICAN_MODEL_COUNT} 个模型</b></div>
       <div className="vr-pelican-stage">
-        <svg viewBox="0 0 300 150" role="img" aria-label="迷你鹈鹕骑自行车动画">
-          <defs><linearGradient id="miniSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#a5dcff"/><stop offset="1" stopColor="#eaf7ff"/></linearGradient></defs>
-          <rect width="300" height="150" rx="7" fill="url(#miniSky)"/>
-          <circle cx="272" cy="24" r="11" fill="#ffd84d"/>
-          <g className="mini-cloud" opacity=".9"><ellipse cx="40" cy="26" rx="20" ry="8" fill="#fff"/><ellipse cx="58" cy="20" rx="14" ry="8" fill="#fff"/></g>
-          <rect y="122" width="300" height="28" fill="#82c95a"/>
-          <rect y="128" width="300" height="22" fill="#707984"/>
-          <line x1="0" y1="140" x2="300" y2="140" stroke="#f6d74b" strokeWidth="3" strokeDasharray="16 10"/>
-          <g className="mini-spin" stroke="#9aa4b0" strokeWidth="2"><circle cx="70" cy="112" r="20" fill="#f7f9fb" stroke="#333" strokeWidth="4"/><line x1="70" y1="92" x2="70" y2="132"/><line x1="50" y1="112" x2="90" y2="112"/><line x1="56" y1="98" x2="84" y2="126"/><line x1="84" y1="98" x2="56" y2="126"/></g>
-          <g className="mini-spin" stroke="#9aa4b0" strokeWidth="2"><circle cx="218" cy="112" r="20" fill="#f7f9fb" stroke="#333" strokeWidth="4"/><line x1="218" y1="92" x2="218" y2="132"/><line x1="198" y1="112" x2="238" y2="112"/><line x1="204" y1="98" x2="232" y2="126"/><line x1="232" y1="98" x2="204" y2="126"/></g>
-          <g stroke="#d93636" strokeWidth="4" strokeLinecap="round" fill="none"><line x1="70" y1="112" x2="146" y2="112"/><line x1="70" y1="112" x2="108" y2="74"/><line x1="108" y1="74" x2="146" y2="112"/><line x1="108" y1="74" x2="206" y2="70"/><line x1="146" y1="112" x2="206" y2="70"/><line x1="206" y1="70" x2="218" y2="112"/></g>
-          <line x1="108" y1="74" x2="108" y2="66" stroke="#555" strokeWidth="3" strokeLinecap="round"/>
-          <ellipse cx="104" cy="70" rx="9" ry="3.4" fill="#2f333b"/>
-          <g className="mini-bob">
-            <g fill="#f7f1e3" stroke="#cfd7df" strokeWidth="1.2"><ellipse cx="112" cy="46" rx="27" ry="19"/><circle cx="140" cy="26" r="11"/></g>
-            <path d="M124,38 C122,26 128,18 137,16 L148,20 C141,30 138,38 134,44 Z" fill="#f7f1e3" stroke="#cfd7df" strokeWidth="1"/>
-            <path d="M137,24 Q165,19 182,30 Q183,33 178,34 Q162,30 137,33 Z" fill="#f2a23a" stroke="#d98417" strokeWidth=".8"/>
-            <path d="M137,33 Q162,35 176,33 Q172,48 152,47 Q137,46 137,33 Z" fill="#f8c35f" stroke="#e09a3c" strokeWidth=".8"/>
-            <g className="mini-wing"><path d="M112,34 C120,22 140,24 142,38 C134,46 116,44 112,34 Z" fill="#eef3f8" stroke="#c3cdd6" strokeWidth="1"/></g>
-            <circle cx="143" cy="23" r="2" fill="#23272f"/>
-            <path d="M110,42 Q104,46 96,44" fill="none" stroke="#e63946" strokeWidth="3" strokeLinecap="round"/>
-          </g>
-          <g stroke="#fff" strokeWidth="2" strokeLinecap="round" opacity=".7"><line x1="16" y1="52" x2="34" y2="52"/><line x1="10" y1="72" x2="30" y2="72"/></g>
-        </svg>
+        <iframe src="/pelican-gallery/glm-5.3.html" title="GLM-5.3 生成的鹈鹕骑自行车动画" loading="lazy" scrolling="no" />
+        <span className="vr-cmp-tag"><i />GLM-5.3 现场生成</span>
       </div>
     </div>;
   }

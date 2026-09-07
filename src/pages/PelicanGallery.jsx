@@ -29,6 +29,8 @@ const ITEMS = [
 
 const TOTAL = ITEMS.length;
 
+export const PELICAN_MODEL_COUNT = ITEMS.length;
+
 export default function PelicanGallery() {
   return <div className="pg-page">
     <style>{`
