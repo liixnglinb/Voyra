@@ -767,11 +767,13 @@ export default function ClassSchedule({ stats = null, active = true }) {
 /* ============ iOS 风格滚轮时间选择器（小时 / 每 5 分钟） ============ */
 function TimeWheel({ value, onDone }) {
   const [val, setVal] = useState(value);
+  const valRef = useRef(value);
   const hRef = useRef(null);
   const mRef = useRef(null);
   const ITEM = 36;
   const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
   const MINS = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
+  const update = (v) => { valRef.current = v; setVal(v); };
 
   /* 根据滚动位置给每项做缩放 / 淡出，模拟滚轮柱面效果 */
   const paint = (col) => {
@@ -792,7 +794,7 @@ function TimeWheel({ value, onDone }) {
     const idx = Math.round(col.scrollTop / ITEM);
     const v = isHour ? HOURS[idx] : MINS[idx];
     if (v == null) return;
-    setVal(isHour ? `${v}:${val.slice(3, 5)}` : `${val.slice(0, 2)}:${v}`);
+    update(isHour ? `${v}:${valRef.current.slice(3, 5)}` : `${valRef.current.slice(0, 2)}:${v}`);
   };
 
   const jumpTo = (col, isHour, idx) => {
