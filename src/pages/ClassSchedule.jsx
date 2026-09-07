@@ -161,7 +161,7 @@ function classifyXlsCell(s) {
   if (per) return { kind: 'slot', val: slotForPeriod(+per[1]) };
   const per1 = s.match(/^(?:第)?\s*(\d{1,2})\s*节$/);
   if (per1) return { kind: 'slot', val: slotForPeriod(+per1[1]) };
-  const wk = s.match(/^(?:第)?\s*(\d{1,2})\s*[-~—–至]\s*(?:第)?\s*(\d{1,2})\s*周(?:[（(](单|双)周?[)）])?$/);
+  const wk = s.match(/^(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周(?:[（(](单|双)周?[)）])?$/);
   if (wk) return { kind: 'weeks', f: +wk[1], t: +wk[2], type: wk[3] ? (wk[3] === '单' ? 'odd' : 'even') : 'every' };
   const wk1 = s.match(/^(?:第)?\s*(\d{1,2})\s*周(?:[（(](单|双)周?[)）])?$/);
   if (wk1) return { kind: 'weeks', f: +wk1[1], t: +wk1[1], type: wk1[2] ? (wk1[2] === '单' ? 'odd' : 'even') : 'every' };
@@ -241,7 +241,7 @@ function parseXlsRows(rows) {
         if (key === 'day') { const d = v.match(/[一二三四五六日天]/); if (d) segs.push({ kind: 'day', val: XLS_WEEK[d[0]] }); }
         else if (key === 'slot') { segs.push(...classifyXlsSegments(v).filter((s) => s.kind === 'slot')); }
         else if (key === 'weeks') {
-          const w = v.match(/(?:第)?\s*(\d{1,2})\s*[-~—–至]\s*(?:第)?\s*(\d{1,2})\s*周?/);
+          const w = v.match(/(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周?/);
           if (w) segs.push({ kind: 'weeks', f: +w[1], t: +w[2], type: /[（(]\s*(单|双)\s*周?\s*[)）]/.test(v) ? (/[（(]\s*(单|双)\s*周?\s*[)）]/.exec(v)[1] === '单' ? 'odd' : 'even') : 'every' });
         }
         else if (key === 'teacher') { segs.push(...classifyXlsSegments(v).filter((s) => s.kind === 'teacher')); }
