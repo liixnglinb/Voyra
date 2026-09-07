@@ -2,13 +2,14 @@ import React from 'react';
 
 /* ============================================================
    AI 模型对比秀 · PelicanGallery
-   15 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
+   16 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
    排序：按各 HTML 生成时间从新到旧（不分厂商大类）
    卡片：一个大框 = 模型名称 + 生成的画面，无多余元素
    画面：iframe 按各自 viewBox 比例适配，完整展示、不留黑边
    ============================================================ */
 
 const ITEMS = [
+  { file: 'glm-5.3-flash.html',     model: 'GLM-5.3 Flash',          ratio: '880/460' },
   { file: 'deepseek-v4-pro.html',   model: 'DeepSeek-V4 Pro 正式版',  ratio: '900/520' },
   { file: 'deepseek-v4-flash.html', model: 'DeepSeek-V4 Flash 正式版', ratio: '900/520' },
   { file: 'gpt56-sol-ulter.html',   model: 'gpt 5.6 sol Ulter',      ratio: '1600/900' },
