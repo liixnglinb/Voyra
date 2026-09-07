@@ -3,63 +3,62 @@ import React, { useCallback } from 'react';
 /* ============================================================
    AI 模型对比秀 · PelicanGallery
    16 个 AI 模型生成的「鹈鹕骑自行车」SVG 动画同题对比
-   排序：按各 HTML 生成时间从新到旧（不分厂商大类）
-   卡片：统一 3:2 大小，模型名条 + iframe；iframe 通过 fitFrame() 自适应：
+   排序：按本地原始 HTML 的生成时间从新到旧（已对照 mtime 核对）
+   卡片：统一 3:2 大小，模型名条 + iframe；fitFrame() 处理内嵌页：
      - html/body 撑满 100%、去默认边距与滚动条
      - 隐藏所有不含 svg 的兄弟节点（页头标题/副标题/页脚/控件等）
-     - 将 svg 沿 DOM 链一路撑到 100%×100%，并强制
-       preserveAspectRatio="xMidYMid slice" —— 消除黑边，按卡片比例填满
-   画面对齐：所有卡片 aspect-ratio 锁死 3/2（覆盖源 1.5~1.91 都安全，
-     仅横向裁切边缘背景，鹈鹕与主场景始终居中可见）
+     - svg 沿祖先链撑到 100%×100%，强制去 border-radius / box-shadow / 背景
+     - preserveAspectRatio="xMidYMid slice" —— 消除黑边，按卡片比例填满
+   个例缩放：GLM-5.3 场景里鹈鹕偏左上，iframe transform: scale(1.4) 居中放大
    ============================================================ */
 
 const ITEMS = [
-  { file: 'glm-5.3-flash.html',     model: 'GLM-5.3 Flash',          ratio: '880/460' },
-  { file: 'deepseek-v4-pro.html',   model: 'DeepSeek-V4 Pro 正式版',  ratio: '900/520' },
-  { file: 'deepseek-v4-flash.html', model: 'DeepSeek-V4 Flash 正式版', ratio: '900/520' },
-  { file: 'gpt56-sol-ulter.html',   model: 'gpt 5.6 sol Ulter',      ratio: '1600/900' },
-  { file: 'qwen38-max.html',        model: 'Qwen3.8-Max',            ratio: '800/480', zoom: 1.62 },
-  { file: 'qwen3.7-plus.html',      model: 'Qwen3.7-Plus',           ratio: '600/400' },
-  { file: 'kimi-k3.html',           model: 'Kimi-K3',                ratio: '800/480' },
-  { file: 'kimi-k2.6.html',         model: 'Kimi-k2.6',              ratio: '900/500' },
-  { file: 'glm-5.1.html',           model: 'GLM-5.1',                ratio: '900/600' },
-  { file: 'kimi-2.7-code.html',     model: 'Kimi-2.7-Code',          ratio: '1200/800' },
-  { file: 'minmax-m3.html',         model: 'MinMax-M3',              ratio: '800/500' },
-  { file: 'glm-5.3.html',           model: 'GLM-5.3',                ratio: '1000/600' },
-  { file: 'glm-5.2.html',           model: 'GLM-5.2',                ratio: '920/520' },
-  { file: 'hy3-workbuddy.html',     model: 'Hy3 (WorkBuddy)',        ratio: '800/460' },
-  { file: 'doubao-2.1-turbo.html',  model: '豆包 2.1 Turbo',         ratio: '900/500' },
-  { file: 'hy4-preview.html',       model: 'Hy4 preview',            ratio: '960/540' },
+  { file: 'glm-5.3-flash.html',     model: 'GLM-5.3 Flash',     ratio: '880/460',  zoom: 1.4 },
+  { file: 'deepseek-v4-pro.html',   model: 'DeepSeek-V4 Pro',   ratio: '900/520' },
+  { file: 'deepseek-v4-flash.html', model: 'DeepSeek-V4 Flash', ratio: '900/520' },
+  { file: 'gpt56-sol-ulter.html',   model: 'GPT-5.6 Sol Ulter', ratio: '1600/900' },
+  { file: 'qwen38-max.html',        model: 'Qwen3.8-Max',       ratio: '800/480' },
+  { file: 'qwen3.7-plus.html',      model: 'Qwen3.7-Plus',      ratio: '600/400' },
+  { file: 'kimi-k3.html',           model: 'Kimi-K3',           ratio: '800/480' },
+  { file: 'kimi-k2.6.html',         model: 'Kimi-K2.6',         ratio: '900/500' },
+  { file: 'glm-5.1.html',           model: 'GLM-5.1',           ratio: '900/600' },
+  { file: 'kimi-2.7-code.html',     model: 'Kimi-2.7-Code',     ratio: '1200/800' },
+  { file: 'minmax-m3.html',         model: 'MiniMax-M3',        ratio: '800/500' },
+  { file: 'glm-5.3.html',           model: 'GLM-5.3',           ratio: '1000/600' },
+  { file: 'glm-5.2.html',           model: 'GLM-5.2',           ratio: '920/520' },
+  { file: 'hy3-workbuddy.html',     model: 'Hy3 (WorkBuddy)',   ratio: '800/460' },
+  { file: 'doubao-2.1-turbo.html',  model: '豆包 2.1 Turbo',    ratio: '900/500' },
+  { file: 'hy4-preview.html',       model: 'Hy4 Preview',       ratio: '960/540' },
 ];
 
 const TOTAL = ITEMS.length;
 
 export const PELICAN_MODEL_COUNT = ITEMS.length;
 
-/* 把 iframe 内部的页头/页脚/控件隐藏，让 SVG 撑满；
-   只动样式不动 DOM，避免破坏 SMIL/CSS/rAF 动画。 */
+/* 把 iframe 内部的页头/页脚/控件隐藏，让 SVG 撑满并贴合卡片比例；
+   只动样式不动 DOM，不破坏 SMIL/CSS/rAF 动画。 */
 function fitFrame(ifr) {
   try {
     const d = ifr.contentDocument;
     if (!d) return;
     const svg = d.querySelector('svg');
     if (!svg) return;
-    // 1. 把 html/body 一律撑满、去边距、隐藏滚动条
+    // 1. html/body 一律撑满、去边距、隐藏滚动条、透明背景
     const reset = d.createElement('style');
     reset.textContent =
       'html,body{margin:0!important;padding:0!important;width:100%!important;height:100%!important;' +
       'min-height:0!important;overflow:hidden!important;background:transparent!important}';
     d.head && d.head.appendChild(reset);
-    // 2. 隐藏所有「不包含 svg」的兄弟节点（h1/h2/p/header/footer/控件等）
+    // 2. 隐藏所有「不包含 svg」的兄弟节点（页头 h1/p、meta、页脚、控件等）
     Array.from(d.body.querySelectorAll('*')).forEach((el) => {
       if (el === svg) return;
-      if (el.contains(svg)) return;          // svg 的祖先链：保留
+      if (el.contains(svg)) return;          // svg 祖先链：保留
       if (svg.contains(el)) return;          // svg 内部（defs/use/...）：保留
       const tag = el.tagName;
       if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'HEAD' || tag === 'META') return;
       el.style.setProperty('display', 'none', 'important');
     });
-    // 3. svg 沿祖先链一路撑到 100%×100%
+    // 3. svg 沿祖先链一路撑到 100%×100%，并去掉圆角/阴影/自身背景（消除浅色卡片框）
     let n = svg;
     while (n && n.nodeName !== 'HTML') {
       const cs = n.style;
@@ -70,11 +69,14 @@ function fitFrame(ifr) {
       cs.setProperty('max-width', 'none', 'important');
       cs.setProperty('max-height', 'none', 'important');
       cs.setProperty('display', 'block', 'important');
+      cs.setProperty('border-radius', '0', 'important');
+      cs.setProperty('box-shadow', 'none', 'important');
+      cs.setProperty('background', 'transparent', 'important');
       n = n.parentElement;
     }
-    // 4. 强制 slice：消除黑边、让画面按卡片比例铺满（仅裁切边缘背景，主体始终居中可见）
+    // 4. slice：消除黑边，让画面按卡片 3:2 比例铺满
     svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-  } catch (e) { /* 同源即可访问；任何异常静默，不影响页面 */ }
+  } catch (e) { /* 同源访问，异常静默不影响页面 */ }
 }
 
 export default function PelicanGallery() {
@@ -107,10 +109,10 @@ export default function PelicanGallery() {
       .pg-seq{color:#c0b07a;font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em}
       .pg-name{font-size:16px;font-weight:760;line-height:1;letter-spacing:-.01em;transition:color .2s ease}
       .pg-card:hover .pg-name{color:#a48830}
-      /* 画面：固定 3:2，iframe 撑满；fitFrame() 把内嵌 SVG 同步撑满并切到 slice */
+      /* 画面：固定 3:2，iframe 撑满；item.zoom 用 transform 居中放大个别偏的源 */
       .pg-frame{position:relative;background:#f2f3f5;overflow:hidden;border-radius:0 0 12px 12px}
       .pg-frame::before{content:"";display:block;aspect-ratio:3/2}
-      .pg-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+      .pg-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;transform-origin:center center}
       @media(max-width:900px){.pg-head-row{flex-direction:column;align-items:flex-start;gap:18px}.pg-stats{justify-content:flex-start;max-width:none}.pg-head h1{font-size:42px}.pg-grid{grid-template-columns:1fr}}
     `}</style>
 
@@ -144,6 +146,7 @@ export default function PelicanGallery() {
                 loading="lazy"
                 title={`${item.model} 生成的动画`}
                 scrolling="no"
+                style={item.zoom ? { transform: `scale(${item.zoom})` } : undefined}
               />
             </div>
           </article>
