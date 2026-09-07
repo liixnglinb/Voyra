@@ -52,3 +52,5 @@ output/
 
 # Mimosa 本地安全扫描状态（插件自动生成，勿提交）
 .mimosa/
+
+.workbuddy/
