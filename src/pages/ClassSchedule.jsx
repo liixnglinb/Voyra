@@ -284,8 +284,8 @@ function detectXlsHeader(row) {
       if (map[key] == null && re.test(s)) { map[key] = idx; hit++; }
     }
   });
-  /* 表头必须含「课程名称」或「教师」列，否则可能是含星期/节次的数据行 */
-  return hit >= 2 && (map.name != null || map.teacher != null) ? map : null;
+  /* 表头必须含「课程名称」列：数据行里的「节次格+老师格」易误判为表头，但不会有课程名列 */
+  return hit >= 2 && map.name != null ? map : null;
 }
 
 /* 网格表头检测：行首为「节次/时间」，随后是≥3个星期列（如 节次|星期一|…|星期日） */
