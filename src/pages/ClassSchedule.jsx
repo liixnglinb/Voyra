@@ -166,23 +166,102 @@ function classifyXlsCell(s) {
   if (wk) return { kind: 'weeks', f: +wk[1], t: +wk[2], type: wk[3] ? (wk[3] === '单' ? 'odd' : 'even') : 'every' };
   const wk1 = s.match(/^(?:第)?\s*(\d{1,2})\s*周(?:[（(](单|双)周?[)）])?$/);
   if (wk1) return { kind: 'weeks', f: +wk1[1], t: +wk1[1], type: wk1[2] ? (wk1[2] === '单' ? 'odd' : 'even') : 'every' };
-  /* 无单位的裸区间（如 1-2 / 3-4），默认按节次块处理 */
-  const span = s.match(/^(\d{1,2})\s*[-~—–至]\s*(\d{1,2})$/);
-  if (span) return { kind: 'slot', val: slotForPeriod(+span[1]) };
-  if (TITLE_HINTS.some((h) => s.includes(h))) return { kind: 'teacher', val: s };
-  if (ROOM_HINTS.some((h) => s.includes(h))) return { kind: 'room', val: s };
+  /* 无单位的裸区间（如 1-2 / 3-4）→ 节次块；跨度大的（如 1-16）→ 周次区间 */
+  const span = s.match(/^(\d{1,2})\s*[-~—–至到]\s*(\d{1,2})$/);
+  if (span) {
+    const a = +span[1], b = +span[2];
+    if (b > a && b - a <= 2) return { kind: 'slot', val: slotForPeriod(a) };
+    return { kind: 'weeks', f: a, t: b, type: 'every' };
+  }
+  /* 特征词识别只用于「单实体格」（无空格、长度受限），避免长复合串误判 */
+  if (!/\s/.test(s) && s.length <= 14 && TITLE_HINTS.some((h) => s.includes(h))) return { kind: 'teacher', val: s };
+  if (!/\s/.test(s) && s.length <= 14 && ROOM_HINTS.some((h) => s.includes(h))) return { kind: 'room', val: s };
   if (/^[\u4e00-\u9fa5A-Za-z0-9·、（）()]{2,24}$/.test(s) && /[\u4e00-\u9fa5]/.test(s) && !/^(?:星期|周|第|节|上课)/.test(s)) {
     return { kind: 'name', val: s };
   }
   return null;
 }
 
+/* 复合格兜底：整格无法分类时（如「星期一 第1-2节」「星期一1-2节 高等数学」），
+   把星期 / 节次 / 周次 / 课程名 / 老师 / 教室 分别抠出来 */
+function parseMixedCell(p) {
+  const out = [];
+  const d = p.match(/星期?([一二三四五六日天])/);
+  if (d) out.push({ kind: 'day', val: XLS_WEEK[d[1]] });
+  const n = p.match(/晚自习\s*(\d)?/);
+  if (n) out.push({ kind: 'slot', val: n[1] ? `晚自习${n[1]}` : '晚自习1' });
+  const per = p.match(/(?:第)?\s*(\d{1,2})\s*[-~—–至到]\s*\d{1,2}\s*节/);
+  const per1 = !per && p.match(/(?:第)?\s*(\d{1,2})\s*节/);
+  if (per) out.push({ kind: 'slot', val: slotForPeriod(+per[1]) });
+  if (per1) out.push({ kind: 'slot', val: slotForPeriod(+per1[1]) });
+  const wk = p.match(/(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周?/);
+  if (wk) out.push({ kind: 'weeks', f: +wk[1], t: +wk[2], type: 'every' });
+  /* 剩余中文词：课程名 / 老师 / 教室按序归类 */
+  const rest = p
+    .replace(/星期?[一二三四五六日天]/g, ' ')
+    .replace(/晚自习\s*\d?/g, ' ')
+    .replace(/(?:第)?\s*\d{1,2}\s*[-~—–至到]\s*\d{1,2}\s*节/g, ' ')
+    .replace(/(?:第)?\s*\d{1,2}\s*节/g, ' ')
+    .replace(/(?:第)?\s*\d{1,2}\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*\d{1,2}\s*周?/g, ' ')
+    .replace(/\d{1,2}[:：]\d{2}/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+  if (rest) {
+    let gotName = false;
+    for (const w of rest.split(' ')) {
+      if (!/[\u4e00-\u9fa5]/.test(w)) continue;
+      if (TITLE_HINTS.some((h) => w.includes(h))) { out.push({ kind: 'teacher', val: w }); continue; }
+      if (ROOM_HINTS.some((h) => w.includes(h))) { out.push({ kind: 'room', val: w }); continue; }
+      if (!gotName) { out.push({ kind: 'name', val: w }); gotName = true; }
+      else out.push({ kind: 'teacher', val: w });
+    }
+  }
+  return out;
+}
+
 /* 把一个单元格按换行拆成多段分别分类（教务表常见「课程名\n老师\n教室」挤一格） */
 function classifyXlsSegments(s) {
   const parts = String(s).split(/\n|(?:；|;)/).map((t) => t.trim()).filter(Boolean);
-  if (parts.length > 1) return parts.map(classifyXlsCell).filter(Boolean);
-  const one = classifyXlsCell(s);
-  return one ? [one] : [];
+  const out = [];
+  for (const p of parts) {
+    const one = classifyXlsCell(p);
+    if (one) { out.push(one); continue; }
+    out.push(...parseMixedCell(p));
+  }
+  return out;
+}
+
+/* 节次单元格：支持多行 / 「星期一 1-2节」复合 / 裸区间 */
+function parseSlotCell(v) {
+  const out = [];
+  for (const line of String(v).split(/\n|(?:；|;)/)) {
+    const t = line.trim();
+    if (!t) continue;
+    const n = t.match(/晚自习\s*(\d)?/);
+    if (n) { out.push(n[1] ? `晚自习${n[1]}` : '晚自习1'); continue; }
+    const per = t.match(/(?:第)?\s*(\d{1,2})\s*[-~—–至到]\s*\d{1,2}\s*节?/);
+    if (per) { out.push(slotForPeriod(+per[1])); continue; }
+    const per1 = t.match(/(?:第)?\s*(\d{1,2})\s*节/);
+    if (per1) { out.push(slotForPeriod(+per1[1])); continue; }
+  }
+  return out;
+}
+
+/* 周次单元格：区间 / 逗号列表 / 单个周 */
+function parseWeeksCell(v) {
+  const s = String(v).trim();
+  if (!s) return [];
+  const oe = /[（(]\s*(单|双)\s*周?\s*[)）]/.exec(s);
+  const type = oe ? (oe[1] === '单' ? 'odd' : 'even') : 'every';
+  const w = s.match(/(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周?/);
+  if (w) return [{ kind: 'weeks', f: +w[1], t: +w[2], type }];
+  const nums = s.match(/\d{1,2}/g);
+  if (nums && nums.length >= 2 && /[,，、]/.test(s)) {
+    const ns = nums.map(Number);
+    return [{ kind: 'weeks', f: Math.min(...ns), t: Math.max(...ns), type: 'every' }];
+  }
+  const w1 = s.match(/^(?:第)?\s*(\d{1,2})\s*周(?:[（(](单|双)周?[)）])?$/);
+  if (w1) return [{ kind: 'weeks', f: +w1[1], t: +w1[1], type }];
+  return [];
 }
 
 /* 表头检测：某行包含≥2个表头词 → 返回列映射 {name,teacher,day,slot,weeks,room} */
@@ -200,11 +279,51 @@ function detectXlsHeader(row) {
   let hit = 0;
   row.forEach((raw, idx) => {
     const s = xlsCell(raw);
+    /* 一格可同时命中多个表头词（如「星期/节次」） */
     for (const [key, re] of XLS_HEADERS) {
-      if (map[key] == null && re.test(s)) { map[key] = idx; hit++; break; }
+      if (map[key] == null && re.test(s)) { map[key] = idx; hit++; }
     }
   });
-  return hit >= 2 ? map : null;
+  /* 表头必须含「课程名称」或「教师」列，否则可能是含星期/节次的数据行 */
+  return hit >= 2 && (map.name != null || map.teacher != null) ? map : null;
+}
+
+/* 网格表头检测：行首为「节次/时间」，随后是≥3个星期列（如 节次|星期一|…|星期日） */
+function detectXlsGridHeader(row) {
+  let slotIdx = -1;
+  const dayIdxs = [];
+  row.forEach((raw, idx) => {
+    const s = xlsCell(raw);
+    if (idx === 0 && /节次|时间/.test(s)) slotIdx = idx;
+    const d = s.match(/^星期?([一二三四五六日天])$/);
+    if (d) dayIdxs.push({ idx, day: XLS_WEEK[d[1]] });
+  });
+  return slotIdx >= 0 && dayIdxs.length >= 3 ? { slotIdx, dayIdxs } : null;
+}
+
+/* 网格格子内容：多行拆段 → 课程名 / 老师 / 教室（无职称人名按第二段兜底为老师） */
+function parseGridCell(s) {
+  const parts = String(s).split(/\n|(?:；|;)/).map((t) => t.trim()).filter(Boolean);
+  const r = { name: '', teacher: '', room: '' };
+  for (const p of parts) {
+    if (!p) continue;
+    if (/^\d{1,2}[:：]\d{2}\s*[-~—–至到]\s*\d{1,2}[:：]\d{2}$/.test(p)) continue; // 纯时间
+    const cls = classifyXlsCell(p);
+    if (!cls) continue;
+    if (cls.kind === 'teacher') r.teacher = r.teacher || cls.val;
+    else if (cls.kind === 'room') r.room = r.room || cls.val;
+    else if (cls.kind === 'slot' && cls.val.startsWith('晚自习') && !r.name) r.name = cls.val; /* 网格里的晚自习 */
+    else if (cls.kind === 'name') {
+      if (!r.name) r.name = cls.val;
+      else if (!r.teacher) r.teacher = cls.val;
+      else r.room = r.room || cls.val;
+    }
+  }
+  return r;
+}
+
+function firstLine(v) {
+  return String(v).split(/\n|(?:；|;)/).map((t) => t.trim()).find(Boolean) || '';
 }
 
 function mergeXlsSegments(segs) {
@@ -228,29 +347,52 @@ function mergeXlsSegments(segs) {
 function parseXlsRows(rows) {
   const out = [];
   let colMap = null;
+  let gridHeader = null;
   for (const row of rows) {
+    /* 先网格表头（行=节次、列=星期），再展开表头，最后启发式 */
+    const gh = detectXlsGridHeader(row);
+    if (gh) { gridHeader = gh; colMap = null; continue; }
     const headerMap = detectXlsHeader(row);
-    if (headerMap) { colMap = headerMap; continue; }
+    if (headerMap) { colMap = headerMap; gridHeader = null; continue; }
     const segs = [];
     if (colMap) {
-      // 有表头：按列取值（单元格多行也先分段分类再合并）
+      let dayVal = null;
       for (const key of ['name', 'teacher', 'day', 'slot', 'weeks', 'room']) {
         const idx = colMap[key];
         if (idx == null) continue;
         const v = xlsCell(row[idx]);
         if (!v) continue;
-        if (key === 'day') { const d = v.match(/[一二三四五六日天]/); if (d) segs.push({ kind: 'day', val: XLS_WEEK[d[0]] }); }
-        else if (key === 'slot') { segs.push(...classifyXlsSegments(v).filter((s) => s.kind === 'slot')); }
-        else if (key === 'weeks') {
-          const w = v.match(/(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周?/);
-          if (w) segs.push({ kind: 'weeks', f: +w[1], t: +w[2], type: /[（(]\s*(单|双)\s*周?\s*[)）]/.test(v) ? (/[（(]\s*(单|双)\s*周?\s*[)）]/.exec(v)[1] === '单' ? 'odd' : 'even') : 'every' });
+        if (key === 'day') { const d = v.match(/[一二三四五六日天]/); if (d) dayVal = XLS_WEEK[d[0]]; }
+        else if (key === 'slot') {
+          const dd = v.match(/[一二三四五六日天]/);
+          if (dd && dayVal == null) dayVal = XLS_WEEK[dd[0]];
+          for (const sl of parseSlotCell(v)) segs.push({ kind: 'slot', val: sl });
         }
-        else if (key === 'teacher') { segs.push(...classifyXlsSegments(v).filter((s) => s.kind === 'teacher')); }
-        else if (key === 'room') { segs.push(...classifyXlsSegments(v).filter((s) => s.kind === 'room')); }
-        else if (key === 'name') { segs.push(...classifyXlsSegments(v).filter((s) => s.kind === 'name')); }
+        else if (key === 'weeks') segs.push(...parseWeeksCell(v));
+        else if (key === 'teacher') { const t2 = firstLine(v); if (t2) segs.push({ kind: 'teacher', val: t2 }); }
+        else if (key === 'room') { const r2 = firstLine(v); if (r2) segs.push({ kind: 'room', val: r2 }); }
+        else if (key === 'name') { const n2 = firstLine(v); if (n2) segs.push({ kind: 'name', val: n2 }); }
       }
+      if (dayVal != null) segs.push({ kind: 'day', val: dayVal });
+    } else if (gridHeader) {
+      /* 网格表：行首=节次，星期列=格子内容 */
+      const slotVals = parseSlotCell(xlsCell(row[gridHeader.slotIdx]));
+      if (!slotVals.length) continue;
+      for (const { idx, day } of gridHeader.dayIdxs) {
+        const cell = xlsCell(row[idx]);
+        if (!cell) continue;
+        const parts = parseGridCell(cell);
+        if (!parts.name) continue;
+        out.push({
+          id: Date.now() + Math.random().toString(36).slice(2, 7),
+          name: parts.name, teacher: parts.teacher, room: parts.room,
+          day, slot: slotVals[0], f: 1, t: 16, type: 'every',
+          weeksText: '1-16周',
+        });
+      }
+      continue;
     } else {
-      // 无表头：启发式逐格扫描
+      /* 无表头：启发式逐格扫描 */
       for (const raw of row) {
         segs.push(...classifyXlsSegments(xlsCell(raw)));
       }
@@ -430,7 +572,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
         list.push(...parseXlsRows(rows));
       }
-      if (!list.length) { say('未从 Excel 中识别到有效课程，请检查格式'); return; }
+      if (!list.length) { say('未识别到有效课程：请确认表头含「课程名称/教师/星期/节次/周次/教室」列，或为「行=节次、列=星期」的课表'); return; }
       setParsed(list);
       say(`已识别 ${list.length} 门课程，确认后导入`);
     } catch (err) {
