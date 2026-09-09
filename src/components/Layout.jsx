@@ -64,8 +64,8 @@ export default function Layout({ children }) {
     const isDarkPage = pathname.startsWith('/agents');
     return (
       <div
+        className="vr-fullscreen"
         style={{
-          height: '100vh',
           overflow: 'auto',
           background: isDarkPage ? '#04060e' : '#FFFFFF',
           color: isDarkPage ? '#e5e7eb' : '#111111',
@@ -119,6 +119,7 @@ export default function Layout({ children }) {
         .tool-wrap {
           position: relative;
           min-height: 100vh;
+          min-height: 100dvh;
           width: 100%;
           background: #f8f9fa;
           color: #212529;
@@ -128,6 +129,7 @@ export default function Layout({ children }) {
         .tool-inner {
           position: relative;
           height: 100vh;
+          height: 100dvh;
           max-width: 1180px;
           margin: 0 auto;
           padding: 24px 24px 12px;
@@ -491,16 +493,17 @@ export default function Layout({ children }) {
         .tool-content table :is(th, td) { border-color: rgba(27,27,27,.13) !important; }
         .tool-content thead th { background: #fff9df !important; color: #555 !important; }
         @media (max-width: 720px) {
-          .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 40px, 1080px); padding-top: 24px; padding-bottom: 40px; }
+          .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 32px, 1080px); padding-top: 20px; padding-bottom: 32px; }
           .tool-head { align-items: flex-start; }
-          .tool-inner.tool-inner-prompt { width: min(100% - 40px, 1080px); padding-top: 24px; }
+          .tool-inner.tool-inner-prompt { width: min(100% - 32px, 1080px); padding-top: 20px; }
           .tool-head-right { display: none; }
           .tool-back { width: 27px; height: 27px; }
           .tool-title { font-size: 18px; }
           .tool-sub { max-width: 280px; white-space: normal; line-height: 1.45; }
-          .tool-content { padding-top: 22px; }
+          .tool-content { padding: 20px 18px 26px; }
           .tool-content .flex.items-end.justify-between { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
           .tool-content :is(.search-box, .pl-search, .hub-search, .nw-search, .ag-search) { max-width: 100%; }
+          body [class*="modal"]:not([class*="backdrop"]):not([class*="overlay"]) { max-width: calc(100vw - 24px) !important; }
         }
       `}</style>
     </div>

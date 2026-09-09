@@ -776,3 +776,23 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
   box-shadow: var(--shadow-modal);
   animation: scaleIn 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
 }
+
+/* ============================================================
+   移动端整体布局优化（仅作用于手机宽度，桌面端不受影响）
+   ============================================================ */
+.vr-fullscreen {
+  height: 100vh;
+  height: 100dvh;
+  overflow: auto;
+}
+
+@media (max-width: 767px) {
+  /* 动态视口高度：避免手机浏览器地址栏收起时底部内容被遮挡 */
+  body { min-height: 100vh; min-height: 100dvh; }
+
+  /* iOS Safari：输入框字号保持 16px，避免聚焦时页面自动放大 */
+  input[type=text], input[type=password], input[type=time], input[type=url],
+  input[type=search], input[type=number], input[type=date], textarea, select {
+    font-size: 16px;
+  }
+}

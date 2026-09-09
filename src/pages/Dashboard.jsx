@@ -618,17 +618,23 @@ export default function Dashboard() {
       @keyframes vr-hair-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(1px) rotate(.65deg); } }
       @keyframes vr-collar-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(-.8px) rotate(-.45deg); } }
       @media (max-width: 720px) {
-        .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(100svh - 14px); }
-        .vr-home .vr-hero { display: block; min-height: calc(100svh - 82px); padding: 65px 0 35px; }
+        .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(88svh - 14px); }
+        .vr-home .vr-hero { display: block; min-height: calc(88svh - 82px); padding: 52px 0 30px; }
         .vr-home .vr-hero-copy { width: 69%; }
-        .vr-home .vr-hero h1 { max-width: none; font-size: 68px; line-height: .84; }
-        .vr-home .vr-hero-meta { gap: 8px; width: 118%; margin-top: 22px; font-size: 10px; }
+        .vr-home .vr-hero h1 { max-width: none; font-size: 56px; line-height: .88; }
+        .vr-home .vr-hero-meta { gap: 8px; width: 100%; margin-top: 22px; font-size: 10px; }
         .vr-home .vr-hero-meta strong { font-size: 12px; }
         .vr-home .vr-scroll-cue { margin-top: 27px; font-size: 11px; }
-        .vr-home .vr-person-stage { position: absolute; right: -9px; bottom: 8px; width: 49%; min-height: 0; height: min(62svh, 480px); }
+        .vr-home .vr-person-stage { position: absolute; right: -9px; bottom: 8px; width: 49%; min-height: 0; height: min(54svh, 440px); }
         .vr-home .vr-person-stage::before { top: 12%; right: -10%; width: 115%; }
         .vr-home .vr-person-stage::after { right: -8%; bottom: 6%; width: 100%; height: 10px; }
         .vr-home .vr-person-frame { right: 0; width: 100%; }
+        .vr-home .vr-tabs { gap: 14px; padding-bottom: 18px; }
+        .vr-home .vr-tab { font-size: 20px; }
+      }
+      @media (max-width: 360px) {
+        .vr-home .vr-tabs { gap: 11px; }
+        .vr-home .vr-tab { font-size: 18px; }
       }
     `}</style>
     <style>{`
