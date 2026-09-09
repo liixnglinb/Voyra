@@ -550,6 +550,12 @@ export default function UIKit() {
         .ui-detail-body { grid-template-columns:1fr; }
         .ui-nav-links button { display:none; }
       }
+      @media (max-width:480px) {
+        .ui-nav { padding:12px 16px; gap:12px; }
+        .ui-nav-logo { font-size:13.5px; }
+        .ui-nav-logo em { display:none; }
+        .ui-nav-home { padding:7px 9px; font-size:12px; }
+      }
       @media (prefers-reduced-motion:reduce) {
         .uikit-page *, .uikit-page *::before, .uikit-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
       }
