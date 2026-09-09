@@ -191,6 +191,7 @@ function looksLikeRoom(value) {
   if (/(?:校区|教学楼|实验楼|实训楼|办公楼|楼|馆|室|区|操场|球场|田径场|体育馆|游泳馆|实训|实验|机房|中心|报告厅|舞蹈房|琴房|画室|语音室)/.test(s)) return true;
   if (/^[A-Za-z]{0,3}\s*[-–]\s*\d{2,4}$/.test(s)) return true;
   if (/^[A-Za-z]{0,3}\s*\d{1,3}\s*[-–]\s*\d{2,4}$/.test(s)) return true;
+  if (/^[\u4e00-\u9fa5]{1,6}\s*[-–]\s*\d{2,4}$/.test(s)) return true;
   if (/^[A-Za-z]\s*[-–]?\s*\d{3,4}$/.test(s)) return true;
   if (/^\d{1,2}\s*[-–]\s*\d{3,4}$/.test(s)) return true;
   if (/^[A-Za-z]{0,3}\s*\d{3,4}$/.test(s)) return true;
@@ -432,6 +433,7 @@ function parseRowSlot(v) {
 function parseGridCell(s) {
   const parts = String(s).split(/\n|(?:；|;)/).map((t) => t.trim()).filter(Boolean);
   const r = { name: '', teacher: '', room: '', f: 1, t: 16, type: 'every' };
+  const extraNames = [];
   for (const p of parts) {
     if (!p) continue;
     if (/^\d{1,2}[:：]\d{2}\s*[-~—–至到]\s*\d{1,2}[:：]\d{2}$/.test(p)) continue; // 纯时间
@@ -448,9 +450,15 @@ function parseGridCell(s) {
     else if (cls.kind === 'slot' && cls.val.startsWith('晚自习') && !r.name) r.name = cls.val; /* 网格里的晚自习 */
     else if (cls.kind === 'name') {
       if (!r.name) r.name = cls.val;
-      else if (!r.teacher) r.teacher = cls.val;
-      else r.room = r.room || cls.val;
+      else extraNames.push(cls.val);
     }
+  }
+  if (r.teacher) {
+    const noteExtra = extraNames.find((p) => !looksLikeRoom(p) && !looksLikeWeekCell(p));
+    if (noteExtra) r.name = `${r.name}（${cleanCourseName(noteExtra).replace(/^[（(]|[)）]$/g, '')}）`;
+  } else {
+    const teacherCandidate = extraNames.find((p) => !looksLikeRoom(p) && !looksLikeWeekCell(p));
+    if (teacherCandidate) r.teacher = teacherCandidate;
   }
   if (!r.room) {
     const roomLine = parts.find((p) => p !== r.name && p !== r.teacher && !looksLikeWeekCell(p) && looksLikeRoom(p));
@@ -660,6 +668,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
   const currentWeek = settings.overrideWeek != null ? settings.overrideWeek : autoWeek;
 
   const weekCourses = useMemo(() => courses.filter((c) => inWeek(c, currentWeek)), [courses, currentWeek]);
+  const weekendEmpty = useMemo(() => !weekCourses.some((c) => c.day === 6 || c.day === 7), [weekCourses]);
   /* 今日课程数：按今天星期几 + 当前周次实时统计（编辑课表立即生效） */
   const todayCourseCount = useMemo(() => {
     const dayIdx = (new Date().getDay() + 6) % 7 + 1;
@@ -763,15 +772,17 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-grid tbody td { height:var(--cs-row-h,112px);vertical-align:top;padding:6px; }
         .cs-grid thead th { position:sticky;top:0;z-index:2;background:#F8F9FB;color:#5A5F69;font-size:12px;font-weight:750;letter-spacing:.06em;padding:11px 4px;box-shadow:inset 0 -1px rgba(20,24,33,.08); }
         .cs-grid thead th.per { background:#FCFCFD; }
-        .cs-grid .per { background:#FCFCFD;color:#9095A0;font-size:11px;width:88px;text-align:center;padding:10px 5px;line-height:1.5;font-variant-numeric:tabular-nums;vertical-align:middle; }
+        .cs-col-period { width:88px; }
+        .cs-col-day.compact { width:72px; }
+        .cs-grid .per { background:#FCFCFD;color:#9095A0;font-size:11px;text-align:center;padding:10px 5px;line-height:1.5;font-variant-numeric:tabular-nums;vertical-align:middle; }
         .cs-grid .per b { display:block;font-size:12.5px;color:#212529;letter-spacing:.02em;margin-bottom:2px; }
         .cs-grid td.empty { background:#FCFCFD; }
         .cs-cell { background:var(--course-bg);border:1px solid var(--course-border);border-radius:10px;height:100%;padding:10px 10px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:4px;transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;box-shadow:0 1px 2px rgba(16,20,30,.04);overflow:hidden; }
         .cs-cell:hover { transform:translateY(-1px);box-shadow:0 6px 16px rgba(16,20,30,.09); }
-        .cs-cell .n { font-size:13.5px;font-weight:750;color:var(--course-text);line-height:1.32;letter-spacing:.01em;text-align:center;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden; }
+        .cs-cell .n { font-size:13.5px;font-weight:750;color:var(--course-text);line-height:1.32;letter-spacing:.01em;text-align:center;overflow-wrap:anywhere;white-space:normal; }
         .cs-cell .r { display:inline-flex;align-items:center;justify-content:center;gap:3px;align-self:center;max-width:100%;font-size:10.5px;font-weight:700;color:var(--course-room);background:rgba(255,255,255,.72);border-radius:6px;padding:2px 5px;line-height:1.25;text-align:center;overflow-wrap:anywhere; }
         .cs-cell .r svg { flex:0 0 auto; }
-        .cs-cell .t { font-size:10.5px;color:#6A6F79;margin-top:1px;line-height:1.3;letter-spacing:.01em;text-align:center;overflow-wrap:anywhere;white-space:nowrap;text-overflow:ellipsis;overflow:hidden; }
+        .cs-cell .t { font-size:10.5px;color:#6A6F79;margin-top:1px;line-height:1.3;letter-spacing:.01em;text-align:center;overflow-wrap:anywhere;white-space:normal; }
         .cs-cell .w { font-size:10px;color:#838890;font-weight:650;letter-spacing:.01em; }
         .cs-cell.night { background:linear-gradient(180deg, rgba(99,102,241,.07), rgba(99,102,241,.03));border-style:dashed;border-color:rgba(99,102,241,.3); }
         .cs-empty { text-align:center;padding:26px 0;color:#adb5bd;font-size:13px; }
@@ -911,6 +922,12 @@ export default function ClassSchedule({ stats = null, active = true }) {
         </div>
         <div className="cs-grid">
           <table>
+            <colgroup>
+              <col className="cs-col-period" />
+              {WEEKDAY.map((w, i) => (
+                <col key={w} className={`cs-col-day${weekendEmpty && i >= 5 ? ' compact' : ''}`} />
+              ))}
+            </colgroup>
             <thead>
               <tr>
                 <th className="per">节次</th>
