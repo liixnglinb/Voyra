@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-/* voyra-schedule 独立仓库 · 同步链路验证标记 v1 */
+/* Voyra-schedule 独立仓库 · 同步链路验证标记 v1 */
 import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
