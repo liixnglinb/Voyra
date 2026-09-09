@@ -940,7 +940,6 @@ export default function PromptLibrary() {
         .pl-detail-vars label { grid-template-columns:1fr; gap:5px; }
         .pl-detail-vars label span { text-align:left; }
         .pl-detail > footer { flex-wrap:wrap; }
-        .pl-tip { display:block; line-height:1.9; }
       }
       @media (prefers-reduced-motion:reduce) { .pl-page *, .pl-page *::before, .pl-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>
