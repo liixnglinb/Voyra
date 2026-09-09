@@ -63,6 +63,14 @@ const IMPORT_TEMPLATE = `请按下面的文本格式填写课表，每门课用�
 周次：1-16周（单周）
 老师：李老师
 
+【Pro TEL d XP 线路板设计】
+课程：Pro TEL d XP 线路板设计
+星期：周四
+节次：5-6节
+周次：1-16周（双周）
+老师：王老师
+教室：实训中心302
+
 【晚自习·自习】
 课程：晚自习
 星期：周二
@@ -75,7 +83,7 @@ const IMPORT_TEMPLATE = `请按下面的文本格式填写课表，每门课用�
 · 节次：可直接写连堂块名 —— 1-2节 / 3-4节 / 5-6节 / 7-8节 / 晚自习1 / 晚自习2
 · 周次：1-16周（第几周到第几周），可加（单周）/（双周）限定单双周
 · 老师：授课教师姓名与职称，如「龙承星副教授」（也可分开写「龙承星 副教授」）
-· 教室：上课地点（可选），如 博学楼501 / 致远楼A201
+· 教室：上课地点（可选），如 博学楼501 / 致远楼A201 / 实训中心302 / 5-601 / B305
 · 课程：课程名称（也可用【】标题作为课程名）`;
 
 /* ---------- 解析器 ---------- */
@@ -89,14 +97,36 @@ const reOddEven = /[（(](单|双)周?[)）]|(单|双)周/;
 /* 老师：抓取姓名+职称完整串；同一行若后面紧跟「教室/地点」，在此处截断 */
 const reTeacher = /(?:授课老师|老师|教师)[:：]\s*([^\n,，;；]+?)(?=\s*(?:教室|地点|上课地点|上课教室|上课地方)[:：]|$)/;
 /* 教室：支持「教室：博学楼501」「上课地点：致远楼A201」等写法 */
-const reRoom = /(?:教室|上课教室|上课地点|上课地方|地点|room)[:：]?\s*([^\n,，;；]+)/;
+const reRoom = /(?:上课地点|上课教室|上课地方|教室|地点|room)\s*[:：]?\s*([^\n,，;；]+)/;
 
 const WD = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 7, 天: 7 };
 
 /* 常见教师职称词表（xls 智能识别用） */
 const TITLE_HINTS = ['教授', '副教授', '讲师', '助教', '研究员', '副研究员', '高级工程师', '工程师', '实验师', '老师', '教师'];
-/* 常见教室特征词表（xls 智能识别用） */
-const ROOM_HINTS = ['楼', '教室', '实验室', '机房', '实验中心', '报告厅', '实训', '馆', '室'];
+function cleanCourseName(value) {
+  return String(value || '')
+    .replace(/^【\s*|\s*】$/g, '')
+    .replace(/^(?:课程名|课程名称|课程|名称|科目)\s*[:：]\s*/i, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^[-–—·、,，;；\s]+|[-–—·、,，;；\s]+$/g, '')
+    .trim();
+}
+
+const COURSE_THEMES = [
+  { bg: 'linear-gradient(180deg,#FFF9DF,#FFFDF2)', border: 'rgba(164,136,48,.38)', text: '#8A7327', room: '#9A7515' },
+  { bg: 'linear-gradient(180deg,#E7F6EF,#F4FBF7)', border: 'rgba(16,153,101,.28)', text: '#127A53', room: '#17936A' },
+  { bg: 'linear-gradient(180deg,#E9F2FF,#F5F9FF)', border: 'rgba(38,109,222,.26)', text: '#2563C9', room: '#3B77DF' },
+  { bg: 'linear-gradient(180deg,#F3EEFF,#FAF8FF)', border: 'rgba(109,74,220,.24)', text: '#6D4ADC', room: '#8063E5' },
+  { bg: 'linear-gradient(180deg,#FFEEE8,#FFF7F3)', border: 'rgba(223,84,50,.25)', text: '#C8471F', room: '#DE5C34' },
+  { bg: 'linear-gradient(180deg,#E9F7FA,#F5FCFE)', border: 'rgba(14,137,163,.25)', text: '#0F7A93', room: '#1895AF' },
+];
+
+function courseTheme(name) {
+  const source = String(name || '');
+  let hash = 0;
+  for (let i = 0; i < source.length; i += 1) hash = (hash * 31 + source.charCodeAt(i)) % 100000;
+  return COURSE_THEMES[hash % COURSE_THEMES.length];
+}
 
 function parseImport(text) {
   const blocks = String(text)
@@ -107,7 +137,7 @@ function parseImport(text) {
   for (const raw of blocks) {
     const title = raw.match(reTitle);
     const mKey = raw.match(reKey);
-    const name = (mKey && mKey[2] ? mKey[2].trim() : '') || (title ? title[1].trim() : '');
+    const name = cleanCourseName((mKey && mKey[2] ? mKey[2] : '') || (title ? title[1] : ''));
     const d = raw.match(reWeekday);
     const day = d ? WD[d[1]] : null;
 
@@ -152,9 +182,39 @@ function xlsCell(v) {
   return String(v).replace(/[ \t]+/g, ' ').trim(); // 只压缩空格/制表，保留换行（多行单元格）
 }
 
+/* 教室识别：支持「明理楼A201」「5-601」「B305」「实训中心 302」「地点：...」等常见写法 */
+function looksLikeRoom(value) {
+  const s = cleanCourseName(value);
+  if (!s || s.length > 30) return false;
+  if (TITLE_HINTS.some((h) => s.includes(h))) return false;
+  if (/^(?:上课地点|上课教室|上课地方|教室|地点)\s*[:：]/.test(s)) return true;
+  if (/(?:教学楼|实验楼|实训楼|办公楼|楼|馆|室|区|实训|实验|机房|中心|报告厅)/.test(s) && /\d|[A-Za-z]/.test(s)) return true;
+  if (/^[A-Za-z]{0,3}\s*[-–]\s*\d{2,4}$/.test(s)) return true;
+  if (/^[A-Za-z]{0,3}\s*\d{1,3}\s*[-–]\s*\d{2,4}$/.test(s)) return true;
+  if (/^[A-Za-z]\s*[-–]?\s*\d{3,4}$/.test(s)) return true;
+  if (/^\d{1,2}\s*[-–]\s*\d{3,4}$/.test(s)) return true;
+  if (/^[A-Za-z]{0,3}\s*\d{3,4}$/.test(s)) return true;
+  return false;
+}
+
+/* 老师识别：仅依赖职称特征；无职称人名在网格多行解析中按第 2 段兜底 */
+function looksLikeTeacher(value) {
+  const s = cleanCourseName(value);
+  if (!s || s.length > 24) return false;
+  return TITLE_HINTS.some((h) => s.includes(h));
+}
+
 /* 单元格（或单元格内多行片段）分类：返回 {kind,val} 或 null；weeks 段另带 {f,t,type} */
 function classifyXlsCell(s) {
   if (!s) return null;
+  const labeledName = s.match(/^(?:课程名|课程名称|课程|名称|科目)\s*[:：]\s*(.+)$/);
+  if (labeledName) return { kind: 'name', val: cleanCourseName(labeledName[1]) };
+  const labeledTeacher = s.match(/^(?:授课老师|授课教师|老师|教师)\s*[:：]\s*(.+)$/);
+  if (labeledTeacher) return { kind: 'teacher', val: cleanCourseName(labeledTeacher[1]) };
+  const labeledRoom = s.match(/^(?:上课地点|上课教室|上课地方|教室|地点)\s*[:：]\s*(.+)$/);
+  if (labeledRoom) return { kind: 'room', val: cleanCourseName(labeledRoom[1]) };
+  const labeledWeeks = s.match(/^(?:周次|周数|上课周|起止周)\s*[:：]\s*(.+)$/);
+  if (labeledWeeks) return parseWeeksCell(labeledWeeks[1])[0] || null;
   const day = s.match(/^周?([一二三四五六日天])$/);
   if (day) return { kind: 'day', val: XLS_WEEK[day[1]] };
   const night = s.match(/^晚自习\s*(\d)?$/);
@@ -167,6 +227,10 @@ function classifyXlsCell(s) {
   if (wk) return { kind: 'weeks', f: +wk[1], t: +wk[2], type: wk[3] ? (wk[3] === '单' ? 'odd' : 'even') : 'every' };
   const wk1 = s.match(/^(?:第)?\s*(\d{1,2})\s*周(?:[（(](单|双)周?[)）])?$/);
   if (wk1) return { kind: 'weeks', f: +wk1[1], t: +wk1[1], type: wk1[2] ? (wk1[2] === '单' ? 'odd' : 'even') : 'every' };
+  if (/周/.test(s) && /[,，、]/.test(s)) {
+    const seqWeeks = parseWeeksCell(s);
+    if (seqWeeks.length) return seqWeeks[0];
+  }
   /* 无单位的裸区间（如 1-2 / 3-4）→ 节次块；跨度大的（如 1-16）→ 周次区间 */
   const span = s.match(/^(\d{1,2})\s*[-~—–至到]\s*(\d{1,2})$/);
   if (span) {
@@ -174,11 +238,11 @@ function classifyXlsCell(s) {
     if (b > a && b - a <= 2) return { kind: 'slot', val: slotForPeriod(a) };
     return { kind: 'weeks', f: a, t: b, type: 'every' };
   }
-  /* 特征词识别只用于「单实体格」（无空格、长度受限），避免长复合串误判 */
-  if (!/\s/.test(s) && s.length <= 14 && TITLE_HINTS.some((h) => s.includes(h))) return { kind: 'teacher', val: s };
-  if (!/\s/.test(s) && s.length <= 14 && ROOM_HINTS.some((h) => s.includes(h))) return { kind: 'room', val: s };
-  if (/^[\u4e00-\u9fa5A-Za-z0-9·、（）()]{2,24}$/.test(s) && /[\u4e00-\u9fa5]/.test(s) && !/^(?:星期|周|第|节|上课)/.test(s)) {
-    return { kind: 'name', val: s };
+  if (looksLikeTeacher(s)) return { kind: 'teacher', val: cleanCourseName(s) };
+  if (looksLikeRoom(s)) return { kind: 'room', val: cleanCourseName(s) };
+  const name = cleanCourseName(s);
+  if (name.length >= 2 && name.length <= 48 && /[A-Za-z\u4e00-\u9fa5]/.test(name) && !/^(?:星期|周|第|节|上课)/.test(name)) {
+    return { kind: 'name', val: name };
   }
   return null;
 }
@@ -197,7 +261,7 @@ function parseMixedCell(p) {
   if (per1) out.push({ kind: 'slot', val: slotForPeriod(+per1[1]) });
   const wk = p.match(/(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~—–至到]\s*(?:第)?\s*(\d{1,2})\s*周?/);
   if (wk) out.push({ kind: 'weeks', f: +wk[1], t: +wk[2], type: 'every' });
-  /* 剩余中文词：课程名 / 老师 / 教室按序归类 */
+  /* 剩余内容：先保留完整英/中混合课程名，再分类老师与教室 */
   const rest = p
     .replace(/星期?[一二三四五六日天]/g, ' ')
     .replace(/晚自习\s*\d?/g, ' ')
@@ -209,9 +273,10 @@ function parseMixedCell(p) {
   if (rest) {
     let gotName = false;
     for (const w of rest.split(' ')) {
-      if (!/[\u4e00-\u9fa5]/.test(w)) continue;
-      if (TITLE_HINTS.some((h) => w.includes(h))) { out.push({ kind: 'teacher', val: w }); continue; }
-      if (ROOM_HINTS.some((h) => w.includes(h))) { out.push({ kind: 'room', val: w }); continue; }
+      const val = cleanCourseName(w);
+      if (!val || !/[A-Za-z\u4e00-\u9fa5]/.test(val)) continue;
+      if (looksLikeTeacher(val)) { out.push({ kind: 'teacher', val }); continue; }
+      if (looksLikeRoom(val)) { out.push({ kind: 'room', val }); continue; }
       if (!gotName) { out.push({ kind: 'name', val: w }); gotName = true; }
       else out.push({ kind: 'teacher', val: w });
     }
@@ -350,11 +415,17 @@ function parseGridCell(s) {
       else r.room = r.room || cls.val;
     }
   }
+  if (!r.room) {
+    const roomLine = parts.find((p) => p !== r.name && p !== r.teacher && looksLikeRoom(p));
+    if (roomLine) r.room = cleanCourseName(roomLine);
+  }
+  const wholeOddEven = /[（(]\s*(单|双)\s*周?\s*[)）]/.exec(s);
+  if (wholeOddEven) r.type = wholeOddEven[1] === '单' ? 'odd' : 'even';
   return r;
 }
 
-function firstLine(v) {
-  return String(v).split(/\n|(?:；|;)/).map((t) => t.trim()).find(Boolean) || '';
+function joinedCell(v) {
+  return cleanCourseName(String(v || '').split(/\n|(?:；|;)/).filter(Boolean).join(' '));
 }
 
 function mergeXlsSegments(segs) {
@@ -401,9 +472,9 @@ function parseXlsRows(rows) {
           for (const sl of parseSlotCell(v)) segs.push({ kind: 'slot', val: sl });
         }
         else if (key === 'weeks') segs.push(...parseWeeksCell(v));
-        else if (key === 'teacher') { const t2 = firstLine(v); if (t2) segs.push({ kind: 'teacher', val: t2 }); }
-        else if (key === 'room') { const r2 = firstLine(v); if (r2) segs.push({ kind: 'room', val: r2 }); }
-        else if (key === 'name') { const n2 = firstLine(v); if (n2) segs.push({ kind: 'name', val: n2 }); }
+        else if (key === 'teacher') { const t2 = joinedCell(v); if (t2) segs.push({ kind: 'teacher', val: t2 }); }
+        else if (key === 'room') { const r2 = joinedCell(v); if (r2) segs.push({ kind: 'room', val: r2 }); }
+        else if (key === 'name') { const n2 = joinedCell(v); if (n2) segs.push({ kind: 'name', val: n2 }); }
       }
       if (dayVal != null) segs.push({ kind: 'day', val: dayVal });
     } else if (gridHeader) {
@@ -641,20 +712,24 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-input:focus { border-color:${ACCENT}; }
         label.cs-l { font-size:12px;color:#6c757d;font-weight:600;display:block;margin-bottom:5px; }
         .cs-field { display:flex;flex-direction:column; }
-        .cs-grid { overflow-x:auto; }
-        .cs-grid table { width:100%;border-collapse:collapse;table-layout:fixed; }
-        .cs-grid th,.cs-grid td { border:1px solid rgba(20,24,33,.075); }
-        .cs-grid tbody td { height:var(--cs-row-h,auto); }
-        .cs-grid thead th { background:#F6F7F9;color:#5A5F69;font-size:12px;font-weight:700;letter-spacing:.06em;padding:11px 4px; }
-        .cs-grid thead th.per { background:#FAFAFB; }
-        .cs-grid .per { background:#FBFBFC;color:#9095A0;font-size:11px;width:88px;text-align:center;padding:10px 5px;line-height:1.5;font-variant-numeric:tabular-nums; }
+        .cs-grid { overflow-x:auto; scroll-padding-left:88px; }
+        .cs-grid table { min-width:680px;width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed; }
+        .cs-grid th,.cs-grid td { border-bottom:1px solid rgba(20,24,33,.075);border-right:1px solid rgba(20,24,33,.075); }
+        .cs-grid thead tr:first-child th { border-top:1px solid rgba(20,24,33,.075); }
+        .cs-grid tr th:first-child,.cs-grid tr td:first-child { border-left:1px solid rgba(20,24,33,.075); }
+        .cs-grid tbody td { height:var(--cs-row-h,112px);vertical-align:top;padding:6px; }
+        .cs-grid thead th { position:sticky;top:0;z-index:2;background:#F8F9FB;color:#5A5F69;font-size:12px;font-weight:750;letter-spacing:.06em;padding:11px 4px;box-shadow:inset 0 -1px rgba(20,24,33,.08); }
+        .cs-grid thead th.per { background:#FCFCFD; }
+        .cs-grid .per { background:#FCFCFD;color:#9095A0;font-size:11px;width:88px;text-align:center;padding:10px 5px;line-height:1.5;font-variant-numeric:tabular-nums;vertical-align:middle; }
         .cs-grid .per b { display:block;font-size:12.5px;color:#212529;letter-spacing:.02em;margin-bottom:2px; }
         .cs-grid td.empty { background:#FCFCFD; }
-        .cs-cell { background:linear-gradient(180deg, ${ACCENT_SOFT}, #FFFDF2);border:1px solid ${ACCENT_LINE};border-radius:10px;height:100%;padding:12px 11px;display:flex;flex-direction:column;justify-content:center;gap:5px;transition:border-color .15s ease,box-shadow .15s ease;box-shadow:0 1px 2px rgba(164,136,48,.05); }
-        .cs-cell:hover { border-color:rgba(164,136,48,.62);box-shadow:0 2px 8px rgba(164,136,48,.14); }
-        .cs-cell .n { font-size:13.5px;font-weight:750;color:#8A7327;line-height:1.35;letter-spacing:.02em;word-break:break-word; }
-        .cs-cell .r { display:flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:#9A7515;margin-top:1px;line-height:1.3;word-break:break-word; }
-        .cs-cell .t { font-size:11px;color:#7B7F89;margin-top:3px;line-height:1.35;letter-spacing:.01em;word-break:break-word; }
+        .cs-cell { background:var(--course-bg);border:1px solid var(--course-border);border-radius:10px;height:100%;padding:10px 10px;display:flex;flex-direction:column;justify-content:center;gap:4px;transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;box-shadow:0 1px 2px rgba(16,20,30,.04);overflow:hidden; }
+        .cs-cell:hover { transform:translateY(-1px);box-shadow:0 6px 16px rgba(16,20,30,.09); }
+        .cs-cell .n { font-size:13.5px;font-weight:750;color:var(--course-text);line-height:1.32;letter-spacing:.01em;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden; }
+        .cs-cell .r { display:inline-flex;align-items:center;gap:3px;align-self:flex-start;max-width:100%;font-size:10.5px;font-weight:700;color:var(--course-room);background:rgba(255,255,255,.72);border-radius:6px;padding:2px 5px;line-height:1.25;overflow-wrap:anywhere; }
+        .cs-cell .r svg { flex:0 0 auto; }
+        .cs-cell .t { font-size:10.5px;color:#6A6F79;margin-top:1px;line-height:1.3;letter-spacing:.01em;overflow-wrap:anywhere;white-space:nowrap;text-overflow:ellipsis;overflow:hidden; }
+        .cs-cell .w { font-size:10px;color:#838890;font-weight:650;letter-spacing:.01em; }
         .cs-cell.night { background:linear-gradient(180deg, rgba(99,102,241,.07), rgba(99,102,241,.03));border-style:dashed;border-color:rgba(99,102,241,.3); }
         .cs-empty { text-align:center;padding:26px 0;color:#adb5bd;font-size:13px; }
         .cs-list-row { display:flex;align-items:center;gap:12px;border-top:1px solid rgba(20,24,33,.07);padding:10px 4px;flex-wrap:wrap; }
@@ -663,6 +738,14 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-review { border:1px dashed ${ACCENT_LINE};border-radius:10px;background:${ACCENT_SOFT};padding:10px 12px;margin-top:10px; }
         .cs-review-item { display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 10px;margin:4px 4px 0 0;font-size:12px; }
         .cs-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12.5px;z-index:99; }
+        @media (max-width:640px) {
+          .cs-card { padding:14px; }
+          .cs-grid table { min-width:640px; }
+          .cs-grid tbody td { padding:4px;height:var(--cs-row-h,104px); }
+          .cs-cell { padding:8px;border-radius:8px; }
+          .cs-cell .n { font-size:12.5px; }
+          .cs-cell .r,.cs-cell .t { font-size:10px; }
+        }
         .tp-btn { border:1px solid rgba(20,24,33,.16);background:#fff;color:#212529;border-radius:9px;padding:7px 14px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;min-width:66px;transition:all .15s ease; }
         .tp-btn:hover { border-color:${ACCENT_LINE};color:${ACCENT}; }
         .tp-btn.active { border-color:${ACCENT};background:${ACCENT_SOFT};color:${ACCENT};box-shadow:0 0 0 3px rgba(164,136,48,.14); }
@@ -801,12 +884,23 @@ export default function ClassSchedule({ stats = null, active = true }) {
                     const d = di + 1;
                     const c = grid[d]?.[slot.key];
                     if (c) {
+                      const theme = courseTheme(c.name);
                       return (
                         <td key={d}>
-                          <div className={`cs-cell${slot.night ? ' night' : ''}`}>
+                          <div
+                            className={`cs-cell${slot.night ? ' night' : ''}`}
+                            style={{
+                              '--course-bg': theme.bg,
+                              '--course-border': theme.border,
+                              '--course-text': theme.text,
+                              '--course-room': theme.room,
+                            }}
+                            title={c.name}
+                          >
                             <div className="n">{c.name}</div>
-                            {c.room && <div className="r"><MapPin size={11} strokeWidth={2} />{c.room}</div>}
-                            <div className="t">{c.teacher || '未填老师'}</div>
+                            <div className="r"><MapPin size={10} strokeWidth={2.2} />{c.room || '地点未填'}</div>
+                            <div className="t">{c.teacher || '老师未填'}</div>
+                            {c.type !== 'every' && <div className="w">{INC[c.type]}</div>}
                           </div>
                         </td>
                       );
@@ -896,13 +990,13 @@ export default function ClassSchedule({ stats = null, active = true }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>识别到 {parsed.length} 门课程：</div>
             {parsed.map((c) => (
               <span key={c.id} className="cs-review-item">
-                {c.name} · 周{WEEKDAY[c.day - 1]} · {SLOT_META[c.slot]?.label} · {c.f}{c.t > c.f ? `-${c.t}` : ''}周{c.type !== 'every' ? `(${INC[c.type]})` : ''} · {c.teacher || '—'}{c.room ? ` · ${c.room}` : ''}
+                {c.name} · 周{WEEKDAY[c.day - 1]} · {SLOT_META[c.slot]?.label} · {c.f}{c.t > c.f ? `-${c.t}` : ''}周{c.type !== 'every' ? `(${INC[c.type]})` : ''} · {c.teacher || '老师未识别'} · {c.room || '地点未识别'}
               </span>
             ))}
           </div>
         )}
         <p style={{ margin: '10px 0 0', fontSize: 12.5, color: '#6c757d' }}>
-          支持连堂块：1-2节 / 3-4节 / 5-6节 / 7-8节 / 晚自习1 / 晚自习2；晚自习也可单独开设（有时有课）。文本导入支持「老师：龙承星副教授」「教室：博学楼501」自动识别；Excel 导入支持教务导出的 .xls / .xlsx 课表（自动识别课程 / 星期 / 节次 / 周次 / 老师 / 教室）。
+          支持连堂块：1-2节 / 3-4节 / 5-6节 / 7-8节 / 晚自习1 / 晚自习2。文本与 Excel 导入支持中英文混合课程名、「老师 / 教师」职称、以及「明理楼A201 / 5-601 / B305 / 实训中心302」等常见地点写法；识别结果会先列出地点，未识别时可手动补充。
         </p>
       </div>
 
