@@ -171,7 +171,7 @@ function parseImport(text) {
       });
     }
   }
-  return out;
+  return out.map(normalizeCourse);
 }
 
 /* ============ Excel(.xls/.xlsx) 课表解析 ============ */
@@ -188,13 +188,46 @@ function looksLikeRoom(value) {
   if (!s || s.length > 30) return false;
   if (TITLE_HINTS.some((h) => s.includes(h))) return false;
   if (/^(?:上课地点|上课教室|上课地方|教室|地点)\s*[:：]/.test(s)) return true;
-  if (/(?:教学楼|实验楼|实训楼|办公楼|楼|馆|室|区|实训|实验|机房|中心|报告厅)/.test(s) && /\d|[A-Za-z]/.test(s)) return true;
+  if (/(?:校区|教学楼|实验楼|实训楼|办公楼|楼|馆|室|区|操场|球场|田径场|体育馆|游泳馆|实训|实验|机房|中心|报告厅|舞蹈房|琴房|画室|语音室)/.test(s)) return true;
   if (/^[A-Za-z]{0,3}\s*[-–]\s*\d{2,4}$/.test(s)) return true;
   if (/^[A-Za-z]{0,3}\s*\d{1,3}\s*[-–]\s*\d{2,4}$/.test(s)) return true;
   if (/^[A-Za-z]\s*[-–]?\s*\d{3,4}$/.test(s)) return true;
   if (/^\d{1,2}\s*[-–]\s*\d{3,4}$/.test(s)) return true;
   if (/^[A-Za-z]{0,3}\s*\d{3,4}$/.test(s)) return true;
   return false;
+}
+
+/* 识别旧版误存进地点的「2-9([周])[01-02节]」类周次串 */
+function extractWeekFragment(value) {
+  return String(value || '').match(
+    /(?:第)?\d{1,2}(?:\s*[-~—–至到]\s*\d{1,2}|(?:\s*[,，、]\s*\d{1,2})+)?\s*(?:\(\[\s*周\s*\]\)|\[\s*周\s*\]|\(\s*周\s*\)|周)(?:\s*[（(]\s*(?:单|双)\s*周?\s*[)）])?(?:\s*[\[（(][^\]）\n]{1,20}[\]）])?/
+  );
+}
+
+function looksLikeWeekCell(value) {
+  const s = cleanCourseName(value);
+  if (!s || s.length > 48) return false;
+  return Boolean(extractWeekFragment(s));
+}
+
+function normalizeCourse(course) {
+  if (!course) return course;
+  const next = { ...course };
+  let room = cleanCourseName(next.room || '');
+  const weekMatch = extractWeekFragment(room);
+  if (weekMatch) {
+    const weeks = parseWeeksCell(weekMatch[0])[0];
+    const rest = cleanCourseName(room.replace(weekMatch[0], ' '));
+    if (weeks) {
+      next.f = weeks.f;
+      next.t = weeks.t;
+      next.type = weeks.type;
+      next.weeksText = `${weeks.f === weeks.t ? `${weeks.f}周` : `${weeks.f}-${weeks.t}周`}${weeks.type !== 'every' ? `（${INC[weeks.type]}）` : ''}`;
+    }
+    room = looksLikeRoom(rest) ? rest : '';
+  }
+  next.room = room;
+  return next;
 }
 
 /* 老师识别：仅依赖职称特征；无职称人名在网格多行解析中按第 2 段兜底 */
@@ -230,6 +263,10 @@ function classifyXlsCell(s) {
   if (/周/.test(s) && /[,，、]/.test(s)) {
     const seqWeeks = parseWeeksCell(s);
     if (seqWeeks.length) return seqWeeks[0];
+  }
+  if (looksLikeWeekCell(s)) {
+    const mixedWeeks = parseWeeksCell(s);
+    if (mixedWeeks.length) return mixedWeeks[0];
   }
   /* 无单位的裸区间（如 1-2 / 3-4）→ 节次块；跨度大的（如 1-16）→ 周次区间 */
   const span = s.match(/^(\d{1,2})\s*[-~—–至到]\s*(\d{1,2})$/);
@@ -416,7 +453,7 @@ function parseGridCell(s) {
     }
   }
   if (!r.room) {
-    const roomLine = parts.find((p) => p !== r.name && p !== r.teacher && looksLikeRoom(p));
+    const roomLine = parts.find((p) => p !== r.name && p !== r.teacher && !looksLikeWeekCell(p) && looksLikeRoom(p));
     if (roomLine) r.room = cleanCourseName(roomLine);
   }
   const wholeOddEven = /[（(]\s*(单|双)\s*周?\s*[)）]/.exec(s);
@@ -504,7 +541,7 @@ function parseXlsRows(rows) {
     const c = mergeXlsSegments(segs);
     if (c) out.push(c);
   }
-  return out;
+  return out.map(normalizeCourse);
 }
 
 function inWeek(c, w) {
@@ -579,13 +616,19 @@ export default function ClassSchedule({ stats = null, active = true }) {
   useEffect(() => {
     try {
       const raw = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
-      if (raw) { setCourses(raw.courses || []); setSettings(raw.settings || { startDate: '', overrideWeek: null, timeSlots: null }); }
+      if (raw) {
+        const savedCourses = (raw.courses || []).map(normalizeCourse);
+        const savedSettings = raw.settings || { startDate: '', overrideWeek: null, timeSlots: null };
+        setCourses(savedCourses);
+        setSettings(savedSettings);
+        localStorage.setItem(LS_READ(), JSON.stringify({ courses: savedCourses, settings: savedSettings }));
+      }
     } catch { /* ignore */ }
   }, []);
 
   const persist = (nextCourses, nextSettings) => {
     if (!guard()) return;
-    const c = nextCourses ?? courses;
+    const c = (nextCourses ?? courses).map(normalizeCourse);
     const s = nextSettings ?? settings;
     setCourses(c); setSettings(s);
     try { localStorage.setItem(LS_READ(), JSON.stringify({ courses: c, settings: s })); } catch { /* ignore */ }
