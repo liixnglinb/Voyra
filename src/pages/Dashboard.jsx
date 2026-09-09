@@ -30,7 +30,7 @@ const APPS = [
 ];
 
 const MATHMODEL_SKILL = {
-  href: 'https://github.com/liixnglinb/mathmodel-skill',
+  href: 'https://github.com/liixnglinb/Mathmodel-skill',
   name: '数学建模 Skill',
   tagline: '国赛（CUMCM）数学建模十阶段工作流',
 };
