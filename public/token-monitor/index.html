@@ -485,11 +485,12 @@ html.anim [data-roll].in{opacity:1;transform:none}
       return null;
     }
     var setup = pick('setup'), portable = pick('portable'), raw = pick('tokenmonitor.exe', true);
-    if (setup){ links.setup = setup.url;
-      tag('fn-setup', setup.name); tag('mb-setup', mb(setup.size)); tag('size-setup', '约 ' + mb(setup.size)); }
-    if (portable){ links.portable = portable.url;
-      tag('fn-portable', portable.name); tag('mb-portable', mb(portable.size)); tag('size-portable', '约 ' + mb(portable.size)); }
-    if (raw){ links.raw = raw.url; tag('mb-raw', mb(raw.size)); }
+    if (setup){ links.setup = setup.url; tag('fn-setup', setup.name);
+      if (setup.size > 0){ tag('mb-setup', mb(setup.size)); tag('size-setup', '约 ' + mb(setup.size)); } }
+    if (portable){ links.portable = portable.url; tag('fn-portable', portable.name);
+      if (portable.size > 0){ tag('mb-portable', mb(portable.size)); tag('size-portable', '约 ' + mb(portable.size)); } }
+    if (raw){ links.raw = raw.url;
+      if (raw.size > 0) tag('mb-raw', mb(raw.size)); }
     tag('ver-pill', 'v' + ver);
     tag('ver-btn', 'v' + ver);
     tag('v-setup', 'v' + ver);
