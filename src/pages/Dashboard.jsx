@@ -211,6 +211,24 @@ function GlmSceneStage() {
 }
 
 function FeatureArt({ type }) {
+  /* 账迹演示的品牌标识：与 BillTrace 页内 ch/c 数据同源，用字符徽章替代低清位图 */
+  const BT_BRANDS = {
+    meituan: { label: '美', bg: '#FFC300', fg: '#241C00' },
+    luckin: { label: '幸', bg: '#1F3B9E', fg: '#FFFFFF' },
+    cmb: { label: '招', bg: '#E60012', fg: '#FFFFFF' },
+  };
+  const BillBrand = ({ id }) => {
+    const brand = BT_BRANDS[id] || BT_BRANDS.meituan;
+    return <span className="vr-bt-brand" style={{ background: brand.bg, color: brand.fg }}>{brand.label}</span>;
+  };
+  const BillMark = ({ size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="0" y="0" width="24" height="24" rx="6.5" fill="#0BA360" />
+      <path d="M8.3 5.5h7.4v13.2l-1.85-1.25-1.85 1.25-1.85-1.25-1.85 1.25z" fill="#fff" />
+      <path d="M10.4 9.1h3.2M10.4 11.8h3.2" stroke="#0BA360" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+
   const [active, setActive] = useState(0);
   const [checked, setChecked] = useState(false);
   const artRef = useRef(null);
@@ -317,40 +335,41 @@ function FeatureArt({ type }) {
   }
 
   if (type === 'billtrace') {
-    const txns = [['美团外卖', '餐饮-外卖', '−35.80', 'meituan'], ['瑞幸咖啡', '餐饮-咖啡', '−15.90', 'luckin'], ['工资到账', '金融-工资', '+8500.0', 'cmb']];
+    const txns = [['美团外卖', '餐饮-外卖', '−35.80', 'meituan'], ['瑞幸咖啡', '餐饮-咖啡', '−15.90', 'luckin'], ['工资到账', '金融-工资', '+8500.00', 'cmb']];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-bt-art">
       <style>{`
         .vr-bt-art{background:linear-gradient(160deg,#E9F7F0,#F7F8FA 60%);color:#14161A}
-        .vr-bt-art .vr-bt-screen{background:#F7F8FA;color:#14161A;border-radius:14px;padding:14px 12px;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+        .vr-bt-art .vr-bt-screen{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:6px;margin-top:9px;padding:11px;border:1px solid #E3EBE7;border-radius:12px;background:#fff;color:#14161A;box-shadow:0 1px 2px rgba(16,24,40,.05)}
         .vr-bt-art .vr-bt-big{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
-        .vr-bt-art .vr-bt-bar{height:5px;background:#E7E9EC;border-radius:3px;overflow:hidden;margin-top:6px}
+        .vr-bt-art .vr-bt-head{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
+        .vr-bt-art .vr-bt-head em{margin-left:auto;color:#7A7F87;font-size:10px;font-style:normal;text-align:right}
+        .vr-bt-art .vr-bt-bar{height:4px;background:#E7E9EC;border-radius:3px;overflow:hidden;margin-top:5px}
         .vr-bt-art .vr-bt-bar i{display:block;height:100%;width:68%;background:#0BA360;border-radius:3px}
-        .vr-bt-art .vr-bt-row{display:flex;align-items:center;gap:9px;background:#fff;border-radius:11px;padding:8px 10px;box-shadow:0 1px 2px rgba(16,24,40,.06)}
-        .vr-bt-art .vr-bt-row.is-hot{box-shadow:0 0 0 2px rgba(11,163,96,.55)}
-        .vr-bt-art .vr-bt-dot{width:28px;height:28px;border-radius:9px;overflow:hidden;background:#F1F3F5;flex-shrink:0}
-        .vr-bt-art .vr-bt-dot img{width:100%;height:100%;display:block;object-fit:cover}
+        .vr-bt-art .vr-bt-rows{flex:1 1 auto;min-height:0;display:grid;gap:5px;align-content:start}
+        .vr-bt-art .vr-bt-row{display:flex;align-items:center;gap:9px;background:#FCFDFD;border:1px solid #EDF1EF;border-radius:10px;padding:6px 9px;transition:background .25s ease, border-color .25s ease}
+        .vr-bt-art .vr-bt-row.is-hot{background:#F3FBF7;border-color:rgba(11,163,96,.45)}
+        .vr-bt-art .vr-bt-brand{display:grid;place-items:center;width:26px;height:26px;flex-shrink:0;border-radius:8px;font-size:12px;font-weight:800;line-height:1;letter-spacing:0}
         .vr-bt-art .vr-bt-name{font-size:12px;font-weight:700;line-height:1.3}
-        .vr-bt-art .vr-bt-sub{font-size:10px;color:#7A7F87;line-height:1.3}
+        .vr-bt-art .vr-bt-sub{font-size:9.5px;color:#7A7F87;line-height:1.3}
         .vr-bt-art .vr-bt-amt{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
         .vr-bt-art .vr-bt-amt.pos{color:#0BA360}
-        .vr-bt-art .vr-bt-auto{font-size:10px;color:#0BA360;font-weight:700;display:flex;align-items:center;gap:5px}
-        .vr-bt-art .vr-bt-auto img{width:15px;height:15px;border-radius:4px;box-shadow:0 1px 3px rgba(11,163,96,.35)}
+        .vr-bt-art .vr-bt-auto{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:#0BA360}
+        .vr-bt-art .vr-bt-label{min-width:0;overflow:hidden}
       `}</style>
-      <div className="vr-preview-top"><Receipt size={15} /><span>自动记账</span><b>本月 ¥3,420 · 23 笔</b></div>
+      <div className="vr-preview-top"><Receipt size={15} /><span>自动记账</span><b>本月 23 笔</b></div>
       <div className="vr-bt-screen">
-        <div>
-          <div style={{ fontSize: 11, color: '#7A7F87' }}>本月支出 · 预算 68%</div>
-          <div className="vr-bt-big">¥3,420.50</div>
-          <div className="vr-bt-bar"><i /></div>
+        <div className="vr-bt-head"><b className="vr-bt-big">¥3,420.50</b><em>本月支出 · 预算 68%</em></div>
+        <div className="vr-bt-bar"><i /></div>
+        <div className="vr-bt-rows">
+          {txns.map((t, index) => (
+            <div key={t[0]} className={`vr-bt-row${active === index ? ' is-hot' : ''}`}>
+              <BillBrand id={t[3]} />
+              <div className="vr-bt-label"><div className="vr-bt-name">{t[0]}</div><div className="vr-bt-sub">{t[1]} · 自动归类</div></div>
+              <span className={`vr-bt-amt${t[2].startsWith('+') ? ' pos' : ''}`}>{t[2]}</span>
+            </div>
+          ))}
         </div>
-        {txns.map((t, index) => (
-          <div key={t[0]} className={`vr-bt-row${active === index ? ' is-hot' : ''}`}>
-            <span className="vr-bt-dot"><img src={`/billtrace/icons/${t[3]}.png`} alt="" /></span>
-            <div><div className="vr-bt-name">{t[0]}</div><div className="vr-bt-sub">{t[1]} · 自动归类</div></div>
-            <span className={`vr-bt-amt${t[2].startsWith('+') ? ' pos' : ''}`}>{t[2]}</span>
-          </div>
-        ))}
-        <div className="vr-bt-auto"><img src="/billtrace/icon-192.png" alt="" />付款后 2 秒自动入库 · 零手动</div>
+        <div className="vr-bt-auto"><BillMark size={15} />付款后 2 秒自动入库 · 零手动</div>
       </div>
     </div>;
   }
@@ -360,14 +379,14 @@ function FeatureArt({ type }) {
     const svc = [['zcode', '1.17B', '#4D6BFE', 'Z'], ['claude-code', '697M', '#8E7CFF', 'C'], ['codex', '572M', '#5DC3F0', 'X']];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-tm-art">
       <style>{`
-        .vr-tm-art{background:#0D0F14;color:#E8EAF0}
+        .vr-tm-art{background:linear-gradient(160deg,#F3F6FD,#FBFCFE 62%)}
         .vr-tm-art .vr-tm-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-        .vr-tm-art .vr-tm-kpi>div{background:#161A22;border:1px solid #232833;border-radius:10px;padding:9px 10px;transition:border-color .3s}
-        .vr-tm-art .vr-tm-kpi>div.is-on{border-color:rgba(77,107,254,.7)}
-        .vr-tm-art .vr-tm-kpi span{display:block;font-size:9px;color:#8891A6;letter-spacing:.06em;text-transform:uppercase}
-        .vr-tm-art .vr-tm-kpi b{display:block;font-size:15px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
-        .vr-tm-art .vr-tm-kpi em{font-size:9px;font-style:normal;color:#5DC3F0}
-        .vr-tm-art .vr-tm-chart{display:flex;align-items:flex-end;gap:5px;height:58px;margin:12px 0 10px}
+        .vr-tm-art .vr-tm-kpi>div{background:#fff;border:1px solid #E6EAF4;border-radius:8px;padding:6px 8px;transition:border-color .3s ease,box-shadow .3s ease}
+        .vr-tm-art .vr-tm-kpi>div.is-on{border-color:rgba(77,107,254,.5);box-shadow:0 0 0 2px rgba(77,107,254,.1)}
+        .vr-tm-art .vr-tm-kpi span{display:block;font-size:9px;color:#8A90A6;letter-spacing:.06em;text-transform:uppercase}
+        .vr-tm-art .vr-tm-kpi b{display:block;font-size:15px;font-weight:800;margin-top:2px;color:#1F2333;font-variant-numeric:tabular-nums}
+        .vr-tm-art .vr-tm-kpi em{font-size:9px;font-style:normal;color:#3E7BE0}
+        .vr-tm-art .vr-tm-chart{display:flex;flex:0 0 auto;align-items:flex-end;gap:5px;height:32px;margin:9px 0 7px}
         .vr-tm-art .vr-tm-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;height:100%}
         .vr-tm-art .vr-tm-col i{display:block;border-radius:2px;opacity:.32;transition:opacity .35s ease,transform .35s ease}
         .vr-tm-art .vr-tm-col i:nth-child(1){background:#8E7CFF}
@@ -375,17 +394,16 @@ function FeatureArt({ type }) {
         .vr-tm-art .vr-tm-col i:nth-child(3){background:#5DC3F0}
         .vr-tm-art .vr-tm-col i:nth-child(4){background:#37B48F}
         .vr-tm-art .vr-tm-col.is-on i{opacity:1;transform:scaleX(1.12)}
-        .vr-tm-art .vr-tm-list{display:flex;flex-direction:column;gap:6px}
-        .vr-tm-art .vr-tm-row{display:flex;align-items:center;gap:9px;background:#161A22;border:1px solid #232833;border-radius:10px;padding:8px 10px;transition:border-color .3s ease,transform .3s ease}
-        .vr-tm-art .vr-tm-row.is-on{border-color:rgba(77,107,254,.75);transform:translateX(4px)}
+        .vr-tm-art .vr-tm-list{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:4px;overflow:hidden}
+        .vr-tm-art .vr-tm-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E6EAF4;border-radius:8px;padding:6px 9px;transition:border-color .3s ease,transform .3s ease}
+        .vr-tm-art .vr-tm-row.is-on{border-color:rgba(77,107,254,.5);transform:translateX(3px)}
         .vr-tm-art .vr-tm-logo{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
-        .vr-tm-art .vr-tm-name{font-size:11px;font-weight:700}
-        .vr-tm-art .vr-tm-sub{font-size:9px;color:#8891A6}
-        .vr-tm-art .vr-tm-val{margin-left:auto;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
-        .vr-tm-art .vr-tm-track{width:52px;height:4px;border-radius:2px;background:#232833;overflow:hidden;flex-shrink:0}
+        .vr-tm-art .vr-tm-name{flex:1 1 auto;min-width:0;overflow:hidden;color:#232838;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
+        .vr-tm-art .vr-tm-val{flex:0 0 auto;font-size:11px;font-weight:800;color:#1F2333;font-variant-numeric:tabular-nums}
+        .vr-tm-art .vr-tm-track{width:52px;height:4px;border-radius:2px;background:#EBEFF7;overflow:hidden;flex-shrink:0}
         .vr-tm-art .vr-tm-track i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#4D6BFE,#8E7CFF)}
       `}</style>
-      <div className="vr-preview-top" style={{ color: '#fff' }}><Activity size={15} /><span>用量看板</span><b>9 个数据源 · 自动扫描</b></div>
+      <div className="vr-preview-top"><Activity size={15} /><span>用量看板</span><b>9 个数据源 · 自动扫描</b></div>
       <div className="vr-tm-kpi">
         <div className={active === 0 ? 'is-on' : ''}><span>Tokens</span><b>3.05B</b><em>缓存命中 90.5%</em></div>
         <div className={active === 1 ? 'is-on' : ''}><span>请求次数</span><b>10,870</b></div>
@@ -394,7 +412,7 @@ function FeatureArt({ type }) {
       <div className="vr-tm-chart">{cols[0].map((_, i) => <div key={i} className={`vr-tm-col${active === i % 3 ? ' is-on' : ''}`}>{cols.map((col, ci) => <i key={ci} style={{ height: `${Math.max(col[i] * 0.5, 3)}%` }} />)}</div>)}</div>
       <div className="vr-tm-list">{svc.map((row, index) => <div key={row[0]} className={`vr-tm-row${active === index ? ' is-on' : ''}`}>
         <span className="vr-tm-logo" style={{ background: row[2] }}>{row[3]}</span>
-        <div><div className="vr-tm-name">{row[0]}</div><div className="vr-tm-sub">展开查看模型与对话明细</div></div>
+        <span className="vr-tm-name">{row[0]}</span>
         <span className="vr-tm-val">{row[1]}</span>
         <span className="vr-tm-track"><i style={{ width: `${[100, 60, 49][index]}%` }} /></span>
       </div>)}</div>
@@ -818,6 +836,110 @@ export default function Dashboard() {
 .vr-toolbox-art{padding:18px}.vr-toolbox-drive{margin-top:14px}.vr-toolbox-drive span{font-size:11px;font-weight:600;color:#333}.vr-toolbox-drive i{display:block;height:6px;border-radius:99px;background:#eee;margin-top:6px;position:relative;overflow:hidden}.vr-toolbox-drive i b{position:absolute;left:0;top:0;bottom:0;width:var(--fill);background:linear-gradient(90deg,#a48830,#d4a930);border-radius:99px}.vr-toolbox-drive i.is-done b{width:100%;background:linear-gradient(90deg,#34c759,#28a745)}.vr-toolbox-drive em{display:block;font-size:10px;font-style:normal;color:#999;margin-top:6px}.vr-toolbox-cats{display:grid;gap:6px;margin-top:14px}.vr-toolbox-cats button{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-toolbox-cats button.is-active{border-color:#a48830;background:#FFFAEB}.vr-toolbox-cats button span{font-size:12px;font-weight:600;color:#333}.vr-toolbox-cats button em{font-size:10px;font-style:normal;color:#888;font-family:ui-monospace,monospace}.vr-toolbox-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#999}.vr-toolbox-foot b{color:#a48830;font-family:ui-monospace,monospace}
 `}</style>
     <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
+    <style>{`
+      /* ============ 统一卡片尺寸：所有产品/应用卡片与首个卡片等高 ============ */
+      @media (min-width: 721px) {
+        .vr-home .vr-roll-wrap { height: var(--vr-card-h, 344px); }
+        .vr-home .vr-feature { height: 100%; min-height: 0; }
+        .vr-home .vr-art { align-self: stretch; height: auto; min-height: 0; overflow: hidden; }
+        .vr-home .vr-feature .vr-art { margin: 18px 24px; }
+      }
+      @media (max-width: 720px) {
+        .vr-home .vr-roll-wrap { height: auto; }
+        .vr-home .vr-art { overflow: hidden; }
+        .vr-home .vr-tm-art .vr-tm-kpi em { display: none; }
+        .vr-home .vr-tm-art .vr-tm-kpi b { font-size: 14px; }
+        .vr-home .vr-tm-art .vr-tm-chart { height: 32px; margin: 8px 0 7px; }
+        .vr-home .vr-tm-art .vr-tm-row { padding: 6px 8px; }
+        .vr-home .vr-bt-art .vr-bt-big { font-size: 20px; }
+        .vr-home .vr-bt-art .vr-bt-screen { gap: 6px; padding: 10px; }
+        .vr-home .vr-bt-art .vr-bt-brand { width: 24px; height: 24px; font-size: 11px; }
+      }
+      /* 演示面板内容压缩到统一高度内，保证任何一张卡片都不裁切 */
+      .vr-home .vr-toolbox-drive { margin-top: 12px; }
+      .vr-home .vr-toolbox-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
+      .vr-home .vr-toolbox-cats button { padding: 8px 10px; }
+      .vr-home .vr-toolbox-cats button span { font-size: 11px; }
+      .vr-home .vr-toolbox-cats button em { color: #a48830; font-size: 11px; font-weight: 700; }
+      .vr-home .vr-toolbox-foot { margin-top: auto; }
+      .vr-home .vr-checkin-stats { margin-top: 12px; }
+      .vr-home .vr-checkin-stats span { padding: 8px; font-size: 9px; }
+      .vr-home .vr-checkin-stats span b { font-size: 18px; }
+      .vr-home .vr-checkin-list { gap: 5px; margin-top: 12px; }
+      .vr-home .vr-checkin-list button { padding: 9px 11px; }
+      .vr-home .vr-checkin-list button span { font-size: 11.5px; }
+      .vr-home .vr-tm-list { margin-top: auto; }
+
+      /* ============ 动态效果：网格缓慢流动 + 卡片轮播进度条 ============ */
+      .vr-home { animation: vr-grid-drift 26s linear infinite; }
+      @keyframes vr-grid-drift {
+        from { background-position: 0 0, 0 0; }
+        to { background-position: 32px 32px, 32px 32px; }
+      }
+      .vr-home .vr-preview-top { position: relative; }
+      .vr-home .vr-preview-top::after {
+        content: "";
+        position: absolute;
+        left: 0; right: 0; bottom: -1px;
+        height: 1.5px;
+        transform: scaleX(0);
+        transform-origin: left center;
+        background: linear-gradient(90deg, #a48830, #e0c35f 62%, rgba(224,195,95,0));
+        animation: vr-art-progress 2.6s linear infinite;
+        pointer-events: none;
+      }
+      @keyframes vr-art-progress {
+        0% { transform: scaleX(0); opacity: 1; }
+        84% { transform: scaleX(1); opacity: 1; }
+        100% { transform: scaleX(1); opacity: 0; }
+      }
+      .vr-home .vr-tool-art:hover .vr-preview-top::after { animation-play-state: paused; }
+      .vr-home .vr-tool-art button.is-active { animation: vr-pick 1.9s cubic-bezier(.16,1,.3,1) infinite; }
+      @keyframes vr-pick {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(164,136,48,.24); }
+        50% { box-shadow: 0 0 0 3px rgba(164,136,48,.17); }
+      }
+      /* 动态：进度条流光、看板柱呼吸、编号浮动、品牌点脉冲 */
+      .vr-home .vr-art .vr-tm-col i { animation: vr-bar-pulse 2.6s ease-in-out infinite; }
+      .vr-home .vr-art .vr-tm-col i:nth-child(2) { animation-delay: .18s; }
+      .vr-home .vr-art .vr-tm-col i:nth-child(3) { animation-delay: .36s; }
+      .vr-home .vr-art .vr-tm-col i:nth-child(4) { animation-delay: .54s; }
+      @keyframes vr-bar-pulse {
+        0%, 100% { filter: brightness(1); }
+        50% { filter: brightness(1.2); }
+      }
+      .vr-home .vr-toolbox-drive i b, .vr-home .vr-bt-art .vr-bt-bar i { position: relative; overflow: hidden; }
+      .vr-home .vr-toolbox-drive i b::after, .vr-home .vr-bt-art .vr-bt-bar i::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-110%);
+        background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.72), rgba(255,255,255,0));
+        animation: vr-shimmer 2.4s ease-in-out infinite;
+      }
+      .vr-home .vr-bt-art .vr-bt-bar i::after { animation-duration: 3s; animation-delay: .5s; }
+      @keyframes vr-shimmer {
+        0% { transform: translateX(-110%); }
+        62%, 100% { transform: translateX(110%); }
+      }
+      .vr-home .vr-feature-index { animation: vr-index-float 7s ease-in-out infinite; }
+      @keyframes vr-index-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-7px); }
+      }
+      .vr-home .vr-brand::before { animation: vr-dot-pulse 2.4s ease-in-out infinite; }
+      @keyframes vr-dot-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(164,136,48,.34); }
+        55% { box-shadow: 0 0 0 5px rgba(164,136,48,0); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .vr-home { animation: none; }
+        .vr-home .vr-preview-top::after { animation: none; transform: scaleX(1); opacity: .5; }
+        .vr-home .vr-tool-art button.is-active { animation: none; }
+        .vr-home .vr-art .vr-tm-col i, .vr-home .vr-feature-index, .vr-home .vr-brand::before { animation: none; }
+        .vr-home .vr-toolbox-drive i b::after, .vr-home .vr-bt-art .vr-bt-bar i::after { animation: none; opacity: 0; }
+      }
+    `}</style>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
     <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
