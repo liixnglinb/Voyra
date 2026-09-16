@@ -211,24 +211,6 @@ function GlmSceneStage() {
 }
 
 function FeatureArt({ type }) {
-  /* 账迹演示的品牌标识：与 BillTrace 页内 ch/c 数据同源，用字符徽章替代低清位图 */
-  const BT_BRANDS = {
-    meituan: { label: '美', bg: '#FFC300', fg: '#241C00' },
-    luckin: { label: '幸', bg: '#1F3B9E', fg: '#FFFFFF' },
-    cmb: { label: '招', bg: '#E60012', fg: '#FFFFFF' },
-  };
-  const BillBrand = ({ id }) => {
-    const brand = BT_BRANDS[id] || BT_BRANDS.meituan;
-    return <span className="vr-bt-brand" style={{ background: brand.bg, color: brand.fg }}>{brand.label}</span>;
-  };
-  const BillMark = ({ size = 16 }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect x="0" y="0" width="24" height="24" rx="6.5" fill="#0BA360" />
-      <path d="M8.3 5.5h7.4v13.2l-1.85-1.25-1.85 1.25-1.85-1.25-1.85 1.25z" fill="#fff" />
-      <path d="M10.4 9.1h3.2M10.4 11.8h3.2" stroke="#0BA360" strokeWidth="1.2" strokeLinecap="round" />
-    </svg>
-  );
-
   const [active, setActive] = useState(0);
   const [checked, setChecked] = useState(false);
   const artRef = useRef(null);
@@ -348,12 +330,14 @@ function FeatureArt({ type }) {
         .vr-bt-art .vr-bt-rows{flex:1 1 auto;min-height:0;display:grid;gap:5px;align-content:start}
         .vr-bt-art .vr-bt-row{display:flex;align-items:center;gap:9px;background:#FCFDFD;border:1px solid #EDF1EF;border-radius:10px;padding:6px 9px;transition:background .25s ease, border-color .25s ease}
         .vr-bt-art .vr-bt-row.is-hot{background:#F3FBF7;border-color:rgba(11,163,96,.45)}
-        .vr-bt-art .vr-bt-brand{display:grid;place-items:center;width:26px;height:26px;flex-shrink:0;border-radius:8px;font-size:12px;font-weight:800;line-height:1;letter-spacing:0}
+        .vr-bt-art .vr-bt-brand{width:26px;height:26px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#F1F3F5}
+        .vr-bt-art .vr-bt-brand img{width:100%;height:100%;display:block;object-fit:cover}
         .vr-bt-art .vr-bt-name{font-size:12px;font-weight:700;line-height:1.3}
         .vr-bt-art .vr-bt-sub{font-size:9.5px;color:#7A7F87;line-height:1.3}
         .vr-bt-art .vr-bt-amt{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
         .vr-bt-art .vr-bt-amt.pos{color:#0BA360}
         .vr-bt-art .vr-bt-auto{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:#0BA360}
+        .vr-bt-art .vr-bt-auto img{width:15px;height:15px;flex-shrink:0;border-radius:4px;box-shadow:0 1px 3px rgba(11,163,96,.35)}
         .vr-bt-art .vr-bt-label{min-width:0;overflow:hidden}
       `}</style>
       <div className="vr-preview-top"><Receipt size={15} /><span>自动记账</span><b>本月 23 笔</b></div>
@@ -363,13 +347,13 @@ function FeatureArt({ type }) {
         <div className="vr-bt-rows">
           {txns.map((t, index) => (
             <div key={t[0]} className={`vr-bt-row${active === index ? ' is-hot' : ''}`}>
-              <BillBrand id={t[3]} />
+              <span className="vr-bt-brand"><img src={`/billtrace/icons/${t[3]}.png`} alt="" /></span>
               <div className="vr-bt-label"><div className="vr-bt-name">{t[0]}</div><div className="vr-bt-sub">{t[1]} · 自动归类</div></div>
               <span className={`vr-bt-amt${t[2].startsWith('+') ? ' pos' : ''}`}>{t[2]}</span>
             </div>
           ))}
         </div>
-        <div className="vr-bt-auto"><BillMark size={15} />付款后 2 秒自动入库 · 零手动</div>
+        <div className="vr-bt-auto"><img src="/billtrace/icon-192.png" alt="" />付款后 2 秒自动入库 · 零手动</div>
       </div>
     </div>;
   }
