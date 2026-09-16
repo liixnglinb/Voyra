@@ -317,7 +317,7 @@ function FeatureArt({ type }) {
   }
 
   if (type === 'billtrace') {
-    const txns = [['美团外卖', '餐饮-外卖', '−35.80', '#FFC300', '美'], ['瑞幸咖啡', '餐饮-咖啡', '−15.90', '#1F3B9E', '幸'], ['工资到账', '金融-工资', '+8500.0', '#EAB308', '招']];
+    const txns = [['美团外卖', '餐饮-外卖', '−35.80', 'meituan'], ['瑞幸咖啡', '餐饮-咖啡', '−15.90', 'luckin'], ['工资到账', '金融-工资', '+8500.0', 'cmb']];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-bt-art">
       <style>{`
         .vr-bt-art{background:linear-gradient(160deg,#E9F7F0,#F7F8FA 60%);color:#14161A}
@@ -327,7 +327,8 @@ function FeatureArt({ type }) {
         .vr-bt-art .vr-bt-bar i{display:block;height:100%;width:68%;background:#0BA360;border-radius:3px}
         .vr-bt-art .vr-bt-row{display:flex;align-items:center;gap:9px;background:#fff;border-radius:11px;padding:8px 10px;box-shadow:0 1px 2px rgba(16,24,40,.06)}
         .vr-bt-art .vr-bt-row.is-hot{box-shadow:0 0 0 2px rgba(11,163,96,.55)}
-        .vr-bt-art .vr-bt-dot{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+        .vr-bt-art .vr-bt-dot{width:28px;height:28px;border-radius:9px;overflow:hidden;background:#F1F3F5;flex-shrink:0}
+        .vr-bt-art .vr-bt-dot img{width:100%;height:100%;display:block;object-fit:cover}
         .vr-bt-art .vr-bt-name{font-size:12px;font-weight:700;line-height:1.3}
         .vr-bt-art .vr-bt-sub{font-size:10px;color:#7A7F87;line-height:1.3}
         .vr-bt-art .vr-bt-amt{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
@@ -344,7 +345,7 @@ function FeatureArt({ type }) {
         </div>
         {txns.map((t, index) => (
           <div key={t[0]} className={`vr-bt-row${active === index ? ' is-hot' : ''}`}>
-            <span className="vr-bt-dot" style={{ background: t[3], color: t[3] === '#FFC300' ? '#1A1A1A' : '#fff' }}>{t[4]}</span>
+            <span className="vr-bt-dot"><img src={`/billtrace/icons/${t[3]}.png`} alt="" /></span>
             <div><div className="vr-bt-name">{t[0]}</div><div className="vr-bt-sub">{t[1]} · 自动归类</div></div>
             <span className={`vr-bt-amt${t[2].startsWith('+') ? ' pos' : ''}`}>{t[2]}</span>
           </div>

@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>账迹 BillTrace · 付完款，账就自动记好了</title>
 <meta name="description" content="账迹 BillTrace —— Android 自动记账 App：三引擎全自动采集、智能分类、本地加密、零打扰。">
+<link rel="icon" type="image/png" href="/billtrace/favicon.png">
 <style>
 :root{
   --ink:#1a1a1a; --muted:rgba(0,0,0,.5); --muted-2:rgba(0,0,0,.72);
-  --brand:#0BA360; --brand-deep:#087A48; --wash:#F6F8F7; --line:rgba(0,0,0,.08);
+  --brand:#0BA360; --brand-deep:#087A48; --brand-soft:rgba(11,163,96,.09);
+  --wash:#F6F8F7; --line:rgba(0,0,0,.08);
   --zh:"PingFang SC","Noto Sans SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -16,89 +18,173 @@ html{scroll-behavior:smooth}
 body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
-nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-nav .bar{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
-.logo{font-weight:800;font-size:17px;letter-spacing:-.3px}
+
+/* ---------- 动态背景 ---------- */
+.aurora{position:fixed;inset:0;z-index:-2;overflow:hidden;pointer-events:none}
+.aurora span{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;will-change:transform}
+.aurora .a1{width:560px;height:560px;left:-140px;top:-160px;background:radial-gradient(circle,rgba(23,211,140,.5),transparent 70%);animation:drift1 16s ease-in-out infinite alternate}
+.aurora .a2{width:480px;height:480px;right:-120px;top:120px;background:radial-gradient(circle,rgba(88,86,214,.22),transparent 70%);animation:drift2 19s ease-in-out infinite alternate}
+.aurora .a3{width:520px;height:520px;left:32%;bottom:-220px;background:radial-gradient(circle,rgba(11,163,96,.28),transparent 70%);animation:drift3 22s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(90px,60px) scale(1.12)}}
+@keyframes drift2{to{transform:translate(-70px,90px) scale(1.08)}}
+@keyframes drift3{to{transform:translate(60px,-70px) scale(1.15)}}
+.dots{position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(rgba(0,0,0,.055) 1px,transparent 1px);background-size:26px 26px;mask-image:radial-gradient(ellipse 70% 60% at 50% 0%,#000 30%,transparent 100%)}
+
+nav{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.72);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+nav .bar{max-width:1080px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:16.5px;letter-spacing:-.2px}
+.logo img{width:30px;height:30px;border-radius:8px;box-shadow:0 2px 6px rgba(11,163,96,.3)}
 .logo b{color:var(--brand)}
-nav .gh{font-size:13px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;transition:.2s}
+nav .gh{font-size:13px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;transition:.2s;background:rgba(255,255,255,.6)}
 nav .gh:hover{border-color:var(--brand);color:var(--brand)}
-.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:84px 0 72px}
-.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:1.5px;color:var(--brand);background:rgba(11,163,96,.08);border-radius:999px;padding:6px 14px;margin-bottom:22px}
-.kicker i{width:6px;height:6px;border-radius:50%;background:var(--brand);display:inline-block}
-h1{font-size:clamp(34px,5vw,52px);font-weight:800;letter-spacing:-1px;line-height:1.15}
-h1 em{font-style:normal;color:var(--brand)}
+
+/* ---------- Hero ---------- */
+.hero{position:relative;display:grid;grid-template-columns:1.12fr .88fr;gap:44px;align-items:center;padding:76px 0 64px}
+.hero .copy{position:relative;z-index:3}
+.floaters{position:absolute;inset:-46px -20px -30px -36px;pointer-events:none;z-index:1}
+.floaters img{position:absolute;width:42px;height:42px;border-radius:12px;opacity:0;box-shadow:0 10px 26px rgba(16,24,40,.18);animation:floaty 7s ease-in-out infinite;filter:saturate(.92);transition:transform .5s cubic-bezier(.2,.9,.3,1.4),box-shadow .5s,filter .5s}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(var(--r,0deg));opacity:0}16%,84%{opacity:.94}50%{transform:translateY(-22px) rotate(var(--r,0deg))}}
+.floaters img.hit{filter:none;box-shadow:0 0 0 3px rgba(11,163,96,.28),0 14px 30px rgba(11,163,96,.34);animation-play-state:paused;transform:translateY(-14px) rotate(var(--r,0deg)) scale(1.16);opacity:1}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:1.5px;color:var(--brand);background:rgba(11,163,96,.08);border:1px solid rgba(11,163,96,.22);border-radius:999px;padding:6px 15px;margin-bottom:22px;backdrop-filter:blur(6px)}
+.kicker .pulse{width:7px;height:7px;border-radius:50%;background:var(--brand);position:relative}
+.kicker .pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--brand);animation:ping 1.8s ease-out infinite}
+@keyframes ping{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.6);opacity:0}}
+h1{font-size:clamp(34px,5vw,54px);font-weight:800;letter-spacing:-1.2px;line-height:1.14}
+h1 em{font-style:normal;background:linear-gradient(100deg,#0BA360 10%,#17D38C 55%,#087A48 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
 .tagline{font-size:17px;color:var(--muted-2);margin:18px 0 30px;max-width:30em}
 .dl-row{display:flex;gap:12px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:14px;font-size:15px;font-weight:700;transition:.2s;cursor:pointer;border:none}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:14px;font-size:15px;font-weight:700;transition:.22s cubic-bezier(.2,.7,.3,1.2);cursor:pointer;border:none}
 .btn svg{width:17px;height:17px}
-.btn-primary{background:var(--brand);color:#fff;box-shadow:0 10px 24px rgba(11,163,96,.28)}
-.btn-primary:hover{background:var(--brand-deep);transform:translateY(-2px)}
-.btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
-.btn-ghost:hover{border-color:var(--brand);color:var(--brand)}
-.hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
-.meta-chip{font-size:12.5px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:5px 13px}
-.meta-chip b{color:var(--brand);font-weight:700}
-/* 手机样机 */
-.phone{width:270px;height:560px;margin:0 auto;border-radius:40px;background:#0B0C0E;padding:10px;box-shadow:0 30px 70px rgba(16,24,40,.28)}
-.screen{background:#F7F8FA;border-radius:32px;height:100%;overflow:hidden;padding:26px 13px 0;display:flex;flex-direction:column;gap:10px}
-.scr-date{font-size:10.5px;font-weight:700;color:#14161A;padding:2px 4px}
-.scr-card{background:#fff;border-radius:13px;padding:12px 13px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.btn-primary{background:linear-gradient(135deg,#12C97A,var(--brand) 55%,var(--brand-deep));color:#fff;box-shadow:0 12px 28px rgba(11,163,96,.32)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(11,163,96,.4)}
+.btn-ghost{background:rgba(255,255,255,.75);color:var(--ink);border:1.5px solid var(--line);backdrop-filter:blur(8px)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand);transform:translateY(-2px)}
+.hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.meta-chip{font-size:12.5px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:5px 13px;background:rgba(255,255,255,.65);backdrop-filter:blur(6px)}
+.meta-chip b{color:var(--brand);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* ---------- 手机（实时记账模拟） ---------- */
+.phone-wrap{position:relative;display:flex;justify-content:center}
+.phone-halo{position:absolute;width:120%;height:120%;top:-10%;background:radial-gradient(circle,rgba(11,163,96,.18),transparent 65%);filter:blur(20px);z-index:0;animation:halo 6s ease-in-out infinite alternate}
+@keyframes halo{to{transform:scale(1.15);opacity:.7}}
+.phone{position:relative;z-index:2;width:272px;height:566px;border-radius:42px;background:linear-gradient(155deg,#FFFFFF,#F1F4F6 42%,#DCE2E7);padding:10px;box-shadow:0 2px 0 rgba(255,255,255,.9) inset,0 30px 70px rgba(16,24,40,.20),0 6px 16px rgba(16,24,40,.10),inset 0 0 0 1.5px rgba(16,24,40,.07);animation:phone-in 1s cubic-bezier(.2,.8,.2,1) both}
+@keyframes phone-in{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+.screen{position:relative;background:#F7F8FA;border-radius:33px;height:100%;overflow:hidden;padding:14px 13px 0;display:flex;flex-direction:column;gap:9px}
+.sbar{display:flex;justify-content:space-between;align-items:center;font-size:10px;font-weight:700;color:#14161A;padding:0 8px 2px}
+.sbar .r{display:flex;gap:5px;align-items:center}
+.sbar svg{display:block}
+.scr-date{font-size:10.5px;font-weight:700;color:#14161A;padding:2px 5px;display:flex;justify-content:space-between;align-items:center}
+.scr-live{display:inline-flex;align-items:center;gap:5px;font-size:8.5px;font-weight:700;color:var(--brand)}
+.scr-live i{width:6px;height:6px;border-radius:50%;background:var(--brand);animation:blink 1.6s ease infinite}
+@keyframes blink{50%{opacity:.25}}
+.scr-card{background:#fff;border-radius:13px;padding:12px 13px;box-shadow:0 1px 3px rgba(16,24,40,.06)}
 .scr-label{font-size:8.5px;color:#7A7F87}
-.scr-big{font-size:19px;font-weight:800;color:#14161A;font-variant-numeric:tabular-nums}
-.scr-bar{height:4px;background:#EFF1F4;border-radius:2px;margin-top:8px;overflow:hidden}
-.scr-bar i{display:block;height:100%;width:68%;background:var(--brand);border-radius:2px}
-.scr-cap{font-size:8.5px;color:#7A7F87;padding:0 4px;font-weight:600}
-.scr-txn{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:8px 10px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
-.scr-dot{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
-.scr-name{font-size:9.5px;font-weight:700;color:#14161A}
+.scr-big{font-size:20px;font-weight:800;color:#14161A;font-variant-numeric:tabular-nums;letter-spacing:-.4px}
+.scr-bar{height:4.5px;background:#EFF1F4;border-radius:3px;margin-top:8px;overflow:hidden}
+.scr-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#12C97A,#0BA360);border-radius:3px;transition:width 1.6s cubic-bezier(.2,.7,.2,1)}
+.scr-cap{font-size:8.5px;color:#7A7F87;padding:0 4px;font-weight:600;display:flex;justify-content:space-between}
+.scr-list{flex:1;display:flex;flex-direction:column;gap:7px;overflow:hidden;min-height:0}
+.scr-week{margin-top:auto;background:#fff;border-radius:13px;padding:10px 11px 8px;box-shadow:0 1px 3px rgba(16,24,40,.06);flex-shrink:0}
+.scr-week .wk-hd{font-size:8.5px;color:#7A7F87;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.scr-week .wk-hd b{font-size:9.5px;color:#14161A;font-variant-numeric:tabular-nums}
+.wk-bars{display:flex;align-items:flex-end;gap:5px;height:44px}
+.wk-bars i{flex:1;height:var(--h,20%);border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,#2EE093,#0BA360);transform-origin:bottom;transform:scaleY(0);transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.wk-bars i.wk-top{background:linear-gradient(180deg,#0BA360,#087A48)}
+.wk-bars i.grow{transform:scaleY(1)}
+.wk-days{display:flex;gap:5px;margin-top:5px}
+.wk-days span{flex:1;text-align:center;font-size:7px;color:#9AA0A8;font-weight:700}
+.scr-txn{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:8px 10px;box-shadow:0 1px 2px rgba(16,24,40,.05);flex-shrink:0}
+.scr-dot{width:27px;height:27px;border-radius:9px;overflow:hidden;background:#F1F3F5;flex-shrink:0}
+.scr-dot img{width:100%;height:100%;display:block;object-fit:cover}
+.scr-name{font-size:9.5px;font-weight:700;color:#14161A;line-height:1.3}
 .scr-sub{font-size:7.5px;color:#7A7F87}
 .scr-amt{margin-left:auto;font-size:10px;font-weight:700;color:#14161A;font-variant-numeric:tabular-nums}
 .scr-amt.pos{color:var(--brand)}
-.flash{animation:scrflash 2.6s ease infinite}
-@keyframes scrflash{0%,72%{box-shadow:0 0 0 0 rgba(11,163,96,0)}80%{box-shadow:0 0 0 3px rgba(11,163,96,.35)}100%{box-shadow:0 0 0 0 rgba(11,163,96,0)}}
+.scr-txn.new{animation:txn-in .7s cubic-bezier(.2,.9,.3,1.3),txn-flash 2.4s ease}
+@keyframes txn-in{from{opacity:0;transform:translateY(-16px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes txn-flash{0%{background:#DFF5EA}100%{background:#fff}}
+.notif{position:absolute;top:10px;left:11px;right:11px;height:52px;box-sizing:border-box;z-index:5;background:#fff;border:1px solid rgba(16,24,40,.07);border-radius:14px;box-shadow:0 14px 34px rgba(16,24,40,.26);padding:0 11px;display:flex;align-items:center;gap:9px;transform:translateY(-180%);opacity:0;transition:.55s cubic-bezier(.2,.9,.3,1.1)}
+.notif.show{transform:none;opacity:1}
+.notif .nd{width:26px;height:26px;border-radius:8px;overflow:hidden;background:#F1F3F5;flex-shrink:0}
+.notif .nd img{width:100%;height:100%;display:block;object-fit:cover}
+.notif .nt{font-size:9px;font-weight:800;color:#14161A}
+.notif .ns{font-size:8px;color:#7A7F87}
+.notif .na{margin-left:auto;font-size:11px;font-weight:800;color:#14161A;font-variant-numeric:tabular-nums}
+.homebar{width:96px;height:4px;border-radius:2px;background:rgba(0,0,0,.22);margin:6px auto 8px;flex-shrink:0}
+
+/* ---------- 区块通用 ---------- */
 section{padding:64px 0}
 .sec-kicker{font-size:12.5px;font-weight:800;letter-spacing:2px;color:var(--brand);margin-bottom:10px}
-.sec-title{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.6px;margin-bottom:34px}
+.sec-title{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.6px;margin-bottom:36px}
+.rv{opacity:0;transform:translateY(26px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv.on{opacity:1;transform:none}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.feat{background:var(--wash);border-radius:18px;padding:24px;border:1px solid transparent;transition:.25s}
-.feat:hover{border-color:rgba(11,163,96,.35);transform:translateY(-3px)}
-.feat .ic{width:40px;height:40px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 1px 3px rgba(16,24,40,.08)}
-.feat .ic svg{width:20px;height:20px;stroke:var(--brand);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.feat h3{font-size:16px;font-weight:700;margin-bottom:7px}
-.feat p{font-size:13.5px;color:var(--muted-2)}
+.feat{background:rgba(255,255,255,.8);backdrop-filter:blur(8px);border-radius:18px;padding:24px;border:1px solid var(--line);transition:.28s cubic-bezier(.2,.7,.3,1.1);position:relative;overflow:hidden}
+.feat::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(11,163,96,.07),transparent 55%);opacity:0;transition:.3s}
+.feat:hover{transform:translateY(-5px);border-color:rgba(11,163,96,.4);box-shadow:0 18px 40px rgba(11,163,96,.13)}
+.feat:hover::before{opacity:1}
+.feat .ic{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#12C97A,#087A48);display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 6px 14px rgba(11,163,96,.3)}
+.feat .ic svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{font-size:16px;font-weight:700;margin-bottom:7px;position:relative}
+.feat p{font-size:13.5px;color:var(--muted-2);position:relative}
+
+/* 渠道跑马灯 */
+.marquee{position:relative;overflow:hidden;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:rgba(255,255,255,.6);backdrop-filter:blur(6px);-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.mq-track{display:flex;gap:34px;width:max-content;animation:mq 26s linear infinite}
+.marquee:hover .mq-track{animation-play-state:paused}
+@keyframes mq{to{transform:translateX(-50%)}}
+.mq-item{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--muted-2);white-space:nowrap}
+.mq-item img{width:30px;height:30px;border-radius:8px;box-shadow:0 2px 8px rgba(16,24,40,.14)}
+
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:step}
-.step{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:24px}
+.step{position:relative;background:rgba(255,255,255,.85);border:1.5px solid var(--line);border-radius:18px;padding:24px;backdrop-filter:blur(8px);transition:.25s}
+.step:hover{border-color:rgba(11,163,96,.4);transform:translateY(-3px)}
 .step::before{counter-increment:step;content:"0" counter(step);font-size:30px;font-weight:800;color:rgba(11,163,96,.22);position:absolute;top:14px;right:20px}
 .step h3{font-size:16px;font-weight:700;margin:12px 0 7px}
 .step p{font-size:13.5px;color:var(--muted-2)}
-.dl-panel{background:#0B0C0E;border-radius:24px;padding:52px 48px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap}
-.dl-panel h2{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.5px}
-.dl-panel p{color:rgba(255,255,255,.62);font-size:14px;margin-top:8px}
-.dl-panel .btns{display:flex;gap:12px;flex-wrap:wrap}
-.dl-panel .btn-primary{box-shadow:none}
-.dl-panel .btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.25)}
-.dl-panel .btn-ghost:hover{border-color:var(--brand);color:#7BE0B4}
-.ver-inline{color:#7BE0B4;font-variant-numeric:tabular-nums}
-.log{background:var(--wash);border-radius:18px;padding:24px 26px;border:1px solid var(--line)}
-.log h4{font-size:14.5px;font-weight:700;display:flex;justify-content:space-between}
+
+.log{background:rgba(255,255,255,.8);border-radius:18px;padding:24px 26px;border:1px solid var(--line);backdrop-filter:blur(8px)}
+.log h4{font-size:14.5px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.log h4 img{width:22px;height:22px;border-radius:6px}
 .log h4 span{color:var(--brand);font-variant-numeric:tabular-nums}
 .log ul{margin:10px 0 0 18px;font-size:13.5px;color:var(--muted-2)}
 .log li{margin:4px 0}
+
+.dl-panel{position:relative;overflow:hidden;background:linear-gradient(120deg,#0A6B42,#0BA360 46%,#17C77E);border-radius:26px;padding:52px 48px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap;box-shadow:0 24px 60px rgba(11,163,96,.28)}
+.dl-panel::before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.26),transparent 70%);top:-180px;right:-120px;animation:halo 7s ease-in-out infinite alternate}
+.dl-panel::after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.15),transparent 70%);bottom:-160px;left:-80px}
+.dl-panel>*{position:relative;z-index:1}
+.dl-panel h2{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:14px}
+.dl-panel h2 img{width:46px;height:46px;border-radius:12px;box-shadow:0 8px 20px rgba(4,52,32,.35)}
+.dl-panel p{color:rgba(255,255,255,.82);font-size:14px;margin-top:8px}
+.dl-panel .btns{display:flex;gap:12px;flex-wrap:wrap}
+.dl-panel .btn-primary{box-shadow:0 10px 26px rgba(11,163,96,.4)}
+.dl-panel .btn-ghost{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.45);backdrop-filter:blur(6px)}
+.dl-panel .btn-ghost:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.24)}
+.ver-inline{color:#D9FFEC;font-variant-numeric:tabular-nums}
 footer{border-top:1px solid var(--line);padding:26px 0;font-size:12.5px;color:var(--muted);text-align:center}
 footer a{color:var(--brand);font-weight:600}
 @media(max-width:860px){
-  .hero{grid-template-columns:1fr;padding:56px 0 48px;text-align:center}
+  .hero{grid-template-columns:1fr;padding:52px 0 44px;text-align:center}
   .hero .copy{display:flex;flex-direction:column;align-items:center}
+  .floaters{display:none}
   .grid,.steps{grid-template-columns:1fr}
   .dl-panel{padding:36px 26px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .rv{opacity:1;transform:none}
 }
 </style>
 </head>
 <body>
 
+<div class="aurora"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+<div class="dots"></div>
+
 <nav>
   <div class="bar">
-    <span class="logo">Voyra<b>·</b>账迹</span>
+    <span class="logo"><img src="/billtrace/icon-192.png" alt="账迹图标">Voyra<b>·</b>账迹</span>
     <a class="gh" href="https://github.com/liixnglinb/BillTrace" target="_blank" rel="noopener">GitHub 开源仓库</a>
   </div>
 </nav>
@@ -106,7 +192,7 @@ footer a{color:var(--brand);font-weight:600}
 <div class="wrap">
   <div class="hero">
     <div class="copy">
-      <span class="kicker"><i></i>AUTO BOOKKEEPING · 自动记账</span>
+      <span class="kicker"><span class="pulse"></span>AUTO BOOKKEEPING · 自动记账</span>
       <h1>付完款，<br>账就<em>自动记好</em>了。</h1>
       <p class="tagline">账迹 BillTrace 监听支付通知与银行短信，2 秒内自动入库并智能归类——全程零手动、零截图、零打扰，数据只存在你手机里。</p>
       <div class="dl-row">
@@ -126,68 +212,100 @@ footer a{color:var(--brand);font-weight:600}
         <span class="meta-chip">数据本地加密存储</span>
       </div>
     </div>
-    <div class="phone" aria-hidden="true">
-      <div class="screen">
-        <div class="scr-date">9月16日 周二</div>
-        <div class="scr-card">
-          <div class="scr-label">本月支出</div>
-          <div class="scr-big">¥3,420.50</div>
-          <div class="scr-bar"><i></i></div>
-        </div>
-        <div class="scr-cap">今天 · 自动记录</div>
-        <div class="scr-txn flash">
-          <div class="scr-dot" style="background:#FFC300">美</div>
-          <div><div class="scr-name">美团外卖</div><div class="scr-sub">14:32 · 餐饮-外卖</div></div>
-          <div class="scr-amt">−35.80</div>
-        </div>
-        <div class="scr-txn">
-          <div class="scr-dot" style="background:#007AFF">支</div>
-          <div><div class="scr-name">地铁出行</div><div class="scr-sub">09:15 · 交通</div></div>
-          <div class="scr-amt">−4.00</div>
-        </div>
-        <div class="scr-txn">
-          <div class="scr-dot" style="background:#1F3B9E">幸</div>
-          <div><div class="scr-name">瑞幸咖啡</div><div class="scr-sub">08:40 · 餐饮</div></div>
-          <div class="scr-amt">−15.90</div>
+    <div class="phone-wrap">
+      <div class="phone-halo"></div>
+      <div class="floaters" aria-hidden="true">
+        <img data-app="alipay"   src="/billtrace/icons/alipay.png"   style="left:1%;  top:6%;  width:40px;--r:-8deg;animation-duration:7.5s;animation-delay:-.6s" alt="">
+        <img data-app="music163" src="/billtrace/icons/music163.png" style="left:14%; top:27%; --r:6deg; animation-duration:9.2s;animation-delay:-4.4s" alt="">
+        <img data-app="pdd"      src="/billtrace/icons/pdd.png"      style="left:0%;  top:52%; width:46px;--r:7deg;animation-duration:8.5s;animation-delay:-1s"   alt="">
+        <img data-app="luckin"   src="/billtrace/icons/luckin.png"   style="left:2%;  top:39%; --r:-6deg;animation-duration:8.9s;animation-delay:-2.2s" alt="">
+        <img data-app="didi"     src="/billtrace/icons/didi.png"     style="left:13%; top:77%; --r:-5deg;animation-duration:10s; animation-delay:-5s"   alt="">
+        <img data-app="wechat"   src="/billtrace/icons/wechat.png"   style="left:88%; top:10%; --r:-7deg;animation-duration:8.8s;animation-delay:-1.8s" alt="">
+        <img data-app="meituan"  src="/billtrace/icons/meituan.png"  style="left:79%; top:36%; width:46px;--r:5deg;animation-duration:7.8s;animation-delay:-2.6s" alt="">
+        <img data-app="jd"       src="/billtrace/icons/jd.png"       style="left:91%; top:62%; --r:-6deg;animation-duration:9s;  animation-delay:-3.4s" alt="">
+        <img data-app="kfc"      src="/billtrace/icons/kfc.png"      style="left:0%;  top:65%; width:40px;--r:9deg;animation-duration:7.2s;animation-delay:-.2s" alt="">
+        <img data-app="cmb"      src="/billtrace/icons/cmb.png"      style="left:90%; top:87%; --r:4deg; animation-duration:8.2s;animation-delay:-3s"   alt="">
+      </div>
+      <div class="phone" aria-hidden="true">
+        <div class="screen">
+          <div class="sbar">
+            <span id="phClock">14:32</span>
+            <span class="r">
+              <svg width="14" height="10" viewBox="0 0 18 12" fill="none" stroke="#14161A" stroke-width="1.4" stroke-linecap="round"><rect x="0.7" y="0.7" width="3" height="10" rx="1"/><rect x="5" y="3.2" width="3" height="7.5" rx="1"/><rect x="9.3" y="5.7" width="3" height="5" rx="1"/><rect x="13.6" y="8.2" width="3" height="2.5" rx="1"/></svg>
+              <svg width="20" height="10" viewBox="0 0 25 12" fill="none" stroke="#14161A" stroke-width="1.4"><rect x="0.7" y="0.7" width="19.6" height="10.6" rx="3"/><rect x="3" y="3" width="13" height="6" rx="1.5" fill="#14161A" stroke="none"/><line x1="22.8" y1="4" x2="22.8" y2="8"/></svg>
+            </span>
+          </div>
+          <div class="scr-date"><span>9月16日 周二</span><span class="scr-live"><i></i>自动记录中</span></div>
+          <div class="scr-card">
+            <div class="scr-label">本月支出</div>
+            <div class="scr-big" id="phTotal">¥0.00</div>
+            <div class="scr-bar"><i id="phBar"></i></div>
+          </div>
+          <div class="scr-cap"><span>今天 · 自动记录</span><span id="phCnt">0 笔</span></div>
+          <div class="scr-list" id="phList"></div>
+          <div class="scr-week">
+            <div class="wk-hd"><span>近 7 天消费</span><b id="phWeek">¥806.20</b></div>
+            <div class="wk-bars" id="phBars">
+              <i style="--h:34%"></i><i style="--h:58%"></i><i style="--h:26%"></i><i style="--h:72%"></i>
+              <i style="--h:44%"></i><i class="wk-top" style="--h:96%"></i><i style="--h:38%"></i>
+            </div>
+            <div class="wk-days"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+          </div>
+          <div class="notif" id="phNotif">
+            <span class="nd"><img id="nfIcon" src="/billtrace/icons/alipay.png" alt=""></span>
+            <div><div class="nt" id="nfTitle">支付宝 · 支付成功</div><div class="ns">正在自动记账…</div></div>
+            <span class="na" id="nfAmt">¥35.80</span>
+          </div>
+          <div class="homebar"></div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
+<div class="marquee" aria-hidden="true">
+  <div class="mq-track" id="mqTrack"></div>
+</div>
+
+<div class="wrap">
   <section id="features">
-    <div class="sec-kicker">WHY BILLTRACE</div>
-    <div class="sec-title">记账这件事，交给你感觉不到的后台</div>
+    <div class="sec-kicker rv">WHY BILLTRACE</div>
+    <div class="sec-title rv">记账这件事，交给你感觉不到的后台</div>
     <div class="grid">
-      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>三引擎全自动采集</h3><p>通知监听捕获支付宝、微信等支付通知，银行短信解析兜底刷卡与转账，事件驱动架构后台零常驻内存。</p></div>
-      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>付款后 2 秒入库</h3><p>支付成功通知到达即解析写入，打开 App 直接看到最近消费，无网络等待、无需任何手动操作。</p></div>
-      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><h3>自动智能归类</h3><p>内置数千商户规则库，餐饮、交通、购物自动分好类；改错一次，同类商户永久自动修正。</p></div>
-      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>隐私本地加密</h3><p>SQLCipher 全库加密 + 生物识别锁，原始短信通知解析后立即丢弃，绝不上传。云同步端到端加密且默认关闭。</p></div>
-      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A9.8 9.8 0 0 1 12 5c7 0 11 8 11 8a17.7 17.7 0 0 1-2.2 3.2"/><path d="M6.1 6.1A17.9 17.9 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 4.2-.9"/></svg></div><h3>零打扰设计</h3><p>不弹窗、不打分、不推送广告。只有预算超支才提醒你，其余时候它安静地待在后台。</p></div>
-      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.9 4.9l2.9 2.9"/><path d="M16.2 16.2l2.9 2.9"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.9 19.1l2.9-2.9"/><path d="M16.2 7.8l2.9-2.9"/></svg></div><h3>多渠道去重合并</h3><p>同一笔支付被通知、短信同时捕获？金额、时间、渠道三级去重，只留信息最全的一条。</p></div>
+      <div class="feat rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>三引擎全自动采集</h3><p>通知监听捕获支付宝、微信等支付通知，银行短信解析兜底刷卡与转账，事件驱动架构后台零常驻内存。</p></div>
+      <div class="feat rv" style="transition-delay:.07s"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>付款后 2 秒入库</h3><p>支付成功通知到达即解析写入，打开 App 直接看到最近消费，无网络等待、无需任何手动操作。</p></div>
+      <div class="feat rv" style="transition-delay:.14s"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><h3>自动智能归类</h3><p>内置数千商户规则库，餐饮、交通、购物自动分好类；改错一次，同类商户永久自动修正。</p></div>
+      <div class="feat rv" style="transition-delay:.21s"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>隐私本地加密</h3><p>SQLCipher 全库加密 + 生物识别锁，原始短信通知解析后立即丢弃，绝不上传。云同步端到端加密且默认关闭。</p></div>
+      <div class="feat rv" style="transition-delay:.28s"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A9.8 9.8 0 0 1 12 5c7 0 11 8 11 8a17.7 17.7 0 0 1-2.2 3.2"/><path d="M6.1 6.1A17.9 17.9 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 4.2-.9"/></svg></div><h3>零打扰设计</h3><p>不弹窗、不打分、不推送广告。只有预算超支才提醒你，其余时候它安静地待在后台。</p></div>
+      <div class="feat rv" style="transition-delay:.35s"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="6" y1="7.5" x2="10" y2="10.5"/><line x1="14" y1="10.5" x2="18" y2="7.5"/><line x1="6" y1="16.5" x2="10" y2="13.5"/><line x1="14" y1="13.5" x2="18" y2="16.5"/></svg></div><h3>多渠道去重合并</h3><p>同一笔支付被通知、短信同时捕获？金额、时间、渠道三级去重，只留信息最全的一条。</p></div>
     </div>
   </section>
+</div>
 
-  <section style="padding-top:8px">
-    <div class="sec-kicker">HOW IT WORKS</div>
-    <div class="sec-title">三步开始，之后不需要你</div>
+<div class="marquee" aria-hidden="true"><div class="mq-track" id="mqTrack2"></div></div>
+
+<div class="wrap">
+  <section>
+    <div class="sec-kicker rv">HOW IT WORKS</div>
+    <div class="sec-title rv">三步开始，之后不需要你</div>
     <div class="steps">
-      <div class="step"><h3>安装并授权</h3><p>开启通知监听与短信权限，向导一步步引导，用途全程透明可查。</p></div>
-      <div class="step"><h3>正常花钱</h3><p>支付宝、微信、银行卡该怎么用就怎么用，账迹在后台 2 秒内静默入库。</p></div>
-      <div class="step"><h3>想看再看</h3><p>报表、预算、账单日历随时可查，分类错了长按一改，以后自动对。</p></div>
+      <div class="step rv"><h3>安装并授权</h3><p>开启通知监听与短信权限，向导一步步引导，用途全程透明可查。</p></div>
+      <div class="step rv" style="transition-delay:.08s"><h3>正常花钱</h3><p>支付宝、微信、银行卡该怎么用就怎么用，账迹在后台 2 秒内静默入库。</p></div>
+      <div class="step rv" style="transition-delay:.16s"><h3>想看再看</h3><p>报表、预算、账单日历随时可查，分类错了长按一改，以后自动对。</p></div>
     </div>
   </section>
 
   <section id="log" style="padding-top:8px">
-    <div class="sec-kicker">CHANGELOG</div>
-    <div class="sec-title">更新日志</div>
-    <div class="log">
-      <h4>v0.3.0 <span id="log-ver">当前最新</span></h4>
+    <div class="sec-kicker rv">CHANGELOG</div>
+    <div class="sec-title rv">更新日志</div>
+    <div class="log rv">
+      <h4><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.3.0 · 品牌焕新</span><span style="display:inline-flex;align-items:center;gap:12px"><span id="logDate" style="color:rgba(0,0,0,.4);font-weight:600">最近构建</span><span id="log-ver">当前最新</span></span></h4>
       <ul>
+        <li>全新应用图标：翡翠渐变收据 + 自动记账对勾徽章</li>
         <li>可交互高保真原型：首页 / 报表 / 预算 / 账单日历 / 渠道中心</li>
-        <li>官方 App 图标自动匹配：在哪消费显示谁的图标（支付宝 / 微信 / 美团 / 京东 / 淘宝等 15 个渠道）</li>
-        <li>消费概览整合卡：总支出 + 饼图 + 30 天趋势（7 日均线）+ 近 7 天消费</li>
-        <li>筛选系统：类型 / 时间 / 金额 / 分类 / 渠道 / 排序，六维自由组合</li>
-        <li>预算环形进度 + 分类超支预警</li>
+        <li>官方 App 图标自动匹配：在哪消费显示谁的图标（15 个支付渠道）</li>
+        <li>消费概览整合卡 + 近 7 天消费 + 30 天趋势（7 日均线）</li>
+        <li>六维筛选系统：类型 / 时间 / 金额 / 分类 / 渠道 / 排序</li>
       </ul>
     </div>
   </section>
@@ -195,7 +313,7 @@ footer a{color:var(--brand);font-weight:600}
   <section style="padding-top:0">
     <div class="dl-panel">
       <div>
-        <h2>现在安装，下一笔消费自动入账</h2>
+        <h2><img src="/billtrace/icon-512.png" alt="账迹图标">现在安装，下一笔消费自动入账</h2>
         <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.3.0</span> · 安装包约 3 MB</p>
       </div>
       <div class="btns">
@@ -211,29 +329,106 @@ footer a{color:var(--brand);font-weight:600}
 </footer>
 
 <script>
+/* ---------- 动态版本号 ---------- */
 (function(){
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET','https://api.github.com/repos/liixnglinb/BillTrace/releases/latest',true);
-  xhr.onload = function(){
-    if(xhr.status!==200) return;
+  var x=new XMLHttpRequest();
+  x.open('GET','https://api.github.com/repos/liixnglinb/BillTrace/releases/latest',true);
+  x.onload=function(){
+    if(x.status!==200)return;
     try{
-      var d = JSON.parse(xhr.responseText);
-      var v = (d.tag_name||'').replace(/^v/,'') ? 'v'+d.tag_name.replace(/^v/,'') : d.tag_name;
-      if(d.tag_name){
-        ['ver','ver2','log-ver'].forEach(function(id){
-          var el=document.getElementById(id);
-          if(el) el.textContent = id==='log-ver' ? v : v;
-        });
+      var d=JSON.parse(x.responseText);
+      var tag=String(d.tag_name||'');
+      if(/^v?\d+(\.\d+)+$/.test(tag)){
+        var v=tag.charAt(0)==='v'?tag:'v'+tag;
+        ['ver','ver2','log-ver'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=v;});
       }
-      var asset=(d.assets||[]).find(function(a){return a.name==='BillTrace-debug.apk';});
-      var sizeEl=document.querySelector('.dl-panel p');
-      if(asset&&sizeEl){
-        var mb=(asset.size/1048576).toFixed(1);
-        sizeEl.innerHTML='Android 8.0+ · <span class="ver-inline">'+(d.tag_name||'')+'</span> · 安装包约 '+mb+' MB';
+      var verEl=document.getElementById('ver2');
+      var ver=verEl?verEl.textContent:'';
+      var dt=document.getElementById('logDate');
+      if(dt&&d.published_at){
+        var t=new Date(d.published_at);
+        dt.textContent='最近构建 '+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
       }
+      var a=(d.assets||[]).filter(function(a){return a.name==='BillTrace-debug.apk';})[0];
+      var p=document.querySelector('.dl-panel p');
+      if(a&&p)p.innerHTML='Android 8.0+ · <span class="ver-inline">'+ver+'</span> · 安装包约 '+(a.size/1048576).toFixed(1)+' MB';
     }catch(e){}
   };
-  xhr.send();
+  x.send();
+})();
+
+/* ---------- 手机：实时自动记账模拟 ---------- */
+(function(){
+  var pool=[
+    {app:'alipay',  ch:'支',c:'#1677FF',appn:'支付宝',name:'美团外卖', sub:'餐饮-外卖 · 14:32', amt:'−35.80',  neg:true},
+    {app:'wechat',  ch:'微',c:'#07C160',appn:'微信',  name:'地铁出行', sub:'交通 · 09:15',      amt:'−4.00',   neg:true},
+    {app:'luckin',  ch:'幸',c:'#1F3B9E',appn:'云闪付',name:'瑞幸咖啡', sub:'餐饮-咖啡 · 08:40', amt:'−15.90',  neg:true},
+    {app:'cmb',     ch:'招',c:'#E60012',appn:'招商银行',name:'工资到账',sub:'金融-工资 · 10:00', amt:'+8,500.00',neg:false},
+    {app:'meituan', ch:'美',c:'#FFC300',appn:'美团',  name:'肯德基',   sub:'餐饮-外卖 · 18:30', amt:'−45.50',  neg:true},
+    {app:'jd',      ch:'京',c:'#E1251B',appn:'京东',  name:'京东超市', sub:'购物-日用 · 20:11', amt:'−129.00', neg:true}
+  ];
+  var idx=0,cnt=3,total=3420.50;
+  var list=document.getElementById('phList');
+  var notif=document.getElementById('phNotif');
+  function row(t,isNew){
+    var el=document.createElement('div');
+    el.className='scr-txn'+(isNew?' new':'');
+    el.innerHTML='<span class="scr-dot"><img src="/billtrace/icons/'+t.app+'.png" alt=""></span>'+
+      '<div><div class="scr-name">'+t.name+'</div><div class="scr-sub">'+t.sub+'</div></div>'+
+      '<span class="scr-amt'+(t.neg?'':' pos')+'">'+t.amt+'</span>';
+    return el;
+  }
+  var seed=pool[0];list.appendChild(row(seed));list.appendChild(row(pool[1]));list.appendChild(row(pool[2]));idx=3;
+  function cycle(){
+    var t=pool[idx%pool.length];idx++;
+    document.getElementById('nfIcon').src='/billtrace/icons/'+t.app+'.png';
+    document.getElementById('nfTitle').textContent=t.appn+' · 支付成功';
+    document.getElementById('nfAmt').textContent=t.amt.replace('−','¥').replace('+','¥');
+    var src=document.querySelector('.floaters img[data-app="'+t.app+'"]');
+    if(src){src.classList.add('hit');setTimeout(function(){src.classList.remove('hit');},1500);}
+    notif.classList.add('show');
+    setTimeout(function(){notif.classList.remove('show');},1750);
+    setTimeout(function(){
+      list.insertBefore(row(t,true),list.firstChild);
+      while(list.children.length>4)list.removeChild(list.lastChild);
+      cnt++;document.getElementById('phCnt').textContent=cnt+' 笔';
+      if(t.neg)total+=parseFloat(t.amt.replace(/[−,]/g,''));
+      document.getElementById('phTotal').textContent='¥'+total.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    },1850);
+  }
+  setTimeout(cycle,1600);
+  setInterval(cycle,4200);
+  /* 月支出数字滚动 + 预算条 */
+  var el=document.getElementById('phTotal'),t0=null,target=3420.50;
+  function step(ts){if(!t0)t0=ts;var k=Math.min((ts-t0)/1400,1);k=1-Math.pow(1-k,3);
+    el.textContent='¥'+(target*k).toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+    if(k<1)requestAnimationFrame(step);}
+  requestAnimationFrame(step);
+  setTimeout(function(){document.getElementById('phBar').style.width='68%';},300);
+  /* 近 7 天柱状图逐根生长 */
+  var bars=document.querySelectorAll('#phBars i');
+  bars.forEach(function(b,i){setTimeout(function(){b.classList.add('grow');},420+i*110);});
+  /* 时钟 */
+  function tick(){var n=new Date();document.getElementById('phClock').textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
+  tick();setInterval(tick,20000);
+})();
+
+/* ---------- 渠道跑马灯 ---------- */
+(function(){
+  var names=['支付宝','微信','美团外卖','京东','淘宝','拼多多','瑞幸咖啡','肯德基','滴滴出行','高德地图','网易云音乐','腾讯视频','星巴克','招商银行'];
+  var files={支付宝:'alipay',微信:'wechat',美团外卖:'meituan',京东:'jd',淘宝:'taobao',拼多多:'pdd',瑞幸咖啡:'luckin',肯德基:'kfc',滴滴出行:'didi',高德地图:'amap',网易云音乐:'music163',腾讯视频:'tvideo',星巴克:'starbucks',招商银行:'cmb'};
+  var html=names.map(function(n){return '<span class="mq-item"><img src="/billtrace/icons/'+files[n]+'.png" alt="">'+n+'</span>';}).join('');
+  var t1=document.getElementById('mqTrack'),t2=document.getElementById('mqTrack2');
+  if(t1)t1.innerHTML=html+html;
+  if(t2)t2.innerHTML=html+html;
+})();
+
+/* ---------- 滚动显现 ---------- */
+(function(){
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target);}});
+  },{threshold:.14});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
 })();
 </script>
 </body>
