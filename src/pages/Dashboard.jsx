@@ -25,7 +25,7 @@ const FEATURED = [
 
 const APPS = [
   { to: '/modelflow/', external: false, no: '01', name: 'ModelFlow 智模流水线', desc: '数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
-  { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通签到、位置签到、二维码签到三种类型，内置智能防风控。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
+  { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通、位置、二维码、拍照四种签到类型，内置智能防风控，手机可远程查看。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
   { to: '/local-toolbox/', external: false, no: '03', name: '本地工具箱', desc: 'Windows 本地磁盘清理与系统工具平台：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
 ];
 
