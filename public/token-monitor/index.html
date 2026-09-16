@@ -448,7 +448,7 @@ html.anim [data-roll].in{opacity:1;transform:none}
     });
   });
 
-  /* ------- 拉取最新版本，动态改写下载链接 ------- */
+  /* ------- 拉取最新版本（经本站 Function 代理，规避 CORS 与 GitHub 匿名限流） ------- */
   function mb(n){ return (n / 1048576).toFixed(n / 1048576 >= 10 ? 0 : 1) + ' MB'; }
   function tag(id, txt){ var el = document.getElementById(id); if (el && txt) el.textContent = txt; }
   function applyMirror(){
@@ -471,12 +471,11 @@ html.anim [data-roll].in{opacity:1;transform:none}
     applyMirror();
   });
 
-  fetch('https://api.github.com/repos/' + REPO + '/releases/latest', {
-    headers: { 'Accept': 'application/vnd.github+json' }
-  }).then(function(r){ if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+  fetch('/tm-api/latest', { cache: 'no-store' })
+  .then(function(r){ return r.json(); })
   .then(function(d){
-    var ver = String(d.tag_name || '').replace(/^v/, '');
-    if (!ver) return;
+    if (!d || !d.version) return;              /* 上游异常：保留兜底值 */
+    var ver = String(d.version).replace(/^v/, '');
     var assets = d.assets || [];
     function pick(kw, exact){
       for (var i = 0; i < assets.length; i++){
@@ -486,11 +485,11 @@ html.anim [data-roll].in{opacity:1;transform:none}
       return null;
     }
     var setup = pick('setup'), portable = pick('portable'), raw = pick('tokenmonitor.exe', true);
-    if (setup){ links.setup = setup.browser_download_url;
+    if (setup){ links.setup = setup.url;
       tag('fn-setup', setup.name); tag('mb-setup', mb(setup.size)); tag('size-setup', '约 ' + mb(setup.size)); }
-    if (portable){ links.portable = portable.browser_download_url;
+    if (portable){ links.portable = portable.url;
       tag('fn-portable', portable.name); tag('mb-portable', mb(portable.size)); tag('size-portable', '约 ' + mb(portable.size)); }
-    if (raw){ links.raw = raw.browser_download_url; tag('mb-raw', mb(raw.size)); }
+    if (raw){ links.raw = raw.url; tag('mb-raw', mb(raw.size)); }
     tag('ver-pill', 'v' + ver);
     tag('ver-btn', 'v' + ver);
     tag('v-setup', 'v' + ver);
@@ -499,7 +498,7 @@ html.anim [data-roll].in{opacity:1;transform:none}
     tag('foot-ver', 'v' + ver + ' · 9 类数据源');
     document.title = 'Token Monitor v' + ver + ' · 本机 AI 用量看板 — Voyra';
     applyMirror();
-  }).catch(function(){ /* 离线或限流：保留写死的兜底值，链接指向 Releases 页 */ });
+  }).catch(function(){ /* 离线：保留写死的兜底值，链接指向 Releases 页 */ });
 
   applyMirror();
 })();
