@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Film, Github,
-  Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Shapes,
+  Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Receipt, Shapes,
   NotebookPen, Route, Sparkles, Star,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
@@ -27,6 +27,7 @@ const APPS = [
   { to: '/modelflow/', external: false, no: '01', name: 'ModelFlow 智模流水线', desc: '数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
   { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通、位置、二维码、拍照四种签到类型，内置智能防风控，手机可远程查看。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
   { to: '/local-toolbox/', external: false, no: '03', name: '磁盘清理助手', desc: 'Windows 磁盘清理专用工具：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
+  { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
 ];
 
 const MATHMODEL_SKILL = {
@@ -187,7 +188,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3 };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3 };
 
 /* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
    天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
@@ -311,6 +312,43 @@ function FeatureArt({ type }) {
       <div className="vr-toolbox-drive"><span>C: 系统盘</span><i className={active ? 'is-done' : ''} style={{ '--fill': '62%' }}><b /></i><em>{active ? '已清理 3.6 GB' : '已用 62% · 可清理 18.4 GB'}</em></div>
       <div className="vr-toolbox-cats">{cats.map((c, index) => <button key={c[0]} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><span>{c[0]}</span><em>{c[1]}</em></button>)}</div>
       <div className="vr-toolbox-foot"><b>9 大功能</b><span>扫描 · 缓存清理 · 目录百科 · 重复文件</span></div>
+    </div>;
+  }
+
+  if (type === 'billtrace') {
+    const txns = [['美团外卖', '餐饮-外卖', '−35.80', '#FFC300', '美'], ['瑞幸咖啡', '餐饮-咖啡', '−15.90', '#1F3B9E', '幸'], ['工资到账', '金融-工资', '+8500.0', '#EAB308', '招']];
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-bt-art">
+      <style>{`
+        .vr-bt-art{background:#0B0C0E;color:#fff}
+        .vr-bt-art .vr-bt-screen{background:#F7F8FA;color:#14161A;border-radius:14px;padding:14px 12px;display:flex;flex-direction:column;gap:8px;margin-top:10px}
+        .vr-bt-art .vr-bt-big{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+        .vr-bt-art .vr-bt-bar{height:5px;background:#E7E9EC;border-radius:3px;overflow:hidden;margin-top:6px}
+        .vr-bt-art .vr-bt-bar i{display:block;height:100%;width:68%;background:#0BA360;border-radius:3px}
+        .vr-bt-art .vr-bt-row{display:flex;align-items:center;gap:9px;background:#fff;border-radius:11px;padding:8px 10px;box-shadow:0 1px 2px rgba(16,24,40,.06)}
+        .vr-bt-art .vr-bt-row.is-hot{box-shadow:0 0 0 2px rgba(11,163,96,.55)}
+        .vr-bt-art .vr-bt-dot{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0}
+        .vr-bt-art .vr-bt-name{font-size:12px;font-weight:700;line-height:1.3}
+        .vr-bt-art .vr-bt-sub{font-size:10px;color:#7A7F87;line-height:1.3}
+        .vr-bt-art .vr-bt-amt{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+        .vr-bt-art .vr-bt-amt.pos{color:#0BA360}
+        .vr-bt-art .vr-bt-auto{font-size:10px;color:#0BA600;color:#0BA360;font-weight:700}
+      `}</style>
+      <div className="vr-preview-top" style={{ color: '#fff' }}><Receipt size={15} /><span>自动记账</span><b>本月 ¥3,420 · 23 笔</b></div>
+      <div className="vr-bt-screen">
+        <div>
+          <div style={{ fontSize: 11, color: '#7A7F87' }}>本月支出 · 预算 68%</div>
+          <div className="vr-bt-big">¥3,420.50</div>
+          <div className="vr-bt-bar"><i /></div>
+        </div>
+        {txns.map((t, index) => (
+          <div key={t[0]} className={`vr-bt-row${active === index ? ' is-hot' : ''}`}>
+            <span className="vr-bt-dot" style={{ background: t[3], color: t[3] === '#FFC300' ? '#1A1A1A' : '#fff' }}>{t[4]}</span>
+            <div><div className="vr-bt-name">{t[0]}</div><div className="vr-bt-sub">{t[1]} · 自动归类</div></div>
+            <span className={`vr-bt-amt${t[2].startsWith('+') ? ' pos' : ''}`}>{t[2]}</span>
+          </div>
+        ))}
+        <div className="vr-bt-auto">✓ 付款后 2 秒自动入库 · 零手动</div>
+      </div>
     </div>;
   }
 

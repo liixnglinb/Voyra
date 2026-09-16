@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>账迹 BillTrace · 付完款，账就自动记好了</title>
+<meta name="description" content="账迹 BillTrace —— Android 自动记账 App：三引擎全自动采集、智能分类、本地加密、零打扰。">
+<style>
+:root{
+  --ink:#1a1a1a; --muted:rgba(0,0,0,.5); --muted-2:rgba(0,0,0,.72);
+  --brand:#0BA360; --brand-deep:#087A48; --wash:#F6F8F7; --line:rgba(0,0,0,.08);
+  --zh:"PingFang SC","Noto Sans SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .bar{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-weight:800;font-size:17px;letter-spacing:-.3px}
+.logo b{color:var(--brand)}
+nav .gh{font-size:13px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;transition:.2s}
+nav .gh:hover{border-color:var(--brand);color:var(--brand)}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center;padding:84px 0 72px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:1.5px;color:var(--brand);background:rgba(11,163,96,.08);border-radius:999px;padding:6px 14px;margin-bottom:22px}
+.kicker i{width:6px;height:6px;border-radius:50%;background:var(--brand);display:inline-block}
+h1{font-size:clamp(34px,5vw,52px);font-weight:800;letter-spacing:-1px;line-height:1.15}
+h1 em{font-style:normal;color:var(--brand)}
+.tagline{font-size:17px;color:var(--muted-2);margin:18px 0 30px;max-width:30em}
+.dl-row{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:14px;font-size:15px;font-weight:700;transition:.2s;cursor:pointer;border:none}
+.btn svg{width:17px;height:17px}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 10px 24px rgba(11,163,96,.28)}
+.btn-primary:hover{background:var(--brand-deep);transform:translateY(-2px)}
+.btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--brand);color:var(--brand)}
+.hero-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.meta-chip{font-size:12.5px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:5px 13px}
+.meta-chip b{color:var(--brand);font-weight:700}
+/* 手机样机 */
+.phone{width:270px;height:560px;margin:0 auto;border-radius:40px;background:#0B0C0E;padding:10px;box-shadow:0 30px 70px rgba(16,24,40,.28)}
+.screen{background:#F7F8FA;border-radius:32px;height:100%;overflow:hidden;padding:26px 13px 0;display:flex;flex-direction:column;gap:10px}
+.scr-date{font-size:10.5px;font-weight:700;color:#14161A;padding:2px 4px}
+.scr-card{background:#fff;border-radius:13px;padding:12px 13px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.scr-label{font-size:8.5px;color:#7A7F87}
+.scr-big{font-size:19px;font-weight:800;color:#14161A;font-variant-numeric:tabular-nums}
+.scr-bar{height:4px;background:#EFF1F4;border-radius:2px;margin-top:8px;overflow:hidden}
+.scr-bar i{display:block;height:100%;width:68%;background:var(--brand);border-radius:2px}
+.scr-cap{font-size:8.5px;color:#7A7F87;padding:0 4px;font-weight:600}
+.scr-txn{display:flex;align-items:center;gap:8px;background:#fff;border-radius:12px;padding:8px 10px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.scr-dot{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.scr-name{font-size:9.5px;font-weight:700;color:#14161A}
+.scr-sub{font-size:7.5px;color:#7A7F87}
+.scr-amt{margin-left:auto;font-size:10px;font-weight:700;color:#14161A;font-variant-numeric:tabular-nums}
+.scr-amt.pos{color:var(--brand)}
+.flash{animation:scrflash 2.6s ease infinite}
+@keyframes scrflash{0%,72%{box-shadow:0 0 0 0 rgba(11,163,96,0)}80%{box-shadow:0 0 0 3px rgba(11,163,96,.35)}100%{box-shadow:0 0 0 0 rgba(11,163,96,0)}}
+section{padding:64px 0}
+.sec-kicker{font-size:12.5px;font-weight:800;letter-spacing:2px;color:var(--brand);margin-bottom:10px}
+.sec-title{font-size:clamp(24px,3.4vw,34px);font-weight:800;letter-spacing:-.6px;margin-bottom:34px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.feat{background:var(--wash);border-radius:18px;padding:24px;border:1px solid transparent;transition:.25s}
+.feat:hover{border-color:rgba(11,163,96,.35);transform:translateY(-3px)}
+.feat .ic{width:40px;height:40px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;margin-bottom:14px;box-shadow:0 1px 3px rgba(16,24,40,.08)}
+.feat .ic svg{width:20px;height:20px;stroke:var(--brand);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.feat h3{font-size:16px;font-weight:700;margin-bottom:7px}
+.feat p{font-size:13.5px;color:var(--muted-2)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:step}
+.step{position:relative;background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:24px}
+.step::before{counter-increment:step;content:"0" counter(step);font-size:30px;font-weight:800;color:rgba(11,163,96,.22);position:absolute;top:14px;right:20px}
+.step h3{font-size:16px;font-weight:700;margin:12px 0 7px}
+.step p{font-size:13.5px;color:var(--muted-2)}
+.dl-panel{background:#0B0C0E;border-radius:24px;padding:52px 48px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap}
+.dl-panel h2{font-size:clamp(22px,3vw,30px);font-weight:800;letter-spacing:-.5px}
+.dl-panel p{color:rgba(255,255,255,.62);font-size:14px;margin-top:8px}
+.dl-panel .btns{display:flex;gap:12px;flex-wrap:wrap}
+.dl-panel .btn-primary{box-shadow:none}
+.dl-panel .btn-ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.25)}
+.dl-panel .btn-ghost:hover{border-color:var(--brand);color:#7BE0B4}
+.ver-inline{color:#7BE0B4;font-variant-numeric:tabular-nums}
+.log{background:var(--wash);border-radius:18px;padding:24px 26px;border:1px solid var(--line)}
+.log h4{font-size:14.5px;font-weight:700;display:flex;justify-content:space-between}
+.log h4 span{color:var(--brand);font-variant-numeric:tabular-nums}
+.log ul{margin:10px 0 0 18px;font-size:13.5px;color:var(--muted-2)}
+.log li{margin:4px 0}
+footer{border-top:1px solid var(--line);padding:26px 0;font-size:12.5px;color:var(--muted);text-align:center}
+footer a{color:var(--brand);font-weight:600}
+@media(max-width:860px){
+  .hero{grid-template-columns:1fr;padding:56px 0 48px;text-align:center}
+  .hero .copy{display:flex;flex-direction:column;align-items:center}
+  .grid,.steps{grid-template-columns:1fr}
+  .dl-panel{padding:36px 26px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="bar">
+    <span class="logo">Voyra<b>·</b>账迹</span>
+    <a class="gh" href="https://github.com/liixnglinb/BillTrace" target="_blank" rel="noopener">GitHub 开源仓库</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="copy">
+      <span class="kicker"><i></i>AUTO BOOKKEEPING · 自动记账</span>
+      <h1>付完款，<br>账就<em>自动记好</em>了。</h1>
+      <p class="tagline">账迹 BillTrace 监听支付通知与银行短信，2 秒内自动入库并智能归类——全程零手动、零截图、零打扰，数据只存在你手机里。</p>
+      <div class="dl-row">
+        <a class="btn btn-primary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          直接下载 APK <span class="ver-inline" id="ver">v0.3.0</span>
+        </a>
+        <a class="btn btn-ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          国内加速下载
+        </a>
+      </div>
+      <div class="hero-meta">
+        <span class="meta-chip"><b>Android 8.0+</b></span>
+        <span class="meta-chip">MVP 预览版</span>
+        <span class="meta-chip">免费 · 无广告</span>
+        <span class="meta-chip">数据本地加密存储</span>
+      </div>
+    </div>
+    <div class="phone" aria-hidden="true">
+      <div class="screen">
+        <div class="scr-date">9月16日 周二</div>
+        <div class="scr-card">
+          <div class="scr-label">本月支出</div>
+          <div class="scr-big">¥3,420.50</div>
+          <div class="scr-bar"><i></i></div>
+        </div>
+        <div class="scr-cap">今天 · 自动记录</div>
+        <div class="scr-txn flash">
+          <div class="scr-dot" style="background:#FFC300">美</div>
+          <div><div class="scr-name">美团外卖</div><div class="scr-sub">14:32 · 餐饮-外卖</div></div>
+          <div class="scr-amt">−35.80</div>
+        </div>
+        <div class="scr-txn">
+          <div class="scr-dot" style="background:#007AFF">支</div>
+          <div><div class="scr-name">地铁出行</div><div class="scr-sub">09:15 · 交通</div></div>
+          <div class="scr-amt">−4.00</div>
+        </div>
+        <div class="scr-txn">
+          <div class="scr-dot" style="background:#1F3B9E">幸</div>
+          <div><div class="scr-name">瑞幸咖啡</div><div class="scr-sub">08:40 · 餐饮</div></div>
+          <div class="scr-amt">−15.90</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="sec-kicker">WHY BILLTRACE</div>
+    <div class="sec-title">记账这件事，交给你感觉不到的后台</div>
+    <div class="grid">
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>三引擎全自动采集</h3><p>通知监听捕获支付宝、微信等支付通知，银行短信解析兜底刷卡与转账，事件驱动架构后台零常驻内存。</p></div>
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>付款后 2 秒入库</h3><p>支付成功通知到达即解析写入，打开 App 直接看到最近消费，无网络等待、无需任何手动操作。</p></div>
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><h3>自动智能归类</h3><p>内置数千商户规则库，餐饮、交通、购物自动分好类；改错一次，同类商户永久自动修正。</p></div>
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>隐私本地加密</h3><p>SQLCipher 全库加密 + 生物识别锁，原始短信通知解析后立即丢弃，绝不上传。云同步端到端加密且默认关闭。</p></div>
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A9.8 9.8 0 0 1 12 5c7 0 11 8 11 8a17.7 17.7 0 0 1-2.2 3.2"/><path d="M6.1 6.1A17.9 17.9 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 4.2-.9"/></svg></div><h3>零打扰设计</h3><p>不弹窗、不打分、不推送广告。只有预算超支才提醒你，其余时候它安静地待在后台。</p></div>
+      <div class="feat"><div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.9 4.9l2.9 2.9"/><path d="M16.2 16.2l2.9 2.9"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.9 19.1l2.9-2.9"/><path d="M16.2 7.8l2.9-2.9"/></svg></div><h3>多渠道去重合并</h3><p>同一笔支付被通知、短信同时捕获？金额、时间、渠道三级去重，只留信息最全的一条。</p></div>
+    </div>
+  </section>
+
+  <section style="padding-top:8px">
+    <div class="sec-kicker">HOW IT WORKS</div>
+    <div class="sec-title">三步开始，之后不需要你</div>
+    <div class="steps">
+      <div class="step"><h3>安装并授权</h3><p>开启通知监听与短信权限，向导一步步引导，用途全程透明可查。</p></div>
+      <div class="step"><h3>正常花钱</h3><p>支付宝、微信、银行卡该怎么用就怎么用，账迹在后台 2 秒内静默入库。</p></div>
+      <div class="step"><h3>想看再看</h3><p>报表、预算、账单日历随时可查，分类错了长按一改，以后自动对。</p></div>
+    </div>
+  </section>
+
+  <section id="log" style="padding-top:8px">
+    <div class="sec-kicker">CHANGELOG</div>
+    <div class="sec-title">更新日志</div>
+    <div class="log">
+      <h4>v0.3.0 <span id="log-ver">当前最新</span></h4>
+      <ul>
+        <li>可交互高保真原型：首页 / 报表 / 预算 / 账单日历 / 渠道中心</li>
+        <li>官方 App 图标自动匹配：在哪消费显示谁的图标（支付宝 / 微信 / 美团 / 京东 / 淘宝等 15 个渠道）</li>
+        <li>消费概览整合卡：总支出 + 饼图 + 30 天趋势（7 日均线）+ 近 7 天消费</li>
+        <li>筛选系统：类型 / 时间 / 金额 / 分类 / 渠道 / 排序，六维自由组合</li>
+        <li>预算环形进度 + 分类超支预警</li>
+      </ul>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="dl-panel">
+      <div>
+        <h2>现在安装，下一笔消费自动入账</h2>
+        <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.3.0</span> · 安装包约 3 MB</p>
+      </div>
+      <div class="btns">
+        <a class="btn btn-primary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">直接下载</a>
+        <a class="btn btn-ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">国内加速</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  账迹 BillTrace · 由 <a href="https://lxlrwxs.top" target="_blank" rel="noopener">Voyra 个人工具中心</a> 出品 · <a href="https://github.com/liixnglinb/BillTrace" target="_blank" rel="noopener">GitHub</a>
+</footer>
+
+<script>
+(function(){
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET','https://api.github.com/repos/liixnglinb/BillTrace/releases/latest',true);
+  xhr.onload = function(){
+    if(xhr.status!==200) return;
+    try{
+      var d = JSON.parse(xhr.responseText);
+      var v = (d.tag_name||'').replace(/^v/,'') ? 'v'+d.tag_name.replace(/^v/,'') : d.tag_name;
+      if(d.tag_name){
+        ['ver','ver2','log-ver'].forEach(function(id){
+          var el=document.getElementById(id);
+          if(el) el.textContent = id==='log-ver' ? v : v;
+        });
+      }
+      var asset=(d.assets||[]).find(function(a){return a.name==='BillTrace-debug.apk';});
+      var sizeEl=document.querySelector('.dl-panel p');
+      if(asset&&sizeEl){
+        var mb=(asset.size/1048576).toFixed(1);
+        sizeEl.innerHTML='Android 8.0+ · <span class="ver-inline">'+(d.tag_name||'')+'</span> · 安装包约 '+mb+' MB';
+      }
+    }catch(e){}
+  };
+  xhr.send();
+})();
+</script>
+</body>
+</html>
