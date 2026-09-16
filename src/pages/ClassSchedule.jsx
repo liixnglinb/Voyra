@@ -25,15 +25,23 @@ const ACCENT_LINE = 'rgba(164,136,48,.42)';
 const WEEKDAY = ['一', '二', '三', '四', '五', '六', '日'];
 const MAX_WEEK = 20;
 
-/* 连堂节次块（大学课表按此组织，含晚自习）；用户可在「时间设置」中覆盖 time */
+/* 连堂节次块（大学课表按此组织，含晚自习）；用户可在「时间设置」中覆盖 time
+ * 默认作息：8:20 上课，每小节 45 分钟；1→2 节休 10 分钟，2→3 节休 20 分钟，3→4 节休 5 分钟
+ *   第1节 08:20-09:05 → 休10 → 第2节 09:15-10:00 → 休20 → 第3节 10:20-11:05 → 休5 → 第4节 11:10-11:55
+ */
 const DEFAULT_SLOTS = [
-  { key: '1-2',    label: '1-2 节',   time: '08:00-09:45', start: 1,  night: false },
-  { key: '3-4',    label: '3-4 节',   time: '10:00-11:45', start: 3,  night: false },
+  { key: '1-2',    label: '1-2 节',   time: '08:20-10:00', start: 1,  night: false },
+  { key: '3-4',    label: '3-4 节',   time: '10:20-11:55', start: 3,  night: false },
   { key: '5-6',    label: '5-6 节',   time: '13:30-15:15', start: 5,  night: false },
   { key: '7-8',    label: '7-8 节',   time: '15:30-17:15', start: 7,  night: false },
   { key: '晚自习1', label: '晚自习 1', time: '19:00-20:40', start: 9,  night: true },
   { key: '晚自习2', label: '晚自习 2', time: '20:50-22:15', start: 11, night: true },
 ];
+/* 旧版默认作息：仅当用户从未手动改过（覆盖值仍等于旧默认）时才让新默认生效 */
+const LEGACY_DEFAULT_TIME = {
+  '1-2': '08:00-09:45', '3-4': '10:00-11:45', '5-6': '13:30-15:15',
+  '7-8': '15:30-17:15', '晚自习1': '19:00-20:40', '晚自习2': '20:50-22:15',
+};
 const SLOTS = DEFAULT_SLOTS;
 const SLOT_BY_START = Object.fromEntries(DEFAULT_SLOTS.map((s) => [s.start, s.key]));
 const SLOT_META = Object.fromEntries(DEFAULT_SLOTS.map((s) => [s.key, s]));
@@ -648,7 +656,10 @@ export default function ClassSchedule({ stats = null, active = true }) {
     const ov = settings.timeSlots || {};
     for (const k of Object.keys(ov)) {
       const t = String(ov[k] || '').trim();
-      if (base[k] && /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(t)) base[k].time = t;
+      if (!base[k]) continue;
+      /* 覆盖值仍是旧版默认 → 视为用户没自定义过，采用新默认 */
+      if (t === LEGACY_DEFAULT_TIME[k]) continue;
+      if (/^\d{2}:\d{2}-\d{2}:\d{2}$/.test(t)) base[k].time = t;
     }
     return base;
   }, [settings.timeSlots]);
@@ -809,7 +820,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .tp-pop-done { border:none;background:${ACCENT};color:#fff;border-radius:7px;padding:5px 16px;font-size:12.5px;font-weight:700;cursor:pointer;transition:opacity .15s ease; }
         .tp-pop-done:hover { opacity:.9; }
         .tp-wheels { position:relative;display:flex;justify-content:center;align-items:center;gap:2px; }
-        .tp-col { position:relative;height:180px;box-sizing:border-box;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;-ms-overflow-style:none;padding:72px 0; }
+        .tp-col { position:relative;height:180px;box-sizing:border-box;overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior:contain;scrollbar-width:none;-ms-overflow-style:none;padding:72px 0; }
         .tp-col::-webkit-scrollbar { display:none; }
         .tp-item { height:36px;line-height:36px;text-align:center;font-size:15px;font-weight:600;color:#495057;scroll-snap-align:center;cursor:pointer;user-select:none;transition:transform .1s linear,opacity .1s linear,color .15s ease;will-change:transform,opacity; }
         .tp-item.sel { color:${ACCENT};font-weight:800; }
@@ -869,7 +880,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
           <div className="cs-card" style={{ boxShadow: 'none', borderColor: 'rgba(20,24,33,.12)' }}>
             <div className="cs-row" style={{ alignItems: 'flex-start' }}>
               {DEFAULT_SLOTS.map((s) => {
-                const [st, en] = (timeSlots[s.key].time || '08:00-09:45').split('-');
+                const [st, en] = (timeSlots[s.key].time || '08:20-10:00').split('-');
                 const editingThis = timeEdit && timeEdit.key === s.key;
                 return (
                   <div key={s.key} className="cs-field" style={{ gap: 4, position: 'relative' }}>
@@ -1099,37 +1110,78 @@ function TimeWheel({ value, onDone }) {
   const valRef = useRef(value);
   const hRef = useRef(null);
   const mRef = useRef(null);
+  const prevRef = useRef(null);
+  const rafRef = useRef(0);
+  const commitRef = useRef(0);
+  const wheelRef = useRef({ h: -1, m: -1, t: 0 });
   const ITEM = 36;
+  const PAD = 72;
   const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
   const MINS = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
-  const update = (v) => { valRef.current = v; setVal(v); };
 
-  /* 根据滚动位置给每项做缩放 / 淡出，模拟滚轮柱面效果 */
+  /* 距离用序号直接算，不读 offsetTop —— 原实现每次滚动读 24 次布局属性（强制重排），是卡顿主因 */
   const paint = (col) => {
     if (!col) return;
-    const items = col.querySelectorAll('.tp-item');
+    const items = col.children;
     const center = col.scrollTop + col.clientHeight / 2;
-    items.forEach((el) => {
-      const d = (el.offsetTop + ITEM / 2 - center) / ITEM;
-      const a = Math.abs(d);
-      el.style.transform = `scale(${Math.max(0.78, 1 - a * 0.1)})`;
-      el.style.opacity = String(Math.max(0.25, 1 - a * 0.34));
-      el.classList.toggle('sel', a < 0.45);
+    for (let i = 0; i < items.length; i++) {
+      const el = items[i];
+      const d = Math.abs((PAD + i * ITEM + ITEM / 2 - center) / ITEM);
+      el.style.transform = `scale(${Math.max(0.78, 1 - d * 0.1)})`;
+      el.style.opacity = String(Math.max(0.25, 1 - d * 0.34));
+      el.classList.toggle('sel', d < 0.45);
+    }
+  };
+
+  /* 滚动中直接改文本节点，不触发 React 重渲染；停手 120ms 后再同步一次 state */
+  const syncValue = (col, isHour) => {
+    const list = isHour ? HOURS : MINS;
+    const idx = Math.min(list.length - 1, Math.max(0, Math.round(col.scrollTop / ITEM)));
+    const v = list[idx];
+    if (v == null) return;
+    valRef.current = isHour ? `${v}:${valRef.current.slice(3, 5)}` : `${valRef.current.slice(0, 2)}:${v}`;
+    if (prevRef.current) prevRef.current.textContent = valRef.current;
+    clearTimeout(commitRef.current);
+    commitRef.current = setTimeout(() => setVal(valRef.current), 120);
+  };
+
+  const handleScroll = (col, isHour, key) => {
+    const target = wheelRef.current[key];
+    if (target >= 0 && Math.abs(col.scrollTop - target * ITEM) < 2) wheelRef.current[key] = -1;
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = 0;
+      paint(col);
+      syncValue(col, isHour);
     });
   };
 
-  const handleScroll = (col, isHour) => {
-    paint(col);
-    const idx = Math.round(col.scrollTop / ITEM);
-    const v = isHour ? HOURS[idx] : MINS[idx];
-    if (v == null) return;
-    update(isHour ? `${v}:${valRef.current.slice(3, 5)}` : `${valRef.current.slice(0, 2)}:${v}`);
+  const goTo = (col, key, idx, listLen) => {
+    const i = Math.min(listLen - 1, Math.max(0, idx));
+    wheelRef.current[key] = i;
+    col.scrollTo({ top: i * ITEM, behavior: 'smooth' });
   };
 
-  const jumpTo = (col, isHour, idx) => {
-    col.scrollTo({ top: idx * ITEM, behavior: 'auto' });
-    handleScroll(col, isHour);
-  };
+  /* 鼠标滚轮：一格精确走一项。原生滚动叠加 mandatory 吸附会吃掉小幅滚动，手感发滞 */
+  useEffect(() => {
+    const bind = (col, key, listLen) => {
+      if (!col) return () => {};
+      const onWheel = (e) => {
+        e.preventDefault();
+        const now = Date.now();
+        if (now - wheelRef.current.t < 45) return;
+        wheelRef.current.t = now;
+        const base = wheelRef.current[key] >= 0 ? wheelRef.current[key] : Math.round(col.scrollTop / ITEM);
+        goTo(col, key, base + (e.deltaY > 0 ? 1 : -1), listLen);
+      };
+      col.addEventListener('wheel', onWheel, { passive: false });
+      return () => col.removeEventListener('wheel', onWheel);
+    };
+    const unH = bind(hRef.current, 'h', HOURS.length);
+    const unM = bind(mRef.current, 'm', MINS.length);
+    return () => { unH(); unM(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const hh = Math.min(Math.max(parseInt(value.slice(0, 2), 10) || 0, 0), 23);
@@ -1138,6 +1190,10 @@ function TimeWheel({ value, onDone }) {
     if (mRef.current) mRef.current.scrollTop = mm * ITEM;
     paint(hRef.current);
     paint(mRef.current);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      clearTimeout(commitRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1145,20 +1201,20 @@ function TimeWheel({ value, onDone }) {
     <div className="tp-pop">
       <div className="tp-pop-head">
         <span className="tp-pop-title">选择时间</span>
-        <button type="button" className="tp-pop-done" onClick={() => onDone(val)}>完成</button>
+        <button type="button" className="tp-pop-done" onClick={() => onDone(valRef.current)}>完成</button>
       </div>
       <div className="tp-wheels">
-        <div className="tp-col" ref={hRef} onScroll={(e) => handleScroll(e.currentTarget, true)}>
-          {HOURS.map((h, i) => <div key={h} className="tp-item" onClick={() => jumpTo(hRef.current, true, i)}>{h}</div>)}
+        <div className="tp-col" ref={hRef} onScroll={(e) => handleScroll(e.currentTarget, true, 'h')}>
+          {HOURS.map((h, i) => <div key={h} className="tp-item" onClick={() => goTo(hRef.current, 'h', i, HOURS.length)}>{h}</div>)}
         </div>
         <div className="tp-sep">:</div>
-        <div className="tp-col" ref={mRef} onScroll={(e) => handleScroll(e.currentTarget, false)}>
-          {MINS.map((m, i) => <div key={m} className="tp-item" onClick={() => jumpTo(mRef.current, false, i)}>{m}</div>)}
+        <div className="tp-col" ref={mRef} onScroll={(e) => handleScroll(e.currentTarget, false, 'm')}>
+          {MINS.map((m, i) => <div key={m} className="tp-item" onClick={() => goTo(mRef.current, 'm', i, MINS.length)}>{m}</div>)}
         </div>
         <div className="tp-mask tp-mask-top" />
         <div className="tp-mask tp-mask-bottom" />
       </div>
-      <div className="tp-preview">{val}</div>
+      <div className="tp-preview" ref={prevRef}>{val}</div>
     </div>
   );
 }

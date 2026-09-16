@@ -15,6 +15,11 @@ import { Calendar, Clock } from 'lucide-react';
  *   d. 输出字符统一成 "YYYY-MM-DD[THH:MM]"。
  */
 
+/* 滚轮配色：贴合站点「黑白灰 + 金」主调。
+   原冷蓝灰渐变（#F0F6FF/#E5EAF0）配紫色光晕偏塑料感，这里统一换成暖白 + 金。 */
+const GOLD = '164,136,48';
+const INK = '20,24,33';
+
 function pad(n) { return String(n).padStart(2, '0'); }
 
 /** 解析 value（YYYY-MM-DD / YYYY-MM-DDTHH:MM / HH:MM）到 {y,m,d,h,min} */
@@ -120,8 +125,8 @@ function WheelColumn({ values, selected, onSelect, padZero = false, narrow = fal
           const isSel = i === selIdx;
           let blur = 0, opacity = 0.4, fontSize = 13;
           if (isSel) { opacity = 1; blur = 0; }
-          else if (dist === 1) { blur = 0.7; opacity = 0.5; fontSize = 13.2; }
-          else if (dist === 2) { blur = 1.4; opacity = 0.28; fontSize = 12.5; }
+          else if (dist === 1) { blur = 0.45; opacity = 0.46; fontSize = 13.2; }
+          else if (dist === 2) { blur = 0.9; opacity = 0.24; fontSize = 12.5; }
           return (
             <div
               key={i}
@@ -137,7 +142,7 @@ function WheelColumn({ values, selected, onSelect, padZero = false, narrow = fal
                 justifyContent: 'center',
                 fontSize: isSel ? 18 : fontSize,
                 fontWeight: isSel ? 700 : 400,
-                color: isSel ? '#2B3A4B' : '#AAB7C4',
+                color: isSel ? '#171717' : '#B3ADA0',
                 opacity,
                 filter: `blur(${blur}px)`,
                 fontVariantNumeric: 'tabular-nums',
@@ -156,21 +161,21 @@ function WheelColumn({ values, selected, onSelect, padZero = false, narrow = fal
         style={{
           top: center * rowH,
           height: rowH,
-          background: 'linear-gradient(180deg, #F0F6FF 0%, #E8F0FF 100%)',
+          background: `linear-gradient(180deg, rgba(${GOLD},.11) 0%, rgba(${GOLD},.045) 100%)`,
           borderRadius: 10,
-          borderTop: '1px solid #E0E6ED',
-          borderBottom: '1px solid #E0E6ED',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+          borderTop: `1px solid rgba(${GOLD},.22)`,
+          borderBottom: `1px solid rgba(${GOLD},.22)`,
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,.75)',
         }}
       />
       {/* 上/下渐变遮罩（不拦截点击） */}
       <div
         className="pointer-events-none absolute left-0 right-0"
-        style={{ top: 0, height: rowH - 30, background: 'linear-gradient(180deg, #F5F7FA 0%, rgba(245,247,250,0) 100%)' }}
+        style={{ top: 0, height: rowH - 30, background: 'linear-gradient(180deg, #FFFDF7 0%, rgba(255,253,247,0) 100%)' }}
       />
       <div
         className="pointer-events-none absolute left-0 right-0"
-        style={{ bottom: 0, height: rowH - 30, background: 'linear-gradient(0deg, #F5F7FA 0%, rgba(245,247,250,0) 100%)' }}
+        style={{ bottom: 0, height: rowH - 30, background: 'linear-gradient(0deg, #FFFDF7 0%, rgba(255,253,247,0) 100%)' }}
       />
     </div>
   );
@@ -266,7 +271,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
           width: '100%',
           boxShadow: 'var(--shadow-inset)',
         }}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(124,92,255,0.5)'; }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = `rgba(${GOLD},.55)`; }}
         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--line)'; }}
       >
         <span className="truncate">{display}</span>
@@ -288,7 +293,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
             WebkitBackdropFilter: 'blur(20px) saturate(120%)',
             borderRadius: 16,
             border: '1px solid var(--line)',
-            boxShadow: 'var(--shadow-modal), 0 0 26px -8px rgba(124,92,255,0.25), inset 0 1px 0 rgba(255,255,255,0.6)',
+            boxShadow: `var(--shadow-modal), 0 20px 44px -24px rgba(${INK},.34), inset 0 1px 0 rgba(255,255,255,.75)`,
             zIndex: 9999,
             padding: '14px 14px 10px',
           }}
@@ -304,7 +309,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
 
           <div
             className="flex items-center justify-center"
-            style={{ background: '#F5F7FA', borderRadius: 12, border: '1px solid #E0E6ED', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '4px 8px' }}
+            style={{ background: '#FCFBF7', borderRadius: 12, border: `1px solid rgba(${INK},.08)`, boxShadow: `inset 0 1px 2px rgba(${INK},.04)`, padding: '4px 8px' }}
           >
             {isTime ? (
               <>
@@ -314,7 +319,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
                   onSelect={(h) => setDraft((x) => ({ ...x, h }))}
                   padZero
                 />
-                <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>:</span>
+                <span className="text-[15px] font-semibold mx-0.5" style={{ color: `rgba(${GOLD},.5)`, fontVariantNumeric: 'tabular-nums' }}>:</span>
                 <WheelColumn
                   values={minutes}
                   selected={draft.min}
@@ -330,7 +335,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
                   selected={draft.y}
                   onSelect={(y) => setDraft((d) => normalizeDraft({ ...d, y, d: Math.min(d.d, daysInMonth(y, d.m)) }))}
                 />
-                <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>/</span>
+                <span className="text-[15px] font-semibold mx-0.5" style={{ color: `rgba(${GOLD},.5)`, fontVariantNumeric: 'tabular-nums' }}>/</span>
                 <WheelColumn
                   values={months}
                   selected={draft.m}
@@ -338,7 +343,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
                   padZero
                   narrow
                 />
-                <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>/</span>
+                <span className="text-[15px] font-semibold mx-0.5" style={{ color: `rgba(${GOLD},.5)`, fontVariantNumeric: 'tabular-nums' }}>/</span>
                 <WheelColumn
                   values={days}
                   selected={draft.d}
@@ -349,7 +354,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
 
                 {!isDate && (
                   <>
-                    <span className="text-[15px] font-semibold mx-1" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>·</span>
+                    <span className="text-[15px] font-semibold mx-1" style={{ color: `rgba(${GOLD},.5)`, fontVariantNumeric: 'tabular-nums' }}>·</span>
                     <WheelColumn
                       values={hours}
                       selected={draft.h}
@@ -357,7 +362,7 @@ export default function DateTimePicker({ value, onChange, mode = 'datetime', wid
                       padZero
                       narrow
                     />
-                    <span className="text-[15px] font-semibold mx-0.5" style={{ color: 'rgba(15,23,42,0.18)', fontVariantNumeric: 'tabular-nums' }}>:</span>
+                    <span className="text-[15px] font-semibold mx-0.5" style={{ color: `rgba(${GOLD},.5)`, fontVariantNumeric: 'tabular-nums' }}>:</span>
                     <WheelColumn
                       values={minutes}
                       selected={draft.min}
