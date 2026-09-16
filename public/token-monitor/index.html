@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Token Monitor · 本机 AI 用量看板 — Voyra</title>
+<meta name="description" content="Token Monitor 扫描本机 9 类 AI 编程工具（Claude Code、Codex、ZCode、OpenCode 等）的 Token 消耗与成本，DeepSeek 风格看板，缓存命中率、模型单价与对话级明细一目了然。Windows 安装版或免安装便携版，内置自动更新。">
+<meta name="theme-color" content="#0A0C11">
+<link rel="icon" href="/token-monitor/favicon.png">
+<style>
+:root{
+  --bg:#0A0C11; --panel:#12151C; --line:#232833;
+  --txt:#E9EBF2; --sub:#8B93A7; --dim:#5E6678;
+  --blue:#4D6BFE; --purple:#8E7CFF; --cyan:#5DC3F0; --green:#37B48F;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);overflow-x:hidden;font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{width:min(1120px,92vw);margin:0 auto}
+
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg-glow{position:absolute;border-radius:50%;filter:blur(90px)}
+.bg-glow.g1{width:720px;height:720px;top:-260px;left:-140px;background:radial-gradient(circle,rgba(77,107,254,.55),transparent 68%);animation:breathe 9s ease-in-out infinite}
+.bg-glow.g2{width:640px;height:640px;top:22%;right:-220px;background:radial-gradient(circle,rgba(142,124,255,.42),transparent 68%);animation:breathe 11s ease-in-out infinite reverse}
+.bg-glow.g3{width:560px;height:560px;bottom:-180px;left:38%;background:radial-gradient(circle,rgba(93,195,240,.3),transparent 70%);animation:breathe 13s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1) translate(0,0);opacity:.42}50%{transform:scale(1.14) translate(18px,-14px);opacity:.62}}
+.bg-grid{position:absolute;inset:-40%;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,#000 30%,transparent 78%);mask-image:radial-gradient(ellipse 70% 60% at 50% 30%,#000 30%,transparent 78%);animation:drift 26s linear infinite}
+@keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-56px,-56px,0)}}
+
+.topnav{position:sticky;top:0;z-index:20;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);background:rgba(10,12,17,.72);border-bottom:1px solid rgba(255,255,255,.06)}
+.topnav .wrap{display:flex;align-items:center;gap:16px;height:62px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:-.01em}
+.brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(77,107,254,.4)}
+.brand .logo svg{width:17px;height:17px}
+.topnav .grow{flex:1}
+.navlink{color:var(--sub);font-size:13.5px;display:inline-flex;align-items:center;gap:6px;transition:color .25s}
+.navlink:hover{color:var(--txt)}
+.navlink svg{width:15px;height:15px}
+.pill{font-size:12px;color:var(--cyan);border:1px solid rgba(93,195,240,.35);background:rgba(93,195,240,.08);padding:4px 11px;border-radius:999px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.hero{position:relative;z-index:1;padding:92px 0 40px;text-align:center}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);border:1px solid var(--line);background:rgba(255,255,255,.03);padding:6px 14px;border-radius:999px}
+.badge i{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);animation:pulse 2.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+.hero h1{margin:26px 0 0;font-size:clamp(38px,6.4vw,68px);line-height:1.06;letter-spacing:-.035em;font-weight:700}
+.hero h1 em{font-style:normal;background:linear-gradient(100deg,var(--blue),var(--purple) 42%,var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{margin:22px auto 0;max-width:660px;color:var(--sub);font-size:16.5px}
+.cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:36px 0 0}
+.btn{position:relative;display:inline-flex;align-items:center;gap:10px;padding:14px 26px;border-radius:12px;font-size:14.5px;font-weight:600;border:1px solid transparent;cursor:pointer;overflow:hidden;transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s,border-color .28s}
+.btn svg{width:17px;height:17px}
+.btn.primary{color:#fff;background:linear-gradient(120deg,var(--blue),var(--purple));box-shadow:0 14px 36px -12px rgba(77,107,254,.75)}
+.btn.primary:hover{transform:translateY(-3px);box-shadow:0 20px 44px -12px rgba(124,116,255,.85)}
+.btn.ghost{color:var(--txt);background:rgba(255,255,255,.04);border-color:var(--line)}
+.btn.ghost:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.07)}
+.btn .shine{position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.34) 50%,transparent 65%);transform:translateX(-140%);animation:shine 3.6s ease-in-out infinite}
+@keyframes shine{0%{transform:translateX(-140%)}55%,100%{transform:translateX(160%)}}
+.hero .meta{margin-top:16px;font-size:13px;color:var(--dim)}
+.hero .meta b{color:var(--sub);font-weight:600;font-variant-numeric:tabular-nums}
+.hero .meta span{opacity:.4;margin:0 8px}
+
+.preview{position:relative;margin:56px auto 0;width:min(940px,92vw);border-radius:20px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg,rgba(23,27,36,.92),rgba(14,17,23,.92));padding:20px;box-shadow:0 40px 90px -40px rgba(0,0,0,.9);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.preview::after{content:"";position:absolute;inset:0;border-radius:20px;background:radial-gradient(600px 220px at var(--mx,50%) 0%,rgba(77,107,254,.16),transparent 70%);pointer-events:none;transition:background .3s}
+.pv-top{display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,.06);margin-bottom:16px}
+.pv-dots{display:flex;gap:6px}
+.pv-dots i{width:9px;height:9px;border-radius:50%;background:#2A3040}
+.pv-dots i:first-child{background:#3B4256}
+.pv-title{margin-left:6px;font-size:12.5px;color:var(--sub)}
+.pv-title b{color:var(--txt);font-weight:600}
+.pv-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.pv-kpi{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:13px 14px;text-align:left}
+.pv-kpi span{display:block;font-size:11px;color:var(--dim);letter-spacing:.05em}
+.pv-kpi b{display:block;margin-top:5px;font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pv-kpi em{font-size:11px;font-style:normal;color:var(--cyan)}
+.pv-chart{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:16px}
+.pv-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:3px;height:100%}
+.pv-col i{display:block;border-radius:3px;transform-origin:bottom;animation:grow .9s cubic-bezier(.22,1,.36,1) backwards}
+.pv-col i:nth-child(1){background:linear-gradient(180deg,var(--purple),#6C5CE7)}
+.pv-col i:nth-child(2){background:linear-gradient(180deg,var(--blue),#3B55D9)}
+.pv-col i:nth-child(3){background:linear-gradient(180deg,var(--cyan),#2E9BC7)}
+.pv-col i:nth-child(4){background:linear-gradient(180deg,var(--green),#25876A)}
+@keyframes grow{from{transform:scaleY(.05);opacity:0}to{transform:scaleY(1);opacity:1}}
+.pv-rows{margin-top:16px;display:grid;gap:9px}
+.pv-row{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:11px;padding:10px 13px;transition:border-color .3s,transform .3s,background .3s}
+.pv-row:hover{border-color:rgba(77,107,254,.5);transform:translateX(5px);background:rgba(77,107,254,.06)}
+.pv-row .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pv-row .ic svg{width:15px;height:15px}
+.pv-row .nm{font-size:13px;font-weight:600}
+.pv-row .sub{font-size:11px;color:var(--dim)}
+.pv-row .val{margin-left:auto;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.pv-row .track{width:78px;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;flex-shrink:0}
+.pv-row .track i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--purple))}
+
+section.block{position:relative;z-index:1;padding:70px 0}
+.sec-head{text-align:center;margin-bottom:44px}
+.sec-head .tag{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue)}
+.sec-head h2{margin-top:12px;font-size:clamp(26px,3.6vw,38px);letter-spacing:-.03em;font-weight:700}
+.sec-head p{margin:12px auto 0;max-width:640px;color:var(--sub)}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.stat{background:linear-gradient(180deg,rgba(23,27,36,.8),rgba(14,17,23,.8));border:1px solid var(--line);border-radius:16px;padding:24px 22px;text-align:center;position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(77,107,254,.8),transparent)}
+.stat b{display:block;font-size:clamp(26px,3.4vw,36px);font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums;background:linear-gradient(120deg,#fff,#B9C2DA);-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat span{display:block;margin-top:8px;font-size:13px;color:var(--sub)}
+
+.features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.feat{position:relative;background:linear-gradient(180deg,rgba(23,27,36,.72),rgba(14,17,23,.72));border:1px solid var(--line);border-radius:16px;padding:24px 22px;overflow:hidden;transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .35s}
+.feat:hover{transform:translateY(-6px);border-color:rgba(77,107,254,.45)}
+.feat::after{content:"";position:absolute;inset:0;background:radial-gradient(320px 140px at var(--mx,50%) var(--my,0%),rgba(77,107,254,.16),transparent 70%);opacity:0;transition:opacity .35s;pointer-events:none}
+.feat:hover::after{opacity:1}
+.feat .fi{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(77,107,254,.12);border:1px solid rgba(77,107,254,.3);color:var(--cyan)}
+.feat .fi svg{width:20px;height:20px}
+.feat h3{margin-top:16px;font-size:16.5px;font-weight:600;letter-spacing:-.01em}
+.feat p{margin-top:9px;color:var(--sub);font-size:13.5px}
+
+.sources{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:12px}
+.src{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:16px 8px;text-align:center;transition:transform .3s,border-color .3s,background .3s}
+.src:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.06)}
+.src svg{width:24px;height:24px;display:block;margin:0 auto}
+.src span{display:block;margin-top:10px;font-size:11px;color:var(--sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;counter-reset:step}
+.step{position:relative;background:linear-gradient(180deg,rgba(23,27,36,.6),rgba(14,17,23,.6));border:1px solid var(--line);border-radius:16px;padding:26px 22px 22px}
+.step::before{counter-increment:step;content:"0" counter(step);position:absolute;top:18px;right:22px;font-size:30px;font-weight:800;color:rgba(255,255,255,.08);letter-spacing:-.04em}
+.step h3{font-size:16px;font-weight:600}
+.step p{margin-top:9px;color:var(--sub);font-size:13.5px}
+.step code{display:inline-block;margin-top:12px;font:12.5px/1.6 ui-monospace,Consolas,monospace;color:var(--cyan);background:rgba(93,195,240,.08);border:1px solid rgba(93,195,240,.2);border-radius:7px;padding:4px 9px}
+
+.dl-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:36px}
+.dl-card{display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(23,27,36,.85),rgba(14,17,23,.85));border:1px solid var(--line);border-radius:18px;padding:26px 24px;transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .35s,box-shadow .35s}
+.dl-card:hover{transform:translateY(-6px);border-color:rgba(77,107,254,.5);box-shadow:0 30px 60px -30px rgba(77,107,254,.5)}
+.dl-card.reco{border-color:rgba(77,107,254,.55);box-shadow:0 0 0 1px rgba(77,107,254,.25) inset}
+.dl-card .top{display:flex;align-items:center;gap:10px}
+.dl-card .top svg{width:19px;height:19px;color:var(--cyan)}
+.dl-card h3{font-size:16.5px;font-weight:600}
+.dl-card .reco-tag{margin-left:auto;font-size:11px;color:var(--blue);border:1px solid rgba(77,107,254,.45);background:rgba(77,107,254,.1);border-radius:999px;padding:3px 10px}
+.dl-card p{margin:14px 0 18px;color:var(--sub);font-size:13.5px;flex:1}
+.dl-meta{font-size:12.5px;color:var(--dim);margin-bottom:16px;font-variant-numeric:tabular-nums}
+.dl-meta b{color:var(--txt);font-weight:600}
+.dl-btn{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 18px;border-radius:11px;font-size:14px;font-weight:600;transition:transform .25s,background .25s,border-color .25s}
+.dl-btn svg{width:16px;height:16px}
+.dl-btn.p{color:#fff;background:linear-gradient(120deg,var(--blue),var(--purple))}
+.dl-btn.p:hover{transform:translateY(-2px)}
+.dl-btn.s{color:var(--txt);background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.dl-btn.s:hover{background:rgba(255,255,255,.09);transform:translateY(-2px)}
+.mirror{margin-top:34px;text-align:center;font-size:13px;color:var(--dim)}
+.mirror .sw{display:inline-flex;gap:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:11px;padding:5px;margin-top:14px}
+.mirror .sw button{border:0;background:transparent;color:var(--sub);font-size:12.5px;padding:7px 15px;border-radius:8px;cursor:pointer;transition:background .25s,color .25s;font-family:inherit}
+.mirror .sw button.on{background:rgba(77,107,254,.18);color:var(--txt)}
+.tip{margin-top:20px;font-size:12.5px;color:var(--dim);line-height:1.9}
+.tip b{color:var(--sub);font-weight:600}
+
+footer{position:relative;z-index:1;border-top:1px solid rgba(255,255,255,.06);padding:34px 0;color:var(--dim);font-size:13px}
+footer .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+footer .grow{flex:1}
+footer a{color:var(--sub);transition:color .25s}
+footer a:hover{color:var(--txt)}
+
+/* reveal 动效：仅在 JS 正常时启用隐藏态（html.anim），避免脚本异常导致内容不可见 */
+html.anim [data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);transition-delay:var(--d,0s)}
+html.anim [data-reveal].in{opacity:1;transform:none}
+html.anim [data-roll]{opacity:0;transform:translateY(46px) rotateX(6deg);transition:opacity .95s cubic-bezier(.22,1,.36,1),transform .95s cubic-bezier(.22,1,.36,1);transition-delay:var(--d,0s)}
+html.anim [data-roll].in{opacity:1;transform:none}
+
+@media(max-width:1000px){
+  .sources{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .features,.how,.dl-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pv-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:620px){
+  .hero{padding:64px 0 32px}
+  .sources{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .cta{flex-direction:column}
+  .btn{justify-content:center}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i class="bg-glow g1"></i><i class="bg-glow g2"></i><i class="bg-glow g3"></i><i class="bg-grid"></i></div>
+
+<nav class="topnav">
+  <div class="wrap">
+    <a class="brand" href="/"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17.5V11M8.5 17.5V5M14 17.5L17 9M20.5 17.5V13"/></svg></span>Token Monitor</a>
+    <span class="grow"></span>
+    <span class="pill" id="ver-pill">v1.0.5</span>
+    <a class="navlink" href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.55v-2c-3.2.7-3.88-1.4-3.88-1.4-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.12 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.26 5.69.41.36.78 1.06.78 2.14v3.17c0 .3.2.66.8.55A11.5 11.5 0 0 0 23.5 12A11.5 11.5 0 0 0 12 .5z"/></svg>GitHub</a>
+    <a class="navlink" href="/">← 返回 Voyra</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="badge"><i></i>Windows 10 / 11 · 免费 · 数据留在本机</span>
+    <h1>看清每一枚 Token<br><em>究竟花在哪里</em></h1>
+    <p class="lead">一条命令扫出 Claude Code、Codex、ZCode、OpenCode 等 9 类 AI 编程工具的消耗与成本。缓存命中率、模型单价、对话级明细，全部落在一块深色看板上。</p>
+    <div class="cta">
+      <a class="btn primary" id="cta-setup" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener"><span class="shine"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>下载安装版 <span id="ver-btn">v1.0.5</span></a>
+      <a class="btn ghost" id="cta-portable" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M2 8h20l-2-4H4L2 8zM10 12h4"/></svg>便携版（免安装）</a>
+    </div>
+    <p class="meta">安装包 <b id="size-setup">约 18 MB</b><span>·</span>便携包 <b id="size-portable">约 16 MB</b><span>·</span>内置自动更新<span>·</span>无需注册</p>
+
+    <div class="preview" id="preview">
+      <div class="pv-top"><span class="pv-dots"><i></i><i></i><i></i></span><span class="pv-title">Token Monitor · <b>用量总览</b></span></div>
+      <div class="pv-kpis">
+        <div class="pv-kpi"><span>消耗金额</span><b>¥9,336</b></div>
+        <div class="pv-kpi"><span>API 请求</span><b>10,870</b></div>
+        <div class="pv-kpi"><span>Tokens</span><b>3.05 B</b><em>缓存命中 90.5%</em></div>
+        <div class="pv-kpi"><span>数据源</span><b>9 类</b></div>
+      </div>
+      <div class="pv-chart" id="pvChart"></div>
+      <div class="pv-rows" id="pvRows"></div>
+    </div>
+  </div>
+</header>
+
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="tag">By the numbers</span>
+      <h2>它已经统计出的真实用量</h2>
+      <p>下面每一个数字都来自本机 9 类工具的日志扫描，不是估算演示。</p>
+    </div>
+    <div class="stats" id="stats">
+      <div class="stat" data-roll><b data-count="3051996445" data-format="tok">0</b><span>累计 Tokens</span></div>
+      <div class="stat" data-roll style="--d:.08s"><b data-count="9" data-format="int">0</b><span>接入的数据源</span></div>
+      <div class="stat" data-roll style="--d:.16s"><b data-count="90.5" data-format="pct">0</b><span>缓存命中率</span></div>
+      <div class="stat" data-roll style="--d:.24s"><b data-count="9336" data-format="cny">0</b><span>估算成本（CNY）</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="tag">Features</span>
+      <h2>六件事，做透</h2>
+      <p>从扫描、计价到看板，每一环都在本机完成，不上传任何对话内容。</p>
+    </div>
+    <div class="features">
+      <article class="feat" data-roll><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 5v4h4"/><path d="M12 7v5l3 2"/></svg></span><h3>9 类工具全扫</h3><p>Claude Code、Codex、ZCode、OpenCode、Hermes、MHAgent、Agnes、OpenClaw、DSH，自动发现日志位置。</p></article>
+      <article class="feat" data-roll style="--d:.06s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span><h3>按真实单价计价</h3><p>内置 1.2 万条模型价格，未收录的模型单独标注「价格未知」，绝不假装算得出。</p></article>
+      <article class="feat" data-roll style="--d:.12s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 15l3-4 3 3 4-6"/></svg></span><h3>缓存命中率</h3><p>区分未命中输入、缓存写入、缓存命中与输出四类 token，一眼看出省钱空间。</p></article>
+      <article class="feat" data-roll style="--d:.18s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M4 12h16M4 18h7"/><circle cx="18" cy="6" r="2"/><circle cx="14" cy="18" r="2"/></svg></span><h3>Agent 排行与下钻</h3><p>按消耗量排名，点开任一 Agent 即可看到它下面每个模型用了多少、请求了几次。</p></article>
+      <article class="feat" data-roll style="--d:.24s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 10h.01M13 10h.01M17 10h.01"/></svg></span><h3>对话级明细</h3><p>把鼠标停在柱状图上，就能看到那一天的消耗分别来自哪些对话。</p></article>
+      <article class="feat" data-roll style="--d:.3s"><span class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg></span><h3>装完就不用管</h3><p>内置更新器，发现新版本一键下载替换重启；安装版与便携版都支持。</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="block" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="tag">Sources</span>
+      <h2>支持的数据源</h2>
+      <p>软件启动即自动扫描，无需手动配置路径。</p>
+    </div>
+    <div class="sources" id="sources"></div>
+  </div>
+</section>
+
+<section class="block" style="padding-top:0">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="tag">How it works</span>
+      <h2>三步，全过程在本机</h2>
+    </div>
+    <div class="how">
+      <div class="step" data-roll><h3>扫描日志</h3><p>遍历各工具的本地会话日志，按 message id 去重、按会话累计值取终态，避免重复计数。</p><code>9 类数据源</code></div>
+      <div class="step" data-roll style="--d:.08s"><h3>换算成本</h3><p>用内置价格库逐条计价，缓存读写分别按各自单价计算，未收录的模型单独标注。</p><code>12,009 条价格</code></div>
+      <div class="step" data-roll style="--d:.16s"><h3>打开看板</h3><p>本地服务启动后自动打开浏览器，按时间、数据源、模型自由筛选，也可导出 CSV。</p><code>http://127.0.0.1:8420</code></div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head" data-reveal>
+      <span class="tag">Download</span>
+      <h2>选择你的安装方式</h2>
+      <p>三个文件指向同一个版本，按需取用。装完之后，后续更新交给软件自己。</p>
+    </div>
+    <div class="dl-grid">
+      <div class="dl-card reco" data-roll>
+        <div class="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M2 8h20l-2-4H4L2 8z"/></svg><h3>安装版</h3><span class="reco-tag">推荐</span></div>
+        <p>一键安装到本机用户目录，自动创建开始菜单与桌面快捷方式，卸载可从「应用和功能」完成。</p>
+        <div class="dl-meta">文件名 <b id="fn-setup">TokenMonitor-setup.exe</b> · 体积 <b id="mb-setup">18 MB</b> · 版本 <b id="v-setup">v1.0.5</b></div>
+        <a class="dl-btn p" id="dl-setup" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>下载安装包</a>
+      </div>
+      <div class="dl-card" data-roll style="--d:.08s">
+        <div class="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18"/></svg><h3>便携版</h3></div>
+        <p>解压即用，不写注册表、不占系统目录，适合放在 U 盘或临时电脑上使用，同样支持自动更新。</p>
+        <div class="dl-meta">文件名 <b id="fn-portable">TokenMonitor-portable.zip</b> · 体积 <b id="mb-portable">16 MB</b> · 版本 <b id="v-portable">v1.0.5</b></div>
+        <a class="dl-btn s" id="dl-portable" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>下载便携包</a>
+      </div>
+      <div class="dl-card" data-roll style="--d:.16s">
+        <div class="top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg><h3>单文件版</h3></div>
+        <p>只想要一个 exe 时用它。这个文件同时也是更新器下载的对象，双击即可运行。</p>
+        <div class="dl-meta">文件名 <b>TokenMonitor.exe</b> · 体积 <b id="mb-raw">16 MB</b> · 版本 <b id="v-raw">v1.0.5</b></div>
+        <a class="dl-btn s" id="dl-raw" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>下载单文件</a>
+      </div>
+    </div>
+    <div class="mirror">
+      下载源
+      <div class="sw" id="mirrorSw">
+        <button type="button" data-m="0" class="on">国内镜像</button>
+        <button type="button" data-m="1">备用镜像</button>
+        <button type="button" data-m="2">GitHub 官方</button>
+      </div>
+      <p class="tip">如果下载速度慢，可以切换下载源；<b>所有链接都指向同一个官方版本</b>，请放心使用。<br>首次运行若被 SmartScreen 提示，选择「更多信息 → 仍要运行」即可。</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 <a href="/">Voyra</a> · Token Monitor</span>
+    <span class="grow"></span>
+    <a href="https://github.com/liixnglinb/token-monitor/releases" target="_blank" rel="noopener">全部版本</a>
+    <a href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener">源码仓库</a>
+    <span id="foot-ver">v1.0.5 · 9 类数据源</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict';
+  var REPO = 'liixnglinb/token-monitor';
+  var MIRRORS = ['https://gh-proxy.com/', 'https://ghproxy.net/', ''];
+  var FALLBACK = 'https://github.com/' + REPO + '/releases/latest';
+  var links = { setup: null, portable: null, raw: null };
+  var mirrorIdx = 0;
+
+  /* ------- 数据源图标（与软件内一致的 9 枚） ------- */
+  var SRC = [
+    ['claude-code', '#4D6BFE', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2.8v5.4M12 15.8v5.4M2.8 12h5.4M15.8 12h5.4M5.5 5.5l3.8 3.8M14.7 14.7l3.8 3.8M18.5 5.5l-3.8 3.8M9.3 14.7L5.5 18.5"/></svg>'],
+    ['codex', '#8E7CFF', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 2.6l7.6 4.4v8.8L12 20.2l-7.6-4.4V7z"/><path d="M12 8.1l3.8 2.2v4.4L12 16.9l-3.8-2.2v-4.4z"/></svg>'],
+    ['zcode', '#5DC3F0', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 5h12L9 12h9l-9 7"/></svg>'],
+    ['opencode', '#37B48F', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6.5l-5.5 5.5L9 17.5M15 6.5l5.5 5.5L15 17.5"/></svg>'],
+    ['hermes', '#EF9F27', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.6 8.2c3.6-3.2 7.2-3.2 9.4 0 2.2-3.2 5.8-3.2 9.4 0-1.9 6.2-5 10.2-9.4 13.2-4.4-3-7.5-7-9.4-13.2z"/><path d="M12 8.4v9.6"/></svg>'],
+    ['mhagent', '#E24B4A', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.8" y="3.8" width="16.4" height="16.4" rx="3.4"/><path d="M8.6 16.4V8.4l3.4 4.4 3.4-4.4v8"/></svg>'],
+    ['openclaw', '#85B7EB', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21.2c-3.1 0-5.2-1.4-5.2-3.4 0-1.5 1.3-2.4 2.7-2.7M12 21.2c3.1 0 5.2-1.4 5.2-3.4 0-1.5-1.3-2.4-2.7-2.7"/><path d="M7.4 6.4c0-2.1 2-3.6 4.6-3.6s4.6 1.5 4.6 3.6"/><path d="M7.9 11.6V9M12 11.2V8.4M16.1 11.6V9"/></svg>'],
+    ['agnes', '#F09595', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M8.3 16.3l3.7-9.2 3.7 9.2M9.7 13.4h4.6"/></svg>'],
+    ['dsh', '#B4B2A9', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 6.2h7.2M3.6 12h11.4M3.6 17.8h5.6"/><path d="M17.4 5.2l3.4 13.6"/></svg>']
+  ];
+  var box = document.getElementById('sources');
+  SRC.forEach(function(item, i) {
+    var d = document.createElement('div');
+    d.className = 'src';
+    d.setAttribute('data-roll', '');
+    d.style.setProperty('--d', (i * 0.05) + 's');
+    d.innerHTML = '<span style="color:' + item[1] + '">' + item[2] + '</span><span>' + item[0] + '</span>';
+    box.appendChild(d);
+  });
+
+  /* ------- 预览区：柱状图 + Agent 行 ------- */
+  var cols = [[74,52,88,61,43,79,66,91,58,72,84,67],[46,33,55,38,27,49,41,57,36,45,52,42],[28,20,34,24,17,31,26,36,23,28,33,27],[16,12,20,14,10,18,15,21,13,16,19,15]];
+  var chart = document.getElementById('pvChart');
+  cols[0].forEach(function(_, i){
+    var col = document.createElement('div');
+    col.className = 'pv-col';
+    col.innerHTML = cols.map(function(c, ci){
+      return '<i style="height:' + Math.max(c[i] * 0.55, 3) + '%;animation-delay:' + (i * 0.04 + ci * 0.05) + 's"></i>';
+    }).join('');
+    chart.appendChild(col);
+  });
+  var rows = [
+    ['zcode', '1.17 B tokens', '¥8.28', 100, '#4D6BFE', 'Z'],
+    ['claude-code', '696.8 M tokens', '¥12.51', 60, '#8E7CFF', 'C'],
+    ['codex', '572.0 M tokens', '¥1,021.30', 49, '#5DC3F0', 'X']
+  ];
+  var rowsBox = document.getElementById('pvRows');
+  rows.forEach(function(r){
+    var d = document.createElement('div');
+    d.className = 'pv-row';
+    d.innerHTML = '<span class="ic" style="background:' + r[4] + '1F;color:' + r[4] + '">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><text x="12" y="17" text-anchor="middle" font-size="13" stroke="none" fill="currentColor">' + r[5] + '</text></svg></span>'
+      + '<div><div class="nm">' + r[0] + '</div><div class="sub">' + r[2] + '</div></div>'
+      + '<span class="val">' + r[1] + '</span><span class="track"><i style="width:' + r[3] + '%"></i></span>';
+    rowsBox.appendChild(d);
+  });
+
+  /* ------- 滚动 reveal（含 scroll 兜底，避免漏判导致内容隐形） ------- */
+  document.documentElement.classList.add('anim');
+  function showAllBelow(){
+    document.querySelectorAll('[data-reveal]:not(.in),[data-roll]:not(.in)').forEach(function(el){
+      var r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.96 && r.bottom > 0) el.classList.add('in');
+    });
+  }
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+  document.querySelectorAll('[data-reveal],[data-roll]').forEach(function(el){ io.observe(el); });
+  var rafPending = false;
+  window.addEventListener('scroll', function(){
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function(){ rafPending = false; showAllBelow(); });
+  }, { passive: true });
+  window.addEventListener('load', function(){ setTimeout(showAllBelow, 600); });
+  setTimeout(showAllBelow, 1600);
+
+  /* ------- 数字滚动 ------- */
+  function fmt(n, kind){
+    if (kind === 'tok'){
+      if (n >= 1e9) return (n / 1e9).toFixed(2) + ' B';
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + ' M';
+      return Math.round(n).toLocaleString('en-US');
+    }
+    if (kind === 'pct') return n.toFixed(1) + '%';
+    if (kind === 'cny') return '¥' + Math.round(n).toLocaleString('en-US');
+    return Math.round(n).toLocaleString('en-US');
+  }
+  var counters = document.querySelectorAll('[data-count]');
+  var io2 = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if (!e.isIntersecting) return;
+      var el = e.target, target = parseFloat(el.getAttribute('data-count'));
+      var kind = el.getAttribute('data-format'), t0 = null, dur = 1500;
+      function step(ts){
+        if (t0 === null) t0 = ts;
+        var p = Math.min((ts - t0) / dur, 1);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = fmt(target * eased, kind);
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = fmt(target, kind);
+      }
+      requestAnimationFrame(step);
+      io2.unobserve(el);
+    });
+  }, { threshold: 0.4 });
+  counters.forEach(function(el){ io2.observe(el); });
+
+  /* ------- 预览区光斑跟随 ------- */
+  var pv = document.getElementById('preview');
+  if (pv){
+    pv.addEventListener('pointermove', function(e){
+      var r = pv.getBoundingClientRect();
+      pv.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+    });
+  }
+  document.querySelectorAll('.feat').forEach(function(card){
+    card.addEventListener('pointermove', function(e){
+      var r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+
+  /* ------- 拉取最新版本，动态改写下载链接 ------- */
+  function mb(n){ return (n / 1048576).toFixed(n / 1048576 >= 10 ? 0 : 1) + ' MB'; }
+  function tag(id, txt){ var el = document.getElementById(id); if (el && txt) el.textContent = txt; }
+  function applyMirror(){
+    var pre = MIRRORS[mirrorIdx];
+    document.querySelectorAll('#mirrorSw button').forEach(function(b, i){
+      b.classList.toggle('on', i === mirrorIdx);
+    });
+    ['setup','portable','raw'].forEach(function(k){
+      var a = document.getElementById('dl-' + k);
+      if (!a) return;
+      var url = links[k] || FALLBACK;
+      if (pre && links[k]) url = pre + links[k];
+      a.href = url;
+    });
+  }
+  document.getElementById('mirrorSw').addEventListener('click', function(e){
+    var b = e.target.closest('button[data-m]');
+    if (!b) return;
+    mirrorIdx = parseInt(b.getAttribute('data-m'), 10) || 0;
+    applyMirror();
+  });
+
+  fetch('https://api.github.com/repos/' + REPO + '/releases/latest', {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  }).then(function(r){ if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+  .then(function(d){
+    var ver = String(d.tag_name || '').replace(/^v/, '');
+    if (!ver) return;
+    var assets = d.assets || [];
+    function pick(kw, exact){
+      for (var i = 0; i < assets.length; i++){
+        var n = (assets[i].name || '').toLowerCase();
+        if (exact ? n === kw : n.indexOf(kw) >= 0) return assets[i];
+      }
+      return null;
+    }
+    var setup = pick('setup'), portable = pick('portable'), raw = pick('tokenmonitor.exe', true);
+    if (setup){ links.setup = setup.browser_download_url;
+      tag('fn-setup', setup.name); tag('mb-setup', mb(setup.size)); tag('size-setup', '约 ' + mb(setup.size)); }
+    if (portable){ links.portable = portable.browser_download_url;
+      tag('fn-portable', portable.name); tag('mb-portable', mb(portable.size)); tag('size-portable', '约 ' + mb(portable.size)); }
+    if (raw){ links.raw = raw.browser_download_url; tag('mb-raw', mb(raw.size)); }
+    tag('ver-pill', 'v' + ver);
+    tag('ver-btn', 'v' + ver);
+    tag('v-setup', 'v' + ver);
+    tag('v-portable', 'v' + ver);
+    tag('v-raw', 'v' + ver);
+    tag('foot-ver', 'v' + ver + ' · 9 类数据源');
+    document.title = 'Token Monitor v' + ver + ' · 本机 AI 用量看板 — Voyra';
+    applyMirror();
+  }).catch(function(){ /* 离线或限流：保留写死的兜底值，链接指向 Releases 页 */ });
+
+  applyMirror();
+})();
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Film, Github,
+  Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Film, Github,
   Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Receipt, Shapes,
   NotebookPen, Route, Sparkles, Star,
 } from 'lucide-react';
@@ -28,6 +28,7 @@ const APPS = [
   { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通、位置、二维码、拍照四种签到类型，内置智能防风控，手机可远程查看。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
   { to: '/local-toolbox/', external: false, no: '03', name: '磁盘清理助手', desc: 'Windows 磁盘清理专用工具：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
+  { to: '/token-monitor/', external: false, no: '05', name: 'Token Monitor', desc: '本机 AI 编程工具用量看板：一条命令扫出 9 类 Agent 的 Token 消耗与成本，缓存命中率、模型单价、对话级明细全都看得见。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'tokenmonitor' },
 ];
 
 const MATHMODEL_SKILL = {
@@ -188,7 +189,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3 };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3 };
 
 /* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
    天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
@@ -319,7 +320,7 @@ function FeatureArt({ type }) {
     const txns = [['美团外卖', '餐饮-外卖', '−35.80', '#FFC300', '美'], ['瑞幸咖啡', '餐饮-咖啡', '−15.90', '#1F3B9E', '幸'], ['工资到账', '金融-工资', '+8500.0', '#EAB308', '招']];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-bt-art">
       <style>{`
-        .vr-bt-art{background:#0B0C0E;color:#fff}
+        .vr-bt-art{background:linear-gradient(160deg,#E9F7F0,#F7F8FA 60%);color:#14161A}
         .vr-bt-art .vr-bt-screen{background:#F7F8FA;color:#14161A;border-radius:14px;padding:14px 12px;display:flex;flex-direction:column;gap:8px;margin-top:10px}
         .vr-bt-art .vr-bt-big{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
         .vr-bt-art .vr-bt-bar{height:5px;background:#E7E9EC;border-radius:3px;overflow:hidden;margin-top:6px}
@@ -331,9 +332,10 @@ function FeatureArt({ type }) {
         .vr-bt-art .vr-bt-sub{font-size:10px;color:#7A7F87;line-height:1.3}
         .vr-bt-art .vr-bt-amt{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
         .vr-bt-art .vr-bt-amt.pos{color:#0BA360}
-        .vr-bt-art .vr-bt-auto{font-size:10px;color:#0BA600;color:#0BA360;font-weight:700}
+        .vr-bt-art .vr-bt-auto{font-size:10px;color:#0BA360;font-weight:700;display:flex;align-items:center;gap:5px}
+        .vr-bt-art .vr-bt-auto img{width:15px;height:15px;border-radius:4px;box-shadow:0 1px 3px rgba(11,163,96,.35)}
       `}</style>
-      <div className="vr-preview-top" style={{ color: '#fff' }}><Receipt size={15} /><span>自动记账</span><b>本月 ¥3,420 · 23 笔</b></div>
+      <div className="vr-preview-top"><Receipt size={15} /><span>自动记账</span><b>本月 ¥3,420 · 23 笔</b></div>
       <div className="vr-bt-screen">
         <div>
           <div style={{ fontSize: 11, color: '#7A7F87' }}>本月支出 · 预算 68%</div>
@@ -347,8 +349,54 @@ function FeatureArt({ type }) {
             <span className={`vr-bt-amt${t[2].startsWith('+') ? ' pos' : ''}`}>{t[2]}</span>
           </div>
         ))}
-        <div className="vr-bt-auto">✓ 付款后 2 秒自动入库 · 零手动</div>
+        <div className="vr-bt-auto"><img src="/billtrace/icon-192.png" alt="" />付款后 2 秒自动入库 · 零手动</div>
       </div>
+    </div>;
+  }
+
+  if (type === 'tokenmonitor') {
+    const cols = [[74, 52, 88, 61, 43, 79, 66], [46, 33, 55, 38, 27, 49, 41], [28, 20, 34, 24, 17, 31, 26], [16, 12, 20, 14, 10, 18, 15]];
+    const svc = [['zcode', '1.17B', '#4D6BFE', 'Z'], ['claude-code', '697M', '#8E7CFF', 'C'], ['codex', '572M', '#5DC3F0', 'X']];
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-tm-art">
+      <style>{`
+        .vr-tm-art{background:#0D0F14;color:#E8EAF0}
+        .vr-tm-art .vr-tm-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+        .vr-tm-art .vr-tm-kpi>div{background:#161A22;border:1px solid #232833;border-radius:10px;padding:9px 10px;transition:border-color .3s}
+        .vr-tm-art .vr-tm-kpi>div.is-on{border-color:rgba(77,107,254,.7)}
+        .vr-tm-art .vr-tm-kpi span{display:block;font-size:9px;color:#8891A6;letter-spacing:.06em;text-transform:uppercase}
+        .vr-tm-art .vr-tm-kpi b{display:block;font-size:15px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
+        .vr-tm-art .vr-tm-kpi em{font-size:9px;font-style:normal;color:#5DC3F0}
+        .vr-tm-art .vr-tm-chart{display:flex;align-items:flex-end;gap:5px;height:58px;margin:12px 0 10px}
+        .vr-tm-art .vr-tm-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;height:100%}
+        .vr-tm-art .vr-tm-col i{display:block;border-radius:2px;opacity:.32;transition:opacity .35s ease,transform .35s ease}
+        .vr-tm-art .vr-tm-col i:nth-child(1){background:#8E7CFF}
+        .vr-tm-art .vr-tm-col i:nth-child(2){background:#4D6BFE}
+        .vr-tm-art .vr-tm-col i:nth-child(3){background:#5DC3F0}
+        .vr-tm-art .vr-tm-col i:nth-child(4){background:#37B48F}
+        .vr-tm-art .vr-tm-col.is-on i{opacity:1;transform:scaleX(1.12)}
+        .vr-tm-art .vr-tm-list{display:flex;flex-direction:column;gap:6px}
+        .vr-tm-art .vr-tm-row{display:flex;align-items:center;gap:9px;background:#161A22;border:1px solid #232833;border-radius:10px;padding:8px 10px;transition:border-color .3s ease,transform .3s ease}
+        .vr-tm-art .vr-tm-row.is-on{border-color:rgba(77,107,254,.75);transform:translateX(4px)}
+        .vr-tm-art .vr-tm-logo{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+        .vr-tm-art .vr-tm-name{font-size:11px;font-weight:700}
+        .vr-tm-art .vr-tm-sub{font-size:9px;color:#8891A6}
+        .vr-tm-art .vr-tm-val{margin-left:auto;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+        .vr-tm-art .vr-tm-track{width:52px;height:4px;border-radius:2px;background:#232833;overflow:hidden;flex-shrink:0}
+        .vr-tm-art .vr-tm-track i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#4D6BFE,#8E7CFF)}
+      `}</style>
+      <div className="vr-preview-top" style={{ color: '#fff' }}><Activity size={15} /><span>用量看板</span><b>9 个数据源 · 自动扫描</b></div>
+      <div className="vr-tm-kpi">
+        <div className={active === 0 ? 'is-on' : ''}><span>Tokens</span><b>3.05B</b><em>缓存命中 90.5%</em></div>
+        <div className={active === 1 ? 'is-on' : ''}><span>请求次数</span><b>10,870</b></div>
+        <div className={active === 2 ? 'is-on' : ''}><span>估算成本</span><b>¥9,336</b></div>
+      </div>
+      <div className="vr-tm-chart">{cols[0].map((_, i) => <div key={i} className={`vr-tm-col${active === i % 3 ? ' is-on' : ''}`}>{cols.map((col, ci) => <i key={ci} style={{ height: `${Math.max(col[i] * 0.5, 3)}%` }} />)}</div>)}</div>
+      <div className="vr-tm-list">{svc.map((row, index) => <div key={row[0]} className={`vr-tm-row${active === index ? ' is-on' : ''}`}>
+        <span className="vr-tm-logo" style={{ background: row[2] }}>{row[3]}</span>
+        <div><div className="vr-tm-name">{row[0]}</div><div className="vr-tm-sub">展开查看模型与对话明细</div></div>
+        <span className="vr-tm-val">{row[1]}</span>
+        <span className="vr-tm-track"><i style={{ width: `${[100, 60, 49][index]}%` }} /></span>
+      </div>)}</div>
     </div>;
   }
 
