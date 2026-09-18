@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>账迹 BillTrace · 付完款，账就自动记好了</title>
 <meta name="description" content="账迹 BillTrace —— Android 自动记账 App：三引擎全自动采集、智能分类、本地加密、零打扰。">
 <link rel="icon" type="image/png" href="/billtrace/favicon.png">
@@ -186,20 +186,64 @@ section{padding:64px 0;scroll-margin-top:78px;content-visibility:auto;contain-in
 .dl-panel .btn-ghost:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.24)}
 .ver-inline{color:#D9FFEC;font-variant-numeric:tabular-nums}
 footer{border-top:1px solid var(--line);margin-top:26px;padding:30px 0 36px;font-size:12.5px;color:var(--muted)}
+.mbar{position:fixed;left:0;right:0;bottom:0;z-index:70;display:none;align-items:center;gap:10px;padding:9px 14px calc(9px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);transform:translateY(115%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.mbar.show{transform:none}
+.mbar img{width:34px;height:34px;border-radius:9px;box-shadow:0 2px 8px rgba(11,163,96,.28)}
+.mbar .mt{font-size:12.5px;font-weight:800;line-height:1.3}
+.mbar .ms{font-size:10.5px;color:var(--muted)}
+.mbar .ms b{color:var(--brand)}
+.mbar .go{margin-left:auto;font-size:13.5px;font-weight:800;color:#fff;background:linear-gradient(135deg,#12C97A,var(--brand));border-radius:999px;padding:11px 20px;box-shadow:0 6px 16px rgba(11,163,96,.34);white-space:nowrap}
+.mbar .go:active{transform:scale(.97)}
 footer .fbar{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 footer a{color:var(--brand);font-weight:600}
 footer .fl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 footer .up{display:inline-flex;align-items:center;gap:6px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:6px 14px;transition:.2s}
 footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translateY(-2px)}
 @media(max-width:860px){
-  .hero{grid-template-columns:1fr;padding:52px 0 44px;text-align:center}
-  .hero .copy{display:flex;flex-direction:column;align-items:center}
-  .floaters{display:none}
-  .grid,.steps{grid-template-columns:1fr}
-  .dl-panel{padding:36px 26px}
+  .hero{display:flex;flex-direction:column;gap:0;padding:26px 0 38px;text-align:center}
+  .hero .copy{display:contents}
+  .copy .kicker{order:1;margin-bottom:14px;font-size:11px;padding:5px 12px}
+  .copy h1{order:2;font-size:31px;letter-spacing:-.8px}
+  .copy .tagline{order:3;font-size:14.5px;margin:12px auto 0;max-width:24em}
+  .phone-wrap{order:4;width:100%;margin:24px 0 22px}
+  .phone-halo{width:100%;height:100%;top:0;left:0}
+  .copy .dl-row{order:5}
+  .copy .hero-meta{order:6;margin-top:16px;justify-content:center}
+  .floaters{inset:0 -6px}
+  .floaters img{width:26px;height:26px;border-radius:8px}
+  .floaters img:nth-child(2),.floaters img:nth-child(4),.floaters img:nth-child(5),.floaters img:nth-child(7),.floaters img:nth-child(9),.floaters img:nth-child(10){display:none}
+  .floaters img:nth-child(1){left:6%!important}
+  .floaters img:nth-child(3){left:3%!important}
+  .floaters img:nth-child(6){left:88%!important}
+  .floaters img:nth-child(8){left:89%!important}
+  section{padding:42px 0}
+  .sec-title{font-size:21px;margin-bottom:20px}
+  .grid{grid-template-columns:1fr 1fr;gap:10px}
+  .feat{padding:14px;border-radius:14px}
+  .feat .ic{width:30px;height:30px;border-radius:9px;margin-bottom:9px}
+  .feat .ic svg{width:15px;height:15px}
+  .feat h3{font-size:13px;margin-bottom:4px}
+  .feat p{font-size:11px;line-height:1.55}
+  .steps{gap:10px}
+  .step{padding:15px 16px;border-radius:14px}
+  .step::before{font-size:22px;top:10px;right:14px}
+  .step h3{font-size:14.5px;margin:4px 0}
+  .step p{font-size:12.5px}
+  .marquee{padding:14px 0}
+  .mq-item{font-size:12px;gap:7px}
+  .mq-item img{width:26px;height:26px;border-radius:7px}
+  .dl-panel{padding:30px 22px;border-radius:20px}
+  .dl-panel h2{font-size:19px;gap:10px}
+  .dl-panel h2 img{width:38px;height:38px;border-radius:10px}
+  .dl-panel .btns{width:100%}
+  .dl-panel .btn{flex:1;justify-content:center;padding:12px 10px}
+  footer{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+  footer .fbar{flex-direction:column;text-align:center;gap:10px}
   nav .links{display:none}
-  .dl-row{flex-direction:column;align-items:center;width:100%}
+  .dl-row{flex-direction:column;align-items:center;width:100%;margin-top:2px}
   .dl-row .btn{width:100%;max-width:340px;justify-content:center}
+  .mbar{display:flex}
+  .aurora span{filter:blur(44px);opacity:.4}
 }
 @media(max-width:560px){
   nav .gh{display:none}
@@ -376,6 +420,12 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
   </div>
 </footer>
 
+<div class="mbar" id="mbar">
+  <img src="/billtrace/icon-192.png" alt="账迹图标">
+  <div><div class="mt">账迹 BillTrace</div><div class="ms">自动记账 · 安装包 <b id="mbarSize">0.5 MB</b></div></div>
+  <a class="go" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">下载 APK</a>
+</div>
+
 <script>
 /* ---------- 动态版本号 ---------- */
 (function(){
@@ -399,7 +449,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
       }
       var a=(d.assets||[]).filter(function(a){return a.name==='BillTrace-debug.apk';})[0];
       var p=document.querySelector('.dl-panel p');
-      if(a){var mb=(a.size/1048576).toFixed(1)+' MB';if(p)p.innerHTML='Android 8.0+ · <span class="ver-inline">'+ver+'</span> · 安装包约 '+mb;var cs=document.getElementById('chipSize');if(cs)cs.textContent=mb;}
+      if(a){var mb=(a.size/1048576).toFixed(1)+' MB';if(p)p.innerHTML='Android 8.0+ · <span class="ver-inline">'+ver+'</span> · 安装包约 '+mb;['chipSize','mbarSize'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=mb;});}
     }catch(e){}
   };
   x.send();
@@ -496,6 +546,12 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     });
   }
   addEventListener('scroll',onScroll,{passive:true});onScroll();
+  var mbar=document.getElementById('mbar'),dlHide=false;
+  if(mbar){
+    function mbUpd(){mbar.classList.toggle('show',window.pageYOffset>430&&!dlHide);}
+    new IntersectionObserver(function(es){es.forEach(function(e){dlHide=e.isIntersecting;mbUpd();});},{threshold:.15}).observe(document.getElementById('download'));
+    addEventListener('scroll',mbUpd,{passive:true});
+  }
   var mio=new IntersectionObserver(function(es){
     es.forEach(function(e){e.target.classList.toggle('paused',!e.isIntersecting);});
   },{threshold:0});
