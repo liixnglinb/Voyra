@@ -821,14 +821,16 @@ export default function ClassSchedule({ stats = null, active = true }) {
           .cs-grid tr > .per { position:sticky; left:0; z-index:3; box-shadow:1px 0 0 rgba(20,24,33,.1); }
           .cs-grid thead th.per { z-index:5; }
           .cs-grid thead th { font-size:12.5px; padding:12px 4px; }
-          .cs-grid .per { font-size:10.5px; padding:10px 4px; }
-          .cs-grid .per b { font-size:12.5px; }
+          .cs-grid .per { font-size:var(--fs-meta); padding:10px 4px; }
+          .cs-grid .per b { font-size:var(--fs-label); }
           .cs-grid tbody td { padding:4px;height:var(--cs-row-h,100px); }
           .cs-cell { padding:7px 6px;border-radius:8px; }
-          .cs-cell .n { font-size:12.5px; }
-          .cs-cell .r,.cs-cell .t { font-size:10.5px; }
-          .cs-cell .w { font-size:10px; }
-          .cs-h h3 { font-size:15.5px; }
+          /* 课程名是课表里真正要读的东西，给到正文级；教室与时间紧随其后 */
+          .cs-cell .n { font-size:var(--fs-body); line-height:1.35; }
+          .cs-cell .r { font-size:var(--fs-meta); padding:3px 6px; }
+          .cs-cell .t { font-size:var(--fs-meta); }
+          .cs-cell .w { font-size:var(--fs-meta); }
+          .cs-h h3 { font-size:var(--fs-lead); }
           /* 收紧间距让今日概览留在同一行，避免行尾出现孤立的分隔点 */
           .cs-today { gap:7px; font-size:12.5px; }
           .cs-today-date { gap:5px; font-size:13.5px; }

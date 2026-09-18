@@ -789,12 +789,42 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
 /* 手机阅读基线：13px 的桌面密度在手机上偏小，正文提到 15px；
    同时给所有可点元素一个拇指友好的下限。首页 .vr-home 有自己的
    显示级字号，单独钉住，不被基线波及。 */
+/* ------------------------------------------------------------
+   尺寸体系（手机）
+   依据：WCAG 2.2 SC 2.5.8 AA 要求可点目标 ≥24×24 CSS px，
+   SC 2.5.5 AAA 要求 ≥44×44；W3C 移动可访问性建议物理尺寸
+   ≥9mm×9mm 且接近下限的目标周围留非活动区；Material 用
+   48dp 目标 + ≥8dp 间距，Apple HIG 用 44pt。
+   这里取 44 为拇指下限、40 为纯图标按钮，并要求相邻控件
+   至少隔 8px，避免“按得大但挤在一起”依旧误触的情况。
+
+   字号阶梯以 15px 正文为锚点递进，目的是消灭站点里
+   遍地的一像素跳水（10.5/11.5/12.5/13.5/14.5/15.5）。
+   ------------------------------------------------------------ */
 :root {
-  --m-body: 15px;
-  --m-meta: 12.5px;
-  --m-micro: 11px;
-  --m-tap: 44px;
-  --m-tap-sm: 40px;
+  /* 字号阶梯 */
+  --fs-micro: 11px;  /* 仅单位后缀、装饰缩略图，不得用于必要信息 */
+  --fs-meta: 12px;   /* 时间戳、来源、辅助说明 */
+  --fs-label: 14px;  /* 控件文字、表单标签、次要正文 */
+  --fs-body: 15px;   /* 正文基准 */
+  --fs-lead: 17px;   /* 摘要、引导语、卡片标题 */
+  --fs-h4: 20px;
+  --fs-h3: 24px;
+  --fs-h2: 30px;
+  --fs-h1: 38px;
+
+  /* 控件高度阶梯 */
+  --ctl-icon: 40px;  /* 纯图标：返回/复制/锁定 */
+  --ctl-md: 44px;    /* chip / tab / 输入框 / 次级按钮 */
+  --ctl-lg: 52px;    /* 主 CTA：下载 / 添加 / 导入 / 提交 */
+  --gap-tap: 8px;    /* 相邻可点控件最小间距 */
+
+  /* 兼容旧变量名 */
+  --m-body: var(--fs-body);
+  --m-meta: var(--fs-label);
+  --m-micro: var(--fs-micro);
+  --m-tap: var(--ctl-md);
+  --m-tap-sm: var(--ctl-icon);
 }
 
 @media (max-width: 767px) {
@@ -826,7 +856,8 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
   }
 
   /* 拇指可点区域下限 */
-  .tool-content :is(button, a[href], [role="button"]) {
+  /* 用 :where() 归零特异性：这只是一道兵底，必须让各页显式的阶梯规则能盖过它 */
+  .tool-content :where(button, a[href], [role="button"]) {
     min-height: var(--m-tap-sm);
   }
 
@@ -852,6 +883,52 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
   .tool-content .shub-panel { padding: 10px; border-radius: 12px; }
   /* 视图切换钮被 portal 进页头，不在 .tool-content 里，只能不限祖先 */
   .shub-mode { min-height: 44px; }
+
+  /* ----------------------------------------------------------
+     阶梯应用层：把各页主信息对齐到上面的字号/控件阶梯。
+     多一层 .tool-content 前缀，以胜过组件自带的同名规则。
+     原则：主信息(课程名、日期、金额、标题)上调一档；
+     辅助信息(时间戳、来源、单位)不低于 --fs-meta。
+     ---------------------------------------------------------- */
+
+  /* 月历：日期数字是主信息 */
+  .tool-content .pl-cell .num { font-size: var(--fs-body); font-weight: 800; }
+  .tool-content .pl-cell .hol,
+  .tool-content .pl-cell .ev,
+  .tool-content .pl-cell .more { font-size: var(--fs-meta); }
+  .tool-content .pl-mbar b { font-size: var(--fs-lead); }
+  .tool-content .pl-label { font-size: var(--fs-label); }
+
+  /* 列表/卡片主标题上调，描述与元信息不低于 --fs-meta */
+  .tool-content :is(.sk-rank-name, .pl-cd-title, .agx-name, .ui-card-name h3) {
+    font-size: var(--fs-lead);
+  }
+  .tool-content :is(.sk-rank-desc, .agx-desc, .pl-cd-quote) {
+    font-size: var(--fs-label);
+  }
+  .tool-content :is(.pl-cd-sub, .pl-cd-meta, .pl-cd-tags, .ui-card-cat, .bc-kpi-label) {
+    font-size: var(--fs-meta);
+  }
+
+  /* 统计数字：看数要比看字重要 */
+  .tool-content .bc-kpi-value { font-size: var(--fs-h3); line-height: 1.15; }
+
+  /* 区块标题 */
+  .tool-content :is(.pl-hw-title, .agx-group-head h3) { font-size: var(--fs-h4); }
+
+  /* 首页 / agents / uikit / mindmap 是全屏页，没有 .tool-content 外壳，
+     所以触控间距与高度在这里单独兜一档；首页标签有自己的显示级尺寸，排除。 */
+  /* 只点具体容器，不用 [role=tab] 广谱选择器——否则会误伤首页卡片里
+     那些装饰性演示标签 */
+  .uikit-page .ui-cats { gap: var(--gap-tap); }
+  .agx-page .agx-nav { gap: var(--gap-tap); }
+  .ui-cat { min-height: var(--ctl-md); font-size: var(--fs-label); }
+  .ui-cat b { font-size: var(--fs-meta); }
+
+  /* 视图切换图标钮：30x26 且零间距，手机上必误触 */
+  .pl-viewtoggle { gap: 4px; }
+  .tool-content .pl-viewtoggle button { width: var(--ctl-icon); height: var(--ctl-icon); }
+  .tool-content .pl-chips { gap: var(--gap-tap); }
   .tool-content [class*="text-[8"], .tool-content [class*="text-[9"],
   .tool-content [class*="text-[10"], .tool-content [class*="text-[11"] {
     font-size: 12.5px !important;

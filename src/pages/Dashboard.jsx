@@ -844,6 +844,9 @@ export default function Dashboard() {
         .vr-home .vr-all-link::before { content: ""; position: absolute; top: -12px; right: -6px; bottom: -12px; left: -6px; }
         .vr-home .vr-arrow-link, .vr-home .vr-all-link { position: relative; }
         .vr-home .vr-skill-open { width: 40px; height: 40px; top: 14px; right: 14px; }
+        /* 卡片预览图里的小按钮只有 16px 高，手机上按不中也按不准；
+           改成不可点，让 taps 落到整张卡片（卡片本身就是入口） */
+        .vr-home .vr-art :is(button, [role="button"]) { pointer-events: none; }
       }
       /* 演示面板内容压缩到统一高度内，保证任何一张卡片都不裁切 */
       .vr-home .vr-toolbox-drive { margin-top: 12px; }

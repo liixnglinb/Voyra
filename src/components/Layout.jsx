@@ -500,8 +500,8 @@ export default function Layout({ children }) {
           /* 手机上返回按钮反而要比桌面更大，凑足拇指命中区 */
           .tool-back { flex: 0 0 auto; width: 40px; height: 40px; }
           .tool-back svg { width: 19px; height: 19px; }
-          .tool-title { font-size: 18px; }
-          .tool-sub { max-width: 280px; white-space: normal; line-height: 1.45; }
+          .tool-title { font-size: var(--fs-h4); line-height: 1.2; }
+          .tool-sub { max-width: 300px; white-space: normal; line-height: 1.5; font-size: var(--fs-label); }
           /* 页头与正文共用一条左边线，避免图标/标题/内容逐层缩进 */
           /* 页头左侧对齐正文，右侧给固定账户浮标让位，避免文字被压 */
           /* 只让标题区避让固定的账户浮标；操作区换行后仍可用满整行 */
@@ -527,6 +527,38 @@ export default function Layout({ children }) {
           .tool-content .btn { min-height: 44px; }
           /* 成对的胶囊/主操作按钮给足 44px；纯图标按钮走 index.css 的 40px 方形规则 */
           .tool-content :is(.cs-btn, .pl-btn, .tp-btn, .bc-nav-item, .ui-cat, .pl-chip, .agx-chip, .sk-tab, .sk-refresh, .cs-tag) { min-height: 44px; }
+
+          /* 上面的分段控件归一化器为了视觉统一，强制 gap:2px 和
+             font-size:13px !important；手机上这会直接造成误触和看不清，
+             这里用同优先级 + 后置覆盖回来 */
+          .tool-content :is([role="tablist"], [class*="tablist"], [class*="seg-"], [class*="filter-row"], [class*="category-row"]) {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: var(--gap-tap) !important;
+            padding: 4px !important;
+          }
+          .tool-content :is([role="tab"], [class*="tablist"] button, [class*="category-row"] button) {
+            flex: 1 1 auto;
+            min-height: var(--ctl-md) !important;
+            padding: 0 14px !important;
+            font-size: var(--fs-label) !important;
+          }
+
+          /* 主 CTA 阶梯：下载/添加/导入/提交这类页内唯一动作给到 52px */
+          .tool-content :is(.btn-primary, .cs-btn.primary, .pl-btn.primary, .bc-btn-primary,
+                          .ag-btn.solid, .nw-btn.solid, .hub-open, .sk-refresh,
+                          .cs-btn.primary, .tp-btn.primary) {
+            min-height: var(--ctl-lg);
+            font-size: var(--fs-body);
+            padding-left: 20px;
+            padding-right: 20px;
+          }
+
+          /* 输入框与正文控件对齐到同一阶梯 */
+          .tool-content :is(.cs-input, .pl-input, .hub-input, .ag-input, .nw-input, .bc-input) {
+            min-height: var(--ctl-md);
+            font-size: 16px;   /* 同时避开 iOS 聚焦自动放大 */
+          }
         }
       `}</style>
     </div>
