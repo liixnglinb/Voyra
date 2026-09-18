@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { CalendarDays, CalendarRange } from 'lucide-react';
+import { CalendarDays, CalendarRange, ClipboardCheck } from 'lucide-react';
 import ClassSchedule from './ClassSchedule';
 import Planner from './Planner';
+import HomeworkBoard, { loadItems, countDays } from './HomeworkBoard';
 import { userKey } from '../lib/auth';
 
 /* 日程中心 · 一体化时间工作台
-   模式切换（课程表/日历日程）经 portal 渲染进页头「数据服务可用」左侧；
+   模式切换（课程表/日历日程/作业看板）经 portal 渲染进页头「数据服务可用」左侧；
    今日概览（日期/今日课程/今日日程）下沉到课程表首卡「第 X 周」框内 */
 
 const TABS = [
   ['courses', '课程表', '每周课表 · 周次自动推算', CalendarRange],
   ['planner', '日历日程', '月历节假日 · 每日事项', CalendarDays],
+  ['homework', '作业看板', '课程作业 · 截止时间提醒', ClipboardCheck],
 ];
 
 const pad = (n) => String(n).padStart(2, '0');
@@ -27,7 +29,12 @@ function computeStats() {
   let eventCount = 0;
   const pl = readJson(userKey('PlannerData'));
   if (Array.isArray(pl)) eventCount = pl.filter((e) => e.date === today).length;
-  return { month: now.getMonth() + 1, date: now.getDate(), weekDay: WEEK_CN[now.getDay()], eventCount };
+  let homeworkDue = 0;
+  try {
+    const c = countDays(loadItems(), now);
+    homeworkDue = c.overdue + c.today;
+  } catch { /* 作业数据异常不影响概览其余项 */ }
+  return { month: now.getMonth() + 1, date: now.getDate(), weekDay: WEEK_CN[now.getDay()], eventCount, homeworkDue };
 }
 
 function getTabFromHash() {
@@ -69,7 +76,7 @@ export default function ScheduleHub() {
       .shub-page { display:flex; flex-direction:column; gap:18px; }
 
       /* ===== 模式切换（实际渲染于页头「数据服务可用」左侧） ===== */
-      .shub-modes { display:grid; grid-template-columns:repeat(2,minmax(0,auto)); gap:10px; }
+      .shub-modes { display:grid; grid-template-columns:repeat(3,minmax(0,auto)); gap:10px; }
       .shub-mode { display:flex; align-items:center; gap:11px; border:1px solid rgba(27,27,27,.14); border-radius:11px;
         padding:11px 15px; background:rgba(255,255,255,.85); color:#555; cursor:pointer; text-align:left;
         transition:border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease; }
@@ -91,8 +98,11 @@ export default function ScheduleHub() {
         .shub-panel { padding:14px; border-radius:13px; }
       }
       @media (max-width:560px) {
-        .shub-modes { grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
-        .shub-mode { padding:9px 11px; gap:8px; }
+        .shub-modes { grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; }
+        .shub-mode { padding:9px 8px; gap:6px; justify-content:center; }
+        .shub-mode svg { display:none; }
+        .shub-mode-copy { justify-items:center; }
+        .shub-mode-copy b { font-size:12px; }
         .shub-mode-copy i { display:none; }
       }
       @media (prefers-reduced-motion:reduce) {
@@ -120,7 +130,8 @@ export default function ScheduleHub() {
 
     <div className="shub-panel">
       <div hidden={tab !== 'courses'}><ClassSchedule stats={stats} active={tab === 'courses'} /></div>
-      <div hidden={tab !== 'planner'}><Planner /></div>
+      <div hidden={tab !== 'planner'}><Planner active={tab === 'planner'} /></div>
+      <div hidden={tab !== 'homework'}><HomeworkBoard active={tab === 'homework'} /></div>
     </div>
   </div>;
 }
