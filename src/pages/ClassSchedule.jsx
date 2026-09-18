@@ -775,6 +775,9 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-input:focus { border-color:${ACCENT}; }
         label.cs-l { font-size:12px;color:#6c757d;font-weight:600;display:block;margin-bottom:5px; }
         .cs-field { display:flex;flex-direction:column; }
+        .cs-gridwrap { position:relative; }
+        /* 右缘渐隐：手机上提示课表还能接着往右滑 */
+        .cs-gridwrap::after { content:""; position:absolute; top:0; right:0; bottom:0; width:0; pointer-events:none; }
         .cs-grid { overflow-x:auto; scroll-padding-left:88px; }
         .cs-grid table { min-width:680px;width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed; }
         .cs-grid th,.cs-grid td { border-bottom:1px solid rgba(20,24,33,.075);border-right:1px solid rgba(20,24,33,.075); }
@@ -803,13 +806,37 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-review { border:1px dashed ${ACCENT_LINE};border-radius:10px;background:${ACCENT_SOFT};padding:10px 12px;margin-top:10px; }
         .cs-review-item { display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 10px;margin:4px 4px 0 0;font-size:12px; }
         .cs-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12.5px;z-index:99; }
-        @media (max-width:640px) {
-          .cs-card { padding:14px; }
-          .cs-grid table { min-width:640px; }
-          .cs-grid tbody td { padding:4px;height:var(--cs-row-h,104px); }
-          .cs-cell { padding:8px;border-radius:8px; }
+        @media (max-width:767px) {
+          /* 外壳的通用卡片规则带 !important，这里用更高优先级收紧课表卡片 */
+          .tool-content .cs-card { padding:10px !important; }
+          /* 表格贴到卡片边缘：把省下的内边距全部还给课表 */
+          .cs-gridwrap { margin:0 -10px; }
+          .cs-gridwrap::after { width:30px; background:linear-gradient(270deg,#fff 6%,rgba(255,255,255,0)); }
+          .cs-grid { padding:0 10px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+          .cs-grid table { min-width:624px; }
+          .cs-col-period { width:66px; }
+          .cs-col-day { width:80px; }
+          .cs-col-day.compact { width:58px; }
+          /* 节次列冻结：横滑时仍然知道自己在看第几节 */
+          .cs-grid tr > .per { position:sticky; left:0; z-index:3; box-shadow:1px 0 0 rgba(20,24,33,.1); }
+          .cs-grid thead th.per { z-index:5; }
+          .cs-grid thead th { font-size:12.5px; padding:12px 4px; }
+          .cs-grid .per { font-size:10.5px; padding:10px 4px; }
+          .cs-grid .per b { font-size:12.5px; }
+          .cs-grid tbody td { padding:4px;height:var(--cs-row-h,100px); }
+          .cs-cell { padding:7px 6px;border-radius:8px; }
           .cs-cell .n { font-size:12.5px; }
-          .cs-cell .r,.cs-cell .t { font-size:10px; }
+          .cs-cell .r,.cs-cell .t { font-size:10.5px; }
+          .cs-cell .w { font-size:10px; }
+          .cs-h h3 { font-size:15.5px; }
+          /* 收紧间距让今日概览留在同一行，避免行尾出现孤立的分隔点 */
+          .cs-today { gap:7px; font-size:12.5px; }
+          .cs-today-date { gap:5px; font-size:13.5px; }
+          .cs-today-date i { font-size:9px; letter-spacing:.05em; }
+          .cs-tdot { width:3px; height:3px; }
+          .cs-input { font-size:15px; }
+          .cs-list-row { padding:12px 2px; }
+          .cs-toast { bottom:calc(20px + env(safe-area-inset-bottom,0px)); font-size:13.5px; }
         }
         .tp-btn { border:1px solid rgba(20,24,33,.16);background:#fff;color:#212529;border-radius:9px;padding:7px 14px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;min-width:66px;transition:all .15s ease; }
         .tp-btn:hover { border-color:${ACCENT_LINE};color:${ACCENT}; }
@@ -931,10 +958,11 @@ export default function ClassSchedule({ stats = null, active = true }) {
           <div className="sp" />
           <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
         </div>
-        <div className="cs-grid">
-          <table>
-            <colgroup>
-              <col className="cs-col-period" />
+        <div className="cs-gridwrap">
+          <div className="cs-grid">
+            <table>
+              <colgroup>
+                <col className="cs-col-period" />
               {WEEKDAY.map((w, i) => (
                 <col key={w} className={`cs-col-day${weekendEmpty && i >= 5 ? ' compact' : ''}`} />
               ))}
@@ -983,6 +1011,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
               })}
             </tbody>
           </table>
+          </div>
         </div>
         {weekCourses.length === 0 && <div className="cs-empty">本周暂无课程，请先导入课表</div>}
       </div>

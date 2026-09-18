@@ -940,6 +940,18 @@ export default function PromptLibrary() {
         .pl-detail-vars label { grid-template-columns:1fr; gap:5px; }
         .pl-detail-vars label span { text-align:left; }
         .pl-detail > footer { flex-wrap:wrap; }
+        /* 拇指尺寸：筛选片/复制钮/图标钮全部给足命中区 */
+        .pl-chip { height:44px; padding:0 16px; font-size:13.5px; }
+        .pl-chip b { font-size:11.5px; }
+        .pl-copy-btn { height:44px; padding:0 13px; font-size:12.5px; }
+        .pl-icon-btn { width:40px; height:40px; flex-basis:40px; }
+        .pl-detail > footer .pl-icon-btn { width:44px; height:44px; flex-basis:44px; }
+        .pl-back { width:40px; height:40px; }
+        .pl-topbar kbd { font-size:11px; }
+        .pl-cd-sub { font-size:11.5px; }
+        .pl-stat b { font-size:12.5px; }
+        .pl-cd-tags, .pl-cd-vars { font-size:11.5px; }
+        .pl-topbar kbd { font-size:11px; padding:2px 6px; }
       }
       @media (prefers-reduced-motion:reduce) { .pl-page *, .pl-page *::before, .pl-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>

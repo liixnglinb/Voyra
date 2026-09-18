@@ -838,6 +838,12 @@ export default function Dashboard() {
         .vr-home .vr-bt-art .vr-bt-big { font-size: 20px; }
         .vr-home .vr-bt-art .vr-bt-screen { gap: 6px; padding: 10px; }
         .vr-home .vr-bt-art .vr-bt-brand { width: 24px; height: 24px; font-size: 11px; }
+        /* 标签与箭头链接只有文字高，用伪元素撑出拇指命中区，不改变视觉位置 */
+        .vr-home .vr-tab::before { content: ""; position: absolute; top: -12px; right: -8px; bottom: -14px; left: -8px; }
+        .vr-home .vr-arrow-link::before,
+        .vr-home .vr-all-link::before { content: ""; position: absolute; top: -12px; right: -6px; bottom: -12px; left: -6px; }
+        .vr-home .vr-arrow-link, .vr-home .vr-all-link { position: relative; }
+        .vr-home .vr-skill-open { width: 40px; height: 40px; top: 14px; right: 14px; }
       }
       /* 演示面板内容压缩到统一高度内，保证任何一张卡片都不裁切 */
       .vr-home .vr-toolbox-drive { margin-top: 12px; }

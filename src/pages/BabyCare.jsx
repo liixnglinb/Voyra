@@ -1496,6 +1496,13 @@ export default function BabyCare() {
         @media (max-width: 720px) {
           .bc-kpi-sub { display:none; }
           .bc-head-greet { display:none; }
+          /* 吸顶导航看不出来能横滑：右缘渐隐 + 吸附对齐，并给足拇指区 */
+          .bc-nav {
+            scroll-snap-type: x proximity;
+            background-image: linear-gradient(to left, rgba(255,253,249,.99) 0 14px, rgba(255,253,249,0) 54px);
+          }
+          .bc-nav-item { min-height:44px; padding:0 15px; font-size:13.5px; scroll-snap-align:center; }
+          .bc-nav-ic { width:16px; height:16px; }
         }
         @media (prefers-reduced-motion: reduce) {
           .bc-layout *, .bc-layout *::before, .bc-layout *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }

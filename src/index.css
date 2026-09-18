@@ -786,13 +786,98 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
   overflow: auto;
 }
 
+/* 手机阅读基线：13px 的桌面密度在手机上偏小，正文提到 15px；
+   同时给所有可点元素一个拇指友好的下限。首页 .vr-home 有自己的
+   显示级字号，单独钉住，不被基线波及。 */
+:root {
+  --m-body: 15px;
+  --m-meta: 12.5px;
+  --m-micro: 11px;
+  --m-tap: 44px;
+  --m-tap-sm: 40px;
+}
+
 @media (max-width: 767px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   /* 动态视口高度：避免手机浏览器地址栏收起时底部内容被遮挡 */
-  body { min-height: 100vh; min-height: 100dvh; }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-size: var(--m-body);
+    line-height: 1.62;
+  }
+
+  .vr-home { font-size: 13px; }
 
   /* iOS Safari：输入框字号保持 16px，避免聚焦时页面自动放大 */
   input[type=text], input[type=password], input[type=time], input[type=url],
   input[type=search], input[type=number], input[type=date], textarea, select {
     font-size: 16px;
+  }
+
+  /* 触屏没有 hover：去掉系统闪块，改用 :active 给即时反馈 */
+  a, button, [role="button"], summary, label {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* 拇指可点区域下限 */
+  .tool-content :is(button, a[href], [role="button"]) {
+    min-height: var(--m-tap-sm);
+  }
+
+  /* 方形图标按钮：宽高一起撑到 40，避免被拉成细长条 */
+  .tool-content :is(.tool-back, .pl-back, .pl-icon-btn, .sk-hot-copy) {
+    width: var(--m-tap-sm);
+    height: var(--m-tap-sm);
+    min-width: var(--m-tap-sm);
+    min-height: var(--m-tap-sm);
+  }
+
+  /* 文字型小按钮（复制等）靠 padding 撑开，不强制方形 */
+  .tool-content :is(.ui-copy, .pl-copy-btn) {
+    min-height: var(--m-tap-sm);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  /* 各页 Tailwind 里散落的 text-[9/10/11px] 在手机上低于可读下限，统一抬升 */
+
+  /* 日程中心外壳：手机上面板不再叠加第二层内缩，视图切换钮凑足拇指高度。
+     用 .tool-content 前缀提高优先级，压过组件内同名规则 */
+  .tool-content .shub-panel { padding: 10px; border-radius: 12px; }
+  /* 视图切换钮被 portal 进页头，不在 .tool-content 里，只能不限祖先 */
+  .shub-mode { min-height: 44px; }
+  .tool-content [class*="text-[8"], .tool-content [class*="text-[9"],
+  .tool-content [class*="text-[10"], .tool-content [class*="text-[11"] {
+    font-size: 12.5px !important;
+  }
+
+  /* 首页文章卡封面上的眉标/标签同样偏小 */
+  .vr-ac-tag { font-size: 11px !important; }
+  .vr-ac-kicker { font-size: 11.5px !important; }
+  .vr-article-page-top { font-size: 12.5px; }
+
+  .tool-content :is(button, a[href], [role="button"]):active {
+    transform: scale(.978);
+    opacity: .85;
+  }
+
+  .tool-content [class*="grid"], .tool-content [class*="scroll"] {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* 无 hover 能力的设备：把"悬停才出现"的 affordance 常显 */
+@media (hover: none) {
+  .agx-go,
+  .agx-domain,
+  .vr-contact-row svg:last-child {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

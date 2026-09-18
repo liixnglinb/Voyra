@@ -493,17 +493,40 @@ export default function Layout({ children }) {
         .tool-content table :is(th, td) { border-color: rgba(27,27,27,.13) !important; }
         .tool-content thead th { background: #fff9df !important; color: #555 !important; }
         @media (max-width: 720px) {
-          .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 32px, 1080px); padding-top: 20px; padding-bottom: 32px; }
+          .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 24px, 1080px); padding-top: 18px; padding-bottom: 34px; }
           .tool-head { align-items: flex-start; }
-          .tool-inner.tool-inner-prompt { width: min(100% - 32px, 1080px); padding-top: 20px; }
+          .tool-inner.tool-inner-prompt { width: min(100% - 24px, 1080px); padding-top: 18px; }
           .tool-head-right { display: none; }
-          .tool-back { width: 27px; height: 27px; }
+          /* 手机上返回按钮反而要比桌面更大，凑足拇指命中区 */
+          .tool-back { flex: 0 0 auto; width: 40px; height: 40px; }
+          .tool-back svg { width: 19px; height: 19px; }
           .tool-title { font-size: 18px; }
           .tool-sub { max-width: 280px; white-space: normal; line-height: 1.45; }
-          .tool-content { padding: 20px 18px 26px; }
+          /* 页头与正文共用一条左边线，避免图标/标题/内容逐层缩进 */
+          /* 页头左侧对齐正文，右侧给固定账户浮标让位，避免文字被压 */
+          /* 只让标题区避让固定的账户浮标；操作区换行后仍可用满整行 */
+          .tool-head { padding-left: 0; padding-right: 0; }
+          .tool-head-left { padding-right: 138px; }
+          .tool-head-actions { flex-wrap: wrap; gap: 10px; }
+          /* 操作区换行后位于浮标下方，让它用满整行 */
+          .tool-head-actions { width: 100%; justify-content: flex-start; }
+          /* slot 是 flex 子项，不撑开的话 .shub-modes 的 width:100% 会绕回内容宽度 */
+          #tool-head-slot { flex: 1 1 auto; min-width: 0; }
+          .tool-content { padding: 14px 10px 30px; }
+          /* 上面那条通用卡片归一化规则写的是 16px 18px !important，
+             手机上四层叠加会吃掉 35% 宽度，这里统一收紧 */
+          .tool-content :is([class*="card"], [class*="Card"], [class*="note-item"], [class*="link-item"], [class*="prompt-item"], [class*="material-item"], [class*="record-item"], [class*="key-item"], [class*="draft-item"]):not([class*="grid"]) {
+            padding: 14px !important;
+            border-radius: 12px !important;
+          }
+          .tool-content td, .tool-content th { padding: 8px 10px; }
           .tool-content .flex.items-end.justify-between { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
           .tool-content :is(.search-box, .pl-search, .hub-search, .nw-search, .ag-search) { max-width: 100%; }
           body [class*="modal"]:not([class*="backdrop"]):not([class*="overlay"]) { max-width: calc(100vw - 24px) !important; }
+          /* 主操作按钮给足 44px 拇指区 */
+          .tool-content .btn { min-height: 44px; }
+          /* 成对的胶囊/主操作按钮给足 44px；纯图标按钮走 index.css 的 40px 方形规则 */
+          .tool-content :is(.cs-btn, .pl-btn, .tp-btn, .bc-nav-item, .ui-cat, .pl-chip, .agx-chip, .sk-tab, .sk-refresh, .cs-tag) { min-height: 44px; }
         }
       `}</style>
     </div>

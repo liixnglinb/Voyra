@@ -584,6 +584,17 @@ export default function SkillHub() {
         .sk-tab { padding:9px 11px; gap:7px; }
         .sk-tab-ico { width:28px; height:28px; flex-basis:28px; }
         .sk-tab-copy span { display:none; }
+        /* 拇指尺寸与最小可读字号 */
+        .sk-tab { min-height:48px; }
+        .sk-tab-count { font-size:11.5px; padding:4px 10px; }
+        .sk-refresh { height:44px; padding:0 16px; font-size:13px; }
+        /* 刷新钮被 portal 到页头，那里有更高优先级的 34px 规则 */
+        .sk-headctl .sk-refresh, .sk-headctl .sk-status { height:44px; }
+        .sk-eyebrow, .sk-rank-row i, .sk-rank-row em { font-size:11.5px; }
+        .sk-hot-copy { width:40px; height:40px; }
+        .sk-hot-copy svg { width:15px; height:15px; }
+        .sk-rank-name { font-size:13.5px; }
+        .sk-sec-head b { font-size:11.5px; }
       }
       @media (prefers-reduced-motion:reduce) { .sk-page *, .sk-page *::before, .sk-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>

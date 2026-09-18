@@ -550,6 +550,18 @@ export default function UIKit() {
         .ui-detail-body { grid-template-columns:1fr; }
         .ui-nav-links button { display:none; }
       }
+      @media (max-width:767px) {
+        /* 分类筛选与复制钮给足拇指区 */
+        .ui-cat { min-height:44px; padding:0 15px; font-size:13px; }
+        .ui-cat b { font-size:11px; }
+        .ui-copy { min-height:44px; padding:0 14px; font-size:12.5px; }
+        .ui-nav-home { min-height:44px; }
+        /* 窄屏下组件名允许折行，不要用省略号吃掉中文名 */
+        .ui-card-name { display:grid; gap:2px; }
+        .ui-card-name h3 { white-space:normal; font-size:16px; line-height:1.3; }
+        .ui-card-name em { font-size:11px; }
+        .ui-demo { height:auto; min-height:150px; }
+      }
       @media (prefers-reduced-motion:reduce) {
         .uikit-page *, .uikit-page *::before, .uikit-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
       }

@@ -164,8 +164,17 @@ html.anim [data-reveal].in{opacity:1;transform:none}
   .hero{padding:104px 0 28px}
   .nav{display:none}
   .cta{flex-direction:column}
-  .btn{justify-content:center}
+  .btn{justify-content:center;min-height:48px}
   .pkpis{grid-template-columns:1fr}
+}
+@media(max-width:430px){
+  .tbl col.c3{width:0}
+  .tbl th:nth-child(3),.tbl td:nth-child(3){display:none}
+  .tbl th,.tbl td{padding:12px 8px}
+  .tbl td{font-size:12.5px}
+  .tbl col.c1{width:34%}
+  .dl-btn{min-height:48px}
+  .mirror .sw button{min-height:40px}
 }
 </style>
 </head>
