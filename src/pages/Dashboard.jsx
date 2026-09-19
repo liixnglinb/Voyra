@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Film, Github,
   Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Receipt, Shapes,
-  NotebookPen, Route, Sparkles, Star,
+  NotebookPen, BookOpen, Route, Sparkles, Star,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
@@ -29,6 +29,7 @@ const APPS = [
   { to: '/local-toolbox/', external: false, no: '03', name: '磁盘清理助手', desc: 'Windows 磁盘清理专用工具：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
   { to: '/token-monitor/', external: false, no: '05', name: 'Token Monitor', desc: '本机 AI 编程工具用量看板：一条命令扫出 9 类 Agent 的 Token 消耗与成本，缓存命中率、模型单价、对话级明细全都看得见。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'tokenmonitor' },
+  { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把大学课程变成记得住的练习：选课程或导入讲义，AI 生成「先回忆再看答案」的知识卡片，FSRS 算法安排每次复习的最佳时机。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
 ];
 
 const MATHMODEL_SKILL = {
@@ -189,7 +190,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3 };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3 };
 
 /* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
    天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
@@ -355,6 +356,33 @@ function FeatureArt({ type }) {
         </div>
         <div className="vr-bt-auto"><img src="/billtrace/icon-192.png" alt="" />付款后 2 秒自动入库 · 零手动</div>
       </div>
+    </div>;
+  }
+
+  if (type === 'zenew') {
+    const opts = [['不存在', false], ['1', true], ['∞', false]];
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-zenew-art">
+      <style>{`
+        .vr-home .vr-zenew-art{padding:0;color:#9AA0A8;background:#101215;border-color:rgba(27,27,27,.2);box-shadow:0 16px 30px rgba(22,22,28,.22)}
+        .vr-home .vr-zenew-art .vr-preview-top{padding:10px 12px;border-bottom-color:rgba(255,255,255,.08);color:#C6CBD2;font-size:10.5px}
+        .vr-home .vr-zenew-art .vr-preview-top b{color:#E0C35F}
+        .vr-home .vr-zenew-art .vr-zn-q{padding:13px 14px 4px;color:#EDEEF0;font-size:13px;font-weight:600;line-height:1.5}
+        .vr-home .vr-zenew-art .vr-zn-q small{display:block;color:#7E858F;font:500 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;letter-spacing:.14em;margin-bottom:7px}
+        .vr-home .vr-zenew-art .vr-zn-opt{display:flex;align-items:center;gap:8px;margin:5px 14px 0;padding:7px 10px;border:1px solid rgba(255,255,255,.08);border-radius:9px;font-size:11.5px;color:#B9BEC6;transition:border-color .3s ease,background .3s ease,color .3s ease}
+        .vr-home .vr-zenew-art .vr-zn-opt .k{display:grid;place-items:center;width:17px;height:17px;flex:0 0 auto;border:1px solid rgba(255,255,255,.16);border-radius:999px;color:#7E858F;font:600 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;transition:all .3s ease}
+        .vr-home .vr-zenew-art .vr-zn-opt.is-on{border-color:rgba(240,194,75,.55);background:rgba(240,194,75,.07);color:#EDEEF0}
+        .vr-home .vr-zenew-art .vr-zn-opt.is-on .k{border-color:#F0C24B;color:#F0C24B}
+        .vr-home .vr-zenew-art .vr-zn-ans{margin:11px 14px 0;padding:8px 11px;background:rgba(240,194,75,.06);border-left:2px solid #F0C24B;border-radius:0 8px 8px 0;font-size:10.5px;color:#9AA0A8;line-height:1.55}
+        .vr-home .vr-zenew-art .vr-zn-ans b{display:block;color:#E0C35F;font:500 8.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;letter-spacing:.14em;margin-bottom:3px}
+        .vr-home .vr-zenew-art .vr-zn-grade{display:flex;gap:5px;padding:12px 14px 14px}
+        .vr-home .vr-zenew-art .vr-zn-grade span{flex:1;text-align:center;padding:5px 0;border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:9.5px;color:#7E858F;transition:all .3s ease}
+        .vr-home .vr-zenew-art .vr-zn-grade span.is-on{border-color:rgba(240,194,75,.55);color:#F0C24B}
+      `}</style>
+      <div className="vr-preview-top"><BookOpen size={15} /><span>zenew &#183; 今日复习</span><b>FSRS 调度</b></div>
+      <div className="vr-zn-q"><small>RECALL · 高等数学（上）</small>极限 lim(x→0) sin x / x 的值是？</div>
+      {opts.map((o, i) => <div key={i} className={`vr-zn-opt${active === i ? ' is-on' : ''}`}><span className="k">{i + 1}</span>{o[0]}</div>)}
+      <div className="vr-zn-ans"><b>WHY</b>由夹逼准则可证 sin x / x → 1，等价无穷小替换的基础。</div>
+      <div className="vr-zn-grade">{['忘了 · 1', '想起 · 2', '记得 · 3', '秒答 · 4'].map((g, i) => <span key={g} className={active === i % 4 && i === 2 ? 'is-on' : ''}>{g}</span>)}</div>
     </div>;
   }
 
