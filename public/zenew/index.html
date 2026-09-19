@@ -152,14 +152,14 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
       <h1 class="fx d1">把课程变成<em>记得住</em>的练习</h1>
       <p class="sub fx d2">选择课程或导入讲义，AI 生成「先回忆再看答案」的知识卡片，FSRS 算法安排每次复习的最佳时机。</p>
       <div class="cta-row fx d3">
-        <a class="btn btn-gold" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe" id="dl-main">↓ 下载安装版</a>
+        <a class="btn btn-gold" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe" id="dl-main">↓ 下载 Zenew</a>
         <a class="btn btn-ghost" href="https://github.com/liixnglinb/Zenew" target="_blank">GitHub 源码</a>
       </div>
       <div class="meta fx d4">
         <span><i></i>Windows 10 / 11</span>
         <span><i></i>无需管理员权限</span>
-        <span><i></i>本地数据存储</span>
-        <span><i></i id="size-main">约 5 MB</span>
+        <span><i></i>更新免安装 · 软件内自动完成</span>
+        <span><i id="size-main">约 3 MB</i></span>
       </div>
     </div>
     <div class="preview fx d2" aria-hidden="true">
@@ -204,18 +204,11 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
     </div>
     <div class="dl-rows">
       <div class="dl-row rec">
-        <div class="dl-name">安装版<small class="num" id="file1">Zenew-Setup.exe</small></div>
-        <div class="dl-desc">推荐。双击安装，无需管理员权限，桌面开始菜单创建快捷方式。</div>
+        <div class="dl-name">安装包<small class="num" id="file1">Zenew-Setup.exe</small></div>
+        <div class="dl-desc">只需安装一次。之后每次更新由软件自动完成：后台下载、静默替换、自动重启，全程免安装。</div>
         <span class="dl-size num" id="size1">—</span>
         <a class="dl-btn" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe" id="dl1">下载</a>
         <a class="dl-btn ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe" id="dl1p">镜像</a>
-      </div>
-      <div class="dl-row">
-        <div class="dl-name">便携版<small class="num" id="file2">Zenew-portable.zip</small></div>
-        <div class="dl-desc">解压即用，不写注册表、不固定安装路径，可以放在 U 盘里随身带。</div>
-        <span class="dl-size num" id="size2">—</span>
-        <a class="dl-btn ghost" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-portable.zip" id="dl2">下载</a>
-        <a class="dl-btn ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-portable.zip" id="dl2p">镜像</a>
       </div>
     </div>
     <div class="mirror">
@@ -231,9 +224,9 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
       <h2>三步开始</h2>
     </div>
     <div class="steps">
-      <div class="step"><b>STEP 01</b><p><strong>注册账号</strong><br>邮箱注册后自动获得生成额度，学习数据始终保存在本机。</p></div>
+      <div class="step"><b>STEP 01</b><p><strong>安装一次</strong><br>下载 Zenew-Setup.exe 双击安装，无需管理员权限。</p></div>
       <div class="step"><b>STEP 02</b><p><strong>选一门课</strong><br>输入课程名生成知识点大纲，或逐个知识点生成练习卡片。</p></div>
-      <div class="step"><b>STEP 03</b><p><strong>每天打开</strong><br>跟着「今日」队列复习，1-4 键打分，剩下的交给调度器。</p></div>
+      <div class="step"><b>STEP 03</b><p><strong>每天打开</strong><br>跟着「今日」队列复习；有新版本时软件内一键免安装更新。</p></div>
     </div>
   </section>
 </main>
@@ -257,7 +250,6 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
     document.getElementById('ver2').textContent=v;
     (rel.assets||[]).forEach(function(a){
       if(a.name==='Zenew-Setup.exe')fmt('size1',a.size);
-      if(a.name==='Zenew-portable.zip')fmt('size2',a.size);
     });
   }).catch(function(){});
   function fmt(id,size){
