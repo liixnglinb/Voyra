@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>知新 Zenew — 购买额度</title>
+<style>
+  :root{
+    --bg:#0A0A0A; --fg:#F5F5F5; --muted:#8A8A8A; --line:#1F1F1F; --card:#121212;
+    --gold:#C9A227; --gold-soft:#FFE08A;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+    --sans:"Inter",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:960px;margin:0 auto;padding:56px 22px 90px}
+  a{color:inherit}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+  h1{font-size:clamp(30px,5vw,46px);line-height:1.1;letter-spacing:-.02em;font-weight:600}
+  .sub{color:var(--muted);margin-top:14px;max-width:52ch;font-size:14.5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:34px}
+  .tier{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;cursor:pointer;transition:.28s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden}
+  .tier:hover{transform:translateY(-3px);border-color:#2E2E2E}
+  .tier.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 18px 40px -22px rgba(201,162,39,.5)}
+  .tier .nm{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--muted)}
+  .tier .p{font-size:34px;font-weight:600;letter-spacing:-.03em;margin:10px 0 2px}
+  .tier .p span{font-size:15px;color:var(--muted);font-weight:400;letter-spacing:0}
+  .tier .tk{color:var(--gold-soft);font-family:var(--mono);font-size:12.5px;margin-top:10px}
+  .tier .meta{color:var(--muted);font-size:12.5px;margin-top:8px;line-height:1.7}
+  .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.1em;border:1px solid var(--line);border-radius:999px;padding:3px 9px;color:var(--muted)}
+  .tag.gold{border-color:var(--gold);color:var(--gold)}
+  .panel{margin-top:34px;background:var(--card);border:1px solid var(--line);border-radius:24px;padding:26px;display:none}
+  .panel.show{display:block;animation:up .5s cubic-bezier(.22,1,.36,1)}
+  @keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .lab{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  input{width:100%;background:#0E0E0E;border:1px solid var(--line);border-radius:999px;padding:13px 20px;color:var(--fg);font-family:var(--sans);font-size:14px;outline:none;transition:.2s}
+  input:focus{border-color:var(--gold)}
+  .btn{background:#F5F5F5;color:#0A0A0A;border:none;border-radius:999px;padding:13px 26px;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:.24s}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 12px 26px -14px rgba(255,255,255,.5)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--gold);box-shadow:none}
+  .ordno{font-family:var(--mono);font-size:22px;letter-spacing:.06em;color:var(--gold-soft);background:#0E0E0E;border:1px dashed var(--gold);border-radius:14px;padding:14px 18px;display:inline-block;margin-top:8px}
+  .qrs{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px}
+  .qr{background:#0E0E0E;border:1px solid var(--line);border-radius:18px;padding:16px;text-align:center;min-width:170px}
+  .qr img{width:150px;height:150px;object-fit:contain;border-radius:10px;background:#fff}
+  .qr .cap{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px}
+  .steps{display:grid;gap:10px;margin-top:18px}
+  .step{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:#D8D8D8}
+  .step i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--gold);border:1px solid var(--line);border-radius:999px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex:0 0 24px;margin-top:2px}
+  .code{font-family:var(--mono);font-size:26px;letter-spacing:.1em;color:var(--gold-soft);background:#0E0E0E;border:1px dashed var(--gold);border-radius:14px;padding:16px;display:inline-block;margin:10px 0}
+  .ok{color:#7BD88F}.warn{color:#E0B24A}.bad{color:#F0736A}
+  .foot{margin-top:46px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:12.5px;font-family:var(--mono)}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}
+  .pulse{width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block;animation:p 1.4s infinite}
+  @keyframes p{0%,100%{opacity:.35}50%{opacity:1}}
+  @media(max-width:560px){.wrap{padding:38px 16px 70px}.qr{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">ZENEW / 额度购买</div>
+  <h1>按需买额度，永久有效。</h1>
+  <p class="sub">额度用于 AI 生成知识卡片与课程大纲，不随月份清零。填写你的登录邮箱，付款确认后额度自动进入账户；不填则获得兑换码，在软件内「设置 → 兑换充值码」使用。</p>
+
+  <div style="margin-top:28px;max-width:420px">
+    <div class="lab" style="margin-bottom:8px">登录邮箱（选填 · 填写后自动到账）</div>
+    <input id="emailIn" type="email" placeholder="你在软件里注册的邮箱" />
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="panel" id="panel">
+    <div class="lab">订单</div>
+    <div class="ordno" id="ordno">—</div>
+    <div class="row">
+      <span class="tag" id="stTag">等待支付</span>
+      <span class="tag gold" id="amTag">—</span>
+      <button class="btn ghost" id="copyBtn">复制订单号</button>
+    </div>
+
+    <div style="margin-top:24px">
+      <div class="lab">支付方式（任选其一，转账备注填订单号）</div>
+      <div class="qrs" id="qrs"></div>
+      <div class="steps">
+        <div class="step"><i>1</i><div>用微信 / 支付宝扫码转账 <b id="amt">—</b>，<b>备注里填订单号</b>（不备注可能延迟到账）。</div></div>
+        <div class="step"><i>2</i><div>付款后把订单号发给站长（邮件 <a href="mailto:lixingli1024@qq.com">lixingli1024@qq.com</a>），一般几分钟内确认。</div></div>
+        <div class="step"><i>3</i><div>确认后本页会自动刷新：填了邮箱 → 额度直接到账；没填邮箱 → 显示兑换码。</div></div>
+      </div>
+    </div>
+
+    <div id="result" style="margin-top:24px"></div>
+    <div class="row" style="margin-top:20px">
+      <button class="btn ghost" id="againBtn">再买一单</button>
+      <button class="btn" id="checkBtn">手动刷新状态</button>
+    </div>
+  </div>
+
+  <div class="foot">
+    已有兑换码？打开软件 → 设置 → 兑换充值码 → 粘贴即可。<br />
+    还没安装？<a href="/zenew/">前往下载页</a>
+  </div>
+</div>
+
+<script>
+const API = 'https://zenew-api.lxlrwxs.top';
+const TIERS = [
+  {tier:1, price:3.9,  tokens:600000,   name:'入门', note:'约 40 门课的生成量'},
+  {tier:2, price:9.9,  tokens:1700000,  name:'常用', note:'约 110 门课 · 最划算'},
+  {tier:3, price:19.9, tokens:3700000,  name:'进阶', note:'约 240 门课'},
+  {tier:4, price:39.9, tokens:7800000,  name:'重度', note:'约 520 门课'},
+];
+let chosen = 2, orderNo = null, pollTimer = null;
+
+const wan = (n) => (n/10000).toFixed(0) + ' 万';
+const perYuan = (t) => Math.round(t.tokens / t.price / 10000) + ' 万 / 元';
+
+// 档位卡
+document.getElementById('grid').innerHTML = TIERS.map(t => `
+  <div class="tier${t.tier===2?' on':''}" data-tier="${t.tier}">
+    <div class="nm">TIER 0${t.tier} · ${t.name}</div>
+    <div class="p">¥${t.price}<span> 起</span></div>
+    <div class="tk">${wan(t.tokens)} tokens</div>
+    <div class="meta">${t.note}<br />${perYuan(t)}</div>
+  </div>`).join('');
+
+document.querySelectorAll('.tier').forEach(el => el.onclick = () => {
+  document.querySelectorAll('.tier').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+  chosen = Number(el.dataset.tier);
+  start();
+});
+
+// 收款码：把图片放到 /zenew/buy/qr-wechat.png 与 qr-alipay.png 即可显示
+const QRS = [
+  {src:'/zenew/buy/qr-wechat.png', cap:'微信收款码'},
+  {src:'/zenew/buy/qr-alipay.png', cap:'支付宝收款码'},
+];
+const qrBox = document.getElementById('qrs');
+QRS.forEach(q => {
+  const cell = document.createElement('div');
+  cell.className = 'qr';
+  const img = document.createElement('img');
+  img.src = q.src; img.alt = q.cap;
+  const cap = document.createElement('div');
+  cap.className = 'cap'; cap.textContent = q.cap;
+  img.addEventListener('error', () => {
+    img.style.display = 'none';
+    cap.innerHTML = q.cap + '<br /><span class="warn">收款码未上传</span><br />联系站长获取';
+  });
+  cell.appendChild(img); cell.appendChild(cap); qrBox.appendChild(cell);
+});
+
+async function start(){
+  clearInterval(pollTimer);
+  const email = (document.getElementById('emailIn').value || '').trim();
+  const r = await fetch(API + '/billing/order', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ tier: chosen, email })
+  });
+  const d = await r.json();
+  if (!r.ok) { alert(d.detail || '下单失败'); return; }
+  orderNo = d.order_no;
+  localStorage.setItem('zenew_order', orderNo);
+  document.getElementById('ordno').textContent = d.order_no;
+  document.getElementById('amt').textContent = '¥' + d.price_cny;
+  document.getElementById('amTag').textContent = wan(d.tokens) + ' tokens';
+  document.getElementById('stTag').textContent = '等待支付';
+  document.getElementById('stTag').className = 'tag warn';
+  document.getElementById('result').innerHTML = '';
+  document.getElementById('panel').classList.add('show');
+  document.getElementById('panel').scrollIntoView({behavior:'smooth', block:'center'});
+  pollTimer = setInterval(check, 6000);
+}
+
+document.getElementById('copyBtn').onclick = () => {
+  navigator.clipboard.writeText(document.getElementById('ordno').textContent);
+  document.getElementById('copyBtn').textContent = '已复制 ✓';
+  setTimeout(()=>document.getElementById('copyBtn').textContent='复制订单号', 1600);
+};
+document.getElementById('againBtn').onclick = () => {
+  localStorage.removeItem('zenew_order'); orderNo = null;
+  document.getElementById('panel').classList.remove('show');
+};
+document.getElementById('checkBtn').onclick = check;
+
+async function check(){
+  if (!orderNo) return;
+  try{
+    const r = await fetch(API + '/billing/order/' + orderNo);
+    const d = await r.json();
+    if (!r.ok) return;
+    if (d.status === 'paid'){
+      clearInterval(pollTimer);
+      document.getElementById('stTag').textContent = '已支付 ✓';
+      document.getElementById('stTag').className = 'tag gold';
+      if (d.credited){
+        document.getElementById('result').innerHTML = `<div class="lab">结果</div>
+          <p class="ok" style="margin-top:8px">额度已自动充入账户 ${d.email || ''}（${wan(d.tokens)} tokens）。打开软件即可看到，若已打开请在 设置 页点「刷新」。</p>`;
+      } else if (d.code){
+        document.getElementById('result').innerHTML = `<div class="lab">你的兑换码</div>
+          <div class="code">${d.code}</div>
+          <p class="ok">打开软件 → 设置 → 兑换充值码 → 粘贴上面的码，额度立即到账。</p>`;
+      } else {
+        document.getElementById('result').innerHTML = `<p class="ok">已确认收款，额度已发放。</p>`;
+      }
+    }
+  }catch(e){}
+}
+
+// 续接未完成订单
+const saved = localStorage.getItem('zenew_order');
+if (saved){ orderNo = saved; document.getElementById('ordno').textContent = saved; document.getElementById('panel').classList.add('show'); check(); pollTimer = setInterval(check, 6000); }
+</script>
+</body>
+</html>
