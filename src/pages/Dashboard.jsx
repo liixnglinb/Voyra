@@ -24,7 +24,7 @@ const FEATURED = [
 
 
 const APPS = [
-  { to: '/modelflow/', external: false, no: '01', name: 'ModelFlow 智模流水线', desc: '数学建模竞赛全自动工作流，从赛题解析到论文 PDF，九步流水线一键跑完。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
+  { to: '/modelflow/', external: false, no: '01', name: '织流 Loom', desc: '本地智能体流水线工作台：流程可编辑，交给本机 Claude Code / Codex CLI 逐步执行，产物实时落盘。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
   { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通、位置、二维码三种签到（手势/拍照推送提醒，需 APP 手动完成），内置智能防风控，手机可远程查看。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
   { to: '/local-toolbox/', external: false, no: '03', name: '磁盘清理助手', desc: 'Windows 磁盘清理专用工具：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
@@ -289,11 +289,11 @@ function FeatureArt({ type }) {
 
 
   if (type === 'modelflow') {
-    const steps = ['题意', '假设', '建模', '求解', '检验', '论文'];
+    const steps = ['需求', '方案', '收集', '执行', '复核', '修订', '交付'];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-modelflow-art">
-      <div className="vr-preview-top"><Sparkles size={15} /><span>ModelFlow 流水线</span><b>9 步</b></div>
+      <div className="vr-preview-top"><Sparkles size={15} /><span>织流 Loom 流程</span><b>7 步</b></div>
       <div className="vr-model-flow">{steps.map((step, index) => <React.Fragment key={step}><button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><i>{String(index + 1).padStart(2, '0')}</i>{step}</button>{index < steps.length - 1 && <span />}</React.Fragment>)}</div>
-      <div className="vr-model-flow-status"><span>当前阶段：{['解析题目', '建立假设', '构建模型', '求解计算', '结果检验', '撰写论文'][active]}</span><b>{active + 1}/6</b></div>
+      <div className="vr-model-flow-status"><span>当前阶段：{['钉死需求', '拆解方案', '收集备料', '逐项执行', '自检复核', '修订打磨', '交付整合'][active]}</span><b>{active + 1}/7</b></div>
     </div>;
   }
 
@@ -851,7 +851,7 @@ export default function Dashboard() {
       @media (max-width: 720px) { .vr-home .vr-tool-art { min-height: 192px; }.vr-home .vr-week-grid button { min-height: 80px; padding: 5px; } }
     `}</style>
     <style>{`
-.vr-modelflow-art{padding:18px}.vr-model-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.vr-model-flow button{display:grid;gap:4px;place-items:center;padding:10px 6px;border:1px solid #e5e5e5;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer}.vr-model-flow button.is-active{background:#ffe08a;border-color:#d4a930}.vr-model-flow button i{font-size:10px;color:#999;font-style:normal;font-family:ui-monospace,monospace}.vr-model-flow button b{font-size:12px;font-weight:600}.vr-model-flow>span{display:none}.vr-model-flow-status{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:11px;color:#888}.vr-model-flow-status b{color:#a48830;font-family:ui-monospace,monospace}
+.vr-modelflow-art{padding:18px}.vr-model-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.vr-model-flow button{display:grid;gap:4px;place-items:center;padding:10px 6px;border:1px solid #e5e5e5;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer}.vr-model-flow button.is-active{background:#dbe8fd;border-color:#2c62d6}.vr-model-flow button i{font-size:10px;color:#999;font-style:normal;font-family:ui-monospace,monospace}.vr-model-flow button b{font-size:12px;font-weight:600}.vr-model-flow>span{display:none}.vr-model-flow-status{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:11px;color:#888}.vr-model-flow-status b{color:#2f6fd0;font-family:ui-monospace,monospace}
 .vr-checkin-art{padding:18px}.vr-checkin-stats{display:flex;gap:12px;margin-top:14px}.vr-checkin-stats span{flex:1;padding:10px 8px;border:1px solid #eee;border-radius:8px;background:#fff;text-align:center;font-size:10px;color:#999}.vr-checkin-stats span b{display:block;font-size:20px;font-weight:700;color:#1b1b1b;font-family:ui-monospace,monospace;margin-bottom:2px}.vr-checkin-list{display:grid;gap:6px;margin-top:14px}.vr-checkin-list button{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-checkin-list button.is-active{border-color:#FF6B35;background:#FFF3EE}.vr-checkin-list button span{font-size:12px;font-weight:600;color:#333}.vr-checkin-list button em{font-size:10px;font-style:normal;padding:3px 8px;border-radius:99px;font-weight:600}.vr-checkin-list button em.monitoring{background:#e8f5e9;color:#28a745}.vr-checkin-list button em.done{background:#fff3e0;color:#f57c00}
 .vr-toolbox-art{padding:18px}.vr-toolbox-drive{margin-top:14px}.vr-toolbox-drive span{font-size:11px;font-weight:600;color:#333}.vr-toolbox-drive i{display:block;height:6px;border-radius:99px;background:#eee;margin-top:6px;position:relative;overflow:hidden}.vr-toolbox-drive i b{position:absolute;left:0;top:0;bottom:0;width:var(--fill);background:linear-gradient(90deg,#a48830,#d4a930);border-radius:99px}.vr-toolbox-drive i.is-done b{width:100%;background:linear-gradient(90deg,#34c759,#28a745)}.vr-toolbox-drive em{display:block;font-size:10px;font-style:normal;color:#999;margin-top:6px}.vr-toolbox-cats{display:grid;gap:6px;margin-top:14px}.vr-toolbox-cats button{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-toolbox-cats button.is-active{border-color:#a48830;background:#FFFAEB}.vr-toolbox-cats button span{font-size:12px;font-weight:600;color:#333}.vr-toolbox-cats button em{font-size:10px;font-style:normal;color:#888;font-family:ui-monospace,monospace}.vr-toolbox-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#999}.vr-toolbox-foot b{color:#a48830;font-family:ui-monospace,monospace}
 `}</style>
