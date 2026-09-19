@@ -387,8 +387,8 @@ function FeatureArt({ type }) {
   }
 
   if (type === 'tokenmonitor') {
-    const cols = [[74, 52, 88, 61, 43, 79, 66], [46, 33, 55, 38, 27, 49, 41], [28, 20, 34, 24, 17, 31, 26], [16, 12, 20, 14, 10, 18, 15]];
-    const svc = [['zcode', '1.17 B', '#5B8DEF', 'Z', 100], ['claude-code', '696.8 M', '#9B8CFF', 'C', 60], ['codex', '636.9 M', '#4FC3A1', 'X', 55]];
+    const cols = [[3, 3, 3, 33, 34, 112, 3], [3, 3, 3, 35, 8, 5, 3], [3, 3, 3, 3, 3, 53, 45], [3, 3, 3, 3, 3, 3, 3]];
+    const svc = [["zcode", "1.17 B", "#5B8DEF", "Z", 100], ["claude-code", "696.8 M", "#9B8CFF", "C", 59], ["codex", "641.6 M", "#4FC3A1", "X", 55]];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-tm-art">
       <style>{`
         .vr-home .vr-tm-art{padding:0;color:#9AA0A8;background:#101215;border-color:rgba(27,27,27,.2);box-shadow:0 16px 30px rgba(22,22,28,.22)}
@@ -425,9 +425,9 @@ function FeatureArt({ type }) {
       `}</style>
       <div className="vr-preview-top"><Activity size={15} /><span>token-monitor &#183; 用量总览</span><b>81 个已知源</b></div>
       <div className="vr-tm-kpi">
-        <div className={active === 0 ? 'is-on' : ''}><span>TOKENS</span><b>3.10 B</b><em>缓存命中 91.1%</em></div>
-        <div className={active === 1 ? 'is-on' : ''}><span>API 请求</span><b>10,743</b><em>逐条计价</em></div>
-        <div className={active === 2 ? 'is-on' : ''}><span>估算成本</span><b>&#165;9,330</b><em>按模型单价</em></div>
+        <div className={active === 0 ? 'is-on' : ''}><span>TOKENS</span><b>3.35 B</b><em>缓存命中 83.0%</em></div>
+        <div className={active === 1 ? 'is-on' : ''}><span>API 请求</span><b>12,092</b><em>逐条计价</em></div>
+        <div className={active === 2 ? 'is-on' : ''}><span>估算成本</span><b>&#165;9,334</b><em>按模型单价</em></div>
       </div>
       <div className="vr-tm-chart">{cols[0].map((_, i) => <div key={i} className={`vr-tm-col${active === i % 3 ? ' is-on' : ''}`}>{[...cols].reverse().map((col, ci) => <i key={ci} style={{ height: `${Math.max(col[i] * 0.47, 3)}%` }} />)}</div>)}</div>
       <div className="vr-tm-list">{svc.map((row, index) => <div key={row[0]} className={`vr-tm-row${active === index ? ' is-on' : ''}`}>
