@@ -360,45 +360,53 @@ function FeatureArt({ type }) {
 
   if (type === 'tokenmonitor') {
     const cols = [[74, 52, 88, 61, 43, 79, 66], [46, 33, 55, 38, 27, 49, 41], [28, 20, 34, 24, 17, 31, 26], [16, 12, 20, 14, 10, 18, 15]];
-    const svc = [['zcode', '1.17B', '#4D6BFE', 'Z'], ['claude-code', '697M', '#8E7CFF', 'C'], ['codex', '572M', '#5DC3F0', 'X']];
+    const svc = [['zcode', '1.17 B', '#5B8DEF', 'Z', 100], ['claude-code', '696.8 M', '#9B8CFF', 'C', 60], ['codex', '636.9 M', '#4FC3A1', 'X', 55]];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-tm-art">
       <style>{`
-        .vr-tm-art{background:linear-gradient(160deg,#F3F6FD,#FBFCFE 62%)}
-        .vr-tm-art .vr-tm-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-        .vr-tm-art .vr-tm-kpi>div{background:#fff;border:1px solid #E6EAF4;border-radius:8px;padding:6px 8px;transition:border-color .3s ease,box-shadow .3s ease}
-        .vr-tm-art .vr-tm-kpi>div.is-on{border-color:rgba(77,107,254,.5);box-shadow:0 0 0 2px rgba(77,107,254,.1)}
-        .vr-tm-art .vr-tm-kpi span{display:block;font-size:9px;color:#8A90A6;letter-spacing:.06em;text-transform:uppercase}
-        .vr-tm-art .vr-tm-kpi b{display:block;font-size:15px;font-weight:800;margin-top:2px;color:#1F2333;font-variant-numeric:tabular-nums}
-        .vr-tm-art .vr-tm-kpi em{font-size:9px;font-style:normal;color:#3E7BE0}
-        .vr-tm-art .vr-tm-chart{display:flex;flex:0 0 auto;align-items:flex-end;gap:5px;height:32px;margin:9px 0 7px}
-        .vr-tm-art .vr-tm-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;height:100%}
-        .vr-tm-art .vr-tm-col i{display:block;border-radius:2px;opacity:.32;transition:opacity .35s ease,transform .35s ease}
-        .vr-tm-art .vr-tm-col i:nth-child(1){background:#8E7CFF}
-        .vr-tm-art .vr-tm-col i:nth-child(2){background:#4D6BFE}
-        .vr-tm-art .vr-tm-col i:nth-child(3){background:#5DC3F0}
-        .vr-tm-art .vr-tm-col i:nth-child(4){background:#37B48F}
-        .vr-tm-art .vr-tm-col.is-on i{opacity:1;transform:scaleX(1.12)}
-        .vr-tm-art .vr-tm-list{display:flex;flex:1 1 auto;min-height:0;flex-direction:column;gap:4px;overflow:hidden}
-        .vr-tm-art .vr-tm-row{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E6EAF4;border-radius:8px;padding:6px 9px;transition:border-color .3s ease,transform .3s ease}
-        .vr-tm-art .vr-tm-row.is-on{border-color:rgba(77,107,254,.5);transform:translateX(3px)}
-        .vr-tm-art .vr-tm-logo{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
-        .vr-tm-art .vr-tm-name{flex:1 1 auto;min-width:0;overflow:hidden;color:#232838;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
-        .vr-tm-art .vr-tm-val{flex:0 0 auto;font-size:11px;font-weight:800;color:#1F2333;font-variant-numeric:tabular-nums}
-        .vr-tm-art .vr-tm-track{width:52px;height:4px;border-radius:2px;background:#EBEFF7;overflow:hidden;flex-shrink:0}
-        .vr-tm-art .vr-tm-track i{display:block;height:100%;border-radius:2px;background:linear-gradient(90deg,#4D6BFE,#8E7CFF)}
+        .vr-home .vr-tm-art{padding:0;color:#9AA0A8;background:#101215;border-color:rgba(27,27,27,.2);box-shadow:0 16px 30px rgba(22,22,28,.22)}
+        .vr-home .vr-tm-art .vr-preview-top{padding:10px 12px;border-bottom-color:rgba(255,255,255,.08);color:#C6CBD2;font-size:10.5px}
+        .vr-home .vr-tm-art .vr-preview-top b{color:#E0C35F}
+        .vr-home .vr-tm-art .vr-tm-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+        .vr-home .vr-tm-art .vr-tm-kpi>div{padding:9px 12px;border-right:1px solid rgba(255,255,255,.07);transition:background .35s ease}
+        .vr-home .vr-tm-art .vr-tm-kpi>div:last-child{border-right:0}
+        .vr-home .vr-tm-art .vr-tm-kpi>div.is-on{background:rgba(240,194,75,.06)}
+        .vr-home .vr-tm-art .vr-tm-kpi span{display:block;color:#7E858F;font-size:9.5px;font-weight:600;letter-spacing:.05em}
+        .vr-home .vr-tm-art .vr-tm-kpi b{display:block;margin-top:4px;color:#EDEEF0;font:600 15px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;font-variant-numeric:tabular-nums}
+        .vr-home .vr-tm-art .vr-tm-kpi>div.is-on b{color:#F0C24B}
+        .vr-home .vr-tm-art .vr-tm-kpi em{display:block;margin-top:3px;color:#6E747E;font:9.5px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;font-style:normal}
+        .vr-home .vr-tm-art .vr-tm-chart{display:flex;flex:1 1 auto;min-height:48px;align-items:flex-end;gap:5px;margin:0 12px;padding:11px 0 0;border-top:1px solid rgba(255,255,255,.07)}
+        .vr-home .vr-tm-art .vr-tm-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;height:100%}
+        .vr-home .vr-tm-art .vr-tm-col i{display:block;border-radius:1.5px;opacity:.28;transition:opacity .35s ease}
+        .vr-home .vr-tm-art .vr-tm-col i:nth-child(1){background:#F0C24B}
+        .vr-home .vr-tm-art .vr-tm-col i:nth-child(2){background:#4FC3A1}
+        .vr-home .vr-tm-art .vr-tm-col i:nth-child(3){background:#9B8CFF}
+        .vr-home .vr-tm-art .vr-tm-col i:nth-child(4){background:#5B8DEF}
+        .vr-home .vr-tm-art .vr-tm-col.is-on i{opacity:.96}
+        .vr-home .vr-tm-art .vr-tm-list{display:flex;flex:0 0 auto;flex-direction:column;gap:0;padding:8px 12px 12px;overflow:hidden}
+        .vr-home .vr-tm-art .vr-tm-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.055);transition:padding-left .3s cubic-bezier(.16,1,.3,1)}
+        .vr-home .vr-tm-art .vr-tm-row:first-child{border-top:0}
+        .vr-home .vr-tm-art .vr-tm-row.is-on{padding-left:4px}
+        .vr-home .vr-tm-art .vr-tm-logo{display:grid;place-items:center;width:18px;height:18px;flex:0 0 auto;border-radius:5px;color:#0B0C0E;font:700 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
+        .vr-home .vr-tm-art .vr-tm-name{flex:1 1 auto;min-width:0;overflow:hidden;color:#B9BEC6;font:11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-overflow:ellipsis;white-space:nowrap;transition:color .3s ease}
+        .vr-home .vr-tm-art .vr-tm-row.is-on .vr-tm-name{color:#EDEEF0}
+        .vr-home .vr-tm-art .vr-tm-val{flex:0 0 auto;color:#EDEEF0;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+        .vr-home .vr-tm-art .vr-tm-track{width:46px;height:3px;flex:0 0 auto;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
+        .vr-home .vr-tm-art .vr-tm-track i{display:block;height:100%;border-radius:2px;background:#454B54;transition:background .35s ease}
+        .vr-home .vr-tm-art .vr-tm-row.is-on .vr-tm-track i{background:#F0C24B}
+        @media (prefers-reduced-motion:reduce){.vr-home .vr-tm-art .vr-tm-col i{animation:none}}
       `}</style>
-      <div className="vr-preview-top"><Activity size={15} /><span>用量看板</span><b>9 个数据源 · 自动扫描</b></div>
+      <div className="vr-preview-top"><Activity size={15} /><span>token-monitor &#183; 用量总览</span><b>9 类数据源</b></div>
       <div className="vr-tm-kpi">
-        <div className={active === 0 ? 'is-on' : ''}><span>Tokens</span><b>3.05B</b><em>缓存命中 90.5%</em></div>
-        <div className={active === 1 ? 'is-on' : ''}><span>请求次数</span><b>10,870</b></div>
-        <div className={active === 2 ? 'is-on' : ''}><span>估算成本</span><b>¥9,336</b></div>
+        <div className={active === 0 ? 'is-on' : ''}><span>TOKENS</span><b>3.10 B</b><em>缓存命中 91.1%</em></div>
+        <div className={active === 1 ? 'is-on' : ''}><span>API 请求</span><b>10,743</b><em>逐条计价</em></div>
+        <div className={active === 2 ? 'is-on' : ''}><span>估算成本</span><b>&#165;9,330</b><em>按模型单价</em></div>
       </div>
-      <div className="vr-tm-chart">{cols[0].map((_, i) => <div key={i} className={`vr-tm-col${active === i % 3 ? ' is-on' : ''}`}>{cols.map((col, ci) => <i key={ci} style={{ height: `${Math.max(col[i] * 0.5, 3)}%` }} />)}</div>)}</div>
+      <div className="vr-tm-chart">{cols[0].map((_, i) => <div key={i} className={`vr-tm-col${active === i % 3 ? ' is-on' : ''}`}>{[...cols].reverse().map((col, ci) => <i key={ci} style={{ height: `${Math.max(col[i] * 0.47, 3)}%` }} />)}</div>)}</div>
       <div className="vr-tm-list">{svc.map((row, index) => <div key={row[0]} className={`vr-tm-row${active === index ? ' is-on' : ''}`}>
         <span className="vr-tm-logo" style={{ background: row[2] }}>{row[3]}</span>
         <span className="vr-tm-name">{row[0]}</span>
         <span className="vr-tm-val">{row[1]}</span>
-        <span className="vr-tm-track"><i style={{ width: `${[100, 60, 49][index]}%` }} /></span>
+        <span className="vr-tm-track"><i style={{ width: `${row[4]}%` }} /></span>
       </div>)}</div>
     </div>;
   }
