@@ -306,10 +306,10 @@ html.anim [data-reveal].in{opacity:1;transform:none}
         </a>
         <a class="btn btn-g" id="dl-portable" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M2 8h20l-2-4H4L2 8zM10 12h4"/></svg>
-          便携版（免安装）
+          便携版（解压即用）
         </a>
       </div>
-      <p class="meta" data-reveal style="--d:.24s" id="head-meta">setup 约 18 MB &#183; 内置自动更新 &#183; 无需注册</p>
+      <p class="meta" data-reveal style="--d:.24s" id="head-meta">setup 约 18 MB &#183; 装一次，之后在软件里更新 &#183; 无需注册</p>
     </div>
 
     <div class="win" data-reveal style="--d:.3s" id="panel">
@@ -419,8 +419,8 @@ html.anim [data-reveal].in{opacity:1;transform:none}
     <div class="bhead" data-reveal>
       <div>
         <span class="tag">Download</span>
-        <h2>选择你的安装方式</h2>
-        <p>三个文件指向同一个版本。装完之后，后续更新交给软件自己。</p>
+        <h2>三种打包方式，任选一个</h2>
+        <p>同一个版本的三种打包方式，区别只在装到哪、要不要快捷方式。不管选哪个，之后都在软件里点「检查更新」升级，不必重新下载安装。</p>
       </div>
       <span class="n">v1.0.6</span>
     </div>
@@ -430,7 +430,7 @@ html.anim [data-reveal].in{opacity:1;transform:none}
         <span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M2 8h20l-2-4H4L2 8z"/></svg></span>
         <div>
           <div class="dt"><h3>安装版</h3><span class="rt">推荐</span></div>
-          <p class="dd">一键安装到当前用户目录，自动创建开始菜单与桌面快捷方式，可从「应用和功能」卸载。</p>
+          <p class="dd">安装到当前用户目录（无需管理员权限），自动创建开始菜单与桌面快捷方式，可从「应用和功能」卸载。更新同样在软件内完成。</p>
         </div>
         <div class="df">文件名 <b id="fn-setup">TokenMonitor-setup.exe</b><br>体积 <b id="s-setup">约 18 MB</b> &#183; 版本 <b id="v-setup">v1.0.6</b></div>
         <a class="btn btn-p" id="dl-setup2" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
@@ -441,7 +441,7 @@ html.anim [data-reveal].in{opacity:1;transform:none}
         <span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 10h18"/></svg></span>
         <div>
           <div class="dt"><h3>便携版</h3></div>
-          <p class="dd">解压即用，不写注册表、不占系统目录，适合放在 U 盘或临时电脑上使用。</p>
+          <p class="dd">压缩包里就是单个 TokenMonitor.exe，解压双击即运行。不写注册表、不固定安装路径，适合放 U 盘或临时电脑。也支持软件内更新。</p>
         </div>
         <div class="df">文件名 <b id="fn-portable">TokenMonitor-portable.zip</b><br>体积 <b id="s-portable">约 16 MB</b> &#183; 版本 <b id="v-portable">v1.0.6</b></div>
         <a class="btn btn-g" id="dl-portable2" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
@@ -468,7 +468,7 @@ html.anim [data-reveal].in{opacity:1;transform:none}
         <button type="button" data-m="1">备用镜像</button>
         <button type="button" data-m="2">GitHub 官方</button>
       </div>
-      <p class="tip">三个链接指向同一个官方版本 &#183; 首次运行若被 SmartScreen 提示，选择「更多信息 &#8594; 仍要运行」<br>软件内点一次「检查更新」即可升级到新版本，安装版与便携版都支持。</p>
+      <p class="tip">三个链接指向同一个官方版本 &#183; 首次运行若被 SmartScreen 提示，选择「更多信息 &#8594; 仍要运行」<br>安装版、便携版、单文件版都内置同一个更新器 —— 软件内点一次「检查更新」即可升级。</p>
     </div>
   </div>
 </section>
@@ -535,7 +535,7 @@ html.anim [data-reveal].in{opacity:1;transform:none}
     }
     var setup = pick('setup'), portable = pick('portable'), raw = pick('tokenmonitor.exe', true);
     if (setup){ links.setup = setup.url; tag('fn-setup', setup.name);
-      if (setup.size > 0){ tag('s-setup', mb(setup.size)); tag('head-meta', 'setup ' + mb(setup.size) + ' \u00b7 内置自动更新 \u00b7 无需注册'); } }
+      if (setup.size > 0){ tag('s-setup', mb(setup.size)); tag('head-meta', 'setup ' + mb(setup.size) + ' \u00b7 装一次，之后在软件里更新 \u00b7 无需注册'); } }
     if (portable){ links.portable = portable.url; tag('fn-portable', portable.name);
       if (portable.size > 0) tag('s-portable', mb(portable.size)); }
     if (raw){ links.raw = raw.url; if (raw.size > 0) tag('s-raw', mb(raw.size)); }
