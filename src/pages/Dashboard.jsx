@@ -395,7 +395,7 @@ function FeatureArt({ type }) {
         .vr-home .vr-tm-art .vr-tm-row.is-on .vr-tm-track i{background:#F0C24B}
         @media (prefers-reduced-motion:reduce){.vr-home .vr-tm-art .vr-tm-col i{animation:none}}
       `}</style>
-      <div className="vr-preview-top"><Activity size={15} /><span>token-monitor &#183; 用量总览</span><b>9 类数据源</b></div>
+      <div className="vr-preview-top"><Activity size={15} /><span>token-monitor &#183; 用量总览</span><b>81 个已知源</b></div>
       <div className="vr-tm-kpi">
         <div className={active === 0 ? 'is-on' : ''}><span>TOKENS</span><b>3.10 B</b><em>缓存命中 91.1%</em></div>
         <div className={active === 1 ? 'is-on' : ''}><span>API 请求</span><b>10,743</b><em>逐条计价</em></div>
