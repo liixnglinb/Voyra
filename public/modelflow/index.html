@@ -13,140 +13,454 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+/* ==========================================================================
+   色值不是"接近软件"，是逐值抄软件 —— 下面 --ink/--accent/--line/--bg-* 与
+   static/style.css 的 :root（浅色主题）一一对应；.mock 里的 --d-* 对应
+   html[data-theme="dark"]，所以页面里那张产品图就是软件本身，不是画个像它的窗。
+   圆角 r-1…r-5/r-pill 同样取软件刻度；r-xl/r-2xl 是营销版面才用得到的两档。
+   ========================================================================== */
 :root{
-  --ink:#1d1d1f;--muted:rgba(0,0,0,.56);--muted-2:rgba(0,0,0,.74);--line:#ececec;
-  --blue:#2f6fd0;--blue-d:#2c62d6;--blue-l:#5b96f9;--blue-soft:rgba(47,111,208,.10);
+  --bg-page:#ffffff;--bg-shell:#f7f7f7;--bg-sunken:#f4f4f4;--bg-inset:#fafafa;
+
+  --ink:#1a1a1a;--ink-2:#4a4a4a;--ink-3:#767676;--ink-4:#9c9c9c;
+
+  --line:#e4e4e4;--line-soft:#eeeeee;--line-strong:#cfcfcf;
+
+  --accent:#2f6fe4;--accent-deep:#245ab8;--accent-soft:#eaf1fd;
+  --accent-line:rgba(47,111,228,.34);--accent-glow:rgba(47,111,228,.12);
+  --on-accent:#ffffff;   /* 实色填充上的文字，对应软件里的 --on-accent */
+
+  --warn:#b0770b;
+  /* 这几个是软件里成对出现的"实色底上压深字"，抄过来免得满文件散落字面 hex */
+  --warn-soft:#fbf2e0;--accent-ink:#1e3f70;
+
+  --r-1:6px;--r-2:8px;--r-3:10px;--r-4:14px;--r-5:18px;--r-pill:999px;
+  --r-xl:24px;--r-2xl:32px;
+
+  /* 阴影取 tabbit 实测的分层（大模糊、低透明度），着色端用软件的蓝不是它的橙 */
+  --sh-1:0 2px 5px rgba(0,0,0,.06);
+  --sh-2:0 8px 32px rgba(0,0,0,.05);
+  --sh-3:0 20px 50px rgba(0,0,0,.08);
+  --sh-card:0 2px 5px rgba(0,0,0,.04),0 12px 32px rgba(0,0,0,.05);
+  --sh-accent:0 15px 30px var(--accent-glow);
+  --sh-float:0 1px 2px rgba(0,0,0,.04),0 24px 48px -18px rgba(24,54,110,.20),
+             0 60px 100px -36px rgba(24,54,110,.14);
+
+  /* tabbit 全站主控曲线是 .4,0,.2,1；hero 那种"弹一下"另留一条 */
+  --e-std:cubic-bezier(.4,0,.2,1);
+  --e-out:cubic-bezier(.22,1,.36,1);
+
   --zh:"PingFang SC","Noto Sans SC","MiSans","HarmonyOS Sans SC","Microsoft YaHei UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   --en:"Montserrat",var(--zh);
+
+  --nav-h:64px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{font-family:var(--zh);color:var(--ink);background:#fff;line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 24px);-webkit-text-size-adjust:100%}
+body{font-family:var(--zh);color:var(--ink);background:var(--bg-page);line-height:1.5;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;
+  overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 img{display:block;max-width:100%}
-::selection{background:rgba(91,150,249,.30);color:#0e1b33}
+::selection{background:rgba(47,111,228,.22);color:var(--accent-ink)}
 ::-webkit-scrollbar{width:10px}
-::-webkit-scrollbar-track{background:#f5f5f7}
-::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#5b96f9,#2c62d6);border-radius:999px;border:2px solid #f5f5f7}
+::-webkit-scrollbar-track{background:var(--bg-sunken)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent),var(--accent-deep));
+  border-radius:var(--r-pill);border:2px solid var(--bg-sunken)}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,var(--accent-deep),var(--accent-deep))}
 .en{font-family:var(--en)}
-.wrap{width:100%;max-width:1080px;margin:0 auto;padding:0 24px}
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:64px;background:rgba(255,255,255,.78);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border-bottom:1px solid transparent;transition:border-color .3s,box-shadow .3s}
+.wrap{width:100%;max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* ---------- 滚动揭示：JS 驱动，脚本没跑起来时内容必须照样可见 ---------- */
+[data-rise]{opacity:1}
+.js [data-rise]{opacity:0;will-change:transform,opacity}
+
+/* ---------- 导航 ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);
+  background:rgba(255,255,255,.78);backdrop-filter:blur(30px) saturate(1.6);
+  -webkit-backdrop-filter:blur(30px) saturate(1.6);
+  border-bottom:1px solid transparent;transition:border-color .3s var(--e-std),box-shadow .3s var(--e-std)}
 .nav.scrolled{border-bottom-color:rgba(0,0,0,.06);box-shadow:0 6px 24px -12px rgba(0,0,0,.12)}
-.nav-in{max-width:1180px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;gap:28px}
+.nav-in{max-width:1180px;margin:0 auto;padding:0 24px;height:var(--nav-h);display:flex;align-items:center;gap:28px}
 .brand{display:flex;align-items:center;gap:11px}
-.brand img{width:34px;height:34px;border-radius:9px}
+.brand img{width:34px;height:34px;border-radius:var(--r-3);transition:transform .4s var(--e-out)}
+.brand:hover img{transform:rotate(-6deg) scale(1.06)}
 .brand b{font-family:var(--en);font-size:18px;font-weight:600;letter-spacing:-.01em}
 .nav-links{display:flex;gap:26px;margin-left:6px}
-.nav-links a{font-size:14px;font-weight:600;color:var(--muted-2)}
-.nav-links a:hover{color:var(--blue)}
+.nav-links a{position:relative;font-size:14px;font-weight:600;color:var(--ink-2);
+  transition:color .18s var(--e-std)}
+.nav-links a::after{content:"";position:absolute;left:0;right:100%;bottom:-6px;height:2px;
+  border-radius:var(--r-pill);background:var(--accent);transition:right .32s var(--e-out)}
+.nav-links a:hover{color:var(--accent)}
+.nav-links a:hover::after,.nav-links a.on::after{right:0}
+.nav-links a.on{color:var(--accent)}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:14px}
-.back{font-size:13px;color:var(--muted)}
-.back:hover{color:var(--blue)}
-.pill{display:inline-flex;align-items:center;justify-content:center;gap:11px;height:46px;padding:0 24px;border-radius:999px;color:#fff;font-size:15px;font-weight:500;white-space:nowrap;background:linear-gradient(135deg,var(--blue-l),var(--blue-d));box-shadow:0 10px 24px rgba(44,98,214,.22);transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s}
-.pill:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 16px 32px rgba(44,98,214,.28)}
-.pill:active{transform:scale(.99)}
-.pill svg{width:17px;height:17px}
+.back{font-size:13px;color:var(--ink-3);transition:color .18s var(--e-std)}
+.back:hover{color:var(--accent)}
+
+/* ---------- 胶囊按钮：hover 有一道扫光，按下有回弹 ---------- */
+.pill{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;
+  gap:11px;height:46px;padding:0 24px;border-radius:var(--r-pill);color:var(--on-accent);font-size:15px;font-weight:500;
+  white-space:nowrap;background:linear-gradient(135deg,var(--accent),var(--accent-deep));
+  box-shadow:var(--sh-accent);
+  transition:transform .3s var(--e-out),box-shadow .3s var(--e-std)}
+.pill::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);
+  transform:skewX(-18deg);transition:left .55s var(--e-std)}
+.pill:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 20px 40px rgba(36,90,184,.26)}
+.pill:hover::after{left:120%}
+.pill:active{transform:translateY(0) scale(.99)}
+.pill svg{width:17px;height:17px;transition:transform .3s var(--e-out)}
+.pill:hover svg{transform:translateY(2px)}
 .pill .sep{width:1px;height:18px;background:rgba(255,255,255,.30)}
 .pill .ver{font-family:var(--en);font-size:13px;opacity:.85}
+.pill-ghost{background:var(--bg-page);color:var(--ink);border:1px solid var(--line-strong);
+  box-shadow:var(--sh-1)}
+.pill-ghost:hover{border-color:var(--accent-line);color:var(--accent);box-shadow:var(--sh-2)}
 .nav-dl{height:38px;padding:0 16px;font-size:14px}
-.hero{position:relative;padding:64px 24px 0;overflow:hidden;background:
-  radial-gradient(58% 48% at 16% 88%,rgba(91,150,249,.16),transparent 70%),
-  radial-gradient(52% 46% at 84% 90%,rgba(47,111,208,.13),transparent 70%),
-  linear-gradient(180deg,#fff 0%,#f8fbff 60%,#eef4fe 100%)}
-.hero-in{position:relative;z-index:2;max-width:820px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;padding:96px 0 0}
-.kicker{font-size:19px;color:var(--muted);opacity:0;animation:up .8s .05s cubic-bezier(.22,1,.36,1) forwards}
-.hero h1{margin-top:14px;font-size:56px;line-height:66px;font-weight:600;letter-spacing:-.012em;color:#000;opacity:0;animation:up .8s .14s cubic-bezier(.22,1,.36,1) forwards}
+
+/* ---------- Hero：透视舞台，产品图随滚动从躺平抬起来 ---------- */
+.hero{position:relative;padding:calc(var(--nav-h) + 56px) 24px 120px;overflow:hidden;
+  perspective:2000px;perspective-origin:50% 28%;-webkit-perspective:2000px;
+  background:
+    radial-gradient(58% 48% at 16% 88%,rgba(91,150,249,.16),transparent 70%),
+    radial-gradient(52% 46% at 84% 90%,rgba(47,111,208,.13),transparent 70%),
+    linear-gradient(180deg,#fff 0%,#f8fbff 60%,#eef4fe 100%)}
+.hero-glow{position:absolute;left:50%;bottom:-180px;width:1200px;max-width:160%;height:560px;
+  transform:translateX(-50%);pointer-events:none;z-index:0;filter:blur(100px);
+  background:radial-gradient(40% 52% at 30% 50%,rgba(47,111,228,.20),transparent 70%),
+             radial-gradient(40% 52% at 70% 50%,rgba(91,150,249,.18),transparent 70%)}
+.hero-in{position:relative;z-index:2;max-width:820px;margin:0 auto;text-align:center;
+  display:flex;flex-direction:column;align-items:center;padding:56px 0 0}
+.kicker{font-size:19px;color:var(--ink-3);opacity:0;animation:up .8s .05s var(--e-out) forwards}
+.hero h1{margin-top:14px;font-size:56px;line-height:66px;font-weight:600;letter-spacing:-.024em;
+  color:var(--ink);opacity:0;animation:up .8s .14s var(--e-out) forwards}
 .hero h1 .en{font-family:var(--en)}
-.hero-sub{margin-top:20px;font-size:17px;line-height:1.7;color:var(--muted);max-width:620px;opacity:0;animation:up .8s .26s cubic-bezier(.22,1,.36,1) forwards}
-.hero-cta{margin-top:34px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;opacity:0;animation:up .8s .38s cubic-bezier(.22,1,.36,1) forwards}
-.hero-note{margin-top:16px;font-size:13px;color:var(--muted);opacity:0;animation:up .8s .5s cubic-bezier(.22,1,.36,1) forwards}
+.hero-sub{margin-top:20px;font-size:17px;line-height:1.75;color:var(--ink-3);max-width:640px;
+  opacity:0;animation:up .8s .26s var(--e-out) forwards}
+.hero-cta{margin-top:34px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  opacity:0;animation:up .8s .38s var(--e-out) forwards}
+.hero-note{margin-top:16px;font-size:13px;color:var(--ink-4);opacity:0;
+  animation:up .8s .5s var(--e-out) forwards}
+.hero-note b{font-weight:600;color:var(--ink-3)}
 @keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-.shot{position:relative;z-index:2;max-width:1080px;margin:74px auto 0;border-radius:14px;overflow:hidden;background:#1d1f24;box-shadow:0 40px 90px -30px rgba(16,32,64,.45),0 0 0 1px rgba(0,0,0,.10);opacity:0;animation:up .9s .55s cubic-bezier(.22,1,.36,1) forwards}
-.shot-bar{height:34px;display:flex;align-items:center;gap:7px;padding:0 14px;background:#26282e}
-.dot{width:11px;height:11px;border-radius:50%}
-.shot-body{display:flex;min-height:392px;font-size:12.5px;line-height:1.9}
-.sb-side{width:186px;flex-shrink:0;background:#212329;border-right:1px solid #2e3138;padding:12px 8px;color:#9aa0ac}
-.sb-logo{display:flex;align-items:center;gap:8px;padding:2px 8px 14px;font-weight:600;color:#e7e9ee;font-size:13px}
-.sb-logo i{width:20px;height:20px;border-radius:6px;background:linear-gradient(160deg,#5b96f9,#2c62d6);display:block}
-.sb-i{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px}
-.sb-i.on{background:#2e323a;color:#eef1f6;font-weight:600}
-.sb-g{margin-top:12px;padding:0 9px;font-size:11px;color:#6d7481}
-.sb-r{padding:6px 9px;border-radius:7px;color:#b6bcc7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sb-r.on{background:#2e323a;color:#eef1f6}
-.sb-foot{margin-top:auto;padding:10px 9px 2px;border-top:1px solid #2e3138;color:#8b91a0;font-size:11.5px}
-.sb-up{margin-top:8px;display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 11px;border-radius:999px;background:#2c62d6;color:#fff;font-size:11.5px;font-weight:600}
-.sb-live{width:6px;height:6px;border-radius:50%;background:#4eb77c;display:inline-block;animation:blink 1.6s infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes previewIn{from{opacity:0;transform:translateY(52px) scale(.982)}to{opacity:1;transform:none}}
 @keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
-.sb-prog{margin-left:auto;width:132px;flex-shrink:0;background:#212329;border-left:1px solid #2e3138;padding:12px 12px;color:#9aa0ac}
-.sb-prog h5{font-size:11.5px;color:#c8ccd4;font-weight:600;margin-bottom:9px;display:flex;justify-content:space-between}
-.pr{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:7px;font-size:11.5px}
-.pr.on{background:#2e323a;color:#eef1f6}
-.pr i{width:13px;height:13px;flex-shrink:0;border-radius:50%;display:inline-block;text-align:center;line-height:13px;font-size:9px;font-style:normal}
-.pr.ok i{background:#4eb77c;color:#0d1f16}
-.pr.run i{background:#2c62d6;color:#fff;animation:spin 1s linear infinite}
-.pr.pend i{border:1px solid #4a5060}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sb-main{flex:1;min-width:0;padding:14px 16px;color:#c8ccd4;overflow:hidden}
+@keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(79,139,247,.45)}
+  50%{opacity:.6;box-shadow:0 0 0 4px rgba(79,139,247,0)}}
+@keyframes logIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@keyframes sweep{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+/* ---------- 产品图：结构照 Loom 真实界面，色值取软件深色主题 ---------- */
+/* 入场动画和滚动视差不能挂在同一个元素上：animation ... forwards 的终值会
+   永久盖住 JS 写的内联 transform，视差就再也不动了。拆成外层摆位、内层入场。 */
+.stage{position:relative;z-index:2;max-width:1180px;margin:64px auto 0;
+  transform-style:preserve-3d;will-change:transform}
+.stage-in{opacity:0;animation:previewIn .95s .5s var(--e-out) forwards}
+.stage::before{content:"";position:absolute;left:50%;top:8%;bottom:8%;width:118%;
+  transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:var(--r-2xl);
+  background:radial-gradient(38% 50% at 18% 50%,rgba(47,111,228,.20),transparent 70%),
+             radial-gradient(38% 50% at 82% 50%,rgba(91,150,249,.16),transparent 70%)}
+.mock{--d-page:#181818;--d-shell:#202020;--d-panel:#232323;
+  --d-hover:#272727;--d-active:#313131;--d-composer:#353535;
+  --d-ink:#dfdfdf;--d-ink-2:#b4b4b4;--d-ink-3:#8a8a8a;--d-ink-4:#656565;
+  --d-line:#323232;--d-line-soft:#282828;--d-accent:#4d8bf7;--d-accent-soft:rgba(77,139,247,.15);
+  --d-accent-deep:#7faaf9;--d-on-accent:#0a1425;--d-on-solid:#ffffff;
+  --d-good-soft:rgba(78,183,124,.13);--d-warn-soft:rgba(217,164,65,.13);
+  --d-good:#4eb77c;--d-warn:#d9a441;--d-ctl:#2a2a2a;
+  position:relative;border-radius:var(--r-5);overflow:hidden;text-align:left;
+  background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.58);
+  backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);
+  box-shadow:var(--sh-float)}
+.mock-bar{height:34px;display:flex;align-items:center;gap:7px;padding:0 14px;background:var(--d-shell);
+  border-bottom:1px solid var(--d-line-soft)}
+.dot{width:11px;height:11px;border-radius:50%;transition:transform .3s var(--e-out)}
+.mock:hover .dot{transform:scale(1.12)}
+.mock-body{display:grid;grid-template-columns:206px minmax(0,1fr) 214px;min-height:412px;
+  background:var(--d-page);font-size:12.5px;line-height:1.85}
+.m-side{background:var(--d-shell);border-right:1px solid var(--d-line);padding:12px 10px;
+  display:flex;flex-direction:column;color:var(--d-ink-3)}
+.m-brand{display:flex;align-items:center;gap:8px;padding:2px 8px 14px;font-weight:600;
+  color:var(--d-ink);font-size:13px}
+.m-brand i{width:20px;height:20px;border-radius:var(--r-2);display:block;
+  background:linear-gradient(160deg,var(--d-accent),#245ab8)}
+.m-new{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-2);
+  background:var(--d-hover);color:var(--d-ink);font-weight:500;font-size:13px}
+.m-new span:last-child{margin-left:auto;font-family:var(--en);font-size:10px;color:var(--d-ink-4);
+  border:1px solid var(--d-line);border-radius:var(--r-1);padding:0 5px}
+.m-nav{margin-top:10px}
+.m-i{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-2)}
+.m-i svg{width:14px;height:14px;opacity:.75}
+.m-i.on{background:var(--d-active);color:var(--d-ink);font-weight:600}
+.m-g{margin-top:14px;padding:0 9px 4px;font-size:11px;font-weight:600;color:var(--d-ink-4);
+  letter-spacing:.02em;display:flex;align-items:center}
+.m-g em{margin-left:auto;font-style:normal;font-family:var(--en);font-size:9.5px;color:var(--d-accent);
+  background:var(--d-accent-soft);border-radius:var(--r-pill);padding:1px 6px}
+.m-r{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:var(--r-2);color:var(--d-ink-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .18s var(--e-std)}
+.m-r:hover{background:var(--d-hover)}
+.m-r.on{background:var(--d-active);color:var(--d-ink)}
+.m-r b{margin-left:auto;font-family:var(--en);font-weight:400;font-size:10px;color:var(--d-ink-4);
+  letter-spacing:.015em;flex-shrink:0}
+.m-live{width:6px;height:6px;border-radius:50%;background:var(--d-good);flex-shrink:0;
+  animation:breathe 1.6s ease-in-out infinite}
+.m-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--d-line-soft)}
+.m-me{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:var(--r-2);color:var(--d-ink-2)}
+.m-me:hover{background:var(--d-hover)}
+.m-av{width:18px;height:18px;border-radius:50%;background:var(--d-composer);flex-shrink:0;
+  border:1px solid var(--d-line)}
+.m-up{margin-top:6px;display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--r-2);
+  background:var(--d-accent-soft);color:var(--d-accent-deep);font-size:11.5px;font-weight:600}
+.m-main{min-width:0;padding:0;display:flex;flex-direction:column}
+.m-top{height:44px;display:flex;align-items:center;gap:10px;padding:0 16px;
+  border-bottom:1px solid var(--d-line);background:var(--d-shell);color:var(--d-ink);font-weight:600;font-size:13px}
+.m-top .run{margin-left:auto;height:24px;padding:0 10px;border-radius:var(--r-2);display:inline-flex;
+  align-items:center;gap:6px;background:var(--d-ctl);color:var(--d-ink-2);font-size:11px}
+.m-rpbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--d-panel);
+  border-bottom:1px solid var(--d-line-soft)}
+.m-badge{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:var(--r-pill);
+  background:var(--d-accent-soft);color:var(--d-accent-deep);flex-shrink:0}
+.m-rtrack{flex:1;height:3px;border-radius:var(--r-pill);background:var(--d-line);overflow:hidden;min-width:60px}
+.m-rtrack i{display:block;height:100%;width:43%;border-radius:var(--r-pill);
+  background:linear-gradient(90deg,var(--d-accent),var(--d-accent-deep),var(--d-accent));
+  background-size:200% 100%;animation:sweep 2.4s linear infinite}
+.m-pct{font-family:var(--en);font-size:11px;color:var(--d-ink-2);font-variant-numeric:tabular-nums}
+.m-of{font-size:11px;color:var(--d-ink-4)}
+.m-sect{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--d-ink);font-weight:600}
+.m-sect .cnt{font-family:var(--en);color:var(--d-ink-4);font-weight:400}
+.m-sect .rf{margin-left:auto;font-size:10.5px;font-weight:400;color:var(--d-ink-3);
+  display:inline-flex;align-items:center;gap:4px}
+.m-scroll{flex:1;padding:14px 16px;color:var(--d-ink-2);overflow:hidden}
 .ln{display:flex;gap:9px;align-items:baseline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ln b{font-family:var(--en);font-size:10.5px;font-weight:500;color:#6d7481;flex-shrink:0}
-.tag{font-family:var(--en);font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:4px;flex-shrink:0}
-.t-ok{background:rgba(78,183,124,.16);color:#6fd0a0}
-.t-run{background:rgba(91,150,249,.18);color:#8fb6fb}
-.t-tool{background:rgba(217,164,65,.16);color:#e0b46a}
-.t-info{background:rgba(255,255,255,.07);color:#9aa0ac}
-.ws{margin-top:14px;padding-top:12px;border-top:1px solid #2e3138}
-.ws h5{font-size:11.5px;color:#c8ccd4;font-weight:600;margin-bottom:8px;display:flex;gap:8px;align-items:center}
-.ws h5 em{font-style:normal;font-size:10.5px;color:#6fd0a0;font-family:var(--en);letter-spacing:.04em}
-.ws-r{display:flex;gap:9px;align-items:center;padding:5px 0;font-size:11.5px;color:#b6bcc7}
-.ws-r span:first-child{font-family:var(--en);color:#8fb6fb;min-width:118px}
-.ws-r em{font-style:normal;color:#6d7481;font-size:10.5px}
-.ws-r b{margin-left:auto;font-weight:600;font-size:10px;color:#0d1f16;background:#4eb77c;border-radius:999px;padding:1px 7px}
+.ln.new{animation:logIn .4s var(--e-out)}
+.ln b{font-family:var(--en);font-size:10.5px;font-weight:500;color:var(--d-ink-4);flex-shrink:0}
+.tag{font-family:var(--en);font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:var(--r-1);flex-shrink:0}
+.t-ok{background:var(--d-good-soft);color:var(--d-good)}
+.t-run{background:var(--d-accent-soft);color:var(--d-accent-deep)}
+.t-tool{background:var(--d-warn-soft);color:var(--d-warn)}
+.t-info{background:rgba(255,255,255,.07);color:var(--d-ink-3)}
+.cursor{display:inline-block;width:6px;height:12px;background:var(--d-accent);vertical-align:-2px;
+  animation:blink 1.1s steps(2,start) infinite}
+.ws{margin-top:14px;padding-top:12px;border-top:1px solid var(--d-line-soft)}
+.ws .m-sect{margin-bottom:8px}
+.ws .wslive{font-style:normal;font-size:10.5px;font-weight:400;color:var(--d-good);
+  display:inline-flex;align-items:center;gap:4px}
+.ws .wslive i{width:5px;height:5px;border-radius:50%;background:var(--d-good);
+  animation:breathe 1.6s ease-in-out infinite}
+.ws-r{display:flex;gap:9px;align-items:center;padding:5px 0;color:var(--d-ink-2)}
+.ws-r span:first-child{font-family:var(--en);color:var(--d-accent-deep);min-width:150px;overflow:hidden;text-overflow:ellipsis}
+.ws-r em{font-style:normal;color:var(--d-ink-4);font-size:10.5px}
+.ws-r b{margin-left:auto;font-weight:600;font-size:10px;color:var(--d-on-solid);background:var(--d-good);
+  border-radius:var(--r-pill);padding:1px 7px}
+.m-composer{margin:0 16px 14px;padding:9px 11px;border-radius:var(--r-3);background:var(--d-composer);
+  border:1px solid var(--d-line);color:var(--d-ink-4);font-size:11.5px;display:flex;align-items:center;gap:8px}
+.m-prog{background:var(--d-shell);border-left:1px solid var(--d-line-soft);padding:14px 12px;color:var(--d-ink-3)}
+.m-prog h5{font-size:11.5px;color:var(--d-ink);font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between}
+.m-prog h5 span{font-family:var(--en);color:var(--d-accent)}
+.pr{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:var(--r-2);
+  font-size:11.5px;color:var(--d-ink-2)}
+.pr.on{background:var(--d-active);color:var(--d-ink)}
+.pr i{width:13px;height:13px;flex-shrink:0;border-radius:50%;display:inline-block;text-align:center;
+  line-height:13px;font-size:9px;font-style:normal}
+.pr.ok i{background:var(--d-good);color:var(--d-on-solid)}
+.pr.run i{background:var(--d-accent);color:var(--d-on-accent);animation:spin 1s linear infinite}
+.pr.pend i{border:1px solid var(--d-ink-4)}
+.pr em{margin-left:auto;font-style:normal;font-size:9.5px;font-family:var(--en);color:var(--d-warn);
+  background:var(--d-warn-soft);border-radius:var(--r-1);padding:1px 4px}
+
+/* ---------- 数字条：count-up ---------- */
+.stats{position:relative;z-index:3;margin:-58px auto 0;max-width:1000px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--sh-3)}
+.stat{background:var(--bg-page);padding:24px 16px;text-align:center;transition:background .25s var(--e-std)}
+.stat:hover{background:var(--bg-inset)}
+.stat b{display:block;font-family:var(--en);font-size:32px;line-height:1.1;font-weight:600;
+  letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+.stat span{display:block;margin-top:6px;font-size:12.5px;color:var(--ink-3)}
+
+/* ---------- 版面 ---------- */
 section{padding:96px 0}
-.eyebrow{font-family:var(--en);font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blue)}
-h2{margin-top:12px;font-size:38px;line-height:1.25;font-weight:600;letter-spacing:-.012em}
-.lead{margin-top:14px;font-size:16.5px;line-height:1.75;color:var(--muted);max-width:660px}
-.grid{margin-top:44px;display:grid;grid-template-columns:repeat(auto-fit,minmax(292px,1fr));gap:16px}
-.card{border:1px solid var(--line);border-radius:16px;padding:26px 24px;transition:border-color .25s,transform .25s,box-shadow .25s}
-.card:hover{border-color:rgba(47,111,208,.34);transform:translateY(-3px);box-shadow:0 18px 40px -22px rgba(24,54,110,.28)}
-.card .ic{width:34px;height:34px;border-radius:10px;background:var(--blue-soft);color:var(--blue);display:flex;align-items:center;justify-content:center}
-.card .ic svg{width:19px;height:19px}
-.card h3{margin-top:16px;font-size:17px;font-weight:600}
-.card p{margin-top:8px;font-size:14.5px;line-height:1.72;color:var(--muted)}
+section.flush{padding-top:0}
+.eyebrow{font-family:var(--en);font-size:12.5px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent)}
+h2{margin-top:12px;font-size:38px;line-height:1.25;font-weight:600;letter-spacing:-.02em}
+.lead{margin-top:14px;font-size:16.5px;line-height:1.75;color:var(--ink-3);max-width:660px}
+.s-head{max-width:720px}
+.s-head.center{margin-left:auto;margin-right:auto;text-align:center}
+.s-head.center .lead{margin-left:auto;margin-right:auto}
+
+.grid{margin-top:44px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
+.card{position:relative;border:1px solid var(--line);border-radius:var(--r-xl);padding:28px 26px;
+  background:var(--bg-page);transition:border-color .25s var(--e-std),transform .35s var(--e-out),
+             box-shadow .35s var(--e-out)}
+.card:hover{border-color:var(--accent-line);transform:translateY(-4px);box-shadow:var(--sh-card),var(--sh-accent)}
+.card .ic{width:38px;height:38px;border-radius:var(--r-3);background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;transition:transform .4s var(--e-out)}
+.card:hover .ic{transform:scale(1.08) rotate(-4deg)}
+.card .ic svg{width:20px;height:20px}
+.card h3{margin-top:18px;font-size:17px;font-weight:600;letter-spacing:-.006em}
+.card p{margin-top:8px;font-size:14.5px;line-height:1.75;color:var(--ink-3)}
+.card .more{margin-top:14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+  color:var(--accent);opacity:0;transform:translateX(-6px);
+  transition:opacity .25s var(--e-std),transform .3s var(--e-out)}
+.card:hover .more{opacity:1;transform:none}
+
+/* ---------- 流水线：三段式接力 ---------- */
+.pipeline{background:var(--bg-shell);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stages{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.stage{position:relative;background:var(--bg-page);border:1px solid var(--line);border-radius:var(--r-xl);
+  padding:30px 26px;transition:transform .35s var(--e-out),box-shadow .35s var(--e-out)}
+.stage:hover{transform:translateY(-4px);box-shadow:var(--sh-card)}
+.stage-label{font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--ink-4)}
+.stage h3{margin-top:10px;font-size:19px;font-weight:600;letter-spacing:-.01em}
+.stage .sd{margin-top:8px;font-size:14px;line-height:1.7;color:var(--ink-3)}
+.stage ul{margin-top:18px;list-style:none;border-top:1px solid var(--line-soft)}
+.stage li{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.stage li .n{font-family:var(--en);font-size:11px;font-weight:700;color:var(--accent);width:20px;flex-shrink:0}
+.stage li .t{font-size:14px;font-weight:500}
+.stage li .f{margin-left:auto;font-family:var(--en);font-size:10.5px;color:var(--ink-4)}
+.stage li .cp{font-size:9.5px;font-weight:600;color:var(--warn);background:var(--warn-soft);
+  border-radius:var(--r-pill);padding:1px 7px;flex-shrink:0}
+.stage-out{margin-top:16px;font-size:12.5px;color:var(--ink-3)}
+.stage-out b{color:var(--ink);font-weight:600}
+.stage .arrow{position:absolute;right:-16px;top:50%;width:24px;height:24px;border-radius:50%;
+  background:var(--bg-page);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  color:var(--accent);z-index:2;transition:transform .35s var(--e-out)}
+.stage:hover .arrow{transform:translateX(3px)}
+.stage:last-child .arrow{display:none}
+
+/* ---------- 引擎 ---------- */
+.engines{margin-top:52px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.eng{border:1px solid var(--line);border-radius:var(--r-xl);padding:26px;background:var(--bg-page);
+  transition:border-color .25s var(--e-std),box-shadow .3s var(--e-out)}
+.eng:hover{border-color:var(--accent-line);box-shadow:var(--sh-card)}
+.eng .logo{width:40px;height:40px;border-radius:var(--r-3);display:flex;align-items:center;
+  justify-content:center;font-family:var(--en);font-weight:700;font-size:15px;color:var(--on-accent);
+  background:linear-gradient(135deg,var(--accent),var(--accent-deep))}
+.eng h3{margin-top:16px;font-size:16.5px;font-weight:600}
+.eng p{margin-top:8px;font-size:14px;line-height:1.72;color:var(--ink-3)}
+.eng code{font-family:var(--en);font-size:12.5px;background:var(--bg-sunken);padding:1px 6px;
+  border-radius:var(--r-1);color:var(--ink)}
+
+/* ---------- 步骤 ---------- */
 .steps{margin-top:40px;display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--line)}
-.step{display:flex;gap:22px;padding:22px 0;border-bottom:1px solid var(--line)}
-.step .n{font-family:var(--en);font-size:13px;font-weight:700;color:var(--blue);width:30px;flex-shrink:0;padding-top:3px}
+.step{display:flex;gap:22px;padding:22px 0;border-bottom:1px solid var(--line);
+  transition:background .25s var(--e-std)}
+.step:hover{background:var(--bg-inset)}
+.step .n{font-family:var(--en);font-size:13px;font-weight:700;color:var(--accent);width:30px;
+  flex-shrink:0;padding-top:3px}
 .step h4{font-size:16.5px;font-weight:600}
-.step p{margin-top:6px;font-size:14.5px;line-height:1.72;color:var(--muted);max-width:640px}
-.req{margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-.req div{border:1px solid var(--line);border-radius:14px;padding:18px}
+.step p{margin-top:6px;font-size:14.5px;line-height:1.75;color:var(--ink-3);max-width:660px}
+
+/* ---------- 前置要求 / 本地性 ---------- */
+.req{margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.req div{border:1px solid var(--line);border-radius:var(--r-4);padding:20px;background:var(--bg-page);
+  transition:border-color .25s var(--e-std),transform .3s var(--e-out)}
+.req div:hover{border-color:var(--accent-line);transform:translateY(-2px)}
 .req b{display:block;font-size:14.5px}
-.req span{display:block;margin-top:6px;font-size:13.5px;line-height:1.65;color:var(--muted)}
-.note{margin-top:26px;padding:16px 18px;border-radius:14px;background:var(--blue-soft);border:1px solid rgba(47,111,208,.18);font-size:14.5px;line-height:1.7;color:#1e3f70}
-.faq{margin-top:32px;border-top:1px solid var(--line)}
+.req span{display:block;margin-top:6px;font-size:13.5px;line-height:1.68;color:var(--ink-3)}
+.note{margin-top:28px;padding:18px 20px;border-radius:var(--r-4);background:var(--accent-soft);
+  border:1px solid rgba(47,111,228,.18);font-size:14.5px;line-height:1.72;color:var(--accent-ink)}
+.note b{font-weight:600}
+.local{background:var(--bg-inset);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.local-grid{margin-top:52px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.lc{background:var(--bg-page);border:1px solid var(--line);border-radius:var(--r-xl);padding:34px 28px;
+  text-align:center;transition:transform .35s var(--e-out),box-shadow .35s var(--e-out)}
+.lc:hover{transform:translateY(-5px);box-shadow:var(--sh-card)}
+.lc .g{width:46px;height:46px;margin:0 auto;border-radius:var(--r-4);display:flex;align-items:center;
+  justify-content:center;background:var(--accent-soft);color:var(--accent)}
+.lc .g svg{width:22px;height:22px}
+.lc h3{margin-top:18px;font-size:16.5px;font-weight:600}
+.lc p{margin-top:8px;font-size:14px;line-height:1.72;color:var(--ink-3)}
+
+/* ---------- FAQ：用 grid-template-rows 做高度过渡，不靠 JS 量高 ---------- */
+.faq{margin-top:36px;border-top:1px solid var(--line)}
 details{border-bottom:1px solid var(--line);padding:18px 0}
-summary{font-size:16px;font-weight:600;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;align-items:center}
+summary{font-size:16px;font-weight:600;cursor:pointer;list-style:none;display:flex;
+  justify-content:space-between;gap:16px;align-items:center;transition:color .18s var(--e-std)}
+summary:hover{color:var(--accent)}
 summary::-webkit-details-marker{display:none}
-summary i{font-style:normal;color:var(--blue);font-size:19px;transition:transform .25s}
+summary i{font-style:normal;color:var(--accent);font-size:19px;line-height:1;
+  transition:transform .3s var(--e-out)}
 details[open] summary i{transform:rotate(45deg)}
-details p{margin-top:12px;font-size:14.5px;line-height:1.78;color:var(--muted);max-width:720px}
-details code{font-family:var(--en);font-size:13px;background:#f4f5f7;padding:1px 6px;border-radius:5px}
-.cta{position:relative;text-align:center;padding:82px 24px;border-radius:24px;overflow:hidden;background:linear-gradient(180deg,#f7faff,#eaf1fd)}
-.cta h2{font-size:32px}
-.cta .pill{margin-top:26px}
+/* details 的展开高度补间需要 interpolate-size（Chrome/Edge 131+）。不支持的浏览器
+   整块选择器被丢弃，details 照旧瞬间开合 —— 那是降级，不是坏。 */
+details{interpolate-size:allow-keywords}
+details::details-content{block-size:0;overflow:hidden;opacity:0;
+  transition:block-size .32s var(--e-std),opacity .28s var(--e-std),
+             content-visibility .32s allow-discrete}
+details[open]::details-content{block-size:auto;opacity:1}
+details p{padding-top:12px;font-size:14.5px;line-height:1.78;color:var(--ink-3);max-width:720px}
+details code{font-family:var(--en);font-size:13px;background:var(--bg-sunken);padding:1px 6px;
+  border-radius:var(--r-1);color:var(--ink-2)}
+
+/* ---------- CTA ---------- */
+.cta{position:relative;text-align:center;padding:88px 28px;border-radius:var(--r-2xl);overflow:hidden;
+  background:linear-gradient(180deg,#f7faff,#eaf1fd);border:1px solid var(--line)}
+.cta::before{content:"";position:absolute;left:50%;top:-40%;width:820px;max-width:130%;height:400px;
+  transform:translateX(-50%);pointer-events:none;filter:blur(90px);
+  background:radial-gradient(45% 55% at 50% 50%,rgba(47,111,228,.18),transparent 70%)}
+.cta h2{position:relative;font-size:32px}
+.cta .lead{position:relative;margin-left:auto;margin-right:auto}
+.cta .pill{position:relative;margin-top:28px}
+.cta .hero-note{position:relative;animation:none;opacity:1;margin-top:16px}
+.sha{position:relative;margin-top:12px;display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--en);font-size:11.5px;color:var(--ink-4);cursor:pointer;
+  border:1px solid transparent;border-radius:var(--r-pill);padding:3px 10px;
+  transition:color .18s var(--e-std),border-color .18s var(--e-std),background .18s var(--e-std)}
+.sha:hover{color:var(--ink-2);border-color:var(--line);background:rgba(255,255,255,.6)}
+.sha svg{width:12px;height:12px;opacity:.6}
+.copied{position:fixed;left:50%;bottom:38px;transform:translate(-50%,16px);z-index:200;
+  background:var(--ink);color:var(--on-accent);font-size:13px;padding:9px 16px;border-radius:var(--r-pill);
+  box-shadow:var(--sh-3);opacity:0;pointer-events:none;transition:opacity .25s var(--e-std),transform .3s var(--e-out)}
+.copied.show{opacity:1;transform:translate(-50%,0)}
+
 footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
-.foot{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:13px;color:var(--muted)}
+.foot{display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:13px;color:var(--ink-3)}
 .foot .sep{width:1px;height:14px;background:var(--line)}
-.sha{font-family:var(--en);font-size:11.5px;color:#9aa0ac}
+
+/* 触屏没有 hover：卡里的补充说明和按钮扫光不能只在悬停时才存在 */
+@media (hover:none){
+  .card .more{opacity:.72;transform:none}
+  .pill::after{display:none}
+}
+
+/* ---------- 响应式：tabbit 那种逐级收窄，不是一档切到底 ---------- */
+@media (max-width:1040px){
+  .stats{grid-template-columns:repeat(3,1fr);margin:-40px 24px 0}
+  .stages,.local-grid{grid-template-columns:1fr;max-width:560px;margin-left:auto;margin-right:auto}
+  .stage .arrow{display:none}
+}
+@media (max-width:900px){
+  .hero h1{font-size:42px;line-height:52px}
+  h2{font-size:30px}
+  .mock-body{grid-template-columns:minmax(0,1fr) 200px}
+  .m-side{display:none}
+}
 @media (max-width:860px){
   .nav-links{display:none}
-  .hero h1{font-size:36px;line-height:1.22}
-  .hero-in{padding-top:64px}
-  h2{font-size:27px}
-  .sb-side,.sb-prog{display:none}
-  .shot-body{min-height:300px}
-  section{padding:66px 0}
+  .hero-in{padding-top:32px}
+  .stage{margin-top:44px}
+  section{padding:72px 0}
+}
+@media (max-width:600px){
+  .hero h1{font-size:34px;line-height:44px}
+  .kicker{font-size:17px}
+  h2{font-size:26px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:1px}
+  .mock-body{grid-template-columns:minmax(0,1fr)}
+  .m-prog{display:none}
   .step{gap:14px}
+  .foot{gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important}
+  .js [data-rise]{opacity:1;transform:none}
 }
 </style>
 </head>
@@ -155,8 +469,9 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 <nav class="nav" id="nav">
   <div class="nav-in">
     <a class="brand" href="./"><img src="./logo-64.png" alt="织流 Loom"><b>Loom</b></a>
-    <div class="nav-links">
-      <a href="#cap">核心能力</a><a href="#how">怎么用</a><a href="#req">前置要求</a><a href="#faq">常见问题</a>
+    <div class="nav-links" id="navLinks">
+      <a href="#cap">核心能力</a><a href="#pipeline">流程</a><a href="#how">怎么用</a>
+      <a href="#req">前置要求</a><a href="#faq">常见问题</a>
     </div>
     <div class="nav-right">
       <a class="back" href="https://lxlrwxs.top">个人工具中心</a>
@@ -166,137 +481,264 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 </nav>
 
 <header class="hero">
+  <div class="hero-glow"></div>
   <div class="hero-in">
     <p class="kicker">本地运行的智能体流水线工作台</p>
     <h1>把一件事拆成流程，<br>交给<span class="en"> AI </span>智能体逐步跑完</h1>
-    <p class="hero-sub">需求钉死 → 方案拆解 → 资料收集 → 逐项执行 → 自检复核 → 修订打磨 → 交付整合。每一步做什么、用哪个技能、产出什么文件，都是你能改的。</p>
+    <p class="hero-sub">需求解析 → 方案拆解 → 信息收集 → 逐项执行 → 自检复核 → 修订打磨 → 交付整合。每一步做什么、用哪个技能、产出什么文件，都是你能改的。</p>
     <div class="hero-cta">
       <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.0.0</span></a>
+      <a class="pill pill-ghost" href="#pipeline">看它怎么跑</a>
     </div>
-    <p class="hero-note">Windows 10 / 11 x64 · 约 <span id="heroSize">36 MB</span> · 全本地运行，无账号无遥测</p>
+    <p class="hero-note">Windows 10 / 11 x64 · 约 <b id="heroSize">36 MB</b> · 全本地运行，无账号无遥测</p>
   </div>
 
   <div class="wrap">
-    <div class="shot">
-      <div class="shot-bar">
-        <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
-      </div>
-      <div class="shot-body">
-        <aside class="sb-side">
-          <div class="sb-logo"><i></i>织流</div>
-          <div class="sb-i on">▤ 项目</div>
-          <div class="sb-i">✦ 技能库</div>
-          <div class="sb-i">◷ 运行记录</div>
-          <div class="sb-g">项目</div>
-          <div class="sb-r on">通用全自动工作流</div>
-          <div class="sb-r">轻量三步流</div>
-          <div class="sb-g">最近运行</div>
-          <div class="sb-r"><span class="sb-live"></span> 板凳腿缠绕优化</div>
-          <div class="sb-foot">⚙ claude · codex<div class="sb-up">更新</div></div>
-        </aside>
-        <div class="sb-main">
-          <div class="ln"><b>12:01:03</b><span class="tag t-ok">DONE</span>问题分析.md · 子问题 3 个已结构化</div>
-          <div class="ln"><b>12:01:08</b><span class="tag t-tool">TOOL</span>Write Q1_solve.py</div>
-          <div class="ln"><b>12:01:12</b><span class="tag t-ok">DONE</span>求解收敛，残差 1.2e-4</div>
-          <div class="ln"><b>12:01:18</b><span class="tag t-info">INFO</span>灵敏度热力图已生成（2.4 MB）</div>
-          <div class="ln"><b>12:01:25</b><span class="tag t-run">RUN</span>正在绘制模型对比折线图</div>
-          <div class="ws">
-            <h5>工作区文件 <em>● 实时</em></h5>
-            <div class="ws-r"><span>STEP3.md</span><em>18 KB · now</em><b>刚写入</b></div>
-            <div class="ws-r"><span>figures/Figure_2.png</span><em>2.4 MB · 1 分钟前</em></div>
-            <div class="ws-r"><span>建模报告.md</span><em>交付物 · 14 KB</em></div>
-            <div class="ws-r"><span>results/参数对比.csv</span><em>3.1 KB · 4 分钟前</em></div>
-          </div>
+    <div class="stage" id="heroStage">
+      <div class="stage-in">
+      <div class="mock">
+        <div class="mock-bar">
+          <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
         </div>
-        <aside class="sb-prog">
-          <h5>进程<span>2 / 7</span></h5>
-          <div class="pr ok"><i>✓</i>需求解析</div>
-          <div class="pr ok"><i>✓</i>方案拆解</div>
-          <div class="pr on run"><i>●</i>信息收集与建模</div>
-          <div class="pr pend"><i></i>逐项执行</div>
-          <div class="pr pend"><i></i>自检复核</div>
-          <div class="pr pend"><i></i>修订打磨</div>
-          <div class="pr pend"><i></i>交付整合</div>
-        </aside>
+        <div class="mock-body">
+          <aside class="m-side">
+            <div class="m-brand"><i></i>织流</div>
+            <div class="m-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg><span>新建任务</span><span>Ctrl K</span></div>
+            <nav class="m-nav">
+              <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h6M4 12h10M4 17h5"/><circle cx="18" cy="7" r="2.2"/><circle cx="19" cy="17" r="2.2"/></svg><span>工作流</span></div>
+              <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7.2 3.6h9.6a1.6 1.6 0 0 1 1.6 1.6v15.2l-6.4-3.9-6.4 3.9V5.2a1.6 1.6 0 0 1 1.6-1.6z"/></svg><span>技能库</span></div>
+              <div class="m-i on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg><span>运行记录</span></div>
+            </nav>
+            <div class="m-g">项目<em>2</em></div>
+            <div class="m-r">通用全自动工作流<b>7步</b></div>
+            <div class="m-r">轻量三步流<b>3步</b></div>
+            <div class="m-g">最近运行<em>1 个在跑</em></div>
+            <div class="m-r on"><span class="m-live"></span><span style="overflow:hidden;text-overflow:ellipsis">板凳腿缠绕结构优化</span></div>
+            <div class="m-r">混凝土梁裂缝等级判定</div>
+            <div class="m-foot">
+              <div class="m-me"><span class="m-av"></span><span>claude</span></div>
+              <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.0.0</div>
+            </div>
+          </aside>
+
+          <div class="m-main">
+            <div class="m-top">板凳腿缠绕结构优化<span class="run">日志</span></div>
+            <div class="m-rpbar"><span class="m-badge">执行中</span><span class="m-rtrack"><i></i></span><span class="m-pct">43%</span><span class="m-of">已完成 3 / 7 步</span></div>
+            <div class="m-scroll" id="mockLog">
+              <div class="ln"><b>12:01:03</b><span class="tag t-ok">DONE</span>需求解析 · REQUIREMENTS.md · 子问题 3 个已结构化</div>
+              <div class="ln"><b>12:04:41</b><span class="tag t-ok">DONE</span>方案拆解 · PLAN.md · 检查点已确认</div>
+              <div class="ln"><b>12:11:07</b><span class="tag t-tool">TOOL</span>Write Q1_solve.py</div>
+              <div class="ln"><b>12:18:52</b><span class="tag t-ok">DONE</span>求解收敛，残差 1.2e-4</div>
+              <div class="ln"><b>12:19:30</b><span class="tag t-info">INFO</span>灵敏度热力图已生成（2.4 MB）</div>
+              <div class="ln"><b>12:21:04</b><span class="tag t-run">RUN</span>正在绘制模型对比折线图<span class="cursor"></span></div>
+              <div class="ws">
+                <div class="m-sect">工作区文件<span class="cnt">(4)</span><em class="wslive"><i></i>实时</em><span class="rf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:11px;height:11px"><path d="M20 11a8 8 0 1 0-1.6 5.6"/><path d="M20 5v6h-6"/></svg>刷新</span></div>
+                <div class="ws-r"><span>EXECUTION.md</span><em>24 KB · now</em><b>刚写入</b></div>
+                <div class="ws-r"><span>figures/Figure_2.png</span><em>2.4 MB · 1 分钟前</em></div>
+                <div class="ws-r"><span>FINDINGS.md</span><em>18 KB · 12 分钟前</em></div>
+                <div class="ws-r"><span>results/参数对比.csv</span><em>3.1 KB · 4 分钟前</em></div>
+              </div>
+            </div>
+            <div class="m-composer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:13px;height:13px"><path d="M4 6.5h16M4 12h11M4 17.5h7"/></svg>输入修改要求，回车发送…</div>
+          </div>
+
+          <aside class="m-prog">
+            <h5>进程<span id="mockCount">3/7</span></h5>
+            <div class="pr ok"><i>✓</i>需求解析<em>CP</em></div>
+            <div class="pr ok"><i>✓</i>方案拆解<em>CP</em></div>
+            <div class="pr ok"><i>✓</i>信息收集</div>
+            <div class="pr on run"><i>●</i>逐项执行<em>CP</em></div>
+            <div class="pr pend"><i></i>自检复核</div>
+            <div class="pr pend"><i></i>修订打磨</div>
+            <div class="pr pend"><i></i>交付整合</div>
+          </aside>
+        </div>
+      </div>
       </div>
     </div>
   </div>
 </header>
 
+<div class="wrap">
+  <div class="stats">
+    <div class="stat"><b data-count="7">0</b><span>全流程步骤</span></div>
+    <div class="stat"><b data-count="3">0</b><span>可插检查点</span></div>
+    <div class="stat"><b data-count="7">0</b><span>出厂技能</span></div>
+    <div class="stat"><b data-count="2">0</b><span>内置流程模板</span></div>
+    <div class="stat"><b data-count="130">0</b><span>回归测试</span></div>
+  </div>
+</div>
+
 <section id="cap">
   <div class="wrap">
-    <p class="eyebrow">Capabilities</p>
-    <h2>它不做代写，它管流程</h2>
-    <p class="lead">正文一律由你本机已登录的 Claude Code 或 Codex CLI 产出。Loom 负责把任务拆开、把提示词规范喂到位、盯着每一步的产物、在需要确认的地方停下来等你。</p>
+    <div class="s-head" data-rise>
+      <p class="eyebrow">Capabilities</p>
+      <h2>它不做代写，它管流程</h2>
+      <p class="lead">正文一律由你本机已登录的 Claude Code 或 Codex CLI 产出。Loom 负责把任务拆开、把提示词规范喂到位、盯着每一步的产物、在需要确认的地方停下来等你。</p>
+    </div>
     <div class="grid">
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/><path d="M14.6 4.6v14.8"/></svg></div><h3>可视化编排流程</h3><p>增删步骤、拖顺序，每步绑定技能、产物文件名、角色（执行 / 复核 / 编辑）、引擎与模型，可设检查点暂停等确认。改完即存，不用重装模板。</p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7.2 3.6h9.6a1.6 1.6 0 0 1 1.6 1.6v15.2l-6.4-3.9-6.4 3.9V5.2a1.6 1.6 0 0 1 1.6-1.6z"/></svg></div><h3>技能库</h3><p>每步的提示词规范独立成技能，可新建、编辑、另存副本，也支持导入标准 skill 包（zip / SKILL.md）。内置一套数模全流程技能，也能整个恢复出厂。</p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg></div><h3>实时流式运行</h3><p>SSE 把每一步的工具调用、输出与耗时逐行推给你；右上角进程卡对应每一步状态，点一行直接跳到那一步的转录。</p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6.5h16M4 12h11M4 17.5h7"/></svg></div><h3>工作区实时反馈</h3><p>智能体写到哪，面板就列到哪：markdown 就地渲染、图片与 PDF 内联预览、刚写入的文件高亮。不用等跑完再去文件夹里翻。</p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8.5 4.5h7a1.6 1.6 0 0 1 1.6 1.6v9.4l-4.7-2.9-4.7 2.9V6.1a1.6 1.6 0 0 1 1.6-1.6z"/><path d="M4 19.5h16"/></svg></div><h3>对话式局部修订</h3><p>结果不满意不用整条重跑 —— 指着某一步说怎么改，只重写那一步，其余产物原样保留。</p></div>
-      <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.4 21 8l-9 4.6L3 8z"/><path d="M3 12.4 12 17l9-4.6M3 16.4 12 21l9-4.6"/></svg></div><h3>流程导入导出</h3><p>一条流程 = 一个 JSON 文件。可分享、可备份、可导回；撞名会问你另存为副本，不会静默覆盖。</p></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/><path d="M14.6 4.6v14.8"/></svg></div><h3>可视化编排流程</h3><p>增删步骤、拖顺序，每步绑定技能、产物文件名、角色（执行 / 复核 / 编辑）、引擎与模型，可设检查点暂停等确认。改完即存，不用重装模板。</p><span class="more">流程 = 一个可编辑的 JSON<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7.2 3.6h9.6a1.6 1.6 0 0 1 1.6 1.6v15.2l-6.4-3.9-6.4 3.9V5.2a1.6 1.6 0 0 1 1.6-1.6z"/></svg></div><h3>技能库</h3><p>每步的提示词规范独立成技能，可新建、编辑、另存副本，也支持导入标准 skill 包（zip / SKILL.md）。内置 7 个覆盖全流程，也能整个恢复出厂。</p><span class="more">出厂技能可改可复原<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg></div><h3>实时流式运行</h3><p>SSE 把每一步的工具调用、输出与耗时逐行推给你；右上角进程卡对应每一步状态，点一行直接跳到那一步的转录。</p><span class="more">检查点会停下等你<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6.5h16M4 12h11M4 17.5h7"/></svg></div><h3>工作区实时反馈</h3><p>智能体写到哪，面板就列到哪：markdown 就地渲染、图片与 PDF 内联预览、刚写入的文件高亮。不用等跑完再去文件夹里翻。</p><span class="more">产物就在你自己磁盘上<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8.5 4.5h7a1.6 1.6 0 0 1 1.6 1.6v9.4l-4.7-2.9-4.7 2.9V6.1a1.6 1.6 0 0 1 1.6-1.6z"/><path d="M4 19.5h16"/></svg></div><h3>对话式局部修订</h3><p>结果不满意不用整条重跑 —— 指着某一步说怎么改，只重写那一步，其余产物原样保留。</p><span class="more">不用从头再来<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.4 21 8l-9 4.6L3 8z"/><path d="M3 12.4 12 17l9-4.6M3 16.4 12 21l9-4.6"/></svg></div><h3>流程导入导出</h3><p>一条流程 = 一个 JSON 文件。可分享、可备份、可导回；撞名会问你另存为副本，不会静默覆盖。</p><span class="more">可分享可备份<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
     </div>
   </div>
 </section>
 
-<section id="how" style="background:#fafafa;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+<section id="pipeline" class="pipeline">
   <div class="wrap">
-    <p class="eyebrow">How it works</p>
-    <h2>四步上手</h2>
+    <div class="s-head center" data-rise>
+      <p class="eyebrow">Pipeline</p>
+      <h2>七个环节，<br>三段式接力</h2>
+      <p class="lead">内置「通用全自动工作流」把这七步摆成一条链，每一步加载对应的出厂技能作为方法内核，产物逐级往下传，环环自检。</p>
+    </div>
+    <div class="stages">
+      <div class="stage" data-rise>
+        <div class="stage-label">STAGE 01</div>
+        <h3>理解与建模</h3>
+        <p class="sd">把开放题变成可计算的问题：界定范围、拆出子问题、确定方法并跑出第一版结果。</p>
+        <ul>
+          <li><span class="n">01</span><span class="t">需求解析</span><span class="cp">检查点</span><span class="f">REQUIREMENTS.md</span></li>
+          <li><span class="n">02</span><span class="t">方案拆解</span><span class="cp">检查点</span><span class="f">PLAN.md</span></li>
+          <li><span class="n">03</span><span class="t">信息收集</span><span class="f">FINDINGS.md</span></li>
+        </ul>
+        <p class="stage-out">角色：<b>执行</b> · 产物逐级传给下一段</p>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="stage" data-rise data-delay="1">
+        <div class="stage-label">STAGE 02</div>
+        <h3>执行与复核</h3>
+        <p class="sd">按拆解逐项落地，再以复核视角独立审一遍 —— 写的人和查的人不是同一步。</p>
+        <ul>
+          <li><span class="n">04</span><span class="t">逐项执行</span><span class="cp">检查点</span><span class="f">EXECUTION.md</span></li>
+          <li><span class="n">05</span><span class="t">自检复核</span><span class="f">REVIEW.md</span></li>
+        </ul>
+        <p class="stage-out">角色：<b>执行 → 复核</b> · 复核步骤由 reviewer 角色独立跑</p>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="stage" data-rise data-delay="2">
+        <div class="stage-label">STAGE 03</div>
+        <h3>打磨与交付</h3>
+        <p class="sd">按复核意见改稿，最后把分散产物整合成一份能直接交出去的东西。</p>
+        <ul>
+          <li><span class="n">06</span><span class="t">修订打磨</span><span class="f">FINAL.md</span></li>
+          <li><span class="n">07</span><span class="t">交付整合</span><span class="f">DELIVERABLE.md</span></li>
+        </ul>
+        <p class="stage-out">角色：<b>编辑 → 执行</b> · 只改被打回的那一步</p>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+    </div>
+    <div class="engines" id="engines">
+      <div class="eng" data-rise>
+        <div class="logo">C</div>
+        <h3>Claude Code</h3>
+        <p>本机已登录的 <code>claude</code> 命令。Loom 自动探测它在不在这台机器上，在就能选为主引擎。</p>
+      </div>
+      <div class="eng" data-rise data-delay="1">
+        <div class="logo">X</div>
+        <h3>Codex CLI</h3>
+        <p>本机已登录的 <code>codex</code> 命令。两个都装了的话，每一步都能单独挑用哪个跑。</p>
+      </div>
+      <div class="eng" data-rise data-delay="2">
+        <div class="logo">API</div>
+        <h3>API 预设只是配置通道</h3>
+        <p>设置里的端点与密钥只用于配置 CLI 的模型与中转，<b>软件自己不直连任何大模型接口</b>。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="s-head" data-rise>
+      <p class="eyebrow">How it works</p>
+      <h2>四步上手</h2>
+    </div>
     <div class="steps">
-      <div class="step"><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Loom 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
-      <div class="step"><span class="n">02</span><div><h4>装 Loom，打开就是工作台</h4><p>安装包约 36 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
-      <div class="step"><span class="n">03</span><div><h4>挑一条流程，或自己编一条</h4><p>内置「通用全自动工作流」和「轻量三步流」，也可以复制一份改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的。</p></div></div>
-      <div class="step"><span class="n">04</span><div><h4>下任务，看它跑</h4><p>写清任务说明就能开跑。转录区实时输出，进程卡显示走到第几步，工作区面板列出正在写的文件；跑完对着任意一步提修改要求即可。</p></div></div>
+      <div class="step" data-rise><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Loom 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
+      <div class="step" data-rise><span class="n">02</span><div><h4>装 Loom，打开就是工作台</h4><p>安装包约 36 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
+      <div class="step" data-rise><span class="n">03</span><div><h4>挑一条流程，或自己编一条</h4><p>内置「通用全自动工作流」七步和「轻量三步流」，也可以复制一份改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的。</p></div></div>
+      <div class="step" data-rise><span class="n">04</span><div><h4>下任务，看它跑</h4><p>写清任务说明就能开跑。转录区实时输出，进程卡显示走到第几步，工作区面板列出正在写的文件；跑完对着任意一步提修改要求即可。</p></div></div>
     </div>
   </div>
 </section>
 
 <section id="req">
   <div class="wrap">
-    <p class="eyebrow">Requirements</p>
-    <h2>跑起来需要什么</h2>
-    <div class="req">
-      <div><b>Windows 10 / 11 x64</b><span>macOS / Linux 暂未提供安装包（源码可跑）。</span></div>
-      <div><b>Claude Code 或 Codex CLI</b><span>已安装并已登录。这是内容产出的唯一通道。</span></div>
-      <div><b>约 200 MB 磁盘</b><span>程序本体 + 数据目录。产物多大取决于你的任务。</span></div>
-      <div><b>可选：API 预设</b><span>把端点/密钥/模型注入给 CLI，用于换模型或走中转。</span></div>
+    <div class="s-head" data-rise>
+      <p class="eyebrow">Requirements</p>
+      <h2>跑起来需要什么</h2>
     </div>
-    <p class="note"><b>一条硬规则：</b>Loom 自己不直连任何大模型接口生成正文。设置里的 API 预设只用于配置 CLI 的端点与模型，正文只能出自你本机已登录的 Claude Code / Codex CLI。你的提示词、流程和产物都留在本机，软件没有账号体系，也没有埋点。</p>
+    <div class="req">
+      <div data-rise><b>Windows 10 / 11 x64</b><span>macOS / Linux 暂未提供安装包（源码可跑）。</span></div>
+      <div data-rise><b>Claude Code 或 Codex CLI</b><span>已安装并已登录。这是内容产出的唯一通道。</span></div>
+      <div data-rise><b>约 200 MB 磁盘</b><span>程序本体 + 数据目录。产物多大取决于你的任务。</span></div>
+      <div data-rise><b>可选：API 预设</b><span>把端点/密钥/模型注入给 CLI，用于换模型或走中转。</span></div>
+    </div>
+    <p class="note" data-rise><b>一条硬规则：</b>Loom 自己不直连任何大模型接口生成正文。设置里的 API 预设只用于配置 CLI 的端点与模型，正文只能出自你本机已登录的 Claude Code / Codex CLI。你的提示词、流程和产物都留在本机，软件没有账号体系，也没有埋点。</p>
   </div>
 </section>
 
-<section id="faq" style="padding-top:0">
+<section id="local" class="local">
   <div class="wrap">
-    <p class="eyebrow">FAQ</p>
-    <h2>常见问题</h2>
+    <div class="s-head center" data-rise>
+      <p class="eyebrow">Local by design</p>
+      <h2>跑在你自己的机器上，<br>不是跑在我们的服务器上</h2>
+    </div>
+    <div class="local-grid">
+      <div class="lc" data-rise>
+        <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 18V7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v11"/><path d="M2 18h20"/><path d="M9 11h6"/></svg></div>
+        <h3>没有账号体系</h3><p>不注册、不登录、不联网激活。装完打开就能建流程跑任务。</p>
+      </div>
+      <div class="lc" data-rise data-delay="1">
+        <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.4 20 6v6c0 4.4-3.2 7.5-8 8.6-4.8-1.1-8-4.2-8-8.6V6z"/><path d="M9 12.2l2.2 2.2L15.4 10"/></svg></div>
+        <h3>没有埋点</h3><p>唯一的对外请求是检查更新时读一次版本清单，其余网络流量都来自你自己的 CLI。</p>
+      </div>
+      <div class="lc" data-rise data-delay="2">
+        <div class="g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6.4" rx="7.4" ry="2.9"/><path d="M4.6 6.4v11.2c0 1.6 3.3 2.9 7.4 2.9s7.4-1.3 7.4-2.9V6.4"/><path d="M4.6 12c0 1.6 3.3 2.9 7.4 2.9s7.4-1.3 7.4-2.9"/></svg></div>
+        <h3>数据留在 <span class="en">data\</span></h3><p>数据库、每次运行的工作区、自建技能、导出件都在安装目录下的 <code>data\</code>。卸载器刻意保留它，重装自动续读。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="flush">
+  <div class="wrap">
+    <div class="s-head" data-rise>
+      <p class="eyebrow">FAQ</p>
+      <h2>常见问题</h2>
+    </div>
     <div class="faq">
       <details open><summary>为什么还要装 Claude Code / Codex CLI？<i>+</i></summary><p>因为正文由它们生成。它们各自带着你自己的登录态或密钥与模型通信，Loom 负责流程编排、提示词规范、产物落盘和过程可视化。这样换模型、走中转、调额度都在 CLI 那边，不会被软件锁死在某一家。</p></details>
       <details><summary>我的数据和产物存在哪？<i>+</i></summary><p>安装目录下的 <code>data\</code>：SQLite 数据库、每次运行的工作区（<code>data\workspaces\run-xxx\</code>）、你自建的技能、导出件都在里面。设置页「本地目录」可以直接打开它们。</p></details>
       <details><summary>卸载会删掉我的流程吗？<i>+</i></summary><p>不会。卸载器刻意保留 <code>data\</code> 整个目录，重装后自动继续读取。要彻底清掉自己的数据，需要你自己删那个文件夹。</p></details>
       <details><summary>怎么更新？<i>+</i></summary><p>左下角会出现「更新」胶囊 —— 软件启动后自动读一次版本清单，有新版本才出现。点一下开始下载，进度实时显示，下载完成后确认即静默安装并退出；有任务在跑或停在检查点时会先弹提示。</p></details>
+      <details><summary>检查点是做什么的？<i>+</i></summary><p>给关键步骤加检查点后，流程跑到那里会停下来等你看产物、给意见，确认了才往下走。内置七步全流程在「需求解析」「方案拆解」「逐项执行」三处默认带检查点 —— 这三步走偏了后面全白跑。</p></details>
       <details><summary>跑一次大概多久？<i>+</i></summary><p>取决于步骤数和智能体本身。内置七步全流程在单题上通常是几十分钟量级；每步耗时、工具调用次数、累计费用都会记在运行记录里，设置页「使用统计」有汇总。</p></details>
       <details><summary>有 macOS 版吗？<i>+</i></summary><p>安装包暂时只有 Windows。后端是 FastAPI，macOS / Linux 可以用源码运行：<code>pip install -r requirements.txt && python run.py</code>。</p></details>
-      <details><summary>源码在哪？<i>+</i></summary><p>GitHub：<code>liixnglinb/Loom</code>。含 122 条回归测试，界面文案中英双语，无框架无构建步骤。</p></details>
+      <details><summary>源码在哪？<i>+</i></summary><p>GitHub：<code>liixnglinb/Loom</code>。含 130 条回归测试（其中一部分专门看守静态资产契约），界面文案中英双语，前端无框架无构建步骤。</p></details>
     </div>
   </div>
 </section>
 
-<section id="dl" style="padding-top:0">
+<section id="dl" class="flush">
   <div class="wrap">
-    <div class="cta">
+    <div class="cta" data-rise>
       <p class="eyebrow">Download</p>
       <h2>把流程握在自己手里</h2>
+      <p class="lead">装在你自己的用户目录里，跑你自己登录的 CLI，产物落在你自己的磁盘上。</p>
       <a class="pill" id="dlBtn" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.0.0-setup.exe">下载 Loom for Windows<span class="sep"></span><span class="ver" id="btnVer">1.0.0</span></a>
-      <p class="hero-note" style="animation:none;opacity:1;margin-top:16px">约 <span id="btnSize">36 MB</span> · Windows 10/11 x64 · 用户级安装，无需管理员</p>
-      <p class="sha" id="btnSha" style="margin-top:10px"></p>
+      <p class="hero-note">约 <b id="btnSize">36 MB</b> · Windows 10/11 x64 · 用户级安装，无需管理员</p>
+      <p class="sha" id="btnSha" title="点击复制完整校验和"></p>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap foot">
-    <a class="brand" href="./"><img src="./logo-64.png" alt="" style="width:26px;height:26px;border-radius:7px"></a>
+    <a class="brand" href="./"><img src="./logo-64.png" alt="" style="width:26px;height:26px;border-radius:8px"></a>
     <span>织流 Loom</span><span class="sep"></span>
     <span>版本 <span class="en" id="ftVer">1.0.0</span></span><span class="sep"></span>
     <a class="back" href="https://lxlrwxs.top">返回个人工具中心</a>
@@ -304,25 +746,193 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   </div>
 </footer>
 
-<script>
-(function(){
-  var nav = document.getElementById('nav');
-  addEventListener('scroll', function(){ nav.classList.toggle('scrolled', scrollY > 8); }, {passive:true});
+<div class="copied" id="copied">已复制</div>
 
-  // 版本清单：和软件内更新器读的是同一份，页面与程序不会各说一套。
-  // 拉不到就保留写死的兜底值，但会在控制台留一条痕迹，方便排查。
+<script>
+document.documentElement.classList.add('js');
+var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* 版本清单：和软件内更新器读的是同一份，页面与程序不会各说一套。
+   拉不到就保留写死的兜底值，但会在控制台留一条痕迹，方便排查。 */
+(function(){
   var MANIFEST = 'https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/latest.json';
+  var FULL_SHA = '';
   function set(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; }
   fetch(MANIFEST, {cache:'no-store'}).then(function(r){
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   }).then(function(d){
     if (d.version) { set('navVer', d.version); set('heroVer', d.version); set('btnVer', d.version); set('ftVer', d.version); }
-    if (d.size) set('heroSize', (d.size/1048576).toFixed(0) + ' MB');
-    if (d.size) set('btnSize', (d.size/1048576).toFixed(0) + ' MB');
+    if (d.size) { var mb = (d.size/1048576).toFixed(0) + ' MB'; set('heroSize', mb); set('btnSize', mb); }
     if (d.url) { var b = document.getElementById('dlBtn'); if (b) b.setAttribute('href', d.url); }
-    if (d.sha256) set('btnSha', 'SHA-256 ' + d.sha256.slice(0, 16) + '…');
+    if (d.sha256) {
+      FULL_SHA = d.sha256;
+      var el = document.getElementById('btnSha');
+      el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>' +
+                     'SHA-256 ' + d.sha256.slice(0, 16) + '…';
+    }
   }).catch(function(e){ console.warn('[loom] 版本清单读取失败，沿用页面兜底值：', e.message); });
+
+  var copied = document.getElementById('copied'), ct;
+  document.getElementById('btnSha').addEventListener('click', function(){
+    if (!FULL_SHA) return;
+    var done = function(){ copied.classList.add('show'); clearTimeout(ct); ct = setTimeout(function(){ copied.classList.remove('show'); }, 1600); };
+    if (navigator.clipboard) navigator.clipboard.writeText(FULL_SHA).then(done, done); else done();
+  });
+})();
+
+/* 滚动工艺：揭示用进度而不是阈值（滚上去多少就走多少，倒滚也跟着退回去），
+   hero 产品图用 rotateX 从躺平抬起来。两者共用一个 rAF 节拍，别各挂各的监听。 */
+(function(){
+  var riseEls = [].slice.call(document.querySelectorAll('[data-rise]'));
+  var preview = document.getElementById('heroStage');
+  var nav = document.getElementById('nav');
+  var links = [].slice.call(document.querySelectorAll('#navLinks a'));
+  var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+
+  /* 起始位置要按"没有位移时"的布局量：JS 给元素挂的 translate 会把 rect 顶下去 36px，
+     resize 后重算时那些位移还在，所以先全部摘掉、强制回流、量完再装回去。 */
+  var starts = null;
+  function measure(){
+    var prev = riseEls.map(function(el){ var v = el.style.transform; el.style.transform = 'none'; return v; });
+    void document.body.offsetHeight;
+    starts = riseEls.map(function(el){ return el.getBoundingClientRect().top + scrollY; });
+    riseEls.forEach(function(el, i){ el.style.transform = prev[i]; });
+  }
+  function applyRise(){
+    if (!riseEls.length) return;
+    if (starts === null) measure();
+    var vh = innerHeight, top = scrollY;
+    for (var i = 0; i < riseEls.length; i++){
+      var el = riseEls[i], start = starts[i] - vh * 0.88, end = starts[i] - vh * 0.44;
+      var p = (top - start) / (end - start);
+      p = Math.min(1, Math.max(0, p));
+      /* data-delay 把同一组里的元素往后推一段进度，做出错落进场而不是整排一起动 */
+      var d = Math.min(0.6, (parseInt(el.dataset.delay || '0', 10) || 0) * 0.12);
+      if (d) p = Math.max(0, (p - d) / (1 - d));
+      var e = 1 - Math.pow(1 - p, 4); // easeOutQuart
+      el.style.opacity = (0.0001 + e * 0.9999).toFixed(4);
+      el.style.transform = 'translate3d(0,' + ((1 - e) * 36).toFixed(2) + 'px,0)';
+    }
+  }
+  function applyParallax(){
+    if (!preview) return;
+    var vh = innerHeight, r = preview.getBoundingClientRect();
+    var span = vh + r.height * 0.25;
+    var p = Math.min(1, Math.max(0, (vh - r.top) / span));
+    var ty = 30 - p * 36;
+    var tiltP = Math.min(1, Math.max(0, (420 - r.top) / 300));
+    var rx = 30 - tiltP * 30;
+    preview.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) translate3d(0,' + ty.toFixed(2) + 'px,0)';
+  }
+  function applySpy(){
+    var y = scrollY + 120, cur = -1;
+    for (var i = 0; i < sections.length; i++){
+      if (sections[i] && sections[i].offsetTop <= y) cur = i;
+    }
+    for (var j = 0; j < links.length; j++) links[j].classList.toggle('on', j === cur);
+  }
+  var ticking = false;
+  function update(){ applyRise(); applyParallax(); applySpy(); }
+  function onFrame(){ update(); ticking = false; }
+  function onScroll(){
+    nav.classList.toggle('scrolled', scrollY > 8);
+    if (!ticking){ ticking = true; requestAnimationFrame(onFrame); }
+  }
+  addEventListener('scroll', onScroll, {passive:true});
+  addEventListener('resize', function(){ starts = null; onScroll(); }, {passive:true});
+
+  /* 首帧必须同步跑，不能只挂 rAF：后台标签页里 rAF 根本不来，而 .js [data-rise]
+     是被 opacity:0 藏着的 —— 只等 rAF 的话，后台打开或刷新在页面中段时会是一片空白，
+     非得手动滚一下才亮。字体/图片到位后位置会变，所以 load 后再重量一次。 */
+  if (REDUCED){
+    riseEls.forEach(function(el){ el.style.opacity = 1; el.style.transform = 'none'; });
+    applySpy();
+  } else {
+    nav.classList.toggle('scrolled', scrollY > 8);
+    update();
+    addEventListener('load', function(){ starts = null; update(); });
+    document.addEventListener('visibilitychange', function(){ if (!document.hidden){ starts = null; update(); } });
+  }
+}());
+
+/* 数字条：进视口跑一次，跑完就 unobserve，往回滚不再重跑 */
+(function(){
+  var els = [].slice.call(document.querySelectorAll('[data-count]'));
+  if (!els.length || !('IntersectionObserver' in window)) return;
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (!en.isIntersecting) return;
+      var el = en.target, target = parseFloat(el.dataset.count);
+      var dec = parseInt(el.dataset.dec || '0', 10), prefix = el.dataset.prefix || '';
+      if (REDUCED){ el.textContent = prefix + target.toFixed(dec); obs.unobserve(el); return; }
+      var dur = 1200, t0 = performance.now();
+      (function tick(t){
+        var p = Math.min(1, (t - t0) / dur);
+        var e = 1 - Math.pow(1 - p, 3);
+        el.textContent = prefix + (target * e).toFixed(dec);
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
+      obs.unobserve(el);
+    });
+  }, {threshold: .5});
+  els.forEach(function(el){ obs.observe(el); });
+})();
+
+/* 产品图里的"正在跑"是演出来的：过一会儿翻一步、补一行转录，再从头来。
+   只改文本和类名，不动布局，所以不会引起重排抖动。 */
+(function(){
+  if (REDUCED) return;
+  var log = document.getElementById('mockLog'), count = document.getElementById('mockCount');
+  var rows = [].slice.call(document.querySelectorAll('.m-prog .pr'));
+  var LINES = [
+    ['12:24:11','TOOL','Write sensitivity.py'],
+    ['12:26:38','DONE','逐项执行 · EXECUTION.md 已落盘'],
+    ['12:31:02','INFO','自检复核开始，逐条比对验收标准']
+  ];
+  var i = 0, timer = null;
+  /* 演示动画滚出视口就该停表：让一个看不见的窗口一直 setInterval 是纯浪费 */
+  function start(){ if (!timer) timer = setInterval(tick, 1800); }
+  function stop(){ clearInterval(timer); timer = null; }
+  function tick(){
+    if (i >= LINES.length){ setTimeout(reset, 2600); return; }
+    var d = document.createElement('div');
+    d.className = 'ln new';
+    var map = {TOOL:'t-tool', DONE:'t-ok', INFO:'t-info', RUN:'t-run'};
+    d.innerHTML = '<b>' + LINES[i][0] + '</b><span class="tag ' + map[LINES[i][1]] + '">' + LINES[i][1] + '</span>' + LINES[i][2];
+    var cur = log.querySelector('.ln .cursor');
+    if (cur) cur.parentNode.removeChild(cur);
+    log.insertBefore(d, log.querySelector('.ws'));
+    if (i === 1){
+      rows[3].className = 'pr ok'; rows[3].querySelector('i').textContent = '✓';
+      rows[4].className = 'pr on run'; rows[4].querySelector('i').textContent = '●';
+      count.textContent = '4/7';
+    }
+    i++;
+  }
+  function reset(){
+    [].slice.call(log.querySelectorAll('.ln')).slice(6).forEach(function(n){ n.parentNode.removeChild(n); });
+    rows[3].className = 'pr on run'; rows[3].querySelector('i').textContent = '●';
+    rows[4].className = 'pr pend'; rows[4].querySelector('i').textContent = '';
+    count.textContent = '3/7';
+    i = 0;
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function(en){
+      en[0].isIntersecting ? start() : stop();
+    }, {threshold: .15}).observe(document.querySelector('.mock'));
+  } else { start(); }
+})();
+
+/* details 的展开高度靠 grid-template-rows 过渡；同组内手风琴式收起，只留一个开着 */
+(function(){
+  var all = [].slice.call(document.querySelectorAll('#faq details'));
+  all.forEach(function(d){
+    d.addEventListener('toggle', function(){
+      if (!d.open) return;
+      all.forEach(function(o){ if (o !== d) o.open = false; });
+    });
+  });
 })();
 </script>
 </body>
