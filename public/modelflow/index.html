@@ -121,16 +121,19 @@ img{display:block;max-width:100%}
 .nav-dl{height:38px;padding:0 16px;font-size:14px}
 
 /* ---------- Hero：透视舞台，产品图随滚动从躺平抬起来 ---------- */
-.hero{position:relative;padding:calc(var(--nav-h) + 56px) 24px 120px;overflow:hidden;
-  perspective:2000px;perspective-origin:50% 28%;-webkit-perspective:2000px;
+.hero{position:relative;min-height:100vh;padding:calc(var(--nav-h) + 56px) 24px 120px;overflow:hidden;
+  perspective:2000px;perspective-origin:50%;-webkit-perspective:2000px;
   background:
     radial-gradient(58% 48% at 16% 88%,rgba(91,150,249,.16),transparent 70%),
     radial-gradient(52% 46% at 84% 90%,rgba(47,111,208,.13),transparent 70%),
-    linear-gradient(180deg,#fff 0%,#f8fbff 60%,#eef4fe 100%)}
+    linear-gradient(180deg,#fff 0%,#f8fbff 60%,var(--hero-end,#eef4fe) 100%)}
+/* 结构照 tabbit 的 .hero-gradient：400% 尺寸的色带 + 8s 位移循环 + 大模糊低不透明度。
+   它那条是彩虹，这里换成软件强调色的蓝调 —— 学机制不学色相。 */
 .hero-glow{position:absolute;left:50%;bottom:-180px;width:1200px;max-width:160%;height:560px;
-  transform:translateX(-50%);pointer-events:none;z-index:0;filter:blur(100px);
-  background:radial-gradient(40% 52% at 30% 50%,rgba(47,111,228,.20),transparent 70%),
-             radial-gradient(40% 52% at 70% 50%,rgba(91,150,249,.18),transparent 70%)}
+  transform:translateX(-50%);pointer-events:none;z-index:0;filter:blur(160px);opacity:.42;
+  background:linear-gradient(270deg,#2f6fe4,#5b96f9,#eaf1fd,#5b96f9,#245ab8,#2f6fe4);
+  background-size:400% 400%;animation:gradientFlow 8s ease-in-out infinite}
+@keyframes gradientFlow{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
 .hero-in{position:relative;z-index:2;max-width:820px;margin:0 auto;text-align:center;
   display:flex;flex-direction:column;align-items:center;padding:56px 0 0}
 .kicker{font-size:19px;color:var(--ink-3);opacity:0;animation:up .8s .05s var(--e-out) forwards}
@@ -146,7 +149,6 @@ img{display:block;max-width:100%}
 .hero-note b{font-weight:600;color:var(--ink-3)}
 @keyframes up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
-@keyframes previewIn{from{opacity:0;transform:translateY(52px) scale(.982)}to{opacity:1;transform:none}}
 @keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(79,139,247,.45)}
@@ -155,11 +157,14 @@ img{display:block;max-width:100%}
 @keyframes sweep{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 
 /* ---------- 产品图：结构照 Loom 真实界面，色值取软件深色主题 ---------- */
-/* 入场动画和滚动视差不能挂在同一个元素上：animation ... forwards 的终值会
-   永久盖住 JS 写的内联 transform，视差就再也不动了。拆成外层摆位、内层入场。 */
-.stage{position:relative;z-index:2;max-width:1180px;margin:64px auto 0;
-  transform-style:preserve-3d;will-change:transform}
-.stage-in{opacity:0;animation:previewIn .95s .5s var(--e-out) forwards}
+/* 支点必须在底边：rotateX 才是"以底边为轴往下压平"（屏幕往架子上放），
+   默认的 center 支点会转成绕自己中心翻，读起来就只是个普通 3D 倾斜。
+   入场只补间 opacity —— 只碰 transform 以外的属性，JS 写的内联 transform 才不会被
+   animation forwards 的终值永久盖住。 */
+.stage{position:relative;z-index:2;width:100%;max-width:1200px;margin:64px auto 0;
+  transform-style:preserve-3d;transform-origin:center bottom;will-change:transform;
+  opacity:0;animation:heroFadeIn .8s ease .8s forwards}
+@keyframes heroFadeIn{from{opacity:0}to{opacity:1}}
 .stage::before{content:"";position:absolute;left:50%;top:8%;bottom:8%;width:118%;
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:var(--r-2xl);
   background:radial-gradient(38% 50% at 18% 50%,rgba(47,111,228,.20),transparent 70%),
@@ -458,8 +463,8 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;
-    transition-duration:.001ms!important}
+  *,*::before,*::after{animation-duration:.001ms!important;animation-delay:0s!important;
+    animation-iteration-count:1!important;transition-duration:.001ms!important}
   .js [data-rise]{opacity:1;transform:none}
 }
 </style>
@@ -493,9 +498,9 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     <p class="hero-note">Windows 10 / 11 x64 · 约 <b id="heroSize">36 MB</b> · 全本地运行，无账号无遥测</p>
   </div>
 
-  <div class="wrap">
-    <div class="stage" id="heroStage">
-      <div class="stage-in">
+  <!-- 不能包在 .wrap 里：.wrap 是 transform-style:flat，会把 .hero 的 perspective 拍平，
+     rotateX 就退化成纵向压扁、没有透视。横向留白由 .hero 自己的 padding 给。 -->
+  <div class="stage" id="heroStage">
       <div class="mock">
         <div class="mock-bar">
           <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
@@ -554,8 +559,6 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
           </aside>
         </div>
       </div>
-      </div>
-    </div>
   </div>
 </header>
 
@@ -786,6 +789,7 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 (function(){
   var riseEls = [].slice.call(document.querySelectorAll('[data-rise]'));
   var preview = document.getElementById('heroStage');
+  var hero = document.querySelector('.hero');
   var nav = document.getElementById('nav');
   var links = [].slice.call(document.querySelectorAll('#navLinks a'));
   var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
@@ -815,15 +819,21 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
       el.style.transform = 'translate3d(0,' + ((1 - e) * 36).toFixed(2) + 'px,0)';
     }
   }
+  /* 进度只认 scrollY：滚到 330px 就完全摊平，所以它在预览图进视口之前就动完了 ——
+   tabbit 就是这个手感（先到 flatten、再到眼前），不需要 getBoundingClientRect。
+   只写 rotateX，别的分量一个都不加。 */
+  /* 与 transform 共用同一个 y，但颜色走 easeInOutCubic：tabbit 原式
+     A = y<.5 ? 4y³ : 1-(-2y+2)³/2，端点换成 #eef4fe → #ffffff */
+  function heroEnd(y){
+    var A = y < .5 ? 4*y*y*y : 1 - Math.pow(-2*y+2, 3)/2;
+    return 'rgb(' + Math.round(238+17*A) + ',' + Math.round(244+11*A) + ',' + Math.round(254+1*A) + ')';
+  }
   function applyParallax(){
     if (!preview) return;
-    var vh = innerHeight, r = preview.getBoundingClientRect();
-    var span = vh + r.height * 0.25;
-    var p = Math.min(1, Math.max(0, (vh - r.top) / span));
-    var ty = 30 - p * 36;
-    var tiltP = Math.min(1, Math.max(0, (420 - r.top) / 300));
-    var rx = 30 - tiltP * 30;
-    preview.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) translate3d(0,' + ty.toFixed(2) + 'px,0)';
+    var y = Math.min(Math.max(scrollY / 330, 0), 1);
+    preview.style.transform = 'rotateX(' + (30 * (1 - y)).toFixed(2) + 'deg)';
+    /* 底色跟着摊平进度从蓝调收白，和 transform 同一个进度驱动，见 .hero 的 --hero-end */
+    if (hero) hero.style.setProperty('--hero-end', heroEnd(y));
   }
   function applySpy(){
     var y = scrollY + 120, cur = -1;
