@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/png" href="/zenew/icon.png" sizes="any">
+<link rel="apple-touch-icon" href="/zenew/icon.png">
 <title>知新 Zenew — 购买额度</title>
 <style>
   :root{
@@ -191,10 +193,16 @@ document.getElementById('againBtn').onclick = () => {
 document.getElementById('checkBtn').onclick = check;
 
 // 是否由软件打开（带 ?sid=）→ 付款成功后自动唤回软件
-const fromApp = !!new URLSearchParams(location.search).get('sid');
+const qs = new URLSearchParams(location.search);
+const fromApp = !!qs.get('sid');
 if (fromApp) {
   const notice = document.getElementById('appNotice');
   if (notice) notice.style.display = 'block';
+}
+// 软件传来的登录邮箱：预填 → 订单绑定账号 → 付款确认后自动到账
+const preEmail = qs.get('email');
+if (preEmail && !document.getElementById('emailIn').value) {
+  document.getElementById('emailIn').value = preEmail;
 }
 
 async function check(){
