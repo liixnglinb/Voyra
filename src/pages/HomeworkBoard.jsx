@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import DateTimePicker from '../components/DateTimePicker';
 import { useAuth } from '../components/AuthGate';
-import { userKey } from '../lib/auth';
+import { userKey, isAuthed } from '../lib/auth';
 
 /* ============================================================
    作业看板 · HomeworkBoard
@@ -187,7 +187,8 @@ export function badgeText(it, now = new Date()) {
 /* ---------------- 组件 ---------------- */
 
 export default function HomeworkBoard({ active = true }) {
-  const { guard } = useAuth();
+  const { guard, authed } = useAuth();
+  const CLOUD_KEY = 'schedule-homework-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const [items, setItems] = useState([]);
   const [courses, setCourses] = useState([]);
   const [startDate, setStartDate] = useState('');
@@ -213,6 +214,28 @@ export default function HomeworkBoard({ active = true }) {
 
   useEffect(reload, []);
   useEffect(() => { if (active) reload(); }, [active]);
+
+  /* ===== 云端同步（2026-09-20）：登录后作业数据上云，跨设备跟随 ===== */
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        if (!authed || !active || !isAuthed()) return;
+        const cloud = await window.electronAPI?.loadData?.(CLOUD_KEY);
+        if (!alive) return;
+        if (Array.isArray(cloud)) {
+          setItems(cloud);
+          try { localStorage.setItem(LS_READ(), JSON.stringify(cloud)); } catch { /* ignore */ }
+        } else {
+          const local = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
+          const legacy = JSON.parse(localStorage.getItem('HomeworkData_local') || 'null');
+          const first = Array.isArray(local) && local.length ? local : (Array.isArray(legacy) && legacy.length ? legacy : null);
+          if (first) await window.electronAPI?.saveData?.(CLOUD_KEY, first);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { alive = false; };
+  }, [authed, active]);
   useEffect(() => {
     if (quickOpen) requestAnimationFrame(() => { if (titleRef.current) titleRef.current.focus(); });
   }, [quickOpen]);
@@ -222,6 +245,7 @@ export default function HomeworkBoard({ active = true }) {
     setItems(next);
     try {
       localStorage.setItem(LS_READ(), JSON.stringify(next));
+      try { Promise.resolve(window.electronAPI?.saveData?.(CLOUD_KEY, next)).catch(() => {}); } catch { /* ignore */ }
       return true;
     } catch {
       say('保存失败：本机存储空间不足');

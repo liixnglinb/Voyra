@@ -16,7 +16,7 @@ import { loadItems, groupByDate, urgency, urgentStyle, badgeText } from './Homew
    ============================================================ */
 
 const LS_KEY = 'PlannerData';
-import { userKey } from '../lib/auth';
+import { userKey, isAuthed } from '../lib/auth';
 const LS_READ = () => userKey(LS_KEY);
 const ACCENT = '#A48830';
 const ACCENT_SOFT = '#FFF9DF';
@@ -122,7 +122,8 @@ function CatSelect({ value, onChange }) {
 }
 
 export default function Planner({ active = true }) {
-  const { guard } = useAuth();
+  const { guard, authed } = useAuth();
+  const CLOUD_KEY = 'schedule-planner-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const today = new Date();
   const [view, setView] = useState({ y: today.getFullYear(), m: today.getMonth() + 1 });
   const [selected, setSelected] = useState(fmt(today));
@@ -145,6 +146,31 @@ export default function Planner({ active = true }) {
     setLoaded(true);
   }, []);
 
+  /* ===== 云端同步（2026-09-20）：登录后数据上云，跨设备跟随 =====
+     authed/uid 变化时执行一次：云端有 → 以云端为准覆盖本机；云端无 → 把本机数据首推上云
+     （含未登录时期写入的 PlannerData_local 旧键，一次性迁移） */
+  useEffect(() => {
+    if (!loaded) return;
+    let alive = true;
+    (async () => {
+      try {
+        if (!authed || !isAuthed()) return;
+        const cloud = await window.electronAPI?.loadData?.(CLOUD_KEY);
+        if (!alive) return;
+        if (Array.isArray(cloud)) {
+          setEvents(cloud);
+          try { localStorage.setItem(LS_READ(), JSON.stringify(cloud)); } catch { /* ignore */ }
+        } else {
+          const local = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
+          const legacy = JSON.parse(localStorage.getItem('PlannerData_local') || 'null');
+          const first = Array.isArray(local) && local.length ? local : (Array.isArray(legacy) && legacy.length ? legacy : null);
+          if (first) await window.electronAPI?.saveData?.(CLOUD_KEY, first);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { alive = false; };
+  }, [authed, loaded]);
+
   /* 作业数据只读透出：切回本视图时重新读取，避免与作业看板的改动脱节 */
   const reloadHw = () => { try { setHw(loadItems()); } catch { setHw([]); } };
   useEffect(reloadHw, []);
@@ -154,6 +180,7 @@ export default function Planner({ active = true }) {
     if (!guard()) return;
     setEvents(next);
     try { localStorage.setItem(LS_READ(), JSON.stringify(next)); } catch { /* ignore */ }
+    try { Promise.resolve(window.electronAPI?.saveData?.(CLOUD_KEY, next)).catch(() => {}); } catch { /* ignore */ }
   };
 
   const byDate = useMemo(() => {
