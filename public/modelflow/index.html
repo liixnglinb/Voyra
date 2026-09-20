@@ -8,7 +8,9 @@
 <meta property="og:title" content="织流 Loom · 本地智能体流水线工作台">
 <meta property="og:description" content="可编辑多步流程 + 本机 CLI 智能体执行 + 工作区实时反馈。全本地运行。">
 <meta property="og:type" content="website">
-<link rel="icon" type="image/png" href="./favicon-48.png">
+<link rel="icon" type="image/svg+xml" href="./logo.svg">
+<link rel="alternate icon" type="image/png" sizes="16x16" href="./favicon-16.png">
+<link rel="alternate icon" type="image/png" sizes="32x32" href="./favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
@@ -652,7 +654,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 
 <section class="omni" id="omni">
   <div class="omni-in">
-    <div class="omni-mark"><img src="./logo-64.png" alt=""></div>
+    <div class="omni-mark"><img src="./logo.svg" alt="" width="120" height="120"></div>
     <p class="omni-title">跑完不满意，不用整条重跑</p>
     <p class="omni-desc">转录区里指着某一步说怎么改 —— 修订指令只重写那一步，其余产物原样保留。下面这三张就是那条指令真正拿到的东西。</p>
     <div class="omni-dialog">
@@ -828,7 +830,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <details><summary>检查点是做什么的？<i>+</i></summary><p>给关键步骤加检查点后，流程跑到那里会停下来等你看产物、给意见，确认了才往下走。内置七步全流程在「需求解析」「方案拆解」「逐项执行」三处默认带检查点 —— 这三步走偏了后面全白跑。</p></details>
       <details><summary>跑一次大概多久？<i>+</i></summary><p>取决于步骤数和智能体本身。内置七步全流程在单题上通常是几十分钟量级；每步耗时、工具调用次数、累计费用都会记在运行记录里，设置页「使用统计」有汇总。</p></details>
       <details><summary>有 macOS 版吗？<i>+</i></summary><p>安装包暂时只有 Windows。后端是 FastAPI，macOS / Linux 可以用源码运行：<code>pip install -r requirements.txt && python run.py</code>。</p></details>
-      <details><summary>源码在哪？<i>+</i></summary><p>GitHub：<code>liixnglinb/Loom</code>。含 145 条回归测试（其中一部分专门看守静态资产契约），界面文案中英双语，前端无框架无构建步骤。</p></details>
+      <details><summary>源码在哪？<i>+</i></summary><p>GitHub：<code>liixnglinb/Loom</code>。带一整套回归测试，其中一部分专门看守静态资产契约 —— 配色令牌只许在 token 块里出现、圆角字号只能取刻度上的值、中英两套文案键位必须对齐、图标 ico 的档位和小尺寸五官都有用例钉着。界面文案中英双语，前端无框架无构建步骤。</p></details>
     </div>
   </div>
 </section>
