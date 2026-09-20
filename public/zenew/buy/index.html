@@ -18,6 +18,8 @@
   .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
   h1{font-size:clamp(30px,5vw,46px);line-height:1.1;letter-spacing:-.02em;font-weight:600}
   .sub{color:var(--muted);margin-top:14px;max-width:52ch;font-size:14.5px}
+  .app-notice{margin-top:20px;padding:12px 18px;border-radius:999px;background:rgba(201,162,39,.10);border:1px solid rgba(201,162,39,.35);color:var(--gold-soft);font-size:13px;max-width:52ch}
+  .app-notice b{color:var(--gold)}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-top:34px}
   .tier{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;cursor:pointer;transition:.28s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden}
   .tier:hover{transform:translateY(-3px);border-color:#2E2E2E}
@@ -62,6 +64,10 @@
   <div class="kicker">ZENEW / 额度购买</div>
   <h1>按需买额度，永久有效。</h1>
   <p class="sub">额度用于 AI 生成知识卡片与课程大纲，不随月份清零。填写你的登录邮箱，付款确认后额度自动进入账户；不填则获得兑换码，在软件内「设置 → 兑换充值码」使用。</p>
+
+  <div class="app-notice" id="appNotice" style="display:none">
+    <b>从软件打开</b> · 付款确认后会自动切回软件并提示到账，无需手动刷新。
+  </div>
 
   <div style="margin-top:28px;max-width:420px">
     <div class="lab" style="margin-bottom:8px">登录邮箱（选填 · 填写后自动到账）</div>
@@ -184,6 +190,13 @@ document.getElementById('againBtn').onclick = () => {
 };
 document.getElementById('checkBtn').onclick = check;
 
+// 是否由软件打开（带 ?sid=）→ 付款成功后自动唤回软件
+const fromApp = !!new URLSearchParams(location.search).get('sid');
+if (fromApp) {
+  const notice = document.getElementById('appNotice');
+  if (notice) notice.style.display = 'block';
+}
+
 async function check(){
   if (!orderNo) return;
   try{
@@ -196,7 +209,8 @@ async function check(){
       document.getElementById('stTag').className = 'tag gold';
       if (d.credited){
         document.getElementById('result').innerHTML = `<div class="lab">结果</div>
-          <p class="ok" style="margin-top:8px">额度已自动充入账户 ${d.email || ''}（${wan(d.tokens)} tokens）。打开软件即可看到，若已打开请在 设置 页点「刷新」。</p>`;
+          <p class="ok" style="margin-top:8px">额度已自动充入账户 ${d.email || ''}（${wan(d.tokens)} tokens）。${fromApp ? '正在唤回软件…' : '打开软件即可看到，若已打开请在 设置 页点「刷新」。'}</p>
+          ${fromApp ? '<button class="btn" id="backBtn" style="margin-top:12px">没自动跳转？点这里回到软件</button>' : ''}`;
       } else if (d.code){
         document.getElementById('result').innerHTML = `<div class="lab">你的兑换码</div>
           <div class="code">${d.code}</div>
@@ -204,8 +218,24 @@ async function check(){
       } else {
         document.getElementById('result').innerHTML = `<p class="ok">已确认收款，额度已发放。</p>`;
       }
+      if (fromApp) summonApp();
     }
   }catch(e){}
+}
+
+/** 付款成功 → 用 zenew:// 深链把已打开的软件唤到前台（软件收到后立即对账并提示到账） */
+let summoned = false;
+function summonApp(){
+  if (summoned || !orderNo) return;
+  summoned = true;
+  const url = 'zenew://paid?order=' + encodeURIComponent(orderNo);
+  try { location.href = url; } catch(e){}
+  if (navigator.registerProtocolHandler){
+    // 部署在站点上时声明处理（部分浏览器需用户确认一次）
+    try { navigator.registerProtocolHandler('web+zenew', location.origin + '/zenew/paid?order=%s'); } catch(e){}
+  }
+  const btn = document.getElementById('backBtn');
+  if (btn) btn.onclick = () => { summoned = false; summonApp(); };
 }
 
 // 续接未完成订单
