@@ -664,7 +664,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   </div>
 
   <div class="omni-cards">
-      <div class="omni-card"><h4>技能</h4><p>这一步挂的是 ff-review，提示词规范独立可改，改坏了能单独恢复出厂。</p></div>
+      <div class="omni-card"><h4>技能</h4><p>这一步挂的是复核技能，提示词规范独立存在 —— 改坏了只影响这一步，改完也不用重跑前面几步。</p></div>
       <div class="omni-card wide"><h4>产物</h4><p>输出钉死到 REVIEW.md，就地渲染；图片和 PDF 直接在面板里看，不用等跑完去翻文件夹。</p>
 </div>
     <div class="omni-card"><h4>引擎</h4><p>这一步用 claude 还是 codex，单独选；两个都装了就能逐步换。</p></div>
@@ -673,11 +673,11 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 
 <div class="wrap">
   <div class="stats">
-    <div class="stat"><b data-count="7">0</b><span>全流程步骤</span></div>
-    <div class="stat"><b data-count="3">0</b><span>可插检查点</span></div>
-    <div class="stat"><b data-count="7">0</b><span>出厂技能</span></div>
-    <div class="stat"><b data-count="2">0</b><span>内置流程模板</span></div>
-    <div class="stat"><b data-count="130">0</b><span>回归测试</span></div>
+    <div class="stat"><b data-count="2">0</b><span>本机智能体引擎</span></div>
+    <div class="stat"><b data-count="3">0</b><span>步骤角色</span></div>
+    <div class="stat"><b data-count="9">0</b><span>设置分区</span></div>
+    <div class="stat"><b data-count="9">0</b><span>图标尺寸档位</span></div>
+    <div class="stat"><b data-count="2">0</b><span>界面语言</span></div>
   </div>
 </div>
 
@@ -689,8 +689,8 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="lead">正文一律由你本机已登录的 Claude Code 或 Codex CLI 产出。Loom 负责把任务拆开、把提示词规范喂到位、盯着每一步的产物、在需要确认的地方停下来等你。</p>
     </div>
     <div class="grid">
-      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/><path d="M14.6 4.6v14.8"/></svg></div><h3>可视化编排流程</h3><p>增删步骤、拖顺序，每步绑定技能、产物文件名、角色（执行 / 复核 / 编辑）、引擎与模型，可设检查点暂停等确认。改完即存，不用重装模板。</p><span class="more">流程 = 一个可编辑的 JSON<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
-      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7.2 3.6h9.6a1.6 1.6 0 0 1 1.6 1.6v15.2l-6.4-3.9-6.4 3.9V5.2a1.6 1.6 0 0 1 1.6-1.6z"/></svg></div><h3>技能库</h3><p>每步的提示词规范独立成技能，可新建、编辑、另存副本，也支持导入标准 skill 包（zip / SKILL.md）。内置 7 个覆盖全流程，也能整个恢复出厂。</p><span class="more">出厂技能可改可复原<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/><path d="M14.6 4.6v14.8"/></svg></div><h3>可视化编排流程</h3><p>增删步骤、拖顺序，每步绑定技能、产物文件名、角色（执行 / 复核 / 编辑）、引擎与模型，可设检查点暂停等确认。改完即存，流程本身就是一条可编辑的清单。</p><span class="more">流程 = 一个可编辑的 JSON<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+      <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7.2 3.6h9.6a1.6 1.6 0 0 1 1.6 1.6v15.2l-6.4-3.9-6.4 3.9V5.2a1.6 1.6 0 0 1 1.6-1.6z"/></svg></div><h3>技能库</h3><p>每步的提示词规范独立成技能，可新建、编辑、另存副本，也支持导入标准 skill 包（zip / SKILL.md）。技能从哪来由你定 —— 自己写、别人分享的、或跑完一轮再回头补。</p><span class="more">可新建 · 可导入<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg></div><h3>实时流式运行</h3><p>SSE 把每一步的工具调用、输出与耗时逐行推给你；右上角进程卡对应每一步状态，点一行直接跳到那一步的转录。</p><span class="more">检查点会停下等你<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6.5h16M4 12h11M4 17.5h7"/></svg></div><h3>工作区实时反馈</h3><p>智能体写到哪，面板就列到哪：markdown 就地渲染、图片与 PDF 内联预览、刚写入的文件高亮。不用等跑完再去文件夹里翻。</p><span class="more">产物就在你自己磁盘上<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8.5 4.5h7a1.6 1.6 0 0 1 1.6 1.6v9.4l-4.7-2.9-4.7 2.9V6.1a1.6 1.6 0 0 1 1.6-1.6z"/><path d="M4 19.5h16"/></svg></div><h3>对话式局部修订</h3><p>结果不满意不用整条重跑 —— 指着某一步说怎么改，只重写那一步，其余产物原样保留。</p><span class="more">不用从头再来<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
@@ -704,7 +704,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     <div class="s-head center" data-rise>
       <p class="eyebrow">Pipeline</p>
       <h2>七个环节，<br>三段式接力</h2>
-      <p class="lead">内置「通用全自动工作流」把这七步摆成一条链，每一步加载对应的出厂技能作为方法内核，产物逐级往下传，环环自检。</p>
+      <p class="lead">下面这条「需求 → 拆解 → 备料 → 逐项执行 → 复核 → 修订 → 交付」是编排出来的一种典型形态：任意一段都能改成自己的样子，每一步加载你指定的技能作为方法内核，产物逐级往下传，环环自检。</p>
     </div>
     <div class="stages">
       <div class="stage" data-rise>
@@ -771,7 +771,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     <div class="steps">
       <div class="step" data-rise><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Loom 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
       <div class="step" data-rise><span class="n">02</span><div><h4>装 Loom，打开就是工作台</h4><p>安装包约 36 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
-      <div class="step" data-rise><span class="n">03</span><div><h4>挑一条流程，或自己编一条</h4><p>内置「通用全自动工作流」七步和「轻量三步流」，也可以复制一份改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的。</p></div></div>
+      <div class="step" data-rise><span class="n">03</span><div><h4>编一条你自己的流程</h4><p>从零加步骤，或者导入别人分享的流程 JSON 改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的 —— 软件不预设该怎么干活。</p></div></div>
       <div class="step" data-rise><span class="n">04</span><div><h4>下任务，看它跑</h4><p>写清任务说明就能开跑。转录区实时输出，进程卡显示走到第几步，工作区面板列出正在写的文件；跑完对着任意一步提修改要求即可。</p></div></div>
     </div>
   </div>
@@ -827,8 +827,8 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <details><summary>我的数据和产物存在哪？<i>+</i></summary><p>安装目录下的 <code>data\</code>：SQLite 数据库、每次运行的工作区（<code>data\workspaces\run-xxx\</code>）、你自建的技能、导出件都在里面。设置页「本地目录」可以直接打开它们。</p></details>
       <details><summary>卸载会删掉我的流程吗？<i>+</i></summary><p>不会。卸载器刻意保留 <code>data\</code> 整个目录，重装后自动继续读取。要彻底清掉自己的数据，需要你自己删那个文件夹。</p></details>
       <details><summary>怎么更新？<i>+</i></summary><p>左下角会出现「更新」胶囊 —— 软件启动后自动读一次版本清单，有新版本才出现。点一下开始下载，进度实时显示，下载完成后确认即静默安装并退出；有任务在跑或停在检查点时会先弹提示。</p></details>
-      <details><summary>检查点是做什么的？<i>+</i></summary><p>给关键步骤加检查点后，流程跑到那里会停下来等你看产物、给意见，确认了才往下走。内置七步全流程在「需求解析」「方案拆解」「逐项执行」三处默认带检查点 —— 这三步走偏了后面全白跑。</p></details>
-      <details><summary>跑一次大概多久？<i>+</i></summary><p>取决于步骤数和智能体本身。内置七步全流程在单题上通常是几十分钟量级；每步耗时、工具调用次数、累计费用都会记在运行记录里，设置页「使用统计」有汇总。</p></details>
+      <details><summary>检查点是做什么的？<i>+</i></summary><p>给关键步骤加检查点后，流程跑到那里会停下来等你看产物、给意见，确认了才往下走。哪几步该停由你在编排时决定 —— 通常是那种走偏了后面全白跑的步骤，比如需求界定和方案拆解。</p></details>
+      <details><summary>跑一次大概多久？<i>+</i></summary><p>取决于你编了几步、每步的智能体干什么活。几十分钟的量级很常见；每步耗时、工具调用次数、累计 token 都会记在运行记录里，设置页「使用统计」有汇总。</p></details>
       <details><summary>有 macOS 版吗？<i>+</i></summary><p>安装包暂时只有 Windows。后端是 FastAPI，macOS / Linux 可以用源码运行：<code>pip install -r requirements.txt && python run.py</code>。</p></details>
       <details><summary>源码在哪？<i>+</i></summary><p>GitHub：<code>liixnglinb/Loom</code>。带一整套回归测试，其中一部分专门看守静态资产契约 —— 配色令牌只许在 token 块里出现、圆角字号只能取刻度上的值、中英两套文案键位必须对齐、图标 ico 的档位和小尺寸五官都有用例钉着。界面文案中英双语，前端无框架无构建步骤。</p></details>
     </div>
