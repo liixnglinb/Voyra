@@ -290,19 +290,101 @@ export default function Planner({ active = true }) {
         .pl-hw { border-top:1px dashed rgba(20,24,33,.14);padding-top:10px;display:flex;flex-direction:column;gap:10px; }
         .pl-hw-title { font-size:12px;color:#6c757d;font-weight:600; }
         .pl-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12.5px;z-index:99; }
-        @media (max-width:560px) {
+        /* ── 手机端断点：≤767px（2026-09-22 从 ≤560 抬上来）────────────
+           为什么是 767：站点 index.css 的手机口径就是 max-width:767px，字号/触控
+           阶梯全部在 767 生效。本块以前只写 ≤560，于是 561–767（平板竖屏、
+           小折叠屏外屏）两头不靠：既拿不到均分列，也拿不到 44px 触控兜底。
+           实测 700 档改前：月历七列被撑成 [83.6,179.6,155.6,157.6,32.5,32.5,32.5]、
+           .pl-grid 溢出 121px、周五到周日三列压到 32.5px，「类型」下拉与
+           DateTimePicker 触发钮只有 40 / 40.7px —— 全是这段空档造成的。 */
+        @media (max-width:767px) {
           .pl-card { padding:14px 12px; }
           .pl-top { gap:8px; align-items:flex-start; flex-wrap:wrap; }
-          .pl-mbar { gap:6px; flex:0 0 auto; }
+          /* 相邻可点控件间距 ≥8（站点拇指间距口径）：上一月 / 月份 / 下一月 / 今天
+             四个钮以前挤在 6px，改 8 后实测 .pl-mbar 226px < 可用 298px，不折行 */
+          .pl-mbar { gap:8px; flex:0 0 auto; }
           .pl-mbar b { flex:0 0 auto; white-space:nowrap; font-size:14px; }
           .pl-mbar .pl-btn { padding:8px 10px; }
           .pl-top > .pl-label { width:calc(100% - 42px); margin-left:42px !important; }
           /* 星期表头是月历的列头（主信息），抬到标签级；
              七列靠 1fr 自适应，两字列头 28px < 360 档单列宽 ~35px，不会折行 */
           .pl-dow { font-size:var(--fs-label); }
-          .pl-grid { gap:4px; }
-          .pl-cell { min-height:76px; padding:5px; }
-          .pl-cell .hol, .pl-cell .ev { font-size:9px; }
+          /* ── 手机端排版修复（2026-09-22）────────────────────────
+             以下新增只收紧余量，不动任何字号下限：
+             .pl-cell .num / .hol / .ev / .more 与 .pl-label 的字号
+             由 index.css 里 .tool-content 前缀那批规则定在阶梯上，
+             这里一律不写 font-size，避免同特异性互相压来压去。 */
+          /* 月历七列：repeat(7,1fr) 的 1fr 等价于 minmax(auto,1fr)，而 .pl-cell .ev
+             是 white-space:nowrap —— 实测 390 档带日程的那列被顶到 108px、空列压到 31px，
+             整张月历溢出卡片（周四之后全被裁掉）。改成 minmax(0,1fr) 后七列真均分，
+             每列 (298-18)/7≈40px，超出部分由 .ev 自带的 ellipsis 收住。 */
+          /* 把月历卡左右那 12px 内边距借 8px 给七列（第二张卡是表单，不动，避免输入框贴屏边）。
+             两条踩坑记录：
+             ① 不能写 .pl-page > .pl-card:first-child —— .pl-page 的第一个子元素是本组件那个
+                style 标签，.pl-card 排第二，:first-child 永不命中；:nth-of-type 按 div 计数才对。
+             ② 就算选择器对了也压不住：主站 Layout.jsx 用
+                .tool-content :is([class*="card"],…):not([class*="grid"]) { padding:12px !important }
+                把卡片内边距钉死（实测改 padding-left:4px 后计算值仍是 12px）。
+                所以这里不去打 !important 仗，改成在 .pl-grid 上负外边距外扩——
+                它不是"卡片"，不在那条选择器范围内；12−8=4px 仍在卡内，不会顶出边框。
+                390 档 .pl-grid 可用宽 298 → 314，七列 40.9 → 43.1，
+                「中秋节」这类三字公假也从折两行变一行。 */
+          .pl-page > .pl-card:nth-of-type(1) > .pl-grid { margin-left:-8px; margin-right:-8px; }
+          .pl-grid { grid-template-columns:repeat(7,minmax(0,1fr)); gap:2px; margin-top:8px; }
+          .pl-dow { padding-bottom:3px; line-height:1.25; }
+          /* 月历格：min-height 76 → 56。56 是拇指下限（≥44）留出的空档，
+             有日程的行不再靠 min-height 撑高，改由 .ev 的行数自适应长高 */
+          .pl-cell { min-height:56px; padding:2px; border-radius:8px; }
+          /* 选中格原本用 2px 实线描边，每侧多吃掉 1px 内容宽——正好把 3 字/行压成
+             2 字/行（实测 3 日那格比邻格少看得见两个汉字）。手机端改成 1px 边框
+             + inset 阴影补粗，视觉上仍是 2px 金框，文字宽不再被吃掉。 */
+          .pl-page .pl-cell.sel { border-width:1px; box-shadow:inset 0 0 0 1px ${ACCENT}; }
+          .pl-cell .num { line-height:1.15; }
+          .pl-cell .hol, .pl-cell .more { margin-top:1px; }
+          /* ── 日程标题：不降级成色点，也不压到 12px 以下 ─────────────
+             以前是 nowrap + ellipsis：40px 列里文字宽 25px，「08:00 高等数学期中复习」
+             只画得出「08:」——等于没信息。这里改成「换行吃掉格子上下的留白」：
+             时间自己占一行（30.1px 正好塞满 37.1px 文字宽），标题从第二行起铺满整宽，
+             12px（= 必要信息下限 --fs-meta，不降档）四行可读「高等数学期中复习」。
+             实测 390 档逐条看得见的字：
+               nowrap 改前      「08:0」——0 个标题字
+               三行             「08:00 高等数学期中」6 个标题字，月历高 452、最高格 138
+               四行（本方案）   「08:00 高等数学期中复习」全标题，月历高 497、最高格 153
+             360 档四行是 5 个标题字（列只有 38.9px，每行 2 字），仍远高于改前的 0 字。
+             特异性：.pl-page 前缀凑到 0-3-0 与 index.css 的 .tool-content 打平，
+             而本 style 标签在 body 里、文档顺序靠后，所以由它说了算。 */
+          .pl-page .pl-cell .ev {
+            font-size:var(--fs-meta); line-height:1.25;
+            white-space:normal;
+            display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4;
+            overflow:hidden;
+            /* 左右各借 2px：把 .pl-cell 的内边距也让给文字（37.1 → 41.1px 条宽），
+               自身左右只留 1px——文字宽 37.1px 刚好放得下 3 个 12px 汉字 */
+            margin:2px -2px 0; padding:0 1px; border-left-width:2px;
+          }
+          /* 卡片头图标是装饰，缩到 26；详情列表与表单的行距收紧 */
+          .pl-ico { width:26px; height:26px; border-radius:7px; }
+          .pl-detail { gap:8px; }
+          .pl-label { margin-bottom:2px; line-height:1.3; }
+          .pl-ev { padding:7px 9px; gap:8px; }
+          .pl-ev .title { line-height:1.3; }
+          /* 11px 低于 --fs-meta 这条必要信息下限（时间/备注都是要读的） */
+          .pl-page .pl-ev .meta { font-size:var(--fs-meta); line-height:1.35; }
+          .pl-page .pl-cat { font-size:var(--fs-meta); padding:2px 8px; }
+          .pl-hw { padding-top:8px; gap:8px; }
+          .pl-hw-title { line-height:1.3; }
+          .pl-page > p { line-height:1.55; }
+          /* 触控下限：外壳只给 .pl-btn/.cs-btn 那一串兜了 44px，
+             类型下拉、下拉项与 DateTimePicker 触发钮都不在里面，实测 40/41/41；
+             561–767 这档以前根本没进过本块，所以 700 档量到 40 / 40.7。
+             另：外壳 Layout.jsx 那批兜底写在 @media (max-width:720px) 里，
+             721–767 反而只剩 index.css 的 40px :where 兵底（实测 767 档 .pl-btn=40），
+             所以本页自己按阶梯补齐，.primary 跟主 CTA 档 */
+          .pl-page .pl-btn { min-height:var(--ctl-md); }
+          .pl-page .pl-btn.primary { min-height:var(--ctl-lg); }
+          .pl-page .pl-catsel-btn { min-height:var(--ctl-md); }
+          .pl-page .pl-catopt { min-height:var(--ctl-md); }
+          .pl-page button[class*="py-2"] { min-height:var(--ctl-md); }
         }
       `}</style>
 

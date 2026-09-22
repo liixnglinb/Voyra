@@ -567,6 +567,29 @@ function inWeek(c, w) {
   return true;
 }
 
+/* 手机端断点开关：阈值与 CSS 里已存在的 @media (max-width:767px) 对齐。
+   它只驱动「仅手机生效」的条件渲染 —— 桌面端 isMobile 恒为 false，
+   渲染出的 DOM 与引入该开关之前逐字节相同。 */
+const MOBILE_MQ = '(max-width: 767px)';
+function useIsMobile() {
+  const [mobile, setMobile] = useState(
+    () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(MOBILE_MQ).matches : false),
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia(MOBILE_MQ);
+    const onChange = (e) => setMobile(e.matches);
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange); /* 老 Safari */
+    setMobile(mq.matches);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange);
+      else if (mq.removeListener) mq.removeListener(onChange);
+    };
+  }, []);
+  return mobile;
+}
+
 export default function ClassSchedule({ stats = null, active = true }) {
   const { guard, authed } = useAuth();
   const CLOUD_KEY = 'schedule-classes-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
@@ -586,10 +609,17 @@ export default function ClassSchedule({ stats = null, active = true }) {
   const toastRef = useRef(null);
   const gridCardRef = useRef(null);
   const [rowH, setRowH] = useState(null);
+  /* 手机端：课表行高交给内容自己撑开，不再做「贴住可视区底端」的均摊，
+     所以 fitGrid 在手机上直接短路（见下）。用 ref 读是因为注册 resize 监听时
+     捕获的是首帧闭包，断点切换后那个闭包里的 isMobile 已经过期。 */
+  const isMobile = useIsMobile();
+  const isMobileRef = useRef(isMobile);
+  isMobileRef.current = isMobile;
 
   /* 课表行高自适应：把视口内剩余高度均摊到 6 个节次行，
      使「第 X 周课表」卡片底边正好贴住可视区底端（明细卡被推出首屏） */
   const fitGrid = () => {
+    if (isMobileRef.current) { setRowH(null); return; } // 手机上网格卡是第一屏主体，行高随内容
     const card = gridCardRef.current;
     if (!card || !card.offsetWidth || !card.offsetHeight) return; // 视图隐藏时不测量
     const tbody = card.querySelector('tbody');
@@ -626,7 +656,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
   /* 增删课程 / 设置面板展开收起都会改变卡片高度，联动重算 */
   useEffect(() => {
     requestAnimationFrame(fitGrid);
-  }, [showSettings, showTimeSettings, courses.length]);
+  }, [showSettings, showTimeSettings, courses.length, isMobile]);
 
   const say = (msg) => { setToast(msg); clearTimeout(toastRef.current); toastRef.current = setTimeout(() => setToast(''), 1800); };
 
@@ -708,6 +738,16 @@ export default function ClassSchedule({ stats = null, active = true }) {
 
   const weekCourses = useMemo(() => courses.filter((c) => inWeek(c, currentWeek)), [courses, currentWeek]);
   const weekendEmpty = useMemo(() => !weekCourses.some((c) => c.day === 6 || c.day === 7), [weekCourses]);
+  /* 手机端列数收敛：当周（含单双周换算后）确实没有周六/周日的课，就不渲染这两列，
+     否则 390 宽的屏上它们要白占 110px，周一~周五被挤到看不全。
+     判据是 weekCourses（已按 currentWeek + 单双周过滤过的当周实际课程），不是全量 courses；
+     真有周末课时两列照常出现，此时允许横向滑动，数据不被藏起来。
+     桌面端 isMobile 恒 false → dayCols === WEEKDAY，渲染结果与改动前一致。 */
+  const dayCols = useMemo(
+    () => (isMobile && weekendEmpty ? WEEKDAY.slice(0, 5) : WEEKDAY),
+    [isMobile, weekendEmpty],
+  );
+  const gridScrollable = isMobile && !weekendEmpty; // 手机上仍可能横滑的唯一情形：周末有课
   /* 今日课程数：按今天星期几 + 当前周次实时统计（编辑课表立即生效） */
   const todayCourseCount = useMemo(() => {
     const dayIdx = (new Date().getDay() + 6) % 7 + 1;
@@ -835,28 +875,64 @@ export default function ClassSchedule({ stats = null, active = true }) {
         .cs-review-item { display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 10px;margin:4px 4px 0 0;font-size:12px; }
         .cs-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12.5px;z-index:99; }
         @media (max-width:767px) {
-          /* 外壳的通用卡片规则带 !important，这里用更高优先级收紧课表卡片 */
-          .tool-content .cs-card { padding:10px !important; }
+          /* 外壳的通用卡片规则实测是 .tool-content :is([class*="card"]…):not([class*="grid"])
+             共 3 条类选择器 + !important（手机上落到 12px），原来这条 .tool-content .cs-card
+             只有 2 条，压不过它；补齐 .tool-content .shub-panel .cs-page 前缀才真正收到 10px，
+             省下的横向余量全部给课表网格 */
+          .tool-content .shub-panel .cs-page .cs-card { padding:10px !important; }
+          .tool-content .shub-panel .cs-page .cs-card .cs-card { padding:8px !important; }
+          .cs-page { gap:12px; }
+          /* ── 1. 进来就展示课程表：周次切换卡挪到网格卡紧后面 ──
+             .cs-page 本就是 display:flex，重排只用 order，不动 DOM。
+             注：<style> 也占一个子节点，所以一律用 nth-of-type 按 div 计数。
+             新顺序：网格 0 / 周次 1 / 明细 2 / 导入 3 / 添加 4 ——
+             周次切换器是驱动网格的控件，紧贴网格才不致控件与内容分离。 */
+          .cs-page > .cs-card { order:3; }
+          .cs-page > .cs-card:nth-of-type(1) { order:1; }
+          .cs-page > .cs-card:nth-of-type(2) { order:0; }
+          .cs-page > .cs-card:nth-of-type(3) { order:2; }
+          .cs-page > .cs-card:nth-of-type(4) { order:3; }
+          .cs-page > .cs-card:nth-of-type(5) { order:4; }
+          .cs-page > .cs-toast { order:9; }
           /* 表格贴到卡片边缘：把省下的内边距全部还给课表 */
           .cs-gridwrap { margin:0 -10px; }
           .cs-gridwrap::after { width:30px; background:linear-gradient(270deg,#fff 6%,rgba(255,255,255,0)); }
-          .cs-grid { padding:0 10px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
-          .cs-grid table { min-width:624px; }
-          .cs-col-period { width:66px; }
-          .cs-col-day { width:80px; }
-          .cs-col-day.compact { width:58px; }
+          /* ── 2. 周一~周五一屏看全，不横滑 ──
+             390 档网格可用宽 322（原 .cs-grid 左右各 10px 内边距与 .cs-gridwrap 的
+             -10px 外边距互相抵消，白吃掉 20px）。节次列 46px：实测「08:20-」在
+             --fs-meta(12px) 下宽 40.6px，这是作息串能不断成三截的最小宽度；
+             其余五列不写宽度，交给 table-layout:fixed 等分剩余 →
+             实测 360/390/430 档每列 49 / 55 / 63px。 */
+          .cs-grid { padding:0; scroll-snap-type:x proximity; scroll-padding-left:46px; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+          .cs-grid table { min-width:0; }
+          .cs-col-period { width:46px; }
+          .cs-col-day, .cs-col-day.compact { width:auto; }
+          /* 唯一还允许横滑的情形：当周确有周六/周日课 → 七列一起上，每列兜到 46px 起 */
+          .cs-gridwrap-wide .cs-grid table { min-width:368px; }
+          .cs-gridwrap:not(.cs-gridwrap-wide)::after { width:0; } /* 不横滑了就不许再画「可滑动」的渐隐 */
           /* 节次列冻结：横滑时仍然知道自己在看第几节 */
           .cs-grid tr > .per { position:sticky; left:0; z-index:3; box-shadow:1px 0 0 rgba(20,24,33,.1); }
           .cs-grid thead th.per { z-index:5; }
-          .cs-grid thead th { font-size:12.5px; padding:12px 4px; }
-          .cs-grid .per { font-size:var(--fs-meta); padding:10px 4px; }
-          .cs-grid .per b { font-size:var(--fs-label); }
-          .cs-grid tbody td { padding:4px;height:var(--cs-row-h,100px); }
-          .cs-cell { padding:7px 6px;border-radius:8px; }
-          /* 课程名是课表里真正要读的东西，给到正文级；教室与时间紧随其后 */
-          .cs-cell .n { font-size:var(--fs-body); line-height:1.35; }
-          .cs-cell .r { font-size:var(--fs-meta); padding:3px 6px; }
-          .cs-cell .t { font-size:var(--fs-meta); }
+          .cs-grid thead th { font-size:var(--fs-meta); padding:9px 2px; letter-spacing:0; }
+          .cs-grid .per { font-size:var(--fs-meta); padding:7px 2px; line-height:1.35; }
+          /* 「1-2 节」12px 实测 39.2px，正好躺进 46-4 的一行；14px 是 45.2px 会被挤成竖排 */
+          .cs-grid .per b { font-size:var(--fs-meta); margin-bottom:1px; }
+          /* 行高随内容：手机上不再由 fitGrid 均摊视口高度，格子写死多高就必然裁掉多高。
+             注意别给 td 换 display:flex —— 那会让它不再是 table-cell，整行的格子会
+             塌进同一列里竖着堆起来（实测 390 档一行三格叠成 587px 高）。
+             改回表格原生行为，用 vertical-align:middle 让矮格子在行内居中，
+             避免同一行里三格顶高不齐。 */
+          .cs-grid tbody td { padding:2px; height:auto; min-height:96px; vertical-align:middle; }
+          .cs-cell { padding:4px 2px;border-radius:8px; gap:2px; }
+          /* 五列并排后每列只有 49 / 55 / 63px（360/390/430 实测），课程名格子内正文宽
+             360 档实测 38px —— 正文级 15px 会一个字一行，退到标签级；
+             教室与老师仍守住 --fs-meta 这条必要信息下限 */
+          .cs-cell .n { font-size:var(--fs-label); line-height:1.28; }
+          .cs-cell .r { font-size:var(--fs-meta); padding:1px 2px; gap:0; }
+          /* 定位小图标在 50px 宽的格子里要吃掉 12px，教室串会被挤成「明理/楼A/201」三行竖排；
+             手机上让位给文字（明细卡与 title 里教室信息一字不少） */
+          .cs-cell .r svg { display:none; }
+          .cs-cell .t { font-size:var(--fs-meta); line-height:1.3; }
           .cs-cell .w { font-size:var(--fs-meta); }
           .cs-h h3 { font-size:var(--fs-lead); }
           /* 收紧间距让今日概览留在同一行，避免行尾出现孤立的分隔点 */
@@ -866,8 +942,48 @@ export default function ClassSchedule({ stats = null, active = true }) {
           .cs-today-date i { font-size:var(--fs-meta); letter-spacing:.05em; }
           .cs-tdot { width:3px; height:3px; }
           .cs-input { font-size:15px; }
-          .cs-list-row { padding:12px 2px; }
           .cs-toast { bottom:calc(20px + env(safe-area-inset-bottom,0px)); font-size:13.5px; }
+          /* ── 3. 明细 / 导入 / 添加三块竖向大幅收紧 ──
+             可点控件一律不动：.cs-btn / .cs-input 已由外壳与 index.css 兜在 44px 下限，
+             相邻可点控件的 gap 保持 ≥ --gap-tap(8px)。压缩只发生在
+             「非可点装饰余量」和「窄列把一行撑成五段」这两类真正的浪费上。 */
+          .cs-page > .cs-card:nth-of-type(n+3) .cs-h { margin-bottom:8px; }
+          .cs-page > .cs-card:nth-of-type(n+3) .cs-h .ico { width:26px; height:26px; border-radius:7px; }
+          .cs-page > .cs-card:nth-of-type(n+3) .cs-h h3 { font-size:var(--fs-body); }
+          .cs-page > .cs-card:nth-of-type(n+3) .cs-h .cs-chip { padding:3px 9px; font-size:var(--fs-meta); }
+          /* 明细行：课程名独占一行，其余标签紧凑成串排在下面。
+             外壳给 .cs-tag 也兜了 44px 拇指高，但它是 span 不是按钮，
+             44px 只会把一行撑成五段 —— 收到真实文字高度，触控下限由行尾那颗删除按钮保证。 */
+          .cs-list-row { padding:9px 2px; gap:8px; }
+          .cs-page .cs-list-row > div:first-child { flex:1 1 100% !important; }
+          .cs-page .cs-list-row > div:first-child > div { line-height:1.3; }
+          .cs-page .cs-list-row > div:first-child > .cs-tag { margin-top:3px !important; }
+          .cs-page .cs-list-row .cs-tag { min-height:0; padding:3px 8px; font-size:var(--fs-meta); line-height:1.4; }
+          /* 表单标签：窄列里最容易竖排堆砌的一处 */
+          .cs-page label.cs-l { margin-bottom:2px; line-height:1.3; }
+          .cs-page .cs-field { gap:2px; }
+          .cs-page .cs-field > .cs-input { width:100%; min-width:0; }
+          /* 一行两列：手动添加卡从 8 行压到 5 行，作息/周次设置同理 */
+          .cs-page .cs-row > .cs-field { flex:1 1 calc(50% - 4px); min-width:0; }
+          .cs-page .cs-row > .cs-field:has(> .cs-btn) { flex:0 1 auto; }
+          /* 原生 date 输入框在 16px 下有固定最小内容宽（含日历图标），半列宽会被撑到溢出 */
+          .cs-page .cs-row > .cs-field:has(> input[type="date"]) { flex:1 1 100%; }
+          /* 节次下拉的选中文案最长（「5-6 节（13:30-15:15）」）、周次格是两输入框加单位，都给整行 */
+          .cs-page > .cs-card:nth-of-type(5) .cs-row > .cs-field:nth-child(5),
+          .cs-page > .cs-card:nth-of-type(5) .cs-row > .cs-field:nth-child(6) { flex:1 1 100%; }
+          /* 作息滚轮触发钮：min-width 66 + padding 28 会让「08:20 至 10:00」在 50% 列里换行，
+             压掉左右内边距后一列两个正好放下（高度仍由外壳兜在 44px 拇指下限） */
+          .cs-page .tp-btn { min-width:0; padding:7px 8px; }
+          /* 导入：粘贴框 6 行 → 3 行（仍可拖拽改高），说明文字回到辅助字号 */
+          .cs-page textarea.cs-input { height:78px; min-height:78px; line-height:1.5 !important; }
+          .tool-content .cs-page .cs-card p { font-size:var(--fs-meta) !important; line-height:1.55 !important; }
+          /* 滚轮选择器：一格 36px 在手机上按不准，抬到 44px 拇指下限，
+             列高/留白同步换算（88 = (220-44)/2），与 TimeWheel 里的 ITEM/PAD 一一对应 */
+          .cs-page .tp-col { height:220px; padding:88px 0; min-width:44px; }
+          .cs-page .tp-item { height:44px; line-height:44px; width:100%; }
+          .cs-page .tp-mask { height:80px; }
+          .cs-page .tp-pop { padding:8px 12px 10px; }
+          .cs-page .tp-pop-done { min-height:var(--ctl-md); }
         }
         .tp-btn { border:1px solid rgba(20,24,33,.16);background:#fff;color:#212529;border-radius:9px;padding:7px 14px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;min-width:66px;transition:all .15s ease; }
         .tp-btn:hover { border-color:${ACCENT_LINE};color:${ACCENT}; }
@@ -956,6 +1072,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
                     </div>
                     {editingThis && (
                       <TimeWheel
+                        mobile={isMobile}
                         value={timeEdit.side === 's' ? st : en}
                         onDone={(nv) => {
                           const cur = timeSlots[s.key].time.split('-');
@@ -989,19 +1106,19 @@ export default function ClassSchedule({ stats = null, active = true }) {
           <div className="sp" />
           <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
         </div>
-        <div className="cs-gridwrap">
+        <div className={`cs-gridwrap${gridScrollable ? ' cs-gridwrap-wide' : ''}`}>
           <div className="cs-grid">
             <table>
               <colgroup>
                 <col className="cs-col-period" />
-              {WEEKDAY.map((w, i) => (
+              {dayCols.map((w, i) => (
                 <col key={w} className={`cs-col-day${weekendEmpty && i >= 5 ? ' compact' : ''}`} />
               ))}
             </colgroup>
             <thead>
               <tr>
                 <th className="per">节次</th>
-                {WEEKDAY.map((w) => <th key={w}>周{w}</th>)}
+                {dayCols.map((w) => <th key={w}>周{w}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -1010,7 +1127,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
                 return (
                 <tr key={slot.key}>
                   <td className="per"><b>{slot.label}</b>{slot.time}</td>
-                  {WEEKDAY.map((_, di) => {
+                  {dayCols.map((_, di) => {
                     const d = di + 1;
                     const c = grid[d]?.[slot.key];
                     if (c) {
@@ -1164,8 +1281,11 @@ export default function ClassSchedule({ stats = null, active = true }) {
   );
 }
 
-/* ============ iOS 风格滚轮时间选择器（小时 / 每 5 分钟） ============ */
-function TimeWheel({ value, onDone }) {
+/* ============ iOS 风格滚轮时间选择器（小时 / 每 5 分钟） ============
+   mobile 由外层 matchMedia 开关传入：手机上每格撑到 44px 拇指下限
+   （列高 220 / 上下留白 88 = (220-44)/2，与 CSS 里的 @media 规则一一对应）；
+   桌面端 mobile=false → ITEM/PAD 与改动前完全一致。 */
+function TimeWheel({ value, onDone, mobile = false }) {
   const [val, setVal] = useState(value);
   const valRef = useRef(value);
   const hRef = useRef(null);
@@ -1174,8 +1294,8 @@ function TimeWheel({ value, onDone }) {
   const rafRef = useRef(0);
   const commitRef = useRef(0);
   const wheelRef = useRef({ h: -1, m: -1, t: 0 });
-  const ITEM = 36;
-  const PAD = 72;
+  const ITEM = mobile ? 44 : 36;
+  const PAD = mobile ? 88 : 72;
   const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'));
   const MINS = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'));
 
