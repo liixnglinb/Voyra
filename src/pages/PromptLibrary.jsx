@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ArrowLeft, ArrowUp, Check, Copy, Download, FolderPlus, Import, Lock, LockOpen, Pencil, Plus, Search, Star, Trash2, X, Cloud, CloudOff, RefreshCw,
+  ArrowLeft, ArrowUp, Check, ChevronDown, ChevronUp, Copy, Download, FolderPlus, Import, Lock, LockOpen, Pencil, Plus, Search, Star, Trash2, X, Cloud, CloudOff, RefreshCw,
   PenLine, Briefcase, Code2, GraduationCap, Coffee, HeartPulse, Bot, Shuffle, LayoutGrid, List, MousePointerClick, RotateCcw,
 } from 'lucide-react';
 import {
@@ -339,6 +339,14 @@ function DeleteDialog({ prompt, onClose, onConfirm }) {
   </div>;
 }
 
+/* ============ 手机端排版开关（只管渲染形态，不碰数据 / 鉴权 / 云同步） ============
+   断点必须与本文件 <style> 里那个「已存在的手机 @media (max-width:680px)」严格一致：
+   JS 决定「折不折叠」，CSS 决定「分组长什么样」，两者不同步就会出现
+   「有折叠行为却没有分组样式」的裸标题。681px 以上一律走原有平铺渲染。 */
+const MOBILE_MQ = '(max-width: 680px)';
+/* 折叠态下每个分类露出的卡片数：够判断这一类要不要点进去，又不至于刷不到底 */
+const GROUP_PREVIEW = 3;
+
 /* ============ 主页面 ============ */
 const CAT_ICONS = {
   写作: PenLine, 职场: Briefcase, 编程: Code2, 学习: GraduationCap,
@@ -369,6 +377,29 @@ export default function PromptLibrary() {
   const [pwDialog, setPwDialog] = useState(false);
   const [pwInput, setPwInput] = useState('');
   const [showTop, setShowTop] = useState(false);
+
+  /* 手机端分类折叠：只改「默认展开还是收起」这一件渲染事，桌面端恒为平铺不折叠。
+     用 matchMedia 的 change 监听而不是初始化读一次，横竖屏切换才能跟着变。 */
+  const [isMobile, setIsMobile] = useState(() => {
+    try { return window.matchMedia(MOBILE_MQ).matches; } catch { return false; }
+  });
+  /* 记录「被手动展开过」的分类；缺省 = 全都没展开 = 收起
+     （手机端首屏只看到分类标题 + 该分类前 3 条） */
+  const [openCats, setOpenCats] = useState({});
+  useEffect(() => {
+    let mq;
+    try { mq = window.matchMedia(MOBILE_MQ); } catch { return undefined; }
+    const onChange = (event) => setIsMobile(event.matches);
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', onChange);
+      else if (mq.removeListener) mq.removeListener(onChange);
+    };
+  }, []);
+
+  const isCatOpen = (category) => Boolean(openCats[category]);
+  const toggleCatFold = (category) => setOpenCats((current) => ({ ...current, [category]: !current[category] }));
 
   /* 回到顶部按钮：页面滚动超过一屏后出现（兼容 window 与 .tool-wrap 两种滚动容器） */
   useEffect(() => {
@@ -555,6 +586,25 @@ export default function PromptLibrary() {
     return [...filteredPrompts].sort((a, b) => (set.has(b.id) ? 1 : 0) - (set.has(a.id) ? 1 : 0));
   }, [filteredPrompts, userState.favorites]);
 
+  /* 手机端「全部」视图：按分类分组 + 默认折叠，只解决"一屏刷不到底"，
+     不参与任何筛选计算。一旦搜索 / 选中具体分类 / 选中子分类 / 桌面端，
+     条件即为 false，走原来的平铺渲染——所以搜索命中永远不会被折叠藏掉，
+     管理员的增删改、云同步、/ 快捷键也都还是原样。 */
+  const groupFoldOnMobile = isMobile && !searching && activeCat === '全部' && activeSub === '全部';
+  const groupedPrompts = useMemo(() => {
+    if (!groupFoldOnMobile) return [];
+    const buckets = new Map();
+    for (const prompt of sortedPrompts) {
+      const key = prompt.cat || '未分类';
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(prompt);
+    }
+    /* 分组顺序跟顶部 chips 一致，避免收藏置顶把分类顺序打乱 */
+    const ordered = allCategories.filter((c) => buckets.has(c)).map((c) => [c, buckets.get(c)]);
+    const extra = Array.from(buckets.entries()).filter(([c]) => !allCategories.includes(c));
+    return [...ordered, ...extra];
+  }, [groupFoldOnMobile, sortedPrompts, allCategories]);
+
   const openNewPrompt = () => {
     setDraft({
       id: '', title: '', titleEn: '', summary: '',
@@ -588,6 +638,9 @@ export default function PromptLibrary() {
     if (!builtinCatSet.has(next.cat)) setActiveCat(next.cat);
     setActiveSub('全部');
     setDialog(null);
+    /* 纯排版副作用：手机端「全部」视图里刚存的那条所属分类若是收起状态，
+       新卡片会被折在折叠线以下看不见。这里把它展开，不改动任何数据逻辑。 */
+    setOpenCats((current) => (current[next.cat] ? current : { ...current, [next.cat]: true }));
     setToast(draft.id ? '提示词已更新并同步云端' : '提示词已创建并同步云端');
   };
 
@@ -683,6 +736,24 @@ export default function PromptLibrary() {
       ))}
     </>
   );
+
+  /* 卡片只在这里声明一次：平铺视图和手机端分组视图共用同一份 props，
+     避免两条分支日后各自演化出不一样的行为 */
+  const renderPromptCard = (prompt) => (
+    <PromptCard
+      key={prompt.id}
+      prompt={{ ...prompt, favorite: favSet.has(prompt.id) }}
+      color={colorFor(prompt)}
+      admin={admin}
+      copiedId={copiedId}
+      onOpen={setDetail}
+      onCopy={copyPrompt}
+      onToggleFavorite={toggleFavorite}
+      onEdit={openEditPrompt}
+      onDelete={(item) => { setDraft(item); setDialog('delete'); }}
+    />
+  );
+  const gridClass = `pl-grid${view === 'list' ? ' is-list' : ''}`;
 
   const mainTitle = searching
     ? '检索结果'
@@ -942,7 +1013,6 @@ export default function PromptLibrary() {
         .pl-detail > footer { flex-wrap:wrap; }
         /* 拇指尺寸：筛选片/复制钮/图标钮全部给足命中区 */
         .pl-chip { height:44px; padding:0 16px; font-size:13.5px; }
-        .pl-chip b { font-size:11.5px; }
         .pl-copy-btn { height:44px; padding:0 13px; font-size:12.5px; }
         .pl-icon-btn { width:40px; height:40px; flex-basis:40px; }
         .pl-detail > footer .pl-icon-btn { width:44px; height:44px; flex-basis:44px; }
@@ -950,8 +1020,57 @@ export default function PromptLibrary() {
         .pl-topbar kbd { font-size:11px; }
         .pl-cd-sub { font-size:11.5px; }
         .pl-stat b { font-size:12.5px; }
-        .pl-cd-tags, .pl-cd-vars { font-size:11.5px; }
+        /* ---- 必要信息字号对齐站点字号阶梯（共享层没兜到的那部分） ---- */
+        .pl-cd-tags, .pl-cd-vars { font-size:var(--fs-meta); }
         .pl-topbar kbd { font-size:11px; padding:2px 6px; }
+        /* 提示词正文预览是本页最核心的信息：11.5px 抬到 --fs-label(14px)，
+           同时限 5 行——原始内容 JS 已截到 150 字，全文本来就一点即开弹窗 */
+        .pl-cd-preview {
+          display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:5;
+          font-size:var(--fs-label); line-height:1.8;
+        }
+        /* chip 上的分类计数 11.5px → --fs-meta */
+        .pl-chip b { font-size:var(--fs-meta); }
+        /* 「80 个条目」计数与底部操作提示 11~11.5px → --fs-meta */
+        .pl-main-head span { font-size:var(--fs-meta); }
+        /* .pl-tip 原本是 flex：正文被两个 kbd 切成三段匿名 flex item，
+           手机上会排成左右错开的竖列。抬字号前先把它放回正常文本流，
+           让键帽随文换行。 */
+        .pl-tip { display:block; font-size:var(--fs-meta); line-height:2.1; }
+        .pl-tip svg { display:inline-block; vertical-align:-2px; margin-right:5px; }
+        /* kbd 键帽里的 / 和 Esc 是必要信息，10px 读不清 → --fs-meta */
+        .pl-tip kbd { font-size:var(--fs-meta); padding:2px 6px; }
+
+        /* ===== 手机端分类折叠（配套上面的 groupFoldOnMobile 判断） =====
+           80 条预设 × 7 分类在手机端全展开实测 38.6 屏（≈32500px），
+           这里让每个分类默认只露标题 + 前 3 条，点标题或「展开全部 N 条」再摊开。
+           只在 ≤680px 落样式，桌面端一条都不会命中（且 JS 分支根本不渲染这些类）。 */
+        .pl-groups { display:grid; gap:16px; }
+        .pl-cgroup { display:grid; gap:12px; min-width:0; }
+        .pl-cgroup-head {
+          display:flex; align-items:center; gap:8px; width:100%; min-height:var(--ctl-md);
+          border:1px solid var(--line); border-radius:10px; padding:0 12px;
+          background:#fff; color:var(--ink); text-align:left;
+          transition:border-color .22s var(--pl-ease), background .22s var(--pl-ease);
+        }
+        .pl-cgroup-head:active { transform:scale(.995); }
+        .pl-cgroup-head i { flex:0 0 9px; width:9px; height:9px; border-radius:50%; background:var(--cat, var(--gold)); }
+        .pl-cgroup-head svg { flex:0 0 auto; color:#8a8a8a; }
+        .pl-cgroup-head b { font-size:var(--fs-label); font-weight:750; letter-spacing:-.01em; }
+        /* 英文分类名是中文名的装饰性重复 → --fs-micro（不承载必要信息） */
+        .pl-cgroup-head span { color:#adadad; font-size:var(--fs-micro); letter-spacing:.05em; text-transform:uppercase; }
+        .pl-cgroup-head em { margin-left:auto; flex:0 0 auto; color:#8a8a8a; font-style:normal; font-size:var(--fs-meta); font-variant-numeric:tabular-nums; }
+        .pl-cgroup-arrow { flex:0 0 auto; color:#999; transition:transform .26s var(--pl-ease); }
+        .pl-cgroup.is-open .pl-cgroup-arrow { transform:rotate(180deg); }
+        .pl-cgroup.is-open > .pl-cgroup-head { border-color:rgba(164,136,48,.45); background:var(--soft); }
+        .pl-cgroup.is-open > .pl-cgroup-head em { color:var(--gold); }
+        .pl-cgroup-more {
+          justify-self:start; display:inline-flex; align-items:center; gap:6px;
+          min-height:var(--ctl-md); padding:0 15px; border:1px dashed rgba(164,136,48,.55);
+          border-radius:99px; background:rgba(255,249,223,.6); color:var(--gold);
+          font-size:var(--fs-label); font-weight:650;
+        }
+        .pl-cgroup-more:active { background:var(--hl); }
       }
       @media (prefers-reduced-motion:reduce) { .pl-page *, .pl-page *::before, .pl-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>
@@ -1038,22 +1157,36 @@ export default function PromptLibrary() {
               {!searching && activeCat !== FAV_CAT && admin && <button type="button" className="pl-btn pl-btn-solid" onClick={openNewPrompt}><Plus size={15} />新建提示词</button>}
             </div>
           </section>
+        ) : groupedPrompts.length > 0 ? (
+          /* 手机端「全部」：分类默认收起，一屏能横向扫完 7 个分类 */
+          <div className="pl-groups">
+            {groupedPrompts.map(([category, items]) => {
+              const open = isCatOpen(category);
+              const shown = open ? items : items.slice(0, GROUP_PREVIEW);
+              const Icon = CAT_ICONS[category];
+              return (
+                <section key={category} className={`pl-cgroup${open ? ' is-open' : ''}`}>
+                  <button type="button" className="pl-cgroup-head" aria-expanded={open} onClick={() => toggleCatFold(category)}>
+                    <i style={{ '--cat': colorFor({ cat: category }) }} />
+                    {Icon && <Icon size={15} />}
+                    <b>{category}</b>
+                    <span>{enFor(category)}</span>
+                    <em>{items.length} 条</em>
+                    <ChevronDown size={16} className="pl-cgroup-arrow" />
+                  </button>
+                  <div className={gridClass}>{shown.map(renderPromptCard)}</div>
+                  {items.length > GROUP_PREVIEW && (
+                    <button type="button" className="pl-cgroup-more" onClick={() => toggleCatFold(category)}>
+                      {open ? <><ChevronUp size={14} />收起本类</> : <><Plus size={14} />展开全部 {items.length} 条</>}
+                    </button>
+                  )}
+                </section>
+              );
+            })}
+          </div>
         ) : (
-          <div className={`pl-grid${view === 'list' ? ' is-list' : ''}`}>
-            {sortedPrompts.map((prompt) => (
-              <PromptCard
-                key={prompt.id}
-                prompt={{ ...prompt, favorite: favSet.has(prompt.id) }}
-                color={colorFor(prompt)}
-                admin={admin}
-                copiedId={copiedId}
-                onOpen={setDetail}
-                onCopy={copyPrompt}
-                onToggleFavorite={toggleFavorite}
-                onEdit={openEditPrompt}
-                onDelete={(item) => { setDraft(item); setDialog('delete'); }}
-              />
-            ))}
+          <div className={gridClass}>
+            {sortedPrompts.map(renderPromptCard)}
           </div>
         )}
       </main>
