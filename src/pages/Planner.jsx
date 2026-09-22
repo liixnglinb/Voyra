@@ -297,6 +297,9 @@ export default function Planner({ active = true }) {
           .pl-mbar b { flex:0 0 auto; white-space:nowrap; font-size:14px; }
           .pl-mbar .pl-btn { padding:8px 10px; }
           .pl-top > .pl-label { width:calc(100% - 42px); margin-left:42px !important; }
+          /* 星期表头是月历的列头（主信息），抬到标签级；
+             七列靠 1fr 自适应，两字列头 28px < 360 档单列宽 ~35px，不会折行 */
+          .pl-dow { font-size:var(--fs-label); }
           .pl-grid { gap:4px; }
           .pl-cell { min-height:76px; padding:5px; }
           .pl-cell .hol, .pl-cell .ev { font-size:9px; }

@@ -489,10 +489,14 @@ export default function HomeworkBoard({ active = true }) {
         .hw-alerts { gap:7px; }
         .hw-chip { flex:1 1 calc(50% - 7px);padding:10px 11px;gap:8px; }
         .hw-chip-n b { font-size:17px; }
-        .hw-chip-n i { font-size:10.5px; }
+        /* 计数下方那行状态字（已逾期/今日待交…）是提醒功能的核心信号，
+           原本被压到 10.5px，这里回到辅助信息下限 --fs-meta */
+        .hw-chip-n i { font-size:var(--fs-meta); }
         .hw-clear { flex:1 1 100%;justify-content:center; }
         .hw-row { gap:9px;padding:10px 9px; }
         .hw-del { padding:6px 8px; }
+        /* 页头说明属辅助信息，同样不低于 --fs-meta */
+        .hw-hint { font-size:var(--fs-meta); }
       }
       @media (prefers-reduced-motion:reduce) {
         .hw-page *, .hw-page *::before, .hw-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }

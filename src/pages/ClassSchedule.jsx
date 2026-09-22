@@ -862,7 +862,8 @@ export default function ClassSchedule({ stats = null, active = true }) {
           /* 收紧间距让今日概览留在同一行，避免行尾出现孤立的分隔点 */
           .cs-today { gap:7px; font-size:12.5px; }
           .cs-today-date { gap:5px; font-size:13.5px; }
-          .cs-today-date i { font-size:9px; letter-spacing:.05em; }
+          /* 「TODAY」是当日标识，属必要信息，不得低于辅助字号 */
+          .cs-today-date i { font-size:var(--fs-meta); letter-spacing:.05em; }
           .cs-tdot { width:3px; height:3px; }
           .cs-input { font-size:15px; }
           .cs-list-row { padding:12px 2px; }
