@@ -22,19 +22,21 @@
    圆角 r-1…r-5/r-pill 同样取软件刻度；r-xl/r-2xl 是营销版面才用得到的两档。
    ========================================================================== */
 :root{
-  --bg-page:#ffffff;--bg-shell:#f7f7f7;--bg-sunken:#f4f4f4;--bg-inset:#fafafa;
+  --bg-page:#f8f8f8;--bg-shell:#f0f0f0;--bg-sunken:rgba(13,13,13,.03);--bg-inset:rgba(13,13,13,.05);
 
-  --ink:#1a1a1a;--ink-2:#4a4a4a;--ink-3:#767676;--ink-4:#9c9c9c;
+  --ink:#262626;--ink-2:color-mix(in oklab, var(--ink) 78%, transparent);
+  --ink-3:color-mix(in oklab, var(--ink) 60%, transparent);
+  --ink-4:color-mix(in oklab, var(--ink) 42%, transparent);
 
-  --line:#e4e4e4;--line-soft:#eeeeee;--line-strong:#cfcfcf;
+  --line:rgba(13,13,13,.1);--line-soft:rgba(13,13,13,.06);--line-strong:rgba(13,13,13,.15);
 
-  --accent:#2f6fe4;--accent-deep:#245ab8;--accent-soft:#eaf1fd;
-  --accent-line:rgba(47,111,228,.34);--accent-glow:rgba(47,111,228,.12);
-  --on-accent:#ffffff;   /* 实色填充上的文字，对应软件里的 --on-accent */
+  --accent:#000000;--accent-deep:#1f1f1f;--accent-soft:#ebf4ff;
+  --accent-line:rgba(13,13,13,.35);--accent-glow:rgba(13,13,13,.10);
+  --on-accent:#ffffff;   /* 品牌位是黑白反转：亮色下主按钮黑底白字 */
 
   --warn:#b0770b;
   /* 这几个是软件里成对出现的"实色底上压深字"，抄过来免得满文件散落字面 hex */
-  --warn-soft:#fbf2e0;--accent-ink:#1e3f70;
+  --warn-soft:#fbf2e0;--accent-ink:#1a1a1a;
 
   --r-1:6px;--r-2:8px;--r-3:10px;--r-4:14px;--r-5:18px;--r-pill:999px;
   --r-xl:24px;--r-2xl:32px;
@@ -179,14 +181,17 @@ img{display:block;max-width:100%}
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:var(--r-2xl);
   background:radial-gradient(38% 50% at 18% 50%,rgba(47,111,228,.20),transparent 70%),
              radial-gradient(38% 50% at 82% 50%,rgba(91,150,249,.16),transparent 70%)}
-.mock{--d-page:#181818;--d-shell:#202020;--d-panel:#232323;
-  --d-hover:#272727;--d-active:#313131;--d-composer:#353535;
-  --d-ink:#dfdfdf;--d-ink-2:#b4b4b4;--d-ink-3:#8a8a8a;--d-ink-4:#656565;
-  --d-line:#323232;--d-line-soft:#282828;--d-accent:#4d8bf7;--d-accent-soft:rgba(77,139,247,.15);
-  --d-accent-deep:#7faaf9;--d-on-accent:#0a1425;--d-on-solid:#ffffff;
+.mock{--d-page:#161616;--d-shell:#161616;--d-panel:#202020;
+  --d-hover:rgba(255,255,255,.05);--d-active:rgba(255,255,255,.10);--d-composer:#2b2b2b;
+  --d-ink:#d4d4d4;--d-ink-2:color-mix(in oklab, var(--d-ink) 78%, transparent);
+  --d-ink-3:color-mix(in oklab, var(--d-ink) 60%, transparent);
+  --d-ink-4:color-mix(in oklab, var(--d-ink) 42%, transparent);
+  --d-line:rgba(255,255,255,.1);--d-line-soft:rgba(255,255,255,.065);
+  --d-accent:#ffffff;--d-accent-soft:#001d3d;--d-accent-deep:#e6e6e6;
+  --d-on-accent:#161616;--d-on-solid:#ffffff;
   --d-good-soft:rgba(78,183,124,.13);--d-warn-soft:rgba(217,164,65,.13);
-  --d-good:#4eb77c;--d-warn:#d9a441;--d-ctl:#2a2a2a;
-  --d-float:#2b2b2b;--d-line-strong:#484848;
+  --d-good:#4eb77c;--d-warn:#d9a441;--d-ctl:#2b2b2b;
+  --d-float:#2b2b2b;--d-line-strong:rgba(255,255,255,.15);
   position:relative;border-radius:var(--r-5);overflow:hidden;text-align:left;
   background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.58);
   backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);
@@ -538,6 +543,16 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   .m-proc{display:none}
   .step{gap:14px}
   .foot{gap:12px}
+  /* 流水线三段里的必要信息抬到 12px 下限。
+     256px 的一行放不下「序号 + 标题 + 检查点 + 文件名」，所以文件名换到整行右对齐，
+     让它读得清而不是被挤掉。 */
+  .stage-label{font-size:12px}
+  .stage li{flex-wrap:wrap;gap:8px}
+  .stage li .n{font-size:12px}
+  .stage li .cp{font-size:12px}
+  .stage li .f{font-size:12px;flex-basis:100%;text-align:right}
+  .omni-step{font-size:12px}
+  .sha{font-size:12px}
 }
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -558,7 +573,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     </div>
     <div class="nav-right">
       <a class="back" href="https://lxlrwxs.top">个人工具中心</a>
-      <a class="pill nav-dl" href="#dl" id="navDl">下载<span class="sep"></span><span class="ver" id="navVer">1.0.1</span></a>
+      <a class="pill nav-dl" href="#dl" id="navDl">下载<span class="sep"></span><span class="ver" id="navVer">1.1.0</span></a>
     </div>
   </div>
 </nav>
@@ -572,7 +587,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="hero-sub">需求解析 → 方案拆解 → 信息收集 → 逐项执行 → 自检复核 → 修订打磨 → 交付整合。<br>每一步做什么、产出什么文件，都是你能改的。</p>
     </div>
     <div class="hero-cta">
-      <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.0.1</span></a>
+      <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.1.0</span></a>
       <a class="pill pill-ghost" href="#pipeline">看它怎么跑</a>
     </div>
     <p class="hero-note">Windows 10 / 11 x64 · 约 <b id="heroSize">36.2 MB</b> · 全本地运行，无账号无遥测</p>
@@ -602,7 +617,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
             <div class="m-r">混凝土梁裂缝等级判定</div>
             <div class="m-foot">
               <div class="m-me"><span class="m-av"></span><span>claude</span></div>
-              <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.0.1</div>
+              <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.1.0</div>
             </div>
           </aside>
 
@@ -841,7 +856,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="eyebrow">Download</p>
       <h2>把流程握在自己手里</h2>
       <p class="lead">装在你自己的用户目录里，跑你自己登录的 CLI，产物落在你自己的磁盘上。</p>
-      <a class="pill" id="dlBtn" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.0.1-setup.exe">下载 Loom for Windows<span class="sep"></span><span class="ver" id="btnVer">1.0.1</span></a>
+      <a class="pill" id="dlBtn" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.1.0-setup.exe">下载 Loom for Windows<span class="sep"></span><span class="ver" id="btnVer">1.1.0</span></a>
       <p class="hero-note">约 <b id="btnSize">36.2 MB</b> · Windows 10/11 x64 · 用户级安装，无需管理员</p>
       <p class="sha" id="btnSha" title="点击复制完整校验和"></p>
     </div>
@@ -852,7 +867,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   <div class="wrap foot">
     <a class="brand" href="./"><img src="./logo-64.png" alt="" style="width:26px;height:26px;border-radius:8px"></a>
     <span>织流 Loom</span><span class="sep"></span>
-    <span>版本 <span class="en" id="ftVer">1.0.1</span></span><span class="sep"></span>
+    <span>版本 <span class="en" id="ftVer">1.1.0</span></span><span class="sep"></span>
     <a class="back" href="https://lxlrwxs.top">返回个人工具中心</a>
     <span style="margin-left:auto">本地运行 · 无遥测</span>
   </div>

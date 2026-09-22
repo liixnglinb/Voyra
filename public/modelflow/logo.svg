@@ -1,12 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
   <defs>
-    <linearGradient id="loom" gradientUnits="userSpaceOnUse" x1="60" y1="0" x2="60" y2="120">
-      <stop offset="0" stop-color="#5B96F9"/><stop offset="1" stop-color="#2C62D6"/>
+    <linearGradient id="loom" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="120">
+      <stop offset="0" stop-color="#1F1F1F"/><stop offset="1" stop-color="#000000"/>
     </linearGradient>
   </defs>
   <rect width="120" height="120" rx="27" fill="url(#loom)"/>
-  <rect x="12" y="42" width="62" height="62" rx="22" fill="#F2F6FD"/>
-  <circle cx="31" cy="71" r="7.5" fill="url(#loom)"/>
-  <circle cx="55" cy="71" r="7.5" fill="url(#loom)"/>
-  <circle cx="93" cy="27" r="13" fill="#F2F6FD"/>
+  <rect x="34" y="26" width="16" height="68" fill="#FFFFFF"/>
+  <rect x="34" y="78" width="54" height="16" fill="#FFFFFF"/>
 </svg>
