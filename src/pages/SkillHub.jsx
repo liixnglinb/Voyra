@@ -580,13 +580,34 @@ export default function SkillHub() {
         .sk-headctl .sk-status { display:none; }
         .sk-rank-row { grid-template-columns:34px minmax(0,1fr) auto; }
         .sk-rank-stars { display:none; }
-        .sk-tabs { gap:6px; }
+        /* ---- 粘顶筛选区：窄屏必须走横向单行 ----
+           Layout.jsx 的分段控件归一化器在手机上会给 [role=tablist] 强打
+           flex-wrap:wrap !important、给 [role=tab] 强打 flex:1 1 auto，
+           于是 5 个 tab 在窄一档时换行堆成竖排大列表：360 档实测 sticky 区
+           高 262px（占视口 31%），整页 6.2 屏；390/430 也要 158px。
+           改成 overflow-x 横滑单行（站点其它横滑条如 .pl-chips 同款做法），
+           高度就与宽度解耦、任一档位都稳定在 52px 左右（<9% 视口）。
+           选择器多带一个 [role]（特异度 0,3,0）+ !important，才能压过
+           Layout 的 .tool-content :is([role="tablist"])（0,2,0 !important）。 */
+        .sk-page .sk-tabs[role="tablist"] {
+          display:flex !important; flex-wrap:nowrap !important; gap:var(--gap-tap) !important;
+          padding:4px !important; margin-bottom:0; max-width:100%;
+          overflow-x:auto; overflow-y:hidden; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+        }
+        .sk-page .sk-tabs[role="tablist"]::-webkit-scrollbar { display:none; }
+        .sk-page .sk-tab[role="tab"] {
+          flex:0 0 auto !important; min-height:var(--ctl-md) !important;
+          padding:0 12px !important; white-space:nowrap;
+        }
         .sk-tab { padding:9px 11px; gap:7px; }
         .sk-tab-ico { width:28px; height:28px; flex-basis:28px; }
+        .sk-tab-copy { flex:0 0 auto; }
+        .sk-tab-copy b { font-size:var(--fs-label); }
         .sk-tab-copy span { display:none; }
         /* 拇指尺寸与最小可读字号 */
         .sk-tab { min-height:48px; }
-        .sk-tab-count { font-size:11.5px; padding:4px 10px; }
+        /* tab 上的计数是必要信息，11.5px 低于阶梯下限 → --fs-meta */
+        .sk-tab-count { font-size:var(--fs-meta); padding:4px 9px; }
         .sk-refresh { height:44px; padding:0 16px; font-size:13px; }
         /* 刷新钮被 portal 到页头，那里有更高优先级的 34px 规则 */
         .sk-headctl .sk-refresh, .sk-headctl .sk-status { height:44px; }
@@ -595,6 +616,17 @@ export default function SkillHub() {
         .sk-hot-copy svg { width:15px; height:15px; }
         .sk-rank-name { font-size:13.5px; }
         .sk-sec-head b { font-size:11.5px; }
+        /* ---- 必要信息字号对齐站点字号阶梯 ----
+           下面这几项实测 computed 只有 10~11px，全部是卡片上的必要信息，
+           共享层（.tool-content :is(...)）没有覆盖到它们，只能在本组件里补。 */
+        /* 眉标 "GITHUB SKILL RADAR · 100% 官方入口" 10px → --fs-meta */
+        .sk-brand-copy span { font-size:var(--fs-meta); }
+        /* topic 徽章（"AI" 等）11px → --fs-meta */
+        .sk-hot-topics i { font-size:var(--fs-meta); }
+        /* 卡片脚注：语言 / 更新时间 11px → --fs-meta */
+        .sk-hot-meta { font-size:var(--fs-meta); flex-wrap:wrap; }
+        /* 星数是卡片主信息 11px → --fs-label */
+        .sk-hot-meta b { font-size:var(--fs-label); }
       }
       @media (prefers-reduced-motion:reduce) { .sk-page *, .sk-page *::before, .sk-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
     `}</style>
