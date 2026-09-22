@@ -743,19 +743,32 @@ export default function Dashboard() {
       @keyframes vr-hair-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(1px) rotate(.65deg); } }
       @keyframes vr-collar-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(-.8px) rotate(-.45deg); } }
       @media (max-width: 720px) {
-        .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(88svh - 14px); }
-        .vr-home .vr-hero { display: block; min-height: calc(88svh - 82px); padding: 52px 0 30px; }
-        .vr-home .vr-hero-copy { width: 69%; }
-        .vr-home .vr-hero h1 { max-width: none; font-size: 56px; line-height: .88; }
-        .vr-home .vr-hero-meta { gap: 8px; width: 100%; margin-top: 22px; font-size: 10px; }
-        .vr-home .vr-hero-meta strong { font-size: 12px; }
-        .vr-home .vr-scroll-cue { margin-top: 27px; font-size: 11px; }
-        .vr-home .vr-person-stage { position: absolute; right: -9px; bottom: 8px; width: 49%; min-height: 0; height: min(54svh, 440px); }
+        /* hero 原本被强制撑到 88svh（约 733px）而内容只有 ~300px，
+           人物图又是 absolute 钉底，左半屏因此空掉近一半。
+           改成双栏网格、高度贴合内容，人物与文字同排。 */
+        .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: 0; }
+        .vr-home .vr-hero { display: grid; grid-template-columns: minmax(0, 1fr) 43%; align-items: end; column-gap: 8px; min-height: 0; padding: 54px 0 26px; }
+        .vr-home .vr-hero-copy { width: auto; align-self: end; }
+        .vr-home .vr-hero h1 { max-width: none; font-size: 42px; line-height: .92; }
+        /* 窄列里 strong 与 span 抢同一行会把 "OPEN-SOURCE" 从连字符处截断，改成上下堆叠 */
+        .vr-home .vr-hero-meta { flex-direction: column; align-items: flex-start; gap: 8px; width: 100%; margin-top: 18px; font-size: var(--fs-meta); }
+        .vr-home .vr-hero-meta strong { font-size: var(--fs-label); }
+        .vr-home .vr-scroll-cue { margin-top: 18px; font-size: var(--fs-meta); }
+        .vr-home .vr-top { font-size: var(--fs-meta); }
+        .vr-home .vr-brand { font-size: var(--fs-meta); }
+        .vr-home .vr-github { font-size: var(--fs-meta); max-width: 46%; }
+        /* 「关于我」的技能标签是要读的信息，不是装饰纹理 */
+        .vr-home .vr-tags span { font-size: var(--fs-meta); }
+        /* frame 是 bottom:0 绝对定位，图的自然高度会向上溢出写死的 stage 高度、
+           顶到导航栏上；改回文档流让 stage 跟着图片长。 */
+        .vr-home .vr-person-stage { position: relative; right: auto; bottom: auto; width: 100%; min-height: 0; height: auto; justify-self: end; }
         .vr-home .vr-person-stage::before { top: 12%; right: -10%; width: 115%; }
         .vr-home .vr-person-stage::after { right: -8%; bottom: 6%; width: 100%; height: 10px; }
-        .vr-home .vr-person-frame { right: 0; width: 100%; }
+        .vr-home .vr-person-frame { position: relative; right: auto; bottom: auto; width: 100%; }
         .vr-home .vr-tabs { gap: 14px; padding-bottom: 18px; }
         .vr-home .vr-tab { font-size: 20px; }
+        /* 水印序号占底部 13~51px，而 copy 只留 30px 下边距，"打开日程"这类 CTA 会被压在数字上 */
+        .vr-home .vr-feature-copy { padding-bottom: 58px; }
       }
       @media (max-width: 360px) {
         .vr-home .vr-tabs { gap: 11px; }

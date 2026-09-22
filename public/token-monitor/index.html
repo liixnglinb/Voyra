@@ -281,13 +281,45 @@ html.anim [data-reveal].in{opacity:1;transform:none}
   .cta .btn{flex:1 1 auto;justify-content:center}
   .bento{grid-template-columns:1fr}
   .cell.big{grid-column:span 1}
-  .cell{padding:22px 20px 24px}
+  /* 1fr 网格项的 min-width:auto 会被 .term 里 white-space:nowrap 的命令行顶开，
+     实测格子 347 > 容器 328，右边 4px 被 .bento 的 overflow:hidden 裁掉 */
+  .cell{padding:22px 20px 24px;min-width:0}
   .dlrow{gap:8px;padding:13px 14px}
   .dl-n{gap:7px;font-size:13.5px}
   .dl-s b{display:none}
   .legend{gap:4px 11px;padding:11px 14px}
-  thead th{padding:10px 12px}
+  thead th{padding:10px 12px;font-size:12px}
   tbody td{padding:11px 12px}
+  /* ---------- 必要信息字号下限：辅助说明 12px ---------- */
+  .lg{font-size:12px}
+  .sh em{font-size:12px}
+  .cell .k{font-size:12px}
+  .kpi span{font-size:12px}
+  .kpi i{font-size:12px}
+  .axis{font-size:12px}
+  .live{font-size:12px}
+  .wtitle{font-size:12px}
+  .meta{font-size:12px}
+  .eyebrow{font-size:12px}
+  .tag{font-size:12px}
+  .bhead .n{font-size:12px}
+  .howto h4{font-size:12px}
+  .mirror>span{font-size:12px}
+  .rt{font-size:12px}
+  .ext{font-size:12px}
+  .soon,.plat-h .soon-tag{font-size:12px}
+  .plat-h .plat-n{font-size:12px}
+  .dl-s{font-size:12px}
+  tr.tot td{font-size:12px}
+  /* ---------- 触控下限 44px（纯图标 40px） ---------- */
+  .brand{min-height:44px}
+  .ico{width:40px;height:40px}
+  /* 镜像分段控件实测 76x24：撑满一行、每个按钮抬到 44，文字按控件档走 14px */
+  .seg{display:flex;width:100%;gap:4px;padding:4px}
+  .seg button{flex:1 1 0;min-width:0;padding:0 6px;min-height:44px;font-size:14px;line-height:1.25}
+  /* 字号抬到 12 之后走势列会把 table 顶到 355 > .tablewrap 的 328（基线本来就溢出 15px）。
+     只在 380 以下把走势线收一档，390/430 仍是原来的 104x28。 */
+  @media (max-width:380px){.sp svg{width:76px;height:auto}}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;

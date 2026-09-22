@@ -202,7 +202,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
 @media(max-width:860px){
   .hero{display:flex;flex-direction:column;gap:0;padding:26px 0 38px;text-align:center}
   .hero .copy{display:contents}
-  .copy .kicker{order:1;margin-bottom:14px;font-size:11px;padding:5px 12px}
+  .copy .kicker{order:1;margin-bottom:14px;font-size:12px;padding:5px 12px}
   .copy h1{order:2;font-size:31px;letter-spacing:-.8px}
   .copy .tagline{order:3;font-size:14.5px;margin:12px auto 0;max-width:24em}
   .phone-wrap{order:4;width:100%;margin:24px 0 22px}
@@ -222,8 +222,9 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
   .feat{padding:14px;border-radius:14px}
   .feat .ic{width:30px;height:30px;border-radius:9px;margin-bottom:9px}
   .feat .ic svg{width:15px;height:15px}
-  .feat h3{font-size:13px;margin-bottom:4px}
-  .feat p{font-size:11px;line-height:1.55}
+  .feat h3{font-size:15px;margin-bottom:6px}
+  /* 功能说明是正文不是脚注，手机上抬到 14px（桌面 .feat p 是 13.5px） */
+  .feat p{font-size:14px;line-height:1.7}
   .steps{gap:10px}
   .step{padding:15px 16px;border-radius:14px}
   .step::before{font-size:22px;top:10px;right:14px}
@@ -243,11 +244,15 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
   .dl-row{flex-direction:column;align-items:center;width:100%;margin-top:2px}
   .dl-row .btn{width:100%;max-width:340px;justify-content:center}
   .mbar{display:flex}
+  /* 粘底下载栏只在手机端出现（.mbar 基态 display:none），副标题抬到 12px 下限 */
+  .mbar .ms{font-size:12px}
   .aurora span{filter:blur(44px);opacity:.4}
 }
 @media(max-width:560px){
   nav .gh{display:none}
   .logo i{display:none}
+  /* 功能卡在 360~430 下两列会把 14px 正文挤成 9 字一行的竖条，收成单列 */
+  .grid{grid-template-columns:1fr;gap:12px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}

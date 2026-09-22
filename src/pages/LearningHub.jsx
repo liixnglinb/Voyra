@@ -824,7 +824,7 @@ export default function LearningHub() {
                 value={webQuery}
                 onChange={(e) => setWebQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && searchWeb()}
-                className="flex-1"
+                className="flex-1 min-w-0"
               />
               <button onClick={() => searchWeb()} disabled={!webQuery.trim()} className="btn btn-primary">
                 <Search className="h-3.5 w-3.5" />

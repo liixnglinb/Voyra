@@ -117,9 +117,9 @@ export default function AuthGate({ children, variant = 'light' }) {
         /* 手机上右上角浮标不能压住页头标题：收紧尺寸，页头另行避让 */
         @media (max-width: 767px) {
           .ag-fab { top: 10px; right: 10px; gap: 6px; }
-          .ag-fab-user { padding: 4px 4px 4px 10px; min-height: 38px; }
-          .ag-fab-name { max-width: 64px; font-size: 12px; }
-          .ag-fab-btn { min-height: 38px; padding: 0 12px; font-size: 12px; }
+          .ag-fab-user { padding: 4px 4px 4px 10px; min-height: var(--ctl-md); }
+          .ag-fab-name { max-width: 64px; font-size: var(--fs-meta); }
+          .ag-fab-btn { min-height: var(--ctl-md); padding: 0 12px; font-size: var(--fs-meta); }
         }
 
         /* ===== 弹窗遮罩（亮底虚化，极简风） ===== */

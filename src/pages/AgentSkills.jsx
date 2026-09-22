@@ -321,18 +321,21 @@ export default function AgentSkills() {
         @media (max-width:767px){
           /* 拇指尺寸：分类片、搜索框、卡片描述最小字号 */
           .agx-chip { min-height:44px; padding:0 14px; font-size:13px; }
-          .agx-chip b { font-size:11.5px; }
+          .agx-chip b, .agx-chip span { font-size:var(--fs-meta); }
+          .agx-group-head small { font-size:var(--fs-meta); }
           .agx-searchrow { max-width:none; }
           .agx-searchrow input { font-size:15px; }
           .agx-kbd { display:none; }
           .agx-desc { font-size:12.5px; -webkit-line-clamp:3; }
-          .agx-tag { font-size:11px; padding:3px 9px; }
+          /* 标签/厂商/域名都是要读的信息，按站点规范下限 12px（--fs-micro 只允许给装饰缩略图） */
+          .agx-tag { font-size:var(--fs-meta); padding:3px 9px; }
           .agx-name { font-size:15px; }
-          .agx-domain { position:static; font-size:10.5px; opacity:.7; transform:none; margin-top:2px; }
+          .agx-domain { position:static; font-size:var(--fs-meta); opacity:.7; transform:none; margin-top:2px; }
           .agx-go { top:10px; right:10px; opacity:1; transform:none; }
           /* 窄卡片里名称允许折行，不用省略号吃掉 "GitHub Copilot" 这类长名 */
           .agx-name { white-space:normal; overflow:visible; text-overflow:clip; }
-          .agx-vendor, .agx-domain, .agx-top-badge { font-size:11.5px; }
+          .agx-vendor, .agx-domain, .agx-top-badge, .agx-top-stat { font-size:var(--fs-meta); }
+          .agx-card small { font-size:var(--fs-meta); }
         }
         @media (prefers-reduced-motion:reduce){
           .agx-meteor, .agx-star { animation:none; }
