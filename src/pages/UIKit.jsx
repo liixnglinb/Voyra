@@ -626,8 +626,15 @@ export default function UIKit() {
         .d-seg button { display:inline-flex; align-items:center; justify-content:center;
           min-height:var(--ctl-md); padding:0 4px; font-size:var(--fs-label); }
 
-        /* 卡片密度：52 张卡单列堆叠让整页到了 37.2 屏。只收紧留白、间距与卡片最小
-           高度（不改 DOM、不动行数截断，折叠交互由共享层统一处理） */
+        /* 上一版把整张卡折起来，结果连 <Demo/> 动效演示一起藏了 —— 演示是这页的
+           主体，不该默认不可见。改成：手机端 .ui-detail 恒为展开，只折叠
+           「使用场景 / 实现原理」文字块，点卡片展开的是讲解而不是演示本身。
+           桌面端这条不生效，折叠语义与动画一字未动。 */
+        .ui-detail { grid-template-rows:1fr !important; }
+        .ui-card:not(.is-open) .ui-fields { display:none; }
+
+        /* 卡片密度：52 张卡单列堆叠，关掉 content-visibility 占位后真实是 31.3 屏。
+           只收紧留白、间距与卡片最小高度（不改 DOM、不动行数截断） */
         .ui-list { gap:var(--gap-tap); padding:12px 0 56px; }
         .ui-card { padding:12px; min-height:auto; }
         .ui-card-top { gap:var(--gap-tap); }
