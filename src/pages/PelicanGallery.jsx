@@ -263,6 +263,16 @@ export default function PelicanGallery() {
       .pg-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;transform-origin:center center;opacity:0;transition:opacity .5s ease}
       .pg-frame iframe.is-ready{opacity:1}
       @media(max-width:900px){.pg-head-row{flex-direction:column;align-items:flex-start;gap:18px}.pg-stats{justify-content:flex-start;max-width:none}.pg-head h1{font-size:42px}.pg-grid{grid-template-columns:1fr}.pg-tools{justify-content:flex-start}}
+      /* 手机断点单独一档：上面的 900px 是版式断点（平板也算），字号只跟着
+         站点的手机口径（≤767px）走，桌面与平板中段保持原样。
+         序号/统计/眉标属必要信息，按站点阶梯不低于 --fs-meta；
+         「SORT」是控件文字，给到 --fs-label。 */
+      @media(max-width:767px){
+        .pg-kicker{font-size:var(--fs-meta)}
+        .pg-stat{font-size:var(--fs-meta)}
+        .pg-seq{font-size:var(--fs-meta)}
+        .pg-tools .pg-tools-label{font-size:var(--fs-label)}
+      }
     `}</style>
 
     <div className="pg-shell">
