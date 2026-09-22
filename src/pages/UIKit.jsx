@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Copy, Home } from 'lucide-react';
 import { UI_CATS, UI_COMPONENTS } from '../data/uikit-components';
 
+/* 手机端口径与站点一致（index.css 的移动端块走 max-width:767px） */
+const MOBILE_MQ = '(max-width: 767px)';
+
 /* ============================================================
    UI 组件图鉴 · 开发者查阅工具页
    - 页面自身即 01 号组件的活演示：顶部通栏导航，滚动后变形为悬浮胶囊吸顶
@@ -41,10 +44,23 @@ function buildPrompt(c) {
 export default function UIKit() {
   const [shrunk, setShrunk] = useState(false);
   const [closedIds, setClosedIds] = useState(() => new Set());
+  const [openedIds, setOpenedIds] = useState(() => new Set());
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia(MOBILE_MQ).matches);
   const [cat, setCat] = useState('all');
   const [copiedNo, setCopiedNo] = useState(null);
   const rootRef = useRef(null);
   const copyTimerRef = useRef(null);
+
+  /* 手机上 52 张全展开的卡要滚 31 屏，而 .ui-detail 一块就占 19.9 屏。
+     折叠机制本来就有（.ui-card:not(.is-open) → grid-template-rows:0fr），
+     所以这里只把「默认态」按断点反过来，不新增任何交互。
+     桌面端仍走 closedIds（默认全开），DOM 与行为一字不变。 */
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MQ);
+    const on = (e) => setIsMobile(e.matches);
+    if (mq.addEventListener) mq.addEventListener('change', on); else mq.addListener(on);
+    return () => { if (mq.removeEventListener) mq.removeEventListener('change', on); else mq.removeListener(on); };
+  }, []);
 
   /* 导航收缩判断：用页面根元素的视口位置而非探测滚动容器，
      捕获阶段监听可覆盖任何层级的内层滚动容器（Layout 包装结构差异不影响） */
@@ -79,12 +95,23 @@ export default function UIKit() {
 
   useEffect(() => () => clearTimeout(copyTimerRef.current), []);
 
-  /* 卡片默认全部展开，点击可单卡收起/展开 */
-  const toggle = (no) => setClosedIds((cur) => {
-    const next = new Set(cur);
-    if (next.has(no)) next.delete(no); else next.add(no);
-    return next;
-  });
+  /* 桌面：默认全开，点击记入 closedIds。手机：默认全收，点击记入 openedIds。
+     跨断点各存各的，缩放窗口不会把用户在某一端的显式操作串味。 */
+  const toggle = (no) => {
+    if (!isMobile) {
+      setClosedIds((cur) => {
+        const next = new Set(cur);
+        if (next.has(no)) next.delete(no); else next.add(no);
+        return next;
+      });
+      return;
+    }
+    setOpenedIds((cur) => {
+      const next = new Set(cur);
+      if (next.has(no)) next.delete(no); else next.add(no);
+      return next;
+    });
+  };
 
   const jump = (catKey) => {
     setCat(catKey);
@@ -553,14 +580,61 @@ export default function UIKit() {
       @media (max-width:767px) {
         /* 分类筛选与复制钮给足拇指区 */
         .ui-cat { min-height:44px; padding:0 15px; font-size:13px; }
-        .ui-cat b { font-size:11px; }
+        .ui-cat b { font-size:var(--fs-meta); }
         .ui-copy { min-height:44px; padding:0 14px; font-size:12.5px; }
         .ui-nav-home { min-height:44px; }
         /* 窄屏下组件名允许折行，不要用省略号吃掉中文名 */
         .ui-card-name { display:grid; gap:2px; }
         .ui-card-name h3 { white-space:normal; font-size:16px; line-height:1.3; }
-        .ui-card-name em { font-size:11px; }
-        .ui-demo { height:auto; min-height:150px; }
+        .ui-card-name em { font-size:var(--fs-meta); overflow-wrap:anywhere; }
+        /* 演示框高度自适应；地板值 150→126 与内边距 14→10 属于下面的"密度"收紧 */
+        .ui-demo { height:auto; min-height:126px; padding:10px; }
+
+        /* ---- 以下均为手机端实测修复，全部锁在 ≤767px，桌面端零改动 ---- */
+
+        /* 顶栏：实测手机下内容 scrollWidth 346 > 盒子 312（溢出到视口外 11px），
+           且 fixed 高度 76px 吃掉约 9% 视口。收窄 top/gap/padding 后高度约 64px；
+           英文副名 UI COMPENDIUM 与中文站名、Hero 眉题三重重复，手机端收起
+           （桌面 is-shrunk 态本来也是隐藏它的，不算新损失） */
+        .ui-nav { top:10px; gap:10px; padding:9px 14px; }
+        .ui-nav.is-shrunk { top:8px; padding:7px 12px; }
+        .ui-nav-logo { gap:6px; }
+        .ui-nav-logo em { display:none; }
+
+        /* 必要信息字号抬到站点阶梯：这几处是用户要读的文字，不是 --fs-micro 的场景。
+           .d-tab / .d-fav / .d-step / .d-tl-item / .d-check-row 是产品迷你截图内部的
+           贴图纹理，故意做小，这里不动它们 */
+        .ui-hero-kicker { font-size:var(--fs-meta); }          /* UI COMPENDIUM · FOR DEVELOPERS */
+        .ui-card-cat { font-size:var(--fs-meta); }             /* 分类标签「导航」 */
+        .ui-demo p { font-size:var(--fs-meta); margin:8px 0 0; } /* 演示说明行 */
+        .d-nav-wide, .d-nav-wide b, .d-nav-morph, .d-nav-morph b { font-size:var(--fs-meta); } /* 通栏态 / 内容左右分开排布 */
+        .d-pager { font-size:var(--fs-meta); }                 /* 页码与 ‹ › 箭头 */
+        .d-bread { font-size:var(--fs-meta); }                 /* 面包屑层级路径 */
+
+        /* 演示轮播：手机下容器只有 ~240px 且 overflow:hidden，后两张幻灯片永远看不到。
+           改成手指横滑 + scroll-snap 逐张对齐（滚动条照站点横滑条的做法隐藏），
+           同时关掉 transform 自动轮播——否则手势滚动会被 translateX 动画拽回去。
+           桌面端容器够宽且仍走自动轮播，不受影响 */
+        .d-carousel { overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory;
+          scrollbar-width:none; overscroll-behavior-x:contain; }
+        .d-carousel::-webkit-scrollbar { display:none; }
+        .d-carousel-track { width:100%; animation:none; }
+        .d-carousel-track i { flex:0 0 100%; scroll-snap-align:center; scroll-snap-stop:always; }
+
+        /* 分段控件「日付/周付/月付」实测 60x28，低于拇指下限，抬到 --ctl-md */
+        .d-seg { width:100%; }
+        .d-seg button { display:inline-flex; align-items:center; justify-content:center;
+          min-height:var(--ctl-md); padding:0 4px; font-size:var(--fs-label); }
+
+        /* 卡片密度：52 张卡单列堆叠让整页到了 37.2 屏。只收紧留白、间距与卡片最小
+           高度（不改 DOM、不动行数截断，折叠交互由共享层统一处理） */
+        .ui-list { gap:var(--gap-tap); padding:12px 0 56px; }
+        .ui-card { padding:12px; min-height:auto; }
+        .ui-card-top { gap:var(--gap-tap); }
+        .ui-look { margin:8px 0 0; line-height:1.75; }
+        .ui-detail-body { padding-top:10px; }
+        .ui-fields { gap:10px; }
+        .ui-field p { margin:5px 0 0; line-height:1.75; }
       }
       @media (prefers-reduced-motion:reduce) {
         .uikit-page *, .uikit-page *::before, .uikit-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
@@ -583,7 +657,7 @@ export default function UIKit() {
         <h1>界面组件<br /><span>图鉴</span></h1>
         <p>
           专门讲解网页与后台系统里常见界面组件的查阅手册：每个部件叫什么名字、长什么样子（动效演示）、
-          用在什么场景、又是怎么实现的。卡片默认全部展开，点卡片可收起；右上角「复制提示词」可以把同款风格直接喂给 AI。
+          用在什么场景、又是怎么实现的。{isMobile ? '卡片默认收起，点卡片展开讲解；右上角「复制提示词」可以把同款风格直接喂给 AI。' : '卡片默认全部展开，点卡片可收起；右上角「复制提示词」可以把同款风格直接喂给 AI。'}
         </p>
         <div className="ui-hero-stats">
           <span><b>{UI_COMPONENTS.length}</b>个组件</span>
@@ -617,7 +691,7 @@ export default function UIKit() {
 
     <main className="ui-list">
       {shown.map((c) => {
-        const open = !closedIds.has(c.no);
+        const open = isMobile ? openedIds.has(c.no) : !closedIds.has(c.no);
         return (
           <article
             key={c.no}
