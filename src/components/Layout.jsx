@@ -59,6 +59,9 @@ export default function Layout({ children }) {
   const meta = getMeta(pathname);
   const isWideWorkspace = WIDE_WORKSPACE_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'));
   const isPromptWorkspace = pathname === '/prompts';
+  /* 日程中心的页头介绍文字在手机上被账户浮标的避让挤成 6 行竖排，
+     且它只是重复三个视图的名字 —— 手机端整条去掉，故给它一个页面级类名 */
+  const isScheduleWorkspace = pathname === '/timetable' || pathname.startsWith('/timetable/');
 
   if (isFullscreen) {
     const isDarkPage = pathname.startsWith('/agents');
@@ -81,7 +84,7 @@ export default function Layout({ children }) {
   // ===== 工具页：统一外壳（简约商务白底） =====
   return (
     <div className={`tool-wrap${isPromptWorkspace ? ' tool-wrap-prompt' : ''}`}>
-      <div className={`tool-inner${isWideWorkspace ? ' tool-inner-wide' : ''}${isPromptWorkspace ? ' tool-inner-prompt' : ''}`}>
+      <div className={`tool-inner${isWideWorkspace ? ' tool-inner-wide' : ''}${isPromptWorkspace ? ' tool-inner-prompt' : ''}${isScheduleWorkspace ? ' tool-inner-schedule' : ''}`}>
         {/* 页头：白卡片 */}
         {!isPromptWorkspace && meta && (() => {
           const { label, sub, Icon, accent } = meta;
@@ -502,6 +505,8 @@ export default function Layout({ children }) {
           .tool-back svg { width: 19px; height: 19px; }
           .tool-title { font-size: var(--fs-h4); line-height: 1.2; }
           .tool-sub { max-width: 300px; white-space: normal; line-height: 1.5; font-size: var(--fs-label); }
+          /* 日程中心：介绍文字整条去掉，页头只留标题 + 视图切换 */
+          .tool-inner-schedule .tool-sub { display: none; }
           /* 页头与正文共用一条左边线，避免图标/标题/内容逐层缩进 */
           /* 页头左侧对齐正文，右侧给固定账户浮标让位，避免文字被压 */
           /* 只让标题区避让固定的账户浮标；操作区换行后仍可用满整行 */
@@ -516,9 +521,13 @@ export default function Layout({ children }) {
           /* 上面那条通用卡片归一化规则写的是 16px 18px !important，
              手机上四层叠加会吃掉 35% 宽度，这里统一收紧 */
           .tool-content :is([class*="card"], [class*="Card"], [class*="note-item"], [class*="link-item"], [class*="prompt-item"], [class*="material-item"], [class*="record-item"], [class*="key-item"], [class*="draft-item"]):not([class*="grid"]) {
-            padding: 14px !important;
+            padding: 12px !important;
             border-radius: 12px !important;
           }
+          /* 实测卡片竖向余量主要来自正文行距（各页普遍 1.7~1.8）而不是留白：
+             padding 早就是 14px，压到 12 只省 4px/卡。这里把卡片内正文行距
+             收到 1.6 —— 仍高于站点 1.62 的手机阅读基线附近，不影响可读性 */
+          .tool-content :is([class*="card"], [class*="Card"]) :is(p, li) { line-height: 1.6; }
           .tool-content td, .tool-content th { padding: 8px 10px; }
           .tool-content .flex.items-end.justify-between { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
           .tool-content :is(.search-box, .pl-search, .hub-search, .nw-search, .ag-search) { max-width: 100%; }

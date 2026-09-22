@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Token Monitor · 本机 AI 用量看板 — Voyra</title>
 <meta name="description" content="Token Monitor 扫描本机 AI 编程工具的 Token 消耗与成本：Claude Code、Codex、ZCode、OpenCode 等。缓存命中率、模型单价与对话级明细，数据全部留在本机。">
 <meta name="theme-color" content="#0B0C0E">
@@ -253,6 +253,9 @@ html.anim [data-reveal]{opacity:0;transform:translateY(22px);
   transition:opacity .8s cubic-bezier(.22,1,.36,1) var(--d,0s),transform .8s cubic-bezier(.22,1,.36,1) var(--d,0s)}
 html.anim [data-reveal].in{opacity:1;transform:none}
 
+/* ---------- 吸底下载条基态（手机端断点内点亮；桌面端这个层不存在） ---------- */
+.mbar{display:none}
+
 /* ---------- responsive ---------- */
 @media (max-width:1080px){
   .hero-grid{grid-template-columns:1fr;gap:40px}
@@ -320,6 +323,23 @@ html.anim [data-reveal].in{opacity:1;transform:none}
   /* 字号抬到 12 之后走势列会把 table 顶到 355 > .tablewrap 的 328（基线本来就溢出 15px）。
      只在 380 以下把走势线收一档，390/430 仍是原来的 104x28。 */
   @media (max-width:380px){.sp svg{width:76px;height:auto}}
+  /* ===== 手机端吸底下载条：滚过首屏出现，进入 #download 下载区自动隐藏 ===== */
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;align-items:center;gap:10px;
+    padding:9px 14px calc(9px + env(safe-area-inset-bottom));background:rgba(21,22,26,.92);
+    backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
+    border-top:1px solid var(--line2);box-shadow:0 -14px 40px rgba(0,0,0,.5);
+    transform:translateY(115%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+  .mbar.show{transform:none}
+  .mbar img{width:32px;height:32px;border-radius:8px;flex:0 0 auto;border:1px solid var(--line2)}
+  .mbar .mb-t{flex:1 1 auto;min-width:0}
+  .mbar .mt{font-size:13px;font-weight:650;line-height:1.3;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mbar .ms{font-family:var(--mono);font-size:12px;line-height:1.45;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mbar .ms b{color:var(--accent-s);font-weight:600}
+  .mbar .go{flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 18px;border-radius:7px;font-size:14px;font-weight:600;color:#0B0C0E;background:#F2F3F5;white-space:nowrap}
+  .mbar .go:active{transform:translateY(1px)}
+  /* 页脚为吸底条 + 刘海安全区让位（条实测 63px 高，留 88px） */
+  footer{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
@@ -575,6 +595,16 @@ html.anim [data-reveal].in{opacity:1;transform:none}
   </div>
 </footer>
 
+<!-- 手机端吸底下载条：href 镜像主下载按钮 #dl-setup（由本页已有的镜像逻辑赋值），版本/体积镜像 #ver-pill/#s-setup，不新起请求 -->
+<div class="mbar" id="mbar">
+  <img src="/token-monitor/favicon.png" alt="">
+  <div class="mb-t">
+    <div class="mt">Token Monitor</div>
+    <div class="ms"><b id="mbar-ver">v1.1.4</b> · 安装版 <span id="mbar-size">约 18 MB</span> · Win 10/11</div>
+  </div>
+  <a class="go" id="mbar-go" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">下载</a>
+</div>
+
 <script>
 (function(){
   'use strict';
@@ -713,6 +743,45 @@ html.anim [data-reveal].in{opacity:1;transform:none}
       if (s) spy.observe(s);
     });
   }
+})();
+</script>
+
+<script>
+/* 手机端吸底下载条：滚过首屏（阈值 520px ≈ hero 的两个下载按钮出屏）出现，
+   进入 #download（本页真正的下载区）时自动隐藏。
+   不新起任何请求，也不碰下载链路：条里的 href 镜像主按钮 #dl-setup（本页已有的镜像逻辑
+   会在 /tm-api/latest 解析成功后重写它，失败时保留 releases/latest 兜底），
+   版本号镜像 #ver-pill、体积镜像 #s-setup —— 都是同一次已解析出来的数据。 */
+(function(){
+  var bar = document.getElementById('mbar');
+  if (!bar) return;
+  var go = document.getElementById('mbar-go'),
+      bv = document.getElementById('mbar-ver'),
+      bs = document.getElementById('mbar-size');
+  function mirror(){
+    var src = document.getElementById('dl-setup');
+    if (src && go) { var h = src.getAttribute('href'); if (h) go.setAttribute('href', h); }
+    var v = document.getElementById('ver-pill');
+    if (v && bv && /^v[\d.]+/.test(v.textContent)) bv.textContent = v.textContent;
+    var s = document.getElementById('s-setup');
+    if (s && bs && s.textContent) bs.textContent = s.textContent;
+  }
+  var hidden = false;
+  function upd(){
+    bar.classList.toggle('show', (window.pageYOffset || 0) > 520 && !hidden);
+  }
+  var dl = document.getElementById('download');
+  if ('IntersectionObserver' in window) {
+    if (dl) new IntersectionObserver(function(es){
+      es.forEach(function(e){ hidden = e.isIntersecting; upd(); });
+    }, { threshold:.15 }).observe(dl);
+    ['dl-setup', 'ver-pill', 's-setup'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) new MutationObserver(mirror).observe(el, { attributes:true, attributeFilter:['href'], childList:true, characterData:true, subtree:true });
+    });
+  }
+  mirror(); upd();
+  addEventListener('scroll', upd, { passive:true });
 })();
 </script>
 </body>

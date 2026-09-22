@@ -747,7 +747,7 @@ export default function Dashboard() {
            人物图又是 absolute 钉底，左半屏因此空掉近一半。
            改成双栏网格、高度贴合内容，人物与文字同排。 */
         .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: 0; }
-        .vr-home .vr-hero { display: grid; grid-template-columns: minmax(0, 1fr) 43%; align-items: end; column-gap: 8px; min-height: 0; padding: 54px 0 26px; }
+        .vr-home .vr-hero { display: grid; grid-template-columns: minmax(0, 1fr) 43%; align-items: end; column-gap: 8px; min-height: 0; padding: 34px 0 22px; }
         .vr-home .vr-hero-copy { width: auto; align-self: end; }
         .vr-home .vr-hero h1 { max-width: none; font-size: 42px; line-height: .92; }
         /* 窄列里 strong 与 span 抢同一行会把 "OPEN-SOURCE" 从连字符处截断，改成上下堆叠 */
@@ -765,14 +765,20 @@ export default function Dashboard() {
         .vr-home .vr-person-stage::before { top: 12%; right: -10%; width: 115%; }
         .vr-home .vr-person-stage::after { right: -8%; bottom: 6%; width: 100%; height: 10px; }
         .vr-home .vr-person-frame { position: relative; right: auto; bottom: auto; width: 100%; }
-        .vr-home .vr-tabs { gap: 14px; padding-bottom: 18px; }
+        /* 五个 tab 均匀铺满整行（保留 flex:0 0 auto，让金色下划线仍贴着字宽
+           而不是被拉成整格；容器仍留 overflow-x:auto 兜底窄屏溢出） */
+        .vr-home .vr-tabs { gap: 0; justify-content: space-between; padding-bottom: 18px; }
         .vr-home .vr-tab { font-size: 20px; }
+        /* 巨型描边序号原本 190px 从不随断点缩放，在手机上横贯大半个屏、
+           下沿伸进面板区，把「关于我」的眉标和正文穿过遮住 */
+        .vr-home .vr-tab-reel { top: 4px; right: -2px; font-size: 78px; }
         /* 水印序号占底部 13~51px，而 copy 只留 30px 下边距，"打开日程"这类 CTA 会被压在数字上 */
         .vr-home .vr-feature-copy { padding-bottom: 58px; }
       }
       @media (max-width: 360px) {
-        .vr-home .vr-tabs { gap: 11px; }
+        .vr-home .vr-tabs { gap: 0; }
         .vr-home .vr-tab { font-size: 18px; }
+        .vr-home .vr-tab-reel { font-size: 66px; }
       }
     `}</style>
     <style>{`

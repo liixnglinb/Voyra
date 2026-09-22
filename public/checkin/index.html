@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>学习通自动签到助手 · 让签到，成为习惯</title>
 <meta name="description" content="学习通自动签到助手：桌面端常驻后台，自动监听课程签到活动。一句话，自动签到。">
 <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=11">
@@ -237,6 +237,9 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 .footer-links a{color:#6B6B6B;transition:color .2s}
 .footer-links a:hover{color:var(--brand)}
 
+/* ============ 吸底下载条基态：只在手机断点里被点亮，桌面端不存在这个层 ============ */
+.mbar{display:none}
+
 /* ============ 响应式 ============ */
 @media(max-width:960px){
   .nav-links{display:none}
@@ -258,6 +261,33 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
   .announce{white-space:normal;line-height:1.45;padding:7px 14px;font-size:12px;height:auto;min-height:40px}
   .req-tag,.rec-tag{font-size:12px}
   .footer-links a{min-height:40px;display:inline-flex;align-items:center}
+  /* ---- 公告条改为可关闭（只影响手机）：× 用 hidden 属性在桌面端不显示，这里把它点亮；
+         min-height 抬到 48 让 44px 的按钮整个落在深色带内，仍低于 nav 的 top:52 ---- */
+  .announce{min-height:48px;padding:4px 58px 4px 14px}
+  .ann-x{display:grid;place-items:center;position:absolute;right:5px;top:50%;transform:translateY(-50%);
+    width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;
+    font-size:20px;line-height:1;font-family:var(--en);transition:background .2s}
+  .ann-x:active{background:rgba(255,255,255,.34)}
+  /* 关闭后导航条上移，原本留给公告条的 52px 空带一起收掉 */
+  body.annoff .announce{display:none}
+  body.annoff .nav{top:12px}
+  /* ---- 吸底下载条：滚过首屏出现，进到大下载按钮那一屏自动隐藏 ---- */
+  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:90;display:flex;align-items:center;gap:10px;
+    padding:9px 14px calc(9px + env(safe-area-inset-bottom));background:rgba(255,255,255,.94);
+    backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
+    border-top:1px solid rgba(0,0,0,.08);box-shadow:0 -8px 26px rgba(0,0,0,.07);
+    transform:translateY(115%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+  .mbar.show{transform:none}
+  .mbar img{width:34px;height:34px;border-radius:9px;flex:0 0 auto}
+  .mbar .mb-t{flex:1 1 auto;min-width:0}
+  .mbar .mt{font-size:13px;font-weight:700;line-height:1.3;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mbar .ms{font-size:12px;line-height:1.45;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mbar .go{flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+    padding:0 18px;border-radius:999px;font-size:14px;font-weight:700;color:#fff;white-space:nowrap;
+    background:linear-gradient(135deg,var(--brand),var(--brand-deep));box-shadow:0 4px 14px rgba(255,159,67,.3)}
+  .mbar .go:active{transform:scale(.97)}
+  /* 页脚给吸底条让位（条实测 63px 高 + 刘海安全区） */
+  .footer{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
 }
 </style>
 </head>
@@ -267,6 +297,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 <div class="announce">
   <span class="dot"></span>
   <span><b>v3.7.0</b> 全新版本上线！课表驱动扫描 + 钉钉群发图自动签到 + 监听开关</span>
+  <button class="ann-x" id="ann-x" type="button" hidden aria-label="关闭公告">×</button>
 </div>
 
 <!-- 顶部导航 -->
@@ -425,6 +456,16 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
   <p>© 2026 学习通自动签到助手 · 基于 Voyra 个人站分发 · 仅供学习研究使用</p>
 </footer>
 
+<!-- 手机端吸底下载条（桌面端 .mbar 基态 display:none）；下载 href 与本页主下载按钮同一条 -->
+<div class="mbar" id="mbar">
+  <img src="favicon.png?v=11" alt="">
+  <div class="mb-t">
+    <div class="mt">学习通自动签到助手</div>
+    <div class="ms">v3.7.0 · 106MB · Windows 10/11</div>
+  </div>
+  <a class="go" id="mbar-go" href="https://github.com/liixnglinb/Superstar-checkin/releases/latest/download/SuperstarCheckin-Setup.exe">下载</a>
+</div>
+
 <script>
 (function(){
   const announce = document.querySelector('.announce');
@@ -518,6 +559,44 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(applyLatest)
     .catch(function(){});
+})();
+</script>
+
+<script>
+/* 手机端两件事：① 吸底下载条 ② 公告条可关闭。
+   不碰下载链路：href 与主按钮同为 releases/latest/download/…（版本无关的稳定直链），
+   条里的「v3.7.0 · 106MB」写成与页面正文同样的模式，由本页已有的动态脚本一次解析后
+   顺带改写（它对 document.body 全量文本做替换），这里不新起任何请求。 */
+(function(){
+  var bar = document.getElementById('mbar');
+  var dlHide = false;
+  function upd(){
+    if(!bar) return;
+    bar.classList.toggle('show', (window.pageYOffset || window.scrollY || 0) > 560 && !dlHide);
+  }
+  if(bar){
+    var dl = document.querySelector('#download .dl-buttons');
+    if(dl && 'IntersectionObserver' in window){
+      new IntersectionObserver(function(es){
+        es.forEach(function(e){ dlHide = e.isIntersecting; upd(); });
+      }, {threshold:.15}).observe(dl);
+    }
+    addEventListener('scroll', upd, {passive:true});
+    upd();
+  }
+  /* 公告条关闭：× 只在手机断点显示（基态 hidden），关闭态记 localStorage，之后不再出现 */
+  var KEY = 'voyra-checkin-ann-off', btn = document.getElementById('ann-x');
+  function closeAnnounce(){
+    document.body.classList.add('annoff');
+    if(btn) btn.setAttribute('hidden','');
+  }
+  var saved = null;
+  try{ saved = localStorage.getItem(KEY); }catch(e){}
+  if(saved === '1') closeAnnounce();
+  if(btn) btn.addEventListener('click', function(){
+    closeAnnounce();
+    try{ localStorage.setItem(KEY, '1'); }catch(e){}
+  });
 })();
 </script>
 
