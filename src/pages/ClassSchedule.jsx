@@ -573,18 +573,18 @@ function inWeek(c, w) {
 const MOBILE_MQ = '(max-width: 767px)';
 
 /* ============================================================
-   ★ 手机端「节次 + 起止时间」显示方式的一行撤销开关
+   ★ 手机端「节次 + 起止时间」显示方式的一行切换开关
    ------------------------------------------------------------
-   手机上左侧「第几节」那一列（表头 + 每行的节次格）整列不再渲染，
-   省下的 46px 全部还给周一~周五；但节次/时间这条信息不能丢，
-   所以把它降级成该行第一格顶部的一条极窄 hairline 时间标记
-   （「1-2 节」+「08:20-10:00」）。
-     true  → 格内显示节次 + 起止时间（当前口径，信息一条不少）
-     false → 手机上连格内的节次/时间也不要，网格只剩「周几 × 课程」
-   若用户其实想连时间也不要，只改下面这一行即可（其余渲染自动跟随）。
-   桌面端不受此开关影响：isMobile 恒 false，两列/格渲染与改动前一致。
+   手机上左侧「第几节」那一列（表头 + 每行的节次格）整列不再渲染。
+   省下的宽度给谁，由这个开关决定：
+     true  → 降级成该行第一格顶部的一条 hairline 标记（「1-2 节」+「08:20-10:00」）
+     false → 手机上格子里不出现节次/时间，五列等宽，课程名与教室恢复横排
+   当前取 false：实测 true 时第一格被这条标记撑到 60px 宽，
+   「复变函数与积分变换」这类长课名挤成竖排单字，可读性反而更差。
+   节次与起止时间并没有删掉，仍完整留在下方「第 X 周课程明细」里。
+   桌面端不受此开关影响：isMobile 恒 false，两列/格渲染与引入前一致。
    ============================================================ */
-const MOBILE_SLOT_IN_CELL = true;
+const MOBILE_SLOT_IN_CELL = false;
 function useIsMobile() {
   const [mobile, setMobile] = useState(
     () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(MOBILE_MQ).matches : false),
@@ -629,6 +629,9 @@ export default function ClassSchedule({ stats = null, active = true }) {
   const isMobile = useIsMobile();
   const isMobileRef = useRef(isMobile);
   isMobileRef.current = isMobile;
+  /* 「第 X 周课表 / 清空课表」那条工具栏：手机上默认收成一条把手，
+     把 62px 还给网格；桌面端恒展开（DOM 与改动前一致）。 */
+  const [gridHeadOpen, setGridHeadOpen] = useState(!isMobile);
 
   /* 课表行高自适应：把视口内剩余高度均摊到 6 个节次行，
      使「第 X 周课表」卡片底边正好贴住可视区底端（明细卡被推出首屏） */
@@ -956,6 +959,14 @@ export default function ClassSchedule({ stats = null, active = true }) {
           .cs-cell .t { display:none; }
           .cs-cell .w { font-size:var(--fs-meta); }
           .cs-h h3 { font-size:var(--fs-lead); }
+          /* 「第 X 周课表 / 清空课表」工具栏默认收成一条把手，把竖向还给网格。
+             把手视觉高 34px，命中区靠 ::before 上下各外扩 7px 补到 48px
+             —— 与首页 .vr-tab 用的是同一手法，不是把按钮做小了。 */
+          .cs-grid-h { margin-bottom:8px; }
+          .cs-fold { position:relative;display:flex;align-items:center;gap:6px;min-height:34px;padding:0 2px;
+            border:0;background:transparent;color:#212529;font-size:var(--fs-body);font-weight:700; }
+          .cs-fold::before { content:"";position:absolute;left:-2px;right:-2px;top:-7px;bottom:-7px; }
+          .cs-fold svg { color:#6A6F79; }
           /* 收紧间距让今日概览留在同一行，避免行尾出现孤立的分隔点 */
           .cs-today { gap:7px; font-size:12.5px; }
           .cs-today-date { gap:5px; font-size:13.5px; }
@@ -1121,12 +1132,27 @@ export default function ClassSchedule({ stats = null, active = true }) {
 
       {/* 周网格课表 */}
       <div className="cs-card" ref={gridCardRef} style={{ '--cs-row-h': rowH ? `${rowH}px` : undefined }}>
-        <div className="cs-h">
-          <div className="ico"><CalendarRange size={18} /></div>
-          <h3>第 {currentWeek} 周课表</h3>
-          <div className="sp" />
-          <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
-        </div>
+        {isMobile ? (
+          <div className="cs-h cs-grid-h">
+            <button type="button" className="cs-fold" aria-expanded={gridHeadOpen} onClick={() => setGridHeadOpen((v) => !v)}>
+              {gridHeadOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              <span>第 {currentWeek} 周课表</span>
+            </button>
+            {gridHeadOpen && (
+              <>
+                <div className="sp" />
+                <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="cs-h">
+            <div className="ico"><CalendarRange size={18} /></div>
+            <h3>第 {currentWeek} 周课表</h3>
+            <div className="sp" />
+            <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
+          </div>
+        )}
         <div className={`cs-gridwrap${gridScrollable ? ' cs-gridwrap-wide' : ''}`}>
           <div className="cs-grid">
             <table>
