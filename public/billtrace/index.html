@@ -84,6 +84,15 @@ h1 em{font-style:normal;background:linear-gradient(100deg,#0BA360 10%,#17D38C 55
 .meta-chip{font-size:12.5px;color:var(--muted-2);border:1px solid var(--line);border-radius:999px;padding:5px 13px;background:rgba(255,255,255,.88)}
 .meta-chip b{color:var(--brand);font-weight:700;font-variant-numeric:tabular-nums}
 
+/* ---------- 下载线路 ---------- */
+.src-tag{font-style:normal;font-size:11px;font-weight:700;color:#D9FFEC;background:rgba(255,255,255,.2);border-radius:999px;padding:3px 9px;margin-left:3px;white-space:nowrap}
+.src-note{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--muted)}
+.src-note b{color:var(--muted-2);font-weight:700}
+.src-note .dot{width:6px;height:6px;border-radius:50%;background:var(--brand);flex-shrink:0;animation:blink 2s ease infinite}
+.src-note .swap{font-size:12.5px;font-weight:700;color:var(--brand);text-decoration:underline;text-underline-offset:3px;background:none;border:none;padding:0;cursor:pointer}
+.dl-hint{margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.7}
+.dl-hint a{color:var(--brand);font-weight:700}
+
 /* ---------- 手机（实时记账模拟） ---------- */
 .phone-wrap{position:relative;display:flex;justify-content:center}
 .phone-halo{position:absolute;width:120%;height:120%;top:-10%;background:radial-gradient(circle,rgba(11,163,96,.18),transparent 65%);filter:blur(20px);z-index:0;animation:halo 6s ease-in-out infinite alternate}
@@ -208,7 +217,9 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
   .phone-wrap{order:4;width:100%;margin:24px 0 22px}
   .phone-halo{width:100%;height:100%;top:0;left:0}
   .copy .dl-row{order:5}
-  .copy .hero-meta{order:6;margin-top:16px;justify-content:center}
+  .copy .src-note{order:6;justify-content:center}
+  .copy .dl-hint{order:7;text-align:center}
+  .copy .hero-meta{order:8;margin-top:16px;justify-content:center}
   .floaters{inset:0 -6px}
   .floaters img{width:26px;height:26px;border-radius:8px}
   .floaters img:nth-child(2),.floaters img:nth-child(4),.floaters img:nth-child(5),.floaters img:nth-child(7),.floaters img:nth-child(9),.floaters img:nth-child(10){display:none}
@@ -288,20 +299,23 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
       <h1>付完款，<br>账就<em>自动记好</em>了。</h1>
       <p class="tagline">账迹 BillTrace 监听支付通知与银行短信，2 秒内自动入库并智能归类——全程零手动、零截图、零打扰，数据只存在你手机里。</p>
       <div class="dl-row">
-        <a class="btn btn-primary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
+        <a class="btn btn-primary" id="dlMain" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          直接下载 APK <span class="ver-inline" id="ver">v0.4.0</span>
+          下载 APK <span class="ver-inline" id="ver">v0.4.0</span>
+          <em class="src-tag" id="srcTag">国内镜像</em>
         </a>
-        <a class="btn btn-ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
+        <a class="btn btn-ghost" id="dlAlt" data-dl="secondary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          国内加速下载
+          <span id="altLabel">GitHub 直连</span>
         </a>
       </div>
+      <div class="src-note" id="srcNote"><span class="dot"></span>当前线路：<b>国内镜像</b></div>
+      <div class="dl-hint" id="dlHint">APK 约 0.5 MB · 装完按首页两步提示开启权限</div>
       <div class="hero-meta">
         <span class="meta-chip"><b>Android 8.0+</b></span>
         <span class="meta-chip">真机可用</span>
         <span class="meta-chip">免费 · 无广告</span>
-        <span class="meta-chip">数据本地加密存储</span>
+        <span class="meta-chip">数据只存本机</span>
         <span class="meta-chip">安装包 <b id="chipSize">0.5 MB</b></span>
       </div>
     </div>
@@ -411,8 +425,8 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
         <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.4.0</span> · 安装包约 0.5 MB</p>
       </div>
       <div class="btns">
-        <a class="btn btn-primary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">直接下载</a>
-        <a class="btn btn-ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">国内加速</a>
+        <a class="btn btn-primary" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">下载 APK</a>
+        <a class="btn btn-ghost" data-dl="secondary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">GitHub 直连</a>
       </div>
     </div>
   </section>
@@ -429,10 +443,93 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
 <div class="mbar" id="mbar">
   <img src="/billtrace/icon-192.png" alt="账迹图标">
   <div><div class="mt">账迹 BillTrace</div><div class="ms">自动记账 · 安装包 <b id="mbarSize">0.5 MB</b></div></div>
-  <a class="go" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">下载 APK</a>
+  <a class="go" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">下载 APK</a>
 </div>
 
 <script>
+/* ---------- 下载线路：默认国内镜像，后台自动测速 ---------- */
+(function(){
+  var GH='https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk';
+  var MIRROR='https://gh-proxy.com/'+GH;
+  var URLS={github:GH,mirror:MIRROR};
+  var NAME={github:'GitHub 直连',mirror:'国内镜像'};
+  var KEY='bt_dl_src',KEYAT='bt_dl_at';
+  var nodes=document.querySelectorAll('[data-dl]');
+  var cur='mirror';
+
+  function apply(which,note){
+    cur=which;
+    var main=URLS[which],alt=URLS[which==='mirror'?'github':'mirror'];
+    for(var i=0;i<nodes.length;i++){
+      var el=nodes[i];
+      el.setAttribute('href',el.getAttribute('data-dl')==='primary'?main:alt);
+    }
+    var tag=document.getElementById('srcTag');
+    if(tag)tag.textContent=NAME[which];
+    var al=document.getElementById('altLabel');
+    if(al)al.textContent=NAME[which==='mirror'?'github':'mirror'];
+    var sn=document.getElementById('srcNote');
+    if(!sn)return;
+    sn.innerHTML='<span class="dot"></span>当前线路：<b>'+NAME[which]+'</b>'+
+      (note?'<span>'+note+'</span>':'')+
+      '<button type="button" class="swap" id="swapLine">换线路</button>';
+    var sw=document.getElementById('swapLine');
+    if(sw)sw.onclick=function(){
+      var next=cur==='mirror'?'github':'mirror';
+      try{localStorage.setItem(KEY,next);localStorage.setItem(KEYAT,String(Date.now()));}catch(e){}
+      apply(next,'手动切换');
+    };
+  }
+
+  /* 用 Range 探测首字节耗时；no-cors 下拿不到内容，只比快慢 */
+  function probe(url,ms){
+    return new Promise(function(res){
+      var t0=Date.now(),done=false,ctl=null,timer=null;
+      function fin(v){if(done)return;done=true;if(timer)clearTimeout(timer);res(v);}
+      timer=setTimeout(function(){try{if(ctl)ctl.abort();}catch(e){}fin(null);},ms);
+      try{
+        ctl=window.AbortController?new AbortController():null;
+        fetch(url,{mode:'no-cors',cache:'no-store',headers:{'Range':'bytes=0-0'},signal:ctl?ctl.signal:undefined})
+          .then(function(){fin(Date.now()-t0);})
+          .catch(function(){fin(null);});
+      }catch(e){fin(null);}
+    });
+  }
+
+  var saved=null,at=0;
+  try{saved=localStorage.getItem(KEY);at=+(localStorage.getItem(KEYAT)||0);}catch(e){}
+
+  /* 24 小时内沿用上次结果，不再测速 */
+  if(saved&&URLS[saved]&&Date.now()-at<86400000){apply(saved,'');return;}
+
+  apply('mirror','');   /* 先按国内镜像渲染，不阻塞首屏 */
+
+  if(!window.fetch)return;
+  Promise.all([probe(GH,2500),probe(MIRROR,2500)]).then(function(r){
+    var gh=r[0],mi=r[1],pick='mirror';
+    if(gh!==null&&(mi===null||gh<mi*0.8))pick='github';
+    try{localStorage.setItem(KEY,pick);localStorage.setItem(KEYAT,String(Date.now()));}catch(e){}
+    if(pick!==cur)apply(pick,'已自动选最快的');
+  });
+})();
+
+/* ---------- 下载没反应时的备用线路 ---------- */
+(function(){
+  var GH='https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk';
+  var MIRROR='https://gh-proxy.com/'+GH;
+  var NAME={github:'GitHub 直连',mirror:'国内镜像'};
+  var main=document.getElementById('dlMain'),hint=document.getElementById('dlHint');
+  if(!main||!hint)return;
+  main.addEventListener('click',function(){
+    setTimeout(function(){
+      var tag=document.getElementById('srcTag');
+      var cur=(tag&&tag.textContent.indexOf('GitHub')>=0)?'github':'mirror';
+      var other=cur==='mirror'?'github':'mirror';
+      hint.innerHTML='没开始下载？换另一条线路试试：<a href="'+(other==='mirror'?MIRROR:GH)+'">'+NAME[other]+'</a>';
+    },3500);
+  });
+})();
+
 /* ---------- 动态版本号 ---------- */
 (function(){
   var x=new XMLHttpRequest();
