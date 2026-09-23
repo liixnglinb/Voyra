@@ -571,6 +571,20 @@ function inWeek(c, w) {
    它只驱动「仅手机生效」的条件渲染 —— 桌面端 isMobile 恒为 false，
    渲染出的 DOM 与引入该开关之前逐字节相同。 */
 const MOBILE_MQ = '(max-width: 767px)';
+
+/* ============================================================
+   ★ 手机端「节次 + 起止时间」显示方式的一行撤销开关
+   ------------------------------------------------------------
+   手机上左侧「第几节」那一列（表头 + 每行的节次格）整列不再渲染，
+   省下的 46px 全部还给周一~周五；但节次/时间这条信息不能丢，
+   所以把它降级成该行第一格顶部的一条极窄 hairline 时间标记
+   （「1-2 节」+「08:20-10:00」）。
+     true  → 格内显示节次 + 起止时间（当前口径，信息一条不少）
+     false → 手机上连格内的节次/时间也不要，网格只剩「周几 × 课程」
+   若用户其实想连时间也不要，只改下面这一行即可（其余渲染自动跟随）。
+   桌面端不受此开关影响：isMobile 恒 false，两列/格渲染与改动前一致。
+   ============================================================ */
+const MOBILE_SLOT_IN_CELL = true;
 function useIsMobile() {
   const [mobile, setMobile] = useState(
     () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(MOBILE_MQ).matches : false),
@@ -748,6 +762,10 @@ export default function ClassSchedule({ stats = null, active = true }) {
     [isMobile, weekendEmpty],
   );
   const gridScrollable = isMobile && !weekendEmpty; // 手机上仍可能横滑的唯一情形：周末有课
+  /* 手机端：左侧节次列整列不渲染（表头 + 每行的节次格），省下的宽度还给周几列；
+     节次/时间按 MOBILE_SLOT_IN_CELL 降级进格内。桌面端两个标志恒为 false。 */
+  const hidePeriodCol = isMobile;
+  const slotInCell = isMobile && MOBILE_SLOT_IN_CELL;
   /* 今日课程数：按今天星期几 + 当前周次实时统计（编辑课表立即生效） */
   const todayCourseCount = useMemo(() => {
     const dayIdx = (new Date().getDay() + 6) % 7 + 1;
@@ -899,40 +917,43 @@ export default function ClassSchedule({ stats = null, active = true }) {
           .cs-gridwrap::after { width:30px; background:linear-gradient(270deg,#fff 6%,rgba(255,255,255,0)); }
           /* ── 2. 周一~周五一屏看全，不横滑 ──
              390 档网格可用宽 322（原 .cs-grid 左右各 10px 内边距与 .cs-gridwrap 的
-             -10px 外边距互相抵消，白吃掉 20px）。节次列 46px：实测「08:20-」在
-             --fs-meta(12px) 下宽 40.6px，这是作息串能不断成三截的最小宽度；
-             其余五列不写宽度，交给 table-layout:fixed 等分剩余 →
-             实测 360/390/430 档每列 49 / 55 / 63px。 */
-          .cs-grid { padding:0; scroll-snap-type:x proximity; scroll-padding-left:46px; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+             -10px 外边距互相抵消，白吃掉 20px）。
+             手机上左侧「节次」列整列不再渲染（表头 + 每行的节次格，见 JSX 里的
+             hidePeriodCol / MOBILE_SLOT_IN_CELL），省下的 46px 全部还给周几列：
+             五列不写宽度，交给 table-layout:fixed 等分剩余 →
+             实测 360/390/430 档每列 58 / 64 / 72px（改动前是 49 / 55 / 63px）。
+             节次与起止时间没有丢，降级进每行第一格顶部的 .cs-slot-tag。 */
+          .cs-grid { padding:0; scroll-snap-type:x proximity; scroll-padding-left:0; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
           .cs-grid table { min-width:0; }
-          .cs-col-period { width:46px; }
           .cs-col-day, .cs-col-day.compact { width:auto; }
-          /* 唯一还允许横滑的情形：当周确有周六/周日课 → 七列一起上，每列兜到 46px 起 */
-          .cs-gridwrap-wide .cs-grid table { min-width:368px; }
+          /* 唯一还允许横滑的情形：当周确有周六/周日课 → 七列一起上，每列兜到 46px 起
+             （46 是「08:20-」在 --fs-meta 下不断成三截的最小宽度，与格内时间标记同源） */
+          .cs-gridwrap-wide .cs-grid table { min-width:322px; }
           .cs-gridwrap:not(.cs-gridwrap-wide)::after { width:0; } /* 不横滑了就不许再画「可滑动」的渐隐 */
-          /* 节次列冻结：横滑时仍然知道自己在看第几节 */
-          .cs-grid tr > .per { position:sticky; left:0; z-index:3; box-shadow:1px 0 0 rgba(20,24,33,.1); }
-          .cs-grid thead th.per { z-index:5; }
           .cs-grid thead th { font-size:var(--fs-meta); padding:9px 2px; letter-spacing:0; }
-          .cs-grid .per { font-size:var(--fs-meta); padding:7px 2px; line-height:1.35; }
-          /* 「1-2 节」12px 实测 39.2px，正好躺进 46-4 的一行；14px 是 45.2px 会被挤成竖排 */
-          .cs-grid .per b { font-size:var(--fs-meta); margin-bottom:1px; }
           /* 行高随内容：手机上不再由 fitGrid 均摊视口高度，格子写死多高就必然裁掉多高。
              注意别给 td 换 display:flex —— 那会让它不再是 table-cell，整行的格子会
              塌进同一列里竖着堆起来（实测 390 档一行三格叠成 587px 高）。
              改回表格原生行为，用 vertical-align:middle 让矮格子在行内居中，
-             避免同一行里三格顶高不齐。 */
-          .cs-grid tbody td { padding:2px; height:auto; min-height:96px; vertical-align:middle; }
-          .cs-cell { padding:4px 2px;border-radius:8px; gap:2px; }
-          /* 五列并排后每列只有 49 / 55 / 63px（360/390/430 实测），课程名格子内正文宽
-             360 档实测 38px —— 正文级 15px 会一个字一行，退到标签级；
-             教室与老师仍守住 --fs-meta 这条必要信息下限 */
+             避免同一行里三格顶高不齐。min-height 只兜「整行无课」时的最小可辨识度。 */
+          .cs-grid tbody td { padding:1px; height:auto; min-height:44px; vertical-align:middle; }
+          .cs-cell { padding:3px 2px;border-radius:8px; gap:2px; }
+          /* ── 格内的「第几节 + 起止时间」标记（手机端独有，桌面端不渲染该元素）──
+             一行装不下 19 个字符，让它在连字符处自然断成两行：
+             「1-2 节 08:20-」/「10:00」，与改动前 46px 节次列里的断法一致。 */
+          .cs-slot-tag { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 3px; width:100%; min-width:0; margin-bottom:2px; padding-bottom:1px; border-bottom:1px solid rgba(20,24,33,.12); font-size:var(--fs-meta); line-height:1.25; font-variant-numeric:tabular-nums; color:#6A6F79; overflow-wrap:anywhere; }
+          .cs-slot-tag b { color:#212529; font-size:var(--fs-meta); font-weight:750; }
+          /* 五列并排后每列 58 / 64 / 72px（360/390/430 实测），课程名格子内正文宽
+             360 档实测 50px —— 正文级 15px 会一个字一行，退到标签级；
+             教室与格内时间标记仍守住 --fs-meta 这条必要信息下限 */
           .cs-cell .n { font-size:var(--fs-label); line-height:1.28; }
           .cs-cell .r { font-size:var(--fs-meta); padding:1px 2px; gap:0; }
           /* 定位小图标在 50px 宽的格子里要吃掉 12px，教室串会被挤成「明理/楼A/201」三行竖排；
              手机上让位给文字（明细卡与 title 里教室信息一字不少） */
           .cs-cell .r svg { display:none; }
-          .cs-cell .t { font-size:var(--fs-meta); line-height:1.3; }
+          /* 手机端网格里不再显示授课老师（用户指令）：桌面端这一行照常渲染。
+             老师一条并没有丢 —— 课程明细卡与格子的 title 里都还在。 */
+          .cs-cell .t { display:none; }
           .cs-cell .w { font-size:var(--fs-meta); }
           .cs-h h3 { font-size:var(--fs-lead); }
           /* 收紧间距让今日概览留在同一行，避免行尾出现孤立的分隔点 */
@@ -1110,14 +1131,14 @@ export default function ClassSchedule({ stats = null, active = true }) {
           <div className="cs-grid">
             <table>
               <colgroup>
-                <col className="cs-col-period" />
+                {!hidePeriodCol && <col className="cs-col-period" />}
               {dayCols.map((w, i) => (
                 <col key={w} className={`cs-col-day${weekendEmpty && i >= 5 ? ' compact' : ''}`} />
               ))}
             </colgroup>
             <thead>
               <tr>
-                <th className="per">节次</th>
+                {!hidePeriodCol && <th className="per">节次</th>}
                 {dayCols.map((w) => <th key={w}>周{w}</th>)}
               </tr>
             </thead>
@@ -1126,9 +1147,13 @@ export default function ClassSchedule({ stats = null, active = true }) {
                 const slot = timeSlots[s.key];
                 return (
                 <tr key={slot.key}>
-                  <td className="per"><b>{slot.label}</b>{slot.time}</td>
+                  {!hidePeriodCol && <td className="per"><b>{slot.label}</b>{slot.time}</td>}
                   {dayCols.map((_, di) => {
                     const d = di + 1;
+                    /* 手机上这一行的「第几节 + 起止时间」不再占一整列，改为落在该行
+                       第一格顶部的一条 hairline 标记里 —— 每行都固定落在同一格，
+                       读起来仍是一条左侧时间轴；空行也带着它，行身份不会丢。 */
+                    const tagHere = slotInCell && di === 0;
                     const c = grid[d]?.[slot.key];
                     if (c) {
                       const theme = courseTheme(c.name);
@@ -1144,6 +1169,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
                             }}
                             title={c.name}
                           >
+                            {tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}
                             <div className="n">{c.name}</div>
                             <div className="r"><MapPin size={10} strokeWidth={2.2} />{c.room || '地点未填'}</div>
                             <div className="t">{c.teacher || '老师未填'}</div>
@@ -1152,7 +1178,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
                         </td>
                       );
                     }
-                    return <td key={d} className="empty">{(slot.night && <Moon size={13} style={{ opacity: .4 }} />) || ''}</td>;
+                    return <td key={d} className="empty">{tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}{(slot.night && <Moon size={13} style={{ opacity: .4 }} />) || ''}</td>;
                   })}
                 </tr>
                 );
