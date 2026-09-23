@@ -208,12 +208,12 @@ img{display:block;max-width:100%}
   color:var(--d-ink);font-size:13px}
 .m-brand i{width:20px;height:20px;border-radius:var(--r-2);display:block;
   background:linear-gradient(160deg,var(--d-accent),#245ab8)}
-.m-new{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-2);
-  background:var(--d-hover);color:var(--d-ink);font-weight:500;font-size:13px}
-.m-new span:last-child{margin-left:auto;font-family:var(--en);font-size:10px;color:var(--d-ink-4);
-  border:1px solid var(--d-line);border-radius:var(--r-1);padding:0 5px}
+/* 主导航里两行动作（新建任务 / 搜索）带键位提示：软件上它们就是导航行，
+   不再有一个通栏「新建任务」按钮，所以 .m-new 那套删掉了。 */
 .m-nav{margin-top:10px}
 .m-i{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-2)}
+.m-i em{margin-left:auto;font-style:normal;font-family:var(--en);font-size:9.5px;color:var(--d-ink-4);
+  border:1px solid var(--d-line);border-radius:var(--r-1);padding:0 5px;flex-shrink:0}
 .m-i svg{width:14px;height:14px;opacity:.75}
 .m-i.on{background:var(--d-active);color:var(--d-ink);font-weight:600}
 .m-g{margin-top:14px;padding:0 9px 4px;font-size:11px;font-weight:600;color:var(--d-ink-4);
@@ -226,6 +226,13 @@ img{display:block;max-width:100%}
 .m-r.on{background:var(--d-active);color:var(--d-ink)}
 .m-r b{margin-left:auto;font-family:var(--en);font-weight:400;font-size:10px;color:var(--d-ink-4);
   letter-spacing:.015em;flex-shrink:0}
+/* 最近运行嵌在自己那条流程下面：一条左边框轨道，不是再堆一层 padding（软件同做法） */
+.m-sub{display:flex;align-items:center;gap:6px;margin-left:12px;padding:3px 8px 3px 7px;
+  border-left:1px solid var(--d-line);color:var(--d-ink-3);font-size:11px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-sub span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis}
+.m-sub i{margin-left:auto;font-style:normal;font-family:var(--en);font-size:9.5px;
+  color:var(--d-ink-4);flex-shrink:0}
 .m-live{width:6px;height:6px;border-radius:50%;background:var(--d-good);flex-shrink:0;
   animation:breathe 1.6s ease-in-out infinite}
 .m-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--d-line-soft)}
@@ -278,6 +285,39 @@ img{display:block;max-width:100%}
   border-radius:var(--r-pill);padding:1px 7px}
 .m-composer{margin:0 16px 14px;padding:9px 11px;border-radius:var(--r-5);background:var(--d-composer);
   border:1px solid var(--d-line);color:var(--d-ink-4);font-size:11.5px;display:flex;align-items:center;gap:8px}
+/* ---------- hero：首页输入台（软件打开就是这一屏） ----------
+   三段：上=选哪条流程、中=任务说明、下=工具条（引擎在左，发送在右下）。 */
+.m-home{align-items:center;padding:clamp(22px,5vh,46px) 18px 24px;gap:0}
+.m-greet{margin:0 0 16px;font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--d-ink);
+  text-align:center}
+.m-card{width:min(430px,100%);background:var(--d-panel);border:1px solid var(--d-line);
+  border-radius:var(--r-5);overflow:hidden}
+.m-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--d-line-soft)}
+.m-row .m-cp{margin-left:auto;font-style:normal;font-size:10px;color:var(--d-ink-4);white-space:nowrap}
+.m-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r-3);
+  background:var(--d-ctl);border:1px solid var(--d-line);color:var(--d-ink-2);font-size:11px;
+  min-width:0;white-space:nowrap;overflow:hidden}
+.m-chip svg{flex-shrink:0;opacity:.7}
+.m-chip.ghost{background:transparent;border-color:var(--d-line-soft);color:var(--d-ink-3)}
+.m-ta{padding:9px 11px;font-size:11.5px;line-height:1.7;color:var(--d-ink-2);text-align:left;
+  min-height:56px}
+.m-bar{display:flex;align-items:center;gap:8px;padding:8px 10px 10px}
+.m-lbl{flex:1;min-width:0;font-size:11px;color:var(--d-ink-4);white-space:nowrap;overflow:hidden}
+.m-send{width:26px;height:26px;flex-shrink:0;margin-left:auto;display:inline-flex;align-items:center;
+  justify-content:center;border-radius:var(--r-3);background:var(--d-accent);color:var(--d-on-accent)}
+.m-try{width:min(430px,100%);display:flex;align-items:center;margin-top:14px;font-size:10.5px;
+  color:var(--d-ink-4)}
+.m-try b{font-weight:600}
+.m-shuffle{margin-left:auto;color:var(--d-ink-3)}
+.m-sug{display:flex;align-items:center;gap:8px;width:min(430px,100%);margin-top:6px;padding:6px 9px;
+  border:none;border-radius:var(--r-3);background:transparent;color:var(--d-ink-3);font-size:11px;
+  text-align:left;font-family:inherit}
+.m-sug:hover{background:var(--d-hover);color:var(--d-ink-2)}
+.m-sug svg{flex-shrink:0;opacity:.7}
+/* 单独一屏的产品图（跑起来是什么样）没有侧栏，就一格 */
+.mock-body.one{grid-template-columns:minmax(0,1fr);min-height:392px}
+.runit{padding:clamp(52px,9vh,104px) 0}
+.runit .mock{max-width:920px;margin:0 auto;box-shadow:0 30px 70px -32px rgba(0,0,0,.7)}
 /* 进程卡是浮在正文上的，不是第三栏 —— 尺寸按软件实测值（宽 266 / 右 22 / 圆角 14）等比 0.83 缩 */
 .m-proc{position:absolute;z-index:3;top:104px;right:18px;width:222px;color:var(--d-ink-3);
   background:var(--d-float);border:1px solid var(--d-line-strong);border-radius:var(--r-4);
@@ -494,7 +534,13 @@ details code{font-family:var(--en);font-size:13px;background:var(--bg-sunken);pa
 .cta h2{position:relative;font-size:32px}
 .cta .lead{position:relative;margin-left:auto;margin-right:auto}
 .cta .pill{position:relative;margin-top:28px}
-.cta .hero-note{position:relative;animation:none;opacity:1;margin-top:16px}
+/* 修一处既有错位（桌面端）：.hero-note 的基础样式带着入场动画的
+   transform:translateY(60px)，而 .cta .hero-note 只关了 animation 没关 transform，
+   于是 CTA 区这行「约 36 MB · Windows 10/11 x64 · 用户级安装…」被画到 60px 之下，
+   压在下面的 .sha 行上（实测 1440 档两行只剩 8.5px 缝、且上下顺序颠倒）。
+   transform 不参与布局，所以这里只改这一行的绘制位置：
+   其余元素的盒位置、卡片高度、页面无任何变化（窄屏那条同名规则见 860 块，现在冗余但保留）。 */
+.cta .hero-note{position:relative;animation:none;opacity:1;transform:none;margin-top:16px}
 .sha{position:relative;margin-top:12px;display:inline-flex;align-items:center;gap:8px;
   font-family:var(--en);font-size:11.5px;color:var(--ink-4);cursor:pointer;
   border:1px solid transparent;border-radius:var(--r-pill);padding:3px 10px;
@@ -751,63 +797,44 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
         <div class="mock-body">
           <aside class="m-side">
             <div class="m-brand"><i></i>织流</div>
-            <div class="m-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg><span>新建任务</span><span>Ctrl K</span></div>
             <nav class="m-nav">
-              <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h6M4 12h10M4 17h5"/><circle cx="18" cy="7" r="2.2"/><circle cx="19" cy="17" r="2.2"/></svg><span>工作流</span></div>
+              <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg><span>新建任务</span><em>Ctrl N</em></div>
+              <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.6" cy="10.6" r="6.1"/><path d="M15.2 15.2 20 20"/></svg><span>搜索流程与运行</span><em>Ctrl K</em></div>
+              <div class="m-i on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h6M4 12h10M4 17h5"/><circle cx="18" cy="7" r="2.2"/><circle cx="19" cy="17" r="2.2"/></svg><span>工作流</span></div>
               <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7.2 3.6h9.6a1.6 1.6 0 0 1 1.6 1.6v15.2l-6.4-3.9-6.4 3.9V5.2a1.6 1.6 0 0 1 1.6-1.6z"/></svg><span>技能库</span></div>
-              <div class="m-i on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg><span>运行记录</span></div>
+              <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.4 2"/></svg><span>运行记录</span></div>
             </nav>
-            <div class="m-g">项目<em>2</em></div>
-            <div class="m-r">数模求解主线<b>7步</b></div>
-            <div class="m-r">文献综述快跑<b>3步</b></div>
-            <div class="m-g">最近运行<em>1 个在跑</em></div>
-            <div class="m-r on"><span class="m-live"></span><span style="overflow:hidden;text-overflow:ellipsis">板凳腿缠绕结构优化</span></div>
-            <div class="m-r">混凝土梁裂缝等级判定</div>
+            <div class="m-g">项目<em>2 个在跑</em></div>
+            <div class="m-r">数模求解主线</div>
+            <div class="m-sub"><span class="m-live"></span><span>板凳腿缠绕结构优化</span><i>4 分</i></div>
+            <div class="m-sub"><span>混凝土梁裂缝等级判定</span><i>5 小时</i></div>
+            <div class="m-r">文献综述快跑</div>
+            <div class="m-sub"><span>桥梁检测报告文献综述</span><i>1 天</i></div>
+            <div class="m-r">参数优化流水线</div>
+            <div class="m-sub"><span class="m-live"></span><span>支架拓扑优化第二轮</span><i>刚刚</i></div>
             <div class="m-foot">
               <div class="m-me"><span class="m-av"></span><span>claude</span></div>
               <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.1.1</div>
             </div>
           </aside>
 
-          <div class="m-main">
-            <div class="m-top">板凳腿缠绕结构优化<span class="run">日志</span></div>
-            <div class="m-rpbar"><span class="m-badge">执行中</span><span class="m-rtrack"><i></i></span><span class="m-pct">43%</span><span class="m-of">已完成 3 / 7 步</span></div>
-            <div class="m-scroll" id="mockLog">
-              <div class="ln"><b>12:01:03</b><span class="tag t-ok">DONE</span>需求解析 · REQUIREMENTS.md · 子问题 3 个已结构化</div>
-              <div class="ln"><b>12:04:41</b><span class="tag t-ok">DONE</span>方案拆解 · PLAN.md · 检查点已确认</div>
-              <div class="ln"><b>12:11:07</b><span class="tag t-tool">TOOL</span>Write Q1_solve.py</div>
-              <div class="ln"><b>12:18:52</b><span class="tag t-ok">DONE</span>求解收敛，残差 1.2e-4</div>
-              <div class="ln"><b>12:19:30</b><span class="tag t-info">INFO</span>灵敏度热力图已生成（2.4 MB）</div>
-              <div class="ln"><b>12:21:04</b><span class="tag t-run">RUN</span>正在绘制模型对比折线图<span class="cursor"></span></div>
-              <div class="ws">
-                <div class="m-sect">工作区文件<span class="cnt">(4)</span><em class="wslive"><i></i>实时</em><span class="rf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:11px;height:11px"><path d="M20 11a8 8 0 1 0-1.6 5.6"/><path d="M20 5v6h-6"/></svg>刷新</span></div>
-                <div class="ws-r"><span>EXECUTION.md</span><em>24 KB · now</em><b>刚写入</b></div>
-                <div class="ws-r"><span>figures/Figure_2.png</span><em>2.4 MB · 1 分钟前</em></div>
-                <div class="ws-r"><span>FINDINGS.md</span><em>18 KB · 12 分钟前</em></div>
-                <div class="ws-r"><span>results/参数对比.csv</span><em>3.1 KB · 4 分钟前</em></div>
+          <div class="m-main m-home">
+            <h2 class="m-greet">今天要跑哪条流程？</h2>
+            <div class="m-card">
+              <div class="m-row">
+                <span class="m-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><path d="M4 7h6M4 12h10M4 17h5"/><circle cx="18" cy="7" r="2.2"/><circle cx="19" cy="17" r="2.2"/></svg>数模求解主线 · 7 步</span>
+                <i class="m-cp">含 2 个检查点</i>
+              </div>
+              <div class="m-ta"><span id="mTyped"></span><span class="cursor"></span></div>
+              <div class="m-bar">
+                <span class="m-chip ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><rect x="4.4" y="4.4" width="15.2" height="15.2" rx="2.4"/><path d="M9 9.4h6.2v6.2H9z"/></svg>默认</span>
+                <span class="m-lbl">任务名（可留空）</span>
+                <span class="m-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 19.4V5.2M6.2 11 12 5.2 17.8 11"/></svg></span>
               </div>
             </div>
-            <div class="m-composer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:13px;height:13px"><path d="M4 6.5h16M4 12h11M4 17.5h7"/></svg>输入修改要求，回车发送…</div>
-            <aside class="m-proc" id="mProc">
-              <div class="mp-plain">
-                <span class="mp-act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M6 9.5 12 15l6-5.5"/></svg><i class="mp-lbl">展开进程</i></span>
-                <span class="mp-state run" id="mpState">●</span><span class="mp-t2" id="mpLabel">逐项执行</span>
-              </div>
-              <div class="mp-head">
-                <span class="mp-t">进程</span><span class="mp-c" id="mockCount">3/7</span>
-                <span class="mp-x"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:11px;height:11px"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></span>
-                <span class="mp-x" id="mpToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M6 14.5 12 9l6 5.5"/></svg></span>
-              </div>
-              <div class="mp-list">
-                <div class="pr ok"><i>✓</i>需求解析<em>CP</em></div>
-                <div class="pr ok"><i>✓</i>方案拆解<em>CP</em></div>
-                <div class="pr ok"><i>✓</i>信息收集</div>
-                <div class="pr on run"><i>●</i>逐项执行<em>CP</em></div>
-                <div class="pr pend"><i></i>自检复核</div>
-                <div class="pr pend"><i></i>修订打磨</div>
-                <div class="pr pend"><i></i>交付整合</div>
-              </div>
-            </aside>
+            <div class="m-try"><b>试试这些任务</b><span class="m-shuffle">换一批</span></div>
+            <button class="m-sug"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><circle cx="10.6" cy="10.6" r="6.1"/><path d="M15.2 15.2 20 20"/></svg>帮我把这份赛题拆成可执行的子问题</button>
+            <button class="m-sug"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><path d="M6.4 3.8h8.2l3 3v13.4H6.4z"/><path d="M9 11h6M9 15h4"/></svg>读一遍这份材料，整理方法和数据清单</button>
           </div>
         </div>
       </div>
@@ -858,6 +885,63 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 6.5h16M4 12h11M4 17.5h7"/></svg></div><h3>工作区实时反馈</h3><p>智能体写到哪，面板就列到哪：markdown 就地渲染、图片与 PDF 内联预览、刚写入的文件高亮。不用等跑完再去文件夹里翻。</p><span class="more">产物就在你自己磁盘上<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8.5 4.5h7a1.6 1.6 0 0 1 1.6 1.6v9.4l-4.7-2.9-4.7 2.9V6.1a1.6 1.6 0 0 1 1.6-1.6z"/><path d="M4 19.5h16"/></svg></div><h3>对话式局部修订</h3><p>结果不满意不用整条重跑 —— 指着某一步说怎么改，只重写那一步，其余产物原样保留。</p><span class="more">不用从头再来<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.4 21 8l-9 4.6L3 8z"/><path d="M3 12.4 12 17l9-4.6M3 16.4 12 21l9-4.6"/></svg></div><h3>流程导入导出</h3><p>一条流程 = 一个 JSON 文件。可分享、可备份、可导回；撞名会问你另存为副本，不会静默覆盖。</p><span class="more">可分享可备份<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="runit" id="runit">
+  <div class="wrap">
+    <div class="s-head center" data-rise>
+      <p class="eyebrow">Running</p>
+      <h2>跑起来的时候，<br>你能看见每一步</h2>
+      <p class="lead">SSE 把工具调用、输出和耗时逐行推过来；右上角那张进程卡对应每一步的状态，跑完一步翻一步。工作区面板列的就是你磁盘上真实的文件。</p>
+    </div>
+    <div class="mock mock-wide" data-rise>
+      <div class="mock-bar">
+        <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+      </div>
+      <div class="mock-body one">
+          <div class="m-main">
+            <div class="m-top">板凳腿缠绕结构优化<span class="run">日志</span></div>
+            <div class="m-rpbar"><span class="m-badge">执行中</span><span class="m-rtrack"><i></i></span><span class="m-pct">43%</span><span class="m-of">已完成 3 / 7 步</span></div>
+            <div class="m-scroll" id="mockLog">
+              <div class="ln"><b>12:01:03</b><span class="tag t-ok">DONE</span>需求解析 · REQUIREMENTS.md · 子问题 3 个已结构化</div>
+              <div class="ln"><b>12:04:41</b><span class="tag t-ok">DONE</span>方案拆解 · PLAN.md · 检查点已确认</div>
+              <div class="ln"><b>12:11:07</b><span class="tag t-tool">TOOL</span>Write Q1_solve.py</div>
+              <div class="ln"><b>12:18:52</b><span class="tag t-ok">DONE</span>求解收敛，残差 1.2e-4</div>
+              <div class="ln"><b>12:19:30</b><span class="tag t-info">INFO</span>灵敏度热力图已生成（2.4 MB）</div>
+              <div class="ln"><b>12:21:04</b><span class="tag t-run">RUN</span>正在绘制模型对比折线图<span class="cursor"></span></div>
+              <div class="ws">
+                <div class="m-sect">工作区文件<span class="cnt">(4)</span><em class="wslive"><i></i>实时</em><span class="rf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:11px;height:11px"><path d="M20 11a8 8 0 1 0-1.6 5.6"/><path d="M20 5v6h-6"/></svg>刷新</span></div>
+                <div class="ws-r"><span>EXECUTION.md</span><em>24 KB · now</em><b>刚写入</b></div>
+                <div class="ws-r"><span>figures/Figure_2.png</span><em>2.4 MB · 1 分钟前</em></div>
+                <div class="ws-r"><span>FINDINGS.md</span><em>18 KB · 12 分钟前</em></div>
+                <div class="ws-r"><span>results/参数对比.csv</span><em>3.1 KB · 4 分钟前</em></div>
+              </div>
+            </div>
+            <div class="m-composer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:13px;height:13px"><path d="M4 6.5h16M4 12h11M4 17.5h7"/></svg>输入修改要求，回车发送…</div>
+            <aside class="m-proc" id="mProc">
+              <div class="mp-plain">
+                <span class="mp-act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M6 9.5 12 15l6-5.5"/></svg><i class="mp-lbl">展开进程</i></span>
+                <span class="mp-state run" id="mpState">●</span><span class="mp-t2" id="mpLabel">逐项执行</span>
+              </div>
+              <div class="mp-head">
+                <span class="mp-t">进程</span><span class="mp-c" id="mockCount">3/7</span>
+                <span class="mp-x"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width:11px;height:11px"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></span>
+                <span class="mp-x" id="mpToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px;height:11px"><path d="M6 14.5 12 9l6 5.5"/></svg></span>
+              </div>
+              <div class="mp-list">
+                <div class="pr ok"><i>✓</i>需求解析<em>CP</em></div>
+                <div class="pr ok"><i>✓</i>方案拆解<em>CP</em></div>
+                <div class="pr ok"><i>✓</i>信息收集</div>
+                <div class="pr on run"><i>●</i>逐项执行<em>CP</em></div>
+                <div class="pr pend"><i></i>自检复核</div>
+                <div class="pr pend"><i></i>修订打磨</div>
+                <div class="pr pend"><i></i>交付整合</div>
+              </div>
+            </aside>
+          </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1211,10 +1295,34 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
     i = 0;
   }
   syncPill('逐项执行');
+  /* 观察自己那一屏（跑起来是什么样），不是页面上第一个 .mock —— hero 已经换成输入台了 */
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(function(en){
       en[0].isIntersecting ? start() : stop();
-    }, {threshold: .15}).observe(document.querySelector('.mock'));
+    }, {threshold: .15}).observe(document.querySelector('#runit .mock'));
+  } else { start(); }
+})();
+
+/* hero 的输入台：把任务说明一个字一个字打出来，光标一直闪。
+   和转录那段一样：滚出视口就停表，prefers-reduced-motion 下只填成品的第一个字。 */
+(function(){
+  var box = document.getElementById('mTyped');
+  if (!box) return;
+  var TEXT = '帮我把这份赛题拆成可执行的子问题，列出要用到的方法和数据，跑完出图并写结论。';
+  var i = 0, timer = null;
+  function start(){ if (!timer) timer = setInterval(tick, 62); }
+  function stop(){ clearInterval(timer); timer = null; }
+  function tick(){
+    if (i >= TEXT.length){ stop(); setTimeout(reset, 3400); return; }
+    box.textContent = TEXT.slice(0, ++i);
+  }
+  function reset(){ i = 0; box.textContent = ''; start(); }
+  if (REDUCED){ box.textContent = TEXT; return; }
+  box.textContent = TEXT.slice(0, 8);
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function(en){
+      en[0].isIntersecting ? start() : stop();
+    }, {threshold: .2}).observe(document.querySelector('.m-card'));
   } else { start(); }
 })();
 
