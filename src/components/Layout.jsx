@@ -502,9 +502,9 @@ export default function Layout({ children }) {
            实测该档 .pl-btn / .cs-btn 只剩 index.css :where 兜的 40px。
            抬到 767 后与 index.css 同一条线，≥768 的桌面渲染一字未动（媒体查询上界变化）。 */
         @media (max-width: 767px) {
-          .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 24px, 1080px); padding-top: 18px; padding-bottom: 34px; }
+          .tool-inner, .tool-inner.tool-inner-wide { width: 100%; padding-left: 0; padding-right: 0; padding-top: 18px; padding-bottom: 34px; }
           .tool-head { align-items: flex-start; }
-          .tool-inner.tool-inner-prompt { width: min(100% - 24px, 1080px); padding-top: 18px; }
+          .tool-inner.tool-inner-prompt { width: 100%; padding-left: 0; padding-right: 0; padding-top: 18px; }
           .tool-head-right { display: none; }
           /* 手机上返回按钮反而要比桌面更大，凑足拇指命中区 */
           .tool-back { flex: 0 0 auto; width: 40px; height: 40px; }
@@ -517,13 +517,23 @@ export default function Layout({ children }) {
           /* 页头左侧对齐正文，右侧给固定账户浮标让位，避免文字被压 */
           /* 只让标题区避让固定的账户浮标；操作区换行后仍可用满整行 */
           .tool-head { padding-left: 0; padding-right: 0; }
-          .tool-head-left { padding-right: 138px; }
+          /* 账户区从「用户名 + 退出」胶囊（实测占宽 ~130px）换成 36px 头像后，
+             避让从 138px 收到 56px：头像在 right:10px、宽 36，留 10px 呼吸。 */
+          .tool-head-left { padding-right: 56px; }
           .tool-head-actions { flex-wrap: wrap; gap: 10px; }
           /* 操作区换行后位于浮标下方，让它用满整行 */
           .tool-head-actions { width: 100%; justify-content: flex-start; }
           /* slot 是 flex 子项，不撑开的话 .shub-modes 的 width:100% 会绕回内容宽度 */
           #tool-head-slot { flex: 1 1 auto; min-width: 0; }
-          .tool-content { padding: 14px 10px 30px; }
+          /* 日程中心手机页头：去掉「日程中心」大字和页头图标，
+             视图切换收成一个下拉后够矮，就和返回按钮并到同一行，
+             不再单独占一行（原来两行合计 ~119px）。 */
+          .tool-inner-schedule .tool-title,
+          .tool-inner-schedule .tool-icon { display: none; }
+          .tool-inner-schedule .tool-head { align-items: center; }
+          .tool-inner-schedule .tool-head-left { padding-right: 0; }
+          .tool-inner-schedule .tool-head-actions { width: auto; flex: 1 1 auto; }
+          .tool-content { padding: 14px 0 30px; }
           /* 上面那条通用卡片归一化规则写的是 16px 18px !important，
              手机上四层叠加会吃掉 35% 宽度，这里统一收紧 */
           .tool-content :is([class*="card"], [class*="Card"], [class*="note-item"], [class*="link-item"], [class*="prompt-item"], [class*="material-item"], [class*="record-item"], [class*="key-item"], [class*="draft-item"]):not([class*="grid"]) {

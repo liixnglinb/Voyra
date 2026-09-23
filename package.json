@@ -13,6 +13,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dicebear/core": "^9.4.3",
+    "@dicebear/pixel-art": "^9.4.2",
     "hydrogen-js-sdk": "^3.0.2",
     "jsqr": "^1.4.0",
     "lucide-react": "^0.441.0",

@@ -878,9 +878,10 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
 
   /* 各页 Tailwind 里散落的 text-[9/10/11px] 在手机上低于可读下限，统一抬升 */
 
-  /* 日程中心外壳：手机上面板不再叠加第二层内缩，视图切换钮凑足拇指高度。
+  /* 日程中心外壳：手机上不再有任何一层内缩（用户要求左右零留白，
+     屏幕宽度全部还给课表网格），视图切换钮凑足拇指高度。
      用 .tool-content 前缀提高优先级，压过组件内同名规则 */
-  .tool-content .shub-panel { padding: 10px; border-radius: 12px; }
+  .tool-content .shub-panel { padding: 0; border-radius: 0; }
   /* 视图切换钮被 portal 进页头，不在 .tool-content 里，只能不限祖先 */
   .shub-mode { min-height: 44px; }
 

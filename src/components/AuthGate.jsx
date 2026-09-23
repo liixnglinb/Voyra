@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, useMemo, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Lock, UserRound, X, LogOut, ShieldCheck } from 'lucide-react';
+import { createAvatar } from '@dicebear/core';
+import * as pixelArt from '@dicebear/pixel-art';
 import { isAuthed, login, register, logout as doLogout, getSession, RETENTION_DAYS, SESSION_DAYS } from '../lib/auth';
 
 /* ============================================================
@@ -8,6 +10,34 @@ import { isAuthed, login, register, logout as doLogout, getSession, RETENTION_DA
    - 数据保存时才校验：未登录 → 提示登录
    - 注册需两遍密码，注册即登录
    ============================================================ */
+
+const MOBILE_MQ = '(max-width: 767px)';
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(
+    () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(MOBILE_MQ).matches : false),
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia(MOBILE_MQ);
+    const on = (e) => setMobile(e.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return mobile;
+}
+
+/* 头像在浏览器本地生成，不发第三方请求：api.dicebear.com 在国内移动网络不稳，
+   把用户名当 seed 发给外部站点也是无谓的外流。同名 seed 出同一张图。 */
+function avatarFor(username) {
+  if (!username) return '';
+  try {
+    return createAvatar(pixelArt, { seed: username, size: 64 }).toDataUri();
+  } catch {
+    return ''; // 生成失败退回小人图标，不让页头空掉
+  }
+}
+
 
 const AuthCtx = createContext(null);
 export function useAuth() {
@@ -23,6 +53,24 @@ export default function AuthGate({ children, variant = 'light' }) {
   const [toast, setToast] = useState('');
   const toastRef = useRef(null);
   const session = getSession();
+  const isMobile = useIsMobile();
+  const [acctOpen, setAcctOpen] = useState(false);
+  const acctRef = useRef(null);
+  const username = session ? session.username : '';
+  const avatarUri = useMemo(() => avatarFor(username), [username]);
+
+  /* 头像面板：点外部或 Esc 收起 */
+  useEffect(() => {
+    if (!acctOpen) return undefined;
+    const onDown = (e) => { if (acctRef.current && !acctRef.current.contains(e.target)) setAcctOpen(false); };
+    const onKey = (e) => { if (e.key === 'Escape') setAcctOpen(false); };
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [acctOpen]);
 
   const showToast = useCallback((msg) => {
     setToast(msg);
@@ -58,12 +106,29 @@ export default function AuthGate({ children, variant = 'light' }) {
       {children}
 
       {/* ===== 右上角登录 / 用户按钮 ===== */}
-      <div className={variant === 'dark' ? 'ag-fab ag-fab--dark' : 'ag-fab'}>
+      <div className={variant === 'dark' ? 'ag-fab ag-fab--dark' : 'ag-fab'} ref={acctRef}>
         {authed ? (
-          <div className="ag-fab-user">
-            <span className="ag-fab-name">{session ? session.username : '已登录'}</span>
-            <button className="ag-fab-btn" onClick={handleLogout} title="退出登录"><LogOut size={12} /></button>
-          </div>
+          isMobile ? (
+            <>
+              <button type="button" className="ag-avatar" aria-expanded={acctOpen} aria-label="账户"
+                onClick={() => setAcctOpen((v) => !v)}>
+                {avatarUri ? <img src={avatarUri} alt="" width={36} height={36} /> : <UserRound size={19} />}
+              </button>
+              {acctOpen && (
+                <div className="ag-acct-panel" role="dialog" aria-label="账户">
+                  <span className="ag-acct-name">{username || '已登录'}</span>
+                  <button className="ag-fab-btn" onClick={() => { setAcctOpen(false); handleLogout(); }}>
+                    <LogOut size={12} />退出登录
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="ag-fab-user">
+              <span className="ag-fab-name">{session ? session.username : '已登录'}</span>
+              <button className="ag-fab-btn" onClick={handleLogout} title="退出登录"><LogOut size={12} /></button>
+            </div>
+          )
         ) : (
           <button className="ag-fab-btn ag-fab-login" onClick={() => setOpen(true)}>
             登录
@@ -120,6 +185,20 @@ export default function AuthGate({ children, variant = 'light' }) {
           .ag-fab-user { padding: 4px 4px 4px 10px; min-height: var(--ctl-md); }
           .ag-fab-name { max-width: 64px; font-size: var(--fs-meta); }
           .ag-fab-btn { min-height: var(--ctl-md); padding: 0 12px; font-size: var(--fs-meta); }
+          /* 用户名胶囊 + 退出按钮（实测占宽 ~130px）→ 一个 44px 头像，
+             44 是拇指命中区下限，里面 36px 才是看得见的圆。 */
+          .ag-avatar { display: grid; place-items: center; width: 44px; height: 44px; padding: 0;
+            border: 1px solid rgba(27,27,27,.14); border-radius: 50%; background: #fff; overflow: hidden; cursor: pointer; }
+          .ag-avatar img { display: block; width: 36px; height: 36px; border-radius: 50%; image-rendering: pixelated; }
+          .ag-acct-panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 1001;
+            display: grid; gap: 10px; width: 190px; padding: 12px;
+            border: 1px solid rgba(27,27,27,.14); border-radius: 13px; background: #fff;
+            box-shadow: 0 18px 38px -20px rgba(20,20,20,.55); }
+          .ag-acct-name { color: #1b1b1b; font-size: var(--fs-label); font-weight: 700; overflow-wrap: anywhere; }
+          .ag-acct-panel .ag-fab-btn { justify-content: center; }
+          .ag-fab--dark .ag-avatar { background: rgba(24,24,24,.9); border-color: rgba(255,255,255,.16); }
+          .ag-fab--dark .ag-acct-panel { background: #141414; border-color: rgba(255,255,255,.16); }
+          .ag-fab--dark .ag-acct-name { color: #f2f2f2; }
         }
 
         /* ===== 弹窗遮罩（亮底虚化，极简风） ===== */

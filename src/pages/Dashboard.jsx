@@ -966,6 +966,32 @@ export default function Dashboard() {
         /* 卡片预览图里的小按钮只有 16px 高，手机上按不中也按不准；
            改成不可点，让 taps 落到整张卡片（卡片本身就是入口） */
         .vr-home .vr-art :is(button, [role="button"]) { pointer-events: none; }
+
+        /* ── 卡片竖向压缩：只削余量，不删卡、不裁演示内容 ──
+           实测产品卡 450px = copy 220 + art 192 + art 上下 margin 36，
+           而 copy 的 220 里 padding 独占 84（26 顶 + 58 底），是最大一块纯余量。 */
+        .vr-home .vr-feature-copy { padding: 16px 18px 40px; }
+        .vr-home .vr-feature-title h2 { font-size: 25px; }
+        .vr-home .vr-feature-copy p { max-width: none; margin: 10px 0 12px; font-size: 13.5px; line-height: 1.55; }
+        .vr-home .vr-art { min-height: 0; margin: 12px; }
+        .vr-home .vr-feature-index { left: 14px; bottom: 10px; font-size: 30px; }
+        /* 应用卡最高的那几张卡在 art 里的七步流程：3 列 × 每格 60px = 196px。
+           改 4 列并收掉格内余量，行数从 3 降到 2。 */
+        .vr-home .vr-model-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
+        .vr-home .vr-model-flow button { gap: 2px; padding: 6px 4px; }
+        .vr-home .vr-model-flow-status { margin-top: 9px; padding-top: 9px; }
+        /* 数学建模 Skill 卡：眉标与标题之间的 27px 桌面余量在单列里太奢侈 */
+        .vr-home .vr-mathmodel-card { gap: 14px; padding: 18px; }
+        .vr-home .vr-mathmodel-heading { margin-top: 14px; gap: 6px; }
+        .vr-home .vr-mathmodel-heading strong { font-size: 28px; }
+        .vr-home .vr-mathmodel-card .vr-arrow-link { margin-top: 12px; }
+        /* 关于我 / 交流 / 文章卡：竖向余量基本都在 padding */
+        .vr-home .vr-experience-card { min-height: 0; padding: 16px 18px; }
+        .vr-home .vr-experience-card h2 { font-size: 24px; }
+        .vr-home .vr-article-card { min-height: 0; padding: 20px 18px 18px; }
+        .vr-home .vr-skill-card { min-height: 0; padding: 18px; }
+        .vr-home .vr-skill-groups { gap: 30px; }
+        .vr-home .vr-contact-row { padding: 14px 3px; }
       }
       /* 演示面板内容压缩到统一高度内，保证任何一张卡片都不裁切 */
       .vr-home .vr-toolbox-drive { margin-top: 12px; }
