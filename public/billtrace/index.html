@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>账迹 BillTrace · 付完款，账就自动记好了</title>
-<meta name="description" content="账迹 BillTrace —— Android 自动记账 App：三引擎全自动采集、智能分类、本地加密、零打扰。">
+<meta name="description" content="账迹 BillTrace —— Android 自动记账 App：监听支付通知与银行短信自动入库，智能归类，数据只存本机。">
 <link rel="icon" type="image/png" href="/billtrace/favicon.png">
 <style>
 :root{
@@ -290,7 +290,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
       <div class="dl-row">
         <a class="btn btn-primary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          直接下载 APK <span class="ver-inline" id="ver">v0.3.0</span>
+          直接下载 APK <span class="ver-inline" id="ver">v0.4.0</span>
         </a>
         <a class="btn btn-ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -299,7 +299,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
       </div>
       <div class="hero-meta">
         <span class="meta-chip"><b>Android 8.0+</b></span>
-        <span class="meta-chip">MVP 预览版</span>
+        <span class="meta-chip">真机可用</span>
         <span class="meta-chip">免费 · 无广告</span>
         <span class="meta-chip">数据本地加密存储</span>
         <span class="meta-chip">安装包 <b id="chipSize">0.5 MB</b></span>
@@ -365,12 +365,12 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="sec-kicker rv">WHY BILLTRACE</div>
     <div class="sec-title rv">记账这件事，交给你感觉不到的后台</div>
     <div class="grid">
-      <div class="feat rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>三引擎全自动采集</h3><p>通知监听捕获支付宝、微信等支付通知，银行短信解析兜底刷卡与转账，事件驱动架构后台零常驻内存。</p></div>
+      <div class="feat rv"><div class="ic"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><h3>通知 + 短信双引擎</h3><p>监听支付宝、微信等支付通知，同时解析银行短信兜底刷卡与转账；两个引擎互相补位，事件驱动、后台零常驻。</p></div>
       <div class="feat rv" style="transition-delay:.07s"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><h3>付款后 2 秒入库</h3><p>支付成功通知到达即解析写入，打开 App 直接看到最近消费，无网络等待、无需任何手动操作。</p></div>
-      <div class="feat rv" style="transition-delay:.14s"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><h3>自动智能归类</h3><p>内置数千商户规则库，餐饮、交通、购物自动分好类；改错一次，同类商户永久自动修正。</p></div>
-      <div class="feat rv" style="transition-delay:.21s"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>隐私本地加密</h3><p>SQLCipher 全库加密 + 生物识别锁，原始短信通知解析后立即丢弃，绝不上传。云同步端到端加密且默认关闭。</p></div>
+      <div class="feat rv" style="transition-delay:.14s"><div class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div><h3>自动智能归类</h3><p>内置 120+ 条常用商户规则，餐饮、交通、购物自动分好类；认不出来的标为待确认，改错一次就记住这个商户。</p></div>
+      <div class="feat rv" style="transition-delay:.21s"><div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><h3>数据只存本机</h3><p>账本存在 App 私有目录的本地数据库里，不联网、不上传、不需要账号；卸载即彻底删除。</p></div>
       <div class="feat rv" style="transition-delay:.28s"><div class="ic"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A9.8 9.8 0 0 1 12 5c7 0 11 8 11 8a17.7 17.7 0 0 1-2.2 3.2"/><path d="M6.1 6.1A17.9 17.9 0 0 0 1 13s4 8 11 8a9.7 9.7 0 0 0 4.2-.9"/></svg></div><h3>零打扰设计</h3><p>不弹窗、不打分、不推送广告。只有预算超支才提醒你，其余时候它安静地待在后台。</p></div>
-      <div class="feat rv" style="transition-delay:.35s"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="6" y1="7.5" x2="10" y2="10.5"/><line x1="14" y1="10.5" x2="18" y2="7.5"/><line x1="6" y1="16.5" x2="10" y2="13.5"/><line x1="14" y1="13.5" x2="18" y2="16.5"/></svg></div><h3>多渠道去重合并</h3><p>同一笔支付被通知、短信同时捕获？金额、时间、渠道三级去重，只留信息最全的一条。</p></div>
+      <div class="feat rv" style="transition-delay:.35s"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="6" y1="7.5" x2="10" y2="10.5"/><line x1="14" y1="10.5" x2="18" y2="7.5"/><line x1="6" y1="16.5" x2="10" y2="13.5"/><line x1="14" y1="13.5" x2="18" y2="16.5"/></svg></div><h3>多渠道去重合并</h3><p>同一笔支付被通知和短信同时捕获？2 分钟内同金额自动判定为同一笔，只留信息最全的一条。</p></div>
     </div>
   </section>
 </div>
@@ -384,7 +384,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="steps">
       <div class="step rv"><h3>安装并授权</h3><p>开启通知监听与短信权限，向导一步步引导，用途全程透明可查。</p></div>
       <div class="step rv" style="transition-delay:.08s"><h3>正常花钱</h3><p>支付宝、微信、银行卡该怎么用就怎么用，账迹在后台 2 秒内静默入库。</p></div>
-      <div class="step rv" style="transition-delay:.16s"><h3>想看再看</h3><p>报表、预算、账单日历随时可查，分类错了长按一改，以后自动对。</p></div>
+        <div class="step rv" style="transition-delay:.16s"><h3>想看再看</h3><p>报表、预算、分类占比随时可查，分类错了点一下改，以后同一个商户自动对。</p></div>
     </div>
   </section>
 
@@ -392,13 +392,14 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="sec-kicker rv">CHANGELOG</div>
     <div class="sec-title rv">更新日志</div>
     <div class="log rv">
-      <h4><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.3.0 · 品牌焕新</span><span style="display:inline-flex;align-items:center;gap:12px"><span id="logDate" style="color:rgba(0,0,0,.4);font-weight:600">最近构建</span><span id="log-ver">当前最新</span></span></h4>
+      <h4><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.4.0 · 真机可用</span><span style="display:inline-flex;align-items:center;gap:12px"><span id="logDate" style="color:rgba(0,0,0,.4);font-weight:600">最近构建</span><span id="log-ver">当前最新</span></span></h4>
       <ul>
-        <li>全新应用图标：翡翠渐变收据 + 自动记账对勾徽章</li>
-        <li>可交互高保真原型：首页 / 报表 / 预算 / 账单日历 / 渠道中心</li>
-        <li>官方 App 图标自动匹配：在哪消费显示谁的图标（15 个支付渠道）</li>
-        <li>消费概览整合卡 + 近 7 天消费 + 30 天趋势（7 日均线）</li>
-        <li>六维筛选系统：类型 / 时间 / 金额 / 分类 / 渠道 / 排序</li>
+        <li>真机采集上线：通知监听 + 银行短信双引擎，付款后自动入库</li>
+        <li>历史短信回填：授权后把过去几个月的银行账目一次补进账本</li>
+        <li>本地去重：2 分钟内同金额判定为同一笔，通知与短信不重复计</li>
+        <li>120+ 条商户归类规则，改错一次记住商户，以后自动套用</li>
+        <li>全新真实数据界面：首页 / 报表 / 预算 / 我的 + 记一笔 / 待确认</li>
+        <li>移除全部演示数据与原型外壳，空账本时显示授权引导</li>
       </ul>
     </div>
   </section>
@@ -407,7 +408,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="dl-panel">
       <div>
         <h2><img src="/billtrace/icon-512.png" alt="账迹图标">现在安装，下一笔消费自动入账</h2>
-        <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.3.0</span> · 安装包约 0.5 MB</p>
+        <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.4.0</span> · 安装包约 0.5 MB</p>
       </div>
       <div class="btns">
         <a class="btn btn-primary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">直接下载</a>
