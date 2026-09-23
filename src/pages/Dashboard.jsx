@@ -36,7 +36,10 @@ const MATHMODEL_SKILL = {
   href: 'https://github.com/liixnglinb/Mathmodel-skill',
   name: '数学建模 Skill',
   tagline: '国赛（CUMCM）数学建模十阶段工作流',
+  cta: '打开 Skill 仓库',
 };
+/* 十阶段：既是右侧演示面板的流程节点，也是这张卡的正文内容（桌面/手机一字不差） */
+const MATHMODEL_STEPS = ['题意', '假设', '变量', '建模', '求解', '检验', '评价', '图表', '论文', '提交'];
 
 const HERO_LAYERS = [
   '/hero/voyra-person-skin-v3.webp',
@@ -190,7 +193,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3 };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, mathmodel: MATHMODEL_STEPS.length };
 
 /* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
    天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
@@ -267,6 +270,15 @@ function FeatureArt({ type }) {
       <div className="vr-skill-foot"><Star size={11} />优质精选 · 每周热点</div>
     </div>;
   }
+
+  /* 数学建模 Skill 卡的右侧演示：十阶段带 hairline 连接线的竖向流程，
+     金色「当前阶段」按 ART_CYCLE 每 2.6s 自动推进一格，指针悬停时暂停（与其它卡同机制）。
+     动效分层：推进只碰子元素的 background / border-color（transition），
+     卡片自身的 [data-reveal] 入场用的是 transform —— 两者不在同一层，不会互相覆盖。 */
+  if (type === 'mathmodel') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-mathmodel-art">
+    <div className="vr-preview-top"><ListTree size={15} /><span>十阶段工作流</span><b>{String(active + 1).padStart(2, '0')}/{String(MATHMODEL_STEPS.length).padStart(2, '0')}</b></div>
+    <div className="vr-model-steps" aria-label="数学建模十阶段工作流">{MATHMODEL_STEPS.map((step, index) => <span className={`vr-model-step${index === active ? ' is-active' : ''}${index < active ? ' is-done' : ''}`} key={step}><i>{String(index + 1).padStart(2, '0')}</i><b>{step}</b></span>)}</div>
+  </div>;
 
   if (type === 'learning') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-learning-art">
     <div className="vr-preview-top"><LayoutGrid size={15} /><span>资料库</span><b>24 条</b></div>
@@ -475,16 +487,18 @@ function ProductPanel({ openProduct }) {
 }
 
 function SkillsPanel() {
-  const workflow = ['题意', '假设', '变量', '建模', '求解', '检验', '评价', '图表', '论文', '提交'];
   return <section className="vr-skill-group vr-solo-skill vr-panel-stagger" data-roll>
     <div className="vr-group-label"><span>我的 Skills</span><b>01</b></div>
+    {/* 左文右演示两栏：内容与结构桌面/手机完全一致，手机端只把演示面板移到文字下方（纯排版） */}
     <a className="vr-mathmodel-card vr-card" data-reveal href={MATHMODEL_SKILL.href} target="_blank" rel="noreferrer" onPointerMove={updateSpotlight}>
       <span className="vr-spotlight" aria-hidden="true" />
-      <span className="vr-mathmodel-watermark" aria-hidden="true">10</span>
-      <span className="vr-mathmodel-top"><span className="vr-mathmodel-kicker">CUMCM / REUSABLE WORKFLOW</span><span className="vr-mathmodel-meta"><Star size={16} fill="currentColor" /> GitHub</span><span className="vr-mathmodel-open"><ArrowUpRight size={17} /></span></span>
-      <span className="vr-mathmodel-heading"><strong>{MATHMODEL_SKILL.name}</strong><span>{MATHMODEL_SKILL.tagline}</span></span>
-      <span className="vr-model-workflow" aria-label="数学建模十阶段工作流">{workflow.map((step, index) => <span className={index === 3 ? 'is-core' : ''} key={step}><i>{String(index + 1).padStart(2, '0')}</i><b>{step}</b></span>)}</span>
-      <span className="vr-model-caption"><b>10</b> STEPS / FROM QUESTION TO PAPER</span>
+      <div className="vr-mathmodel-copy">
+        <span className="vr-mathmodel-top"><span className="vr-mathmodel-kicker">CUMCM / REUSABLE WORKFLOW</span><span className="vr-mathmodel-meta"><Star size={16} fill="currentColor" /> GitHub</span><span className="vr-mathmodel-open"><ArrowUpRight size={17} /></span></span>
+        <span className="vr-mathmodel-heading"><strong>{MATHMODEL_SKILL.name}</strong><span>{MATHMODEL_SKILL.tagline}</span></span>
+        <span className="vr-model-caption"><b>{MATHMODEL_STEPS.length}</b> STEPS / FROM QUESTION TO PAPER</span>
+        <span className="vr-arrow-link">{MATHMODEL_SKILL.cta}<ArrowUpRight size={17} /></span>
+      </div>
+      <FeatureArt type="mathmodel" />
     </a>
   </section>;
 }
@@ -690,9 +704,19 @@ export default function Dashboard() {
       .vr-home .vr-arrow-link, .vr-home .vr-all-link { font-size: 14px; }
       .vr-home button.vr-contact-row { appearance: none; border: 0; border-bottom: 1px solid var(--line); background: transparent; font: inherit; width: 100%; text-align: left; cursor: pointer; }
       .vr-home .vr-solo-skill { max-width: 756px; }
-      .vr-home .vr-mathmodel-card { display: block; min-height: 344px; padding: 27px; color: var(--ink); text-decoration: none; }
-      .vr-home .vr-mathmodel-card > *:not(.vr-spotlight):not(.vr-mathmodel-watermark) { position: relative; z-index: 1; }
-      .vr-home .vr-mathmodel-watermark { position: absolute; top: 13px; right: 22px; z-index: 0; color: transparent; -webkit-text-stroke: 1px rgba(27,27,27,.07); font: 116px/.8 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; pointer-events: none; }
+      /* ── 数学建模 Skill 卡：左文右演示两栏（方案 A）────────────────────────
+         1) 去掉了原来那枚 116px 巨型描边 "10" 水印 —— 它的描边正好穿过右上角
+            「GitHub ↗」按钮（实测两者盒子重叠 29×29px，两个都读不清）。
+            计数改为演示面板表头里的等宽小计数「01/10」（复用 .vr-preview-top b）。
+         2) 十阶段不再是 5×2 平铺表格（行优先/列优先读不出来），改成带 hairline
+            连接线的竖向流程，顺序只有一种读法；金色「当前阶段」每 2.6s 自动推进。
+         3) 右侧面板拿掉纯白信息框的观感，与其它 8 张产品卡同一套演示面板语言
+            （±1° 旋转 + 边框 + 阴影 + #fcfcfc 底）。
+         配色只用站点既有令牌：纸白 #fff / 墨黑 #1b1b1b / 金 #A48830 #ffe08a #FFF9DF
+         与灰阶，未引入任何新色值。 */
+      .vr-home .vr-mathmodel-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 296px); align-items: center; gap: 24px; min-height: 344px; padding: 27px; color: var(--ink); text-decoration: none; }
+      .vr-home .vr-mathmodel-card > *:not(.vr-spotlight) { position: relative; z-index: 1; }
+      .vr-home .vr-mathmodel-copy { display: grid; align-content: center; min-width: 0; }
       .vr-home .vr-mathmodel-top { display: grid; grid-template-columns: minmax(0, 1fr) auto 29px; gap: 12px; align-items: center; }
       .vr-home .vr-mathmodel-kicker { color: #888; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
       .vr-home .vr-mathmodel-meta { display: inline-flex; align-items: center; gap: 5px; color: #535353; font-size: 13px; font-weight: 700; }
@@ -702,18 +726,58 @@ export default function Dashboard() {
       .vr-home .vr-mathmodel-heading { display: grid; gap: 8px; max-width: 520px; margin-top: 27px; }
       .vr-home .vr-mathmodel-heading strong { font-size: 37px; font-weight: 760; line-height: 1; }
       .vr-home .vr-mathmodel-heading > span { color: #777; font-size: 15px; font-weight: 650; }
-      .vr-home .vr-model-workflow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 28px; border-top: 1px solid rgba(27,27,27,.14); border-left: 1px solid rgba(27,27,27,.14); }
-      .vr-home .vr-model-workflow > span { display: grid; gap: 6px; min-height: 61px; align-content: center; padding: 9px 10px; border-right: 1px solid rgba(27,27,27,.14); border-bottom: 1px solid rgba(27,27,27,.14); background: rgba(255,255,255,.68); transition: background .2s ease, color .2s ease, transform .2s ease; }
-      .vr-home .vr-model-workflow > span:nth-child(-n+5) { border-bottom: 0; }
-      .vr-home .vr-model-workflow i { color: #9a9a9a; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
-      .vr-home .vr-model-workflow b { font-size: 13px; line-height: 1; }
-      .vr-home .vr-model-workflow > span.is-core { background: #ffe08a; color: #1b1b1b; }
-      .vr-home .vr-mathmodel-card:hover .vr-model-workflow > span { background: #fff; }.vr-home .vr-mathmodel-card:hover .vr-model-workflow > span.is-core { background: #ffe08a; }
-      .vr-home .vr-model-workflow > span:hover { background: #fff9df !important; transform: translateY(-2px); }
-      .vr-home .vr-model-caption { display: flex; align-items: baseline; gap: 7px; margin-top: 12px; color: #8e8e8e; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-model-caption { display: flex; align-items: baseline; gap: 7px; margin-top: 14px; color: #8e8e8e; font: 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
       .vr-home .vr-model-caption b { color: #a48830; font-size: 17px; }
+      /* CTA 用全站通用的 .vr-arrow-link（与「打开日程」「查看对比」同款），不再是孤立药丸 */
+      .vr-home .vr-mathmodel-card .vr-arrow-link { align-self: start; margin-top: 18px; color: #666; }
+      .vr-home .vr-mathmodel-card:hover .vr-arrow-link { color: var(--ink); }
+      /* 右侧演示面板：与其它产品卡的 .vr-art 同一套外壳（旋转 + 阴影）。
+         上面「统一卡片尺寸」那条 @media(min-width:721px) 的 .vr-home .vr-art 会把
+         面板 align-self:stretch + overflow:hidden 拉成跟卡片等高，十阶段最后一格会被
+         裁掉 —— 这里用更高一级特异性改回按内容自定高，靠 align-items:center 居中。 */
+      .vr-home .vr-mathmodel-card .vr-mathmodel-art { display: grid; align-content: start; align-self: center; height: auto; min-height: 0; margin: 0; padding: 12px 14px 14px; transform: rotate(1deg); }
+      .vr-home .vr-mathmodel-art .vr-model-steps { display: grid; margin-top: 7px; }
+      .vr-home .vr-mathmodel-art .vr-model-step { position: relative; display: grid; grid-template-columns: 20px auto; align-items: center; gap: 7px; min-height: 24px; padding: 0 5px 0 20px; border-radius: 6px; transition: background .34s ease, color .34s ease; }
+      /* 节点圆点：压在连接线上，白底盖住线头 */
+      .vr-home .vr-mathmodel-art .vr-model-step::before { content: ""; position: absolute; left: 5px; top: 50%; z-index: 1; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: #fff; border: 1px solid rgba(27, 27, 27, .28); transition: background .34s ease, border-color .34s ease, box-shadow .34s ease; }
+      /* hairline 连接线：从本节点圆心垂直画到下一节点圆心，末节点不画 */
+      .vr-home .vr-mathmodel-art .vr-model-step::after { content: ""; position: absolute; left: 8px; top: 50%; width: 1px; height: 100%; background: rgba(27, 27, 27, .14); }
+      .vr-home .vr-mathmodel-art .vr-model-step:last-child::after { display: none; }
+      .vr-home .vr-mathmodel-art .vr-model-step i { color: #9a9a9a; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; transition: color .34s ease; }
+      .vr-home .vr-mathmodel-art .vr-model-step b { color: #535353; font-size: 13px; font-weight: 650; line-height: 1; transition: color .34s ease; }
+      /* 已走过的阶段：圆点染金，连接线同步染金 —— 顺序一眼可读 */
+      .vr-home .vr-mathmodel-art .vr-model-step.is-done::before { background: rgba(164, 136, 48, .45); border-color: rgba(164, 136, 48, .55); }
+      .vr-home .vr-mathmodel-art .vr-model-step.is-done::after { background: rgba(164, 136, 48, .42); }
+      .vr-home .vr-mathmodel-art .vr-model-step.is-done b { color: #535353; }
+      /* 当前阶段：整条 #ffe08a 金底 + 实心金点，随轮播逐格往下推进 */
+      .vr-home .vr-mathmodel-art .vr-model-step.is-active { background: #ffe08a; }
+      .vr-home .vr-mathmodel-art .vr-model-step.is-active::before { background: #A48830; border-color: #A48830; box-shadow: 0 0 0 3px rgba(164, 136, 48, .18); }
+      .vr-home .vr-mathmodel-art .vr-model-step.is-active::after { background: rgba(164, 136, 48, .42); }
+      .vr-home .vr-mathmodel-art .vr-model-step.is-active i { color: #A48830; }
+      .vr-home .vr-mathmodel-art .vr-model-step.is-active b { color: #1b1b1b; font-weight: 760; }
       @media (max-width: 720px) { .vr-home .vr-top { width: min(100% - 40px, 756px); } .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(100svh - 14px); } .vr-home .vr-hero { min-height: calc(100svh - 14px); padding: 78px 0 54px; } .vr-home .vr-hero h1 { font-size: 76px; line-height: .84; } .vr-home .vr-hero-outline { -webkit-text-stroke-width: 1.25px; text-shadow: 4px 4px 0 rgba(255,226,138,.42); } .vr-home .vr-hero-meta { gap: 11px; margin-top: 31px; font-size: 10px; } .vr-home .vr-hero-meta strong { padding-right: 12px; font-size: 13px; } .vr-home .vr-hero-meta strong::after { width: 6px; } .vr-home .vr-scroll-cue { margin-top: 30px; } .vr-home .vr-tab { font-size: 28px; } .vr-home [data-roll] { transform: perspective(900px) translate3d(0, var(--roll-y), 0) rotateX(var(--roll-angle-mobile)); } .vr-home [data-reveal] { filter: none; transform: translateY(30px); } .vr-home [data-reveal].vr-is-visible { transform: translateY(0); } }
-      @media (max-width: 720px) { .vr-home .vr-mathmodel-card { min-height: 404px; padding: 22px; } .vr-home .vr-mathmodel-watermark { top: 18px; right: 15px; font-size: 92px; } .vr-home .vr-mathmodel-top { grid-template-columns: minmax(0, 1fr) 29px; gap: 9px; } .vr-home .vr-mathmodel-kicker { font-size: 9px; } .vr-home .vr-mathmodel-meta { grid-column: 1 / -1; grid-row: 2; font-size: 12px; } .vr-home .vr-mathmodel-open { grid-column: 2; grid-row: 1; } .vr-home .vr-mathmodel-heading { margin-top: 23px; gap: 9px; } .vr-home .vr-mathmodel-heading strong { font-size: 30px; } .vr-home .vr-mathmodel-heading > span { max-width: 250px; font-size: 14px; line-height: 1.55; } .vr-home .vr-model-workflow { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; } .vr-home .vr-model-workflow > span { min-height: 44px; grid-template-columns: 25px 1fr; align-items: center; gap: 5px; padding: 7px 9px; } .vr-home .vr-model-workflow > span:nth-child(-n+5) { border-bottom: 1px solid rgba(27,27,27,.14); } .vr-home .vr-model-workflow > span:nth-child(n+9) { border-bottom: 0; } .vr-home .vr-model-workflow b { font-size: 12px; } .vr-home .vr-model-caption { margin-top: 10px; font-size: 9px; } .vr-home .vr-model-caption b { font-size: 15px; } }
+      /* 手机端：内容与结构一字不改，只改排版 —— 演示面板从右栏移到文字下方。
+         字号一律落在站点手机阶梯上（--fs-micro/--fs-meta/--fs-label/--fs-lead），
+         必要信息（阶段名、阶段序号）不低于 --fs-meta 12px。 */
+      @media (max-width: 720px) {
+        .vr-home .vr-mathmodel-card { grid-template-columns: minmax(0, 1fr); gap: 20px; min-height: 0; padding: 22px; }
+        .vr-home .vr-mathmodel-top { grid-template-columns: minmax(0, 1fr) 29px; gap: 9px; }
+        .vr-home .vr-mathmodel-kicker { font-size: var(--fs-micro); }
+        .vr-home .vr-mathmodel-meta { grid-column: 1 / -1; grid-row: 2; font-size: var(--fs-meta); }
+        .vr-home .vr-mathmodel-open { grid-column: 2; grid-row: 1; }
+        .vr-home .vr-mathmodel-heading { margin-top: 23px; gap: 9px; }
+        .vr-home .vr-mathmodel-heading strong { font-size: 30px; }
+        .vr-home .vr-mathmodel-heading > span { max-width: 250px; font-size: var(--fs-label); line-height: 1.55; }
+        .vr-home .vr-model-caption { margin-top: 12px; }
+        .vr-home .vr-model-caption b { font-size: var(--fs-lead); }
+        .vr-home .vr-mathmodel-card .vr-arrow-link { margin-top: 16px; }
+        .vr-home .vr-mathmodel-card .vr-mathmodel-art { min-height: 0; margin: 0; padding: 12px 12px 12px; }
+        .vr-home .vr-mathmodel-art .vr-model-step { min-height: 30px; }
+        /* 阶段序号是「读顺序」的必要信息，手机上抬到 --fs-meta；
+           面板表头那 11px/10px 的标题与计数保持全站演示面板的同一套尺寸，不单独改 */
+        .vr-home .vr-mathmodel-art .vr-model-step i { font-size: var(--fs-meta); }
+        .vr-home .vr-mathmodel-art .vr-model-step b { font-size: var(--fs-meta); }
+      }
     `}</style>
     <style>{`
       .vr-home .vr-hero-shell { width: min(100% - 48px, 820px); min-height: calc(100svh - 34px); }

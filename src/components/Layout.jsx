@@ -495,7 +495,13 @@ export default function Layout({ children }) {
         .tool-content :is(.ag-pre, .nw-pre) { border-radius: 0 0 7px 7px !important; background: #1b1b1b !important; }
         .tool-content table :is(th, td) { border-color: rgba(27,27,27,.13) !important; }
         .tool-content thead th { background: #fff9df !important; color: #555 !important; }
-        @media (max-width: 720px) {
+        /* 手机断点抬到 767 与 index.css 对齐（原 720）。
+           站点手机口径是 767：index.css 的字号/控件阶梯、各页自己的 @media 都写在 767，
+           而这一批 44px 触控兜底却停在 720 —— 结果 721–767（平板竖屏 / 小折叠外屏）
+           两头都不沾：既拿不到这里的 44px，也已经被 index.css 当手机处理，
+           实测该档 .pl-btn / .cs-btn 只剩 index.css :where 兜的 40px。
+           抬到 767 后与 index.css 同一条线，≥768 的桌面渲染一字未动（媒体查询上界变化）。 */
+        @media (max-width: 767px) {
           .tool-inner, .tool-inner.tool-inner-wide { width: min(100% - 24px, 1080px); padding-top: 18px; padding-bottom: 34px; }
           .tool-head { align-items: flex-start; }
           .tool-inner.tool-inner-prompt { width: min(100% - 24px, 1080px); padding-top: 18px; }
