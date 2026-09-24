@@ -30,6 +30,7 @@ const APPS = [
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
   { to: '/token-monitor/', external: false, no: '05', name: 'Token Monitor', desc: '本机 AI 编程工具用量看板：一条命令扫出 9 类 Agent 的 Token 消耗与成本，缓存命中率、模型单价、对话级明细全都看得见。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'tokenmonitor' },
   { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把大学课程变成记得住的练习：选课程或导入讲义，AI 生成「先回忆再看答案」的知识卡片，FSRS 算法安排每次复习的最佳时机。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
+  { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机 AI 工作观测台：把 Codex、Claude、Qoder 等软件的会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'aichronicle' },
 ];
 
 const MATHMODEL_SKILL = {
@@ -193,7 +194,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, mathmodel: MATHMODEL_STEPS.length };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, aichronicle: 4, mathmodel: MATHMODEL_STEPS.length };
 
 /* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
    天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
@@ -448,6 +449,48 @@ function FeatureArt({ type }) {
         <span className="vr-tm-val">{row[1]}</span>
         <span className="vr-tm-track"><i style={{ width: `${row[4]}%` }} /></span>
       </div>)}</div>
+    </div>;
+  }
+
+  if (type === 'aichronicle') {
+    const tasks = [
+      ['01', '完成工作观测台信息架构', '每日使用日志', '已确认'],
+      ['02', '盘点本机 AI 软件与数据源', 'AI 使用统计', '已确认'],
+      ['03', '设计历史档案与月历浏览', '每日使用日志', '进行中'],
+      ['04', '接入真实适配器数据', 'AI 使用统计', '待开始'],
+    ];
+    const bars = [36, 58, 45, 74, 52, 91, 68, 84, 62, 96, 72, 88];
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-ac-art">
+      <style>{`
+        .vr-home .vr-ac-art{padding:0;color:#5E6A66;background:#F7FAF8;border-color:rgba(15,157,138,.2);box-shadow:0 20px 42px -28px rgba(20,50,44,.45)}
+        .vr-home .vr-ac-art .vr-preview-top{padding:10px 13px;border-bottom-color:#E5ECE9;color:#48554F;font-size:10.5px}
+        .vr-home .vr-ac-art .vr-preview-top b{color:#0F9D8A}
+        .vr-home .vr-ac-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-bottom:1px solid #E5ECE9}
+        .vr-home .vr-ac-art .vr-ac-kpi{padding:9px 11px;border-right:1px solid #E5ECE9;transition:background .3s ease}
+        .vr-home .vr-ac-art .vr-ac-kpi:last-child{border-right:0}.vr-home .vr-ac-art .vr-ac-kpi.is-on{background:#E7F6F1}
+        .vr-home .vr-ac-art .vr-ac-kpi span{display:block;color:#82908A;font-size:9px;font-weight:650}.vr-home .vr-ac-art .vr-ac-kpi b{display:block;margin-top:3px;color:#17201E;font:700 15px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+        .vr-home .vr-ac-art .vr-ac-chart{display:flex;align-items:flex-end;gap:4px;height:48px;margin:10px 13px 0;padding-bottom:8px;border-bottom:1px solid #E5ECE9}
+        .vr-home .vr-ac-art .vr-ac-chart i{flex:1;min-width:3px;border-radius:3px 3px 1px 1px;background:#B8DDD4;transition:background .3s ease,height .3s ease}
+        .vr-home .vr-ac-art .vr-ac-chart i.is-on{background:#0F9D8A}
+        .vr-home .vr-ac-art .vr-ac-task{display:grid;grid-template-columns:25px minmax(0,1fr) auto;align-items:center;gap:8px;margin:10px 13px 0;padding:9px 10px;border:1px solid #DCE8E4;border-radius:9px;background:#fff;transition:border-color .3s ease,transform .3s ease}
+        .vr-home .vr-ac-art .vr-ac-task.is-on{border-color:rgba(15,157,138,.5);transform:translateX(3px)}
+        .vr-home .vr-ac-art .vr-ac-task em{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:#E7F6F1;color:#0B8475;font:700 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-style:normal}
+        .vr-home .vr-ac-art .vr-ac-task strong{overflow:hidden;color:#26332F;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+        .vr-home .vr-ac-art .vr-ac-task small{display:block;margin-top:2px;color:#87938E;font-size:8.5px}
+        .vr-home .vr-ac-art .vr-ac-state{color:#0F9D8A;font-size:8.5px;font-weight:700;white-space:nowrap}
+        .vr-home .vr-ac-art .vr-ac-foot{display:flex;align-items:center;justify-content:space-between;margin:10px 13px 12px;color:#87938E;font-size:9px}
+        .vr-home .vr-ac-art .vr-ac-foot b{color:#0F9D8A;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+        @media (prefers-reduced-motion:reduce){.vr-home .vr-ac-art *{transition:none!important}}
+      `}</style>
+      <div className="vr-preview-top"><Activity size={15} /><span>AI 轨迹 &#183; 今日工作</span><b>7h 14m</b></div>
+      <div className="vr-ac-kpis">
+        <div className={`vr-ac-kpi${active === 0 ? ' is-on' : ''}`}><span>今日任务</span><b>3 / 7</b></div>
+        <div className={`vr-ac-kpi${active === 1 ? ' is-on' : ''}`}><span>有效会话</span><b>20</b></div>
+        <div className={`vr-ac-kpi${active === 2 ? ' is-on' : ''}`}><span>生成成果</span><b>8</b></div>
+      </div>
+      <div className="vr-ac-chart">{bars.map((height, index) => <i key={index} className={active === index % 4 ? 'is-on' : ''} style={{ height: `${height}%` }} />)}</div>
+      {tasks.map((task, index) => <div className={`vr-ac-task${active === index ? ' is-on' : ''}`} key={task[0]}><em>{task[0]}</em><div><strong>{task[1]}</strong><small>{task[2]}</small></div><span className="vr-ac-state">{task[3]}</span></div>)}
+      <div className="vr-ac-foot"><span>数据留在本机 · GitHub Releases 更新</span><b>v0.1.0</b></div>
     </div>;
   }
 
