@@ -632,6 +632,10 @@ export default function ClassSchedule({ stats = null, active = true }) {
   /* 「第 X 周课表 / 清空课表」那条工具栏：手机上默认收成一条把手，
      把 62px 还给网格；桌面端恒展开（DOM 与改动前一致）。 */
   const [gridHeadOpen, setGridHeadOpen] = useState(!isMobile);
+  /* 导入卡与手动添加卡：手机上默认折叠。两张卡实测 339 + 407px，
+     都在课表下方且不是每次都用到；折叠只藏表单，不删任何字段。 */
+  const [importOpen, setImportOpen] = useState(!isMobile);
+  const [addOpen, setAddOpen] = useState(!isMobile);
 
   /* 课表行高自适应：把视口内剩余高度均摊到 6 个节次行，
      使「第 X 周课表」卡片底边正好贴住可视区底端（明细卡被推出首屏） */
@@ -839,6 +843,20 @@ export default function ClassSchedule({ stats = null, active = true }) {
     }
   };
 
+  /* 导入卡的两个动作：桌面端留在卡头，手机端折叠后放进展开态第一行。
+     同一份 JSX 两处复用，避免出现两套会各自腐烂的按钮。 */
+  const xlsActions = (<>
+    <button className="cs-btn" onClick={() => xlsFileRef.current && xlsFileRef.current.click()} disabled={xlsBusy} style={xlsBusy ? { opacity: .6, cursor: 'wait' } : undefined}>
+      {xlsBusy ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <FileSpreadsheet size={15} />}
+      {xlsBusy ? '解析中…' : '导入 Excel(.xls/.xlsx)'}
+    </button>
+    <button className="cs-btn" onClick={copyTemplate}>
+      {copied ? <Check size={15} style={{ color: ACCENT }} /> : <Copy size={15} />}
+      {copied ? '已复制' : '复制导入模板'}
+    </button>
+  </>);
+  const xlsFileInput = <input ref={xlsFileRef} type="file" accept=".xls,.xlsx" style={{ display: 'none' }} onChange={onXlsFile} />;
+
   return (
     <div className="cs-page">
       <style>{`
@@ -963,6 +981,9 @@ export default function ClassSchedule({ stats = null, active = true }) {
              把手视觉高 34px，命中区靠 ::before 上下各外扩 7px 补到 48px
              —— 与首页 .vr-tab 用的是同一手法，不是把按钮做小了。 */
           .cs-grid-h { margin-bottom:8px; }
+          .cs-fold-h { margin-bottom:8px; }
+          /* 展开后卡头与表单之间恢复原本的 14px 呼吸 */
+          .cs-fold-h:has(.cs-fold[aria-expanded="true"]) { margin-bottom:14px; }
           .cs-fold { position:relative;display:flex;align-items:center;gap:6px;min-height:34px;padding:0 2px;
             border:0;background:transparent;color:#212529;font-size:var(--fs-body);font-weight:700; }
           .cs-fold::before { content:"";position:absolute;left:-2px;right:-2px;top:-7px;bottom:-7px; }
@@ -1257,20 +1278,25 @@ export default function ClassSchedule({ stats = null, active = true }) {
 
       {/* 导入 */}
       <div className="cs-card">
-        <div className="cs-h">
-          <div className="ico"><Upload size={18} /></div>
-          <h3>文本 / Excel 自动识别导入</h3>
-          <div className="sp" />
-          <button className="cs-btn" onClick={() => xlsFileRef.current && xlsFileRef.current.click()} disabled={xlsBusy} style={xlsBusy ? { opacity: .6, cursor: 'wait' } : undefined}>
-            {xlsBusy ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <FileSpreadsheet size={15} />}
-            {xlsBusy ? '解析中…' : '导入 Excel(.xls/.xlsx)'}
-          </button>
-          <input ref={xlsFileRef} type="file" accept=".xls,.xlsx" style={{ display: 'none' }} onChange={onXlsFile} />
-          <button className="cs-btn" onClick={copyTemplate}>
-            {copied ? <Check size={15} style={{ color: ACCENT }} /> : <Copy size={15} />}
-            {copied ? '已复制' : '复制导入模板'}
-          </button>
-        </div>
+        {isMobile ? (
+          <div className="cs-h cs-fold-h">
+            <button type="button" className="cs-fold" aria-expanded={importOpen} onClick={() => setImportOpen((v) => !v)}>
+              {importOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              <span>文本 / Excel 自动识别导入</span>
+            </button>
+            {xlsFileInput}
+          </div>
+        ) : (
+          <div className="cs-h">
+            <div className="ico"><Upload size={18} /></div>
+            <h3>文本 / Excel 自动识别导入</h3>
+            <div className="sp" />
+            {xlsActions}
+            {xlsFileInput}
+          </div>
+        )}
+        {(!isMobile || importOpen) && (<>
+        {isMobile && <div className="cs-row" style={{ marginBottom: 10 }}>{xlsActions}</div>}
         <textarea
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
@@ -1298,11 +1324,22 @@ export default function ClassSchedule({ stats = null, active = true }) {
         <p style={{ margin: '10px 0 0', fontSize: 12.5, color: '#6c757d' }}>
           支持连堂块：1-2节 / 3-4节 / 5-6节 / 7-8节 / 晚自习1 / 晚自习2。文本与 Excel 导入支持中英文混合课程名、「老师 / 教师」职称、以及「明理楼A201 / 5-601 / B305 / 实训中心302」等常见地点写法；识别结果会先列出地点，未识别时可手动补充。
         </p>
+        </>)}
       </div>
 
       {/* 手动新增 */}
       <div className="cs-card">
-        <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>手动添加课程</h3></div>
+        {isMobile ? (
+          <div className="cs-h cs-fold-h">
+            <button type="button" className="cs-fold" aria-expanded={addOpen} onClick={() => setAddOpen((v) => !v)}>
+              {addOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              <span>手动添加课程</span>
+            </button>
+          </div>
+        ) : (
+          <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>手动添加课程</h3></div>
+        )}
+        {(!isMobile || addOpen) && (
         <div className="cs-row">
           <div className="cs-field"><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
           <div className="cs-field"><label className="cs-l">老师（可含职称）</label><input className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
@@ -1326,6 +1363,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
             </select></div>
           <div className="cs-field" style={{ alignSelf: 'flex-end' }}><button className="cs-btn primary" onClick={addOne}><Plus size={14} />添加</button></div>
         </div>
+        )}
       </div>
 
       {toast && <div className="cs-toast">{toast}</div>}
