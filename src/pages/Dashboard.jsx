@@ -876,10 +876,32 @@ export default function Dashboard() {
            而不是被拉成整格；容器仍留 overflow-x:auto 兜底窄屏溢出） */
         .vr-home .vr-tabs { gap: 0; justify-content: space-between; padding-bottom: 18px; }
         .vr-home .vr-tab { font-size: 20px; }
+        /* 基础样式给展示字用的是 line-height:1，而中文字形自然行盒约 1.15em，
+           字形会顶出按钮盒上方约 3px；吸顶时条子贴滚动容器上沿、又没有 padding-top，
+           这 3px 就被外层 overflow 裁掉（「应用」顶上那一横被削平）。
+           手机上把行盒撑到能装下字形，字号不变。 */
+        .vr-home .vr-tab { line-height: 1.25; }
         /* 巨型描边序号原本 190px 从不随断点缩放，在手机上横贯大半个屏、
            下沿伸进面板区，把「关于我」的眉标和正文穿过遮住。
            卡片内的那一枚（.vr-feature-index）改到右上角，见下面压缩段。 */
         .vr-home .vr-tab-reel { top: 4px; right: -2px; font-size: 78px; }
+        /* ── tab 条吸顶失效的根因 ──
+           .vr-home 基础样式是 overflow:hidden，而「hidden 也算滚动盒」，
+           于是它成了 .vr-tabs(position:sticky) 最近的滚动容器；可 .vr-home
+           自身 scrollHeight == clientHeight，永远不滚，sticky 便无从生效，
+           整条 tab 直接跟着内容滚出 844px 视口、被外层 overflow:auto 裁掉
+           （实测 scrollTop=600 时条顶到 -130px，字形被裁 2~10px）。
+           clip 与 hidden 裁切范围相同，但不会创建滚动容器，sticky 于是
+           回到真正在滚的那个外层容器上。只改手机断点，桌面端一字未动。 */
+        .vr-home { overflow: clip; }
+        /* 滚动驱动的 3D 倾斜本来是给卡片用的，落在吸顶条上会把文字
+           再往上抬 6~10px 并斜 11~18°，字形看着被削掉一截 */
+        .vr-home .vr-tabs[data-roll] { transform: none; }
+      }
+      @media (max-width: 720px) and (hover: none) {
+        /* 手机上点过的元素会一直停在 :hover 里，translateY(-2px) 不撤，
+           选中项就永久比别的 tab 高 2px。触屏没有悬停，这个位移没有意义。 */
+        .vr-home .vr-tab:hover { transform: none; }
       }
       @media (max-width: 360px) {
         .vr-home .vr-tabs { gap: 0; }
