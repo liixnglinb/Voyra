@@ -3,8 +3,12 @@
     <linearGradient id="loom" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="120">
       <stop offset="0" stop-color="#1F1F1F"/><stop offset="1" stop-color="#000000"/>
     </linearGradient>
+    <radialGradient id="sheen" gradientUnits="userSpaceOnUse" cx="36.0" cy="19.2" r="110.4">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/><stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.09"/><stop offset="0.75" stop-color="#FFFFFF" stop-opacity="0.0306"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0.0"/>
+    </radialGradient>
   </defs>
   <rect width="120" height="120" rx="27" fill="url(#loom)"/>
+  <rect width="120" height="120" rx="27" fill="url(#sheen)"/>
   <rect x="34" y="26" width="16" height="68" fill="#FFFFFF"/>
   <rect x="34" y="78" width="54" height="16" fill="#FFFFFF"/>
 </svg>
