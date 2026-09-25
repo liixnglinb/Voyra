@@ -877,10 +877,9 @@ export default function Dashboard() {
         .vr-home .vr-tabs { gap: 0; justify-content: space-between; padding-bottom: 18px; }
         .vr-home .vr-tab { font-size: 20px; }
         /* 巨型描边序号原本 190px 从不随断点缩放，在手机上横贯大半个屏、
-           下沿伸进面板区，把「关于我」的眉标和正文穿过遮住 */
+           下沿伸进面板区，把「关于我」的眉标和正文穿过遮住。
+           卡片内的那一枚（.vr-feature-index）改到右上角，见下面压缩段。 */
         .vr-home .vr-tab-reel { top: 4px; right: -2px; font-size: 78px; }
-        /* 水印序号占底部 13~51px，而 copy 只留 30px 下边距，"打开日程"这类 CTA 会被压在数字上 */
-        .vr-home .vr-feature-copy { padding-bottom: 58px; }
       }
       @media (max-width: 360px) {
         .vr-home .vr-tabs { gap: 0; }
@@ -1013,11 +1012,14 @@ export default function Dashboard() {
         /* ── 卡片竖向压缩：只削余量，不删卡、不裁演示内容 ──
            实测产品卡 450px = copy 220 + art 192 + art 上下 margin 36，
            而 copy 的 220 里 padding 独占 84（26 顶 + 58 底），是最大一块纯余量。 */
-        .vr-home .vr-feature-copy { padding: 16px 18px 40px; }
+        .vr-home .vr-feature-copy { padding: 16px 18px 14px; }
         .vr-home .vr-feature-title h2 { font-size: 25px; }
         .vr-home .vr-feature-copy p { max-width: none; margin: 10px 0 12px; font-size: 13.5px; line-height: 1.55; }
         .vr-home .vr-art { min-height: 0; margin: 12px; }
-        .vr-home .vr-feature-index { left: 14px; bottom: 10px; font-size: 30px; }
+        /* 描边序号原本钉在卡片左下角，copy 只能留 40px 下边距躲它；
+           挪到右上角空白区后这 26px 就还回来了（标题是左对齐，最长的一条
+           到 230px 左右收笔，与右上角这枚不重叠）。 */
+        .vr-home .vr-feature-index { top: 8px; right: 12px; bottom: auto; left: auto; font-size: 26px; }
         /* 应用卡最高的那几张卡在 art 里的七步流程：3 列 × 每格 60px = 196px。
            改 4 列并收掉格内余量，行数从 3 降到 2。 */
         .vr-home .vr-model-flow { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 9px; }
