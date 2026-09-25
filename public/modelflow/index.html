@@ -181,14 +181,17 @@ img{display:block;max-width:100%}
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:var(--r-2xl);
   background:radial-gradient(38% 50% at 18% 50%,rgba(47,111,228,.20),transparent 70%),
              radial-gradient(38% 50% at 82% 50%,rgba(91,150,249,.16),transparent 70%)}
-.mock{--d-page:#161616;--d-shell:#161616;--d-panel:#202020;
+/* 逐值取自软件 html[data-theme="dark"]。侧栏 #2b2b2b 和卡片/浮层同色，
+   页面 #161616 最深——两栏靠色差分开，不靠一条竖线（软件同一条规则）。 */
+.mock{--d-page:#161616;--d-shell:#2b2b2b;--d-panel:#202020;
   --d-hover:rgba(255,255,255,.05);--d-active:rgba(255,255,255,.10);--d-composer:#2b2b2b;
+  --d-strip:rgba(13,13,13,.19);
   --d-ink:#d4d4d4;--d-ink-2:color-mix(in oklab, var(--d-ink) 78%, transparent);
   --d-ink-3:color-mix(in oklab, var(--d-ink) 60%, transparent);
   --d-ink-4:color-mix(in oklab, var(--d-ink) 42%, transparent);
   --d-line:rgba(255,255,255,.1);--d-line-soft:rgba(255,255,255,.065);
   --d-accent:#ffffff;--d-accent-soft:#001d3d;--d-accent-deep:#e6e6e6;
-  --d-on-accent:#161616;--d-on-solid:#ffffff;
+  --d-on-accent:#161616;--d-on-solid:#0e1512;--d-bad:#e8695f;
   --d-good-soft:rgba(78,183,124,.13);--d-warn-soft:rgba(217,164,65,.13);
   --d-good:#4eb77c;--d-warn:#d9a441;--d-ctl:#2b2b2b;
   --d-float:#2b2b2b;--d-line-strong:rgba(255,255,255,.15);
@@ -196,21 +199,36 @@ img{display:block;max-width:100%}
   background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.58);
   backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);
   box-shadow:var(--sh-float)}
-.mock-bar{height:34px;display:flex;align-items:center;gap:7px;padding:0 14px;background:var(--d-shell);
-  border-bottom:1px solid var(--d-line-soft)}
-.dot{width:11px;height:11px;border-radius:50%;transition:transform .3s var(--e-out)}
-.mock:hover .dot{transform:scale(1.12)}
+/* 标题行不铺自己的底：左段是侧栏色、右段是页面色，两栏的色差一路顶到窗口最上沿，
+   所以这一行下面没有线（软件同一条：.titlebar 透明、.tlb-left 用 --bg-shell）。
+   三枚 traffic-light 换成自绘窗控 —— 无边框窗口里那三个就是软件自己画的。 */
+.mock-bar{height:34px;display:flex;align-items:stretch}
+.mb-left{width:206px;flex-shrink:0;display:flex;align-items:center;gap:6px;
+  padding:0 8px 0 10px;background:var(--d-shell)}
+.mb-right{flex:1;min-width:0;display:flex;align-items:center;background:var(--d-page)}
+.mb-drag{flex:1;min-width:0}
+.mb-acts{display:flex;gap:1px;flex-shrink:0}
+.mb-ic{width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:var(--r-2);color:var(--d-ink-3);transition:background .18s var(--e-std)}
+.mb-ic:hover{background:var(--d-hover);color:var(--d-ink)}
+.mb-win{display:flex;flex-shrink:0;align-items:stretch;height:100%}
+.mb-wb{width:34px;display:inline-flex;align-items:center;justify-content:center;color:var(--d-ink-3);
+  transition:background .18s var(--e-std),color .18s var(--e-std)}
+.mb-wb:hover{background:var(--d-hover);color:var(--d-ink)}
+.mb-wclose:hover{background:var(--d-bad);color:var(--d-on-solid)}
+/* 第二张产品图没有侧栏，标题行整条都是页面色 */
+.mock-bar.plain .mb-left{display:none}
 .mock-body{display:grid;grid-template-columns:206px minmax(0,1fr);min-height:412px;
   background:var(--d-page);font-size:12.5px;line-height:1.85}
-.m-side{background:var(--d-shell);border-right:1px solid var(--d-line);padding:12px 10px;
+/* 没有 border-right：软件量过，两栏之间没有任何线，分栏纯靠 #2b2b2b vs #161616 的色差。 */
+.m-side{background:var(--d-shell);padding:12px 10px;
   display:flex;flex-direction:column;color:var(--d-ink-3)}
-.m-brand{display:flex;align-items:center;gap:8px;padding:2px 8px 14px;font-weight:600;
-  color:var(--d-ink);font-size:13px}
-.m-brand i{width:20px;height:20px;border-radius:var(--r-2);display:block;
-  background:linear-gradient(160deg,var(--d-accent),#245ab8)}
+.m-brand{display:flex;align-items:center;gap:6px;font-weight:600;min-width:0;
+  color:var(--d-ink);font-size:13px;letter-spacing:-.01em}
+.m-brand img{width:18px;height:18px;border-radius:var(--r-1);display:block;flex-shrink:0}
 /* 主导航里两行动作（新建任务 / 搜索）带键位提示：软件上它们就是导航行，
    不再有一个通栏「新建任务」按钮，所以 .m-new 那套删掉了。 */
-.m-nav{margin-top:10px}
+.m-nav{margin-top:2px}
 .m-i{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--r-2)}
 .m-i em{margin-left:auto;font-style:normal;font-family:var(--en);font-size:9.5px;color:var(--d-ink-4);
   border:1px solid var(--d-line);border-radius:var(--r-1);padding:0 5px;flex-shrink:0}
@@ -243,14 +261,16 @@ img{display:block;max-width:100%}
 .m-up{margin-top:6px;display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--r-2);
   background:var(--d-accent-soft);color:var(--d-accent-deep);font-size:11.5px;font-weight:600}
 .m-main{position:relative;min-width:0;padding:0;display:flex;flex-direction:column}
+/* 页头不铺底、不画下边线：它就是内容列顶部的一段空白，和下面同属一个表面。
+   没有标题的页面（比如首页）这一行整个不收 —— 软件里它是 hidden 掉的。 */
 .m-top{height:44px;display:flex;align-items:center;gap:10px;padding:0 16px;
-  border-bottom:1px solid var(--d-line);background:var(--d-shell);color:var(--d-ink);font-weight:600;font-size:13px}
+  color:var(--d-ink);font-weight:600;font-size:13px}
 .m-top .run{margin-left:auto;height:24px;padding:0 10px;border-radius:var(--r-2);display:inline-flex;
   align-items:center;gap:6px;background:var(--d-ctl);color:var(--d-ink-2);font-size:11px}
-.m-rpbar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--d-panel);
-  border-bottom:1px solid var(--d-line-soft)}
-.m-badge{font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:var(--r-pill);
-  background:var(--d-accent-soft);color:var(--d-accent-deep);flex-shrink:0}
+/* 进度那一行不铺底、不画线：软件里它就是正文顶部的一段（.rp-bar 只有下内缩）。 */
+.m-rpbar{display:flex;align-items:center;gap:10px;padding:0 16px 12px}
+.m-badge{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:var(--r-pill);
+  background:var(--d-accent-soft);color:var(--d-accent);flex-shrink:0}
 .m-rtrack{flex:1;height:3px;border-radius:var(--r-pill);background:var(--d-line);overflow:hidden;min-width:60px}
 .m-rtrack i{display:block;height:100%;width:43%;border-radius:var(--r-pill);
   background:linear-gradient(90deg,var(--d-accent),var(--d-accent-deep),var(--d-accent));
@@ -281,39 +301,37 @@ img{display:block;max-width:100%}
 .ws-r{display:flex;gap:9px;align-items:center;padding:5px 0;color:var(--d-ink-2)}
 .ws-r span:first-child{font-family:var(--en);color:var(--d-accent-deep);min-width:150px;overflow:hidden;text-overflow:ellipsis}
 .ws-r em{font-style:normal;color:var(--d-ink-4);font-size:10.5px}
-.ws-r b{margin-left:auto;font-weight:600;font-size:10px;color:var(--d-on-solid);background:var(--d-good);
-  border-radius:var(--r-pill);padding:1px 7px}
-.m-composer{margin:0 16px 14px;padding:9px 11px;border-radius:var(--r-5);background:var(--d-composer);
+/* 「刚写入」紧跟在文件名后面，不推到行尾 —— 软件那一行的顺序就是
+   名字 / 标记 / 大小·时间，推到右边会被浮在右上角的进程卡压住半个。 */
+.ws-r b{font-weight:600;font-size:10px;color:var(--d-on-solid);background:var(--d-good);
+  border-radius:var(--r-pill);padding:1px 7px;flex-shrink:0}
+.m-composer{margin:0 16px 14px;padding:9px 11px;border-radius:var(--r-4);background:var(--d-composer);
   border:1px solid var(--d-line);color:var(--d-ink-4);font-size:11.5px;display:flex;align-items:center;gap:8px}
 /* ---------- hero：首页输入台（软件打开就是这一屏） ----------
    三段：上=选哪条流程、中=任务说明、下=工具条（引擎在左，发送在右下）。 */
 .m-home{align-items:center;padding:clamp(22px,5vh,46px) 18px 24px;gap:0}
 .m-greet{margin:0 0 16px;font-size:19px;font-weight:600;letter-spacing:-.01em;color:var(--d-ink);
   text-align:center}
-.m-card{width:min(430px,100%);background:var(--d-panel);border:1px solid var(--d-line);
-  border-radius:var(--r-5);overflow:hidden}
-.m-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--d-line-soft)}
-.m-row .m-cp{margin-left:auto;font-style:normal;font-size:10px;color:var(--d-ink-4);white-space:nowrap}
-.m-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r-3);
-  background:var(--d-ctl);border:1px solid var(--d-line);color:var(--d-ink-2);font-size:11px;
+.m-card{width:min(430px,100%);background:var(--d-composer);border:1px solid var(--d-line);
+  border-radius:var(--r-4);overflow:hidden}
+/* 顶部条带压黑、下边线走 --d-line-strong：软件实测那一条就是 #4b4b4b 量出来的。 */
+.m-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--d-strip);
+  border-bottom:1px solid var(--d-line-strong)}
+.m-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r-2);
+  background:var(--d-ctl);border:1px solid var(--d-line);color:var(--d-ink);font-size:11px;
   min-width:0;white-space:nowrap;overflow:hidden}
 .m-chip svg{flex-shrink:0;opacity:.7}
-.m-chip.ghost{background:transparent;border-color:var(--d-line-soft);color:var(--d-ink-3)}
 .m-ta{padding:9px 11px;font-size:11.5px;line-height:1.7;color:var(--d-ink-2);text-align:left;
   min-height:56px}
 .m-bar{display:flex;align-items:center;gap:8px;padding:8px 10px 10px}
-.m-lbl{flex:1;min-width:0;font-size:11px;color:var(--d-ink-4);white-space:nowrap;overflow:hidden}
-.m-send{width:26px;height:26px;flex-shrink:0;margin-left:auto;display:inline-flex;align-items:center;
+/* 步骤条在发送键左侧（软件同一条），压成一条细带而不是三枚按钮 */
+.m-steps{flex:1;min-width:0;display:flex;align-items:center;gap:5px;height:20px;padding:0 7px;
+  border:1px solid var(--d-line);border-radius:var(--r-2);color:var(--d-ink-3);font-size:10px;
+  white-space:nowrap;overflow:hidden}
+.m-steps i{font-style:normal;font-family:var(--en);color:var(--d-ink-4)}
+/* 发送键实测 24 见方、距卡片右缘 12 —— 这张微缩图按自身比例落到 22，比原来那枚 26 小 */
+.m-send{width:22px;height:22px;flex-shrink:0;margin-left:auto;display:inline-flex;align-items:center;
   justify-content:center;border-radius:var(--r-3);background:var(--d-accent);color:var(--d-on-accent)}
-.m-try{width:min(430px,100%);display:flex;align-items:center;margin-top:14px;font-size:10.5px;
-  color:var(--d-ink-4)}
-.m-try b{font-weight:600}
-.m-shuffle{margin-left:auto;color:var(--d-ink-3)}
-.m-sug{display:flex;align-items:center;gap:8px;width:min(430px,100%);margin-top:6px;padding:6px 9px;
-  border:none;border-radius:var(--r-3);background:transparent;color:var(--d-ink-3);font-size:11px;
-  text-align:left;font-family:inherit}
-.m-sug:hover{background:var(--d-hover);color:var(--d-ink-2)}
-.m-sug svg{flex-shrink:0;opacity:.7}
 /* 单独一屏的产品图（跑起来是什么样）没有侧栏，就一格 */
 .mock-body.one{grid-template-columns:minmax(0,1fr);min-height:392px}
 .runit{padding:clamp(52px,9vh,104px) 0}
@@ -792,11 +810,19 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   <div class="hero-stage" id="heroStage">
       <div class="mock">
         <div class="mock-bar">
-          <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+          <div class="mb-left"><span class="m-brand"><img src="./logo.svg" alt="">织流</span></div>
+          <div class="mb-right">
+            <span class="mb-drag"></span>
+            <span class="mb-acts"><span class="mb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:13px;height:13px"><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/><path d="M14.6 4.6v14.8"/></svg></span></span>
+            <span class="mb-win">
+              <span class="mb-wb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:13px;height:13px"><path d="M6 12h12"/></svg></span>
+              <span class="mb-wb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:13px;height:13px"><rect x="6" y="6" width="12" height="12" rx="1.6"/></svg></span>
+              <span class="mb-wb mb-wclose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:13px;height:13px"><path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"/></svg></span>
+            </span>
+          </div>
         </div>
         <div class="mock-body">
           <aside class="m-side">
-            <div class="m-brand"><i></i>织流</div>
             <nav class="m-nav">
               <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 5v14M5 12h14"/></svg><span>新建任务</span><em>Ctrl N</em></div>
               <div class="m-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="10.6" cy="10.6" r="6.1"/><path d="M15.2 15.2 20 20"/></svg><span>搜索流程与运行</span><em>Ctrl K</em></div>
@@ -822,19 +848,16 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
             <h2 class="m-greet">今天要跑哪条流程？</h2>
             <div class="m-card">
               <div class="m-row">
-                <span class="m-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><path d="M4 7h6M4 12h10M4 17h5"/><circle cx="18" cy="7" r="2.2"/><circle cx="19" cy="17" r="2.2"/></svg>数模求解主线 · 7 步</span>
-                <i class="m-cp">含 2 个检查点</i>
+                <span class="m-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><circle cx="5.6" cy="6" r="2.5"/><circle cx="5.6" cy="18" r="2.5"/><circle cx="18.4" cy="12" r="2.5"/><path d="M7.9 7.2 16.1 10.8M7.9 16.8 16.1 13.2"/></svg>数模求解主线 · 7 步</span>
+                <span class="m-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><path d="M12 3.2 19.8 6v5.6c0 4.4-3.1 7.6-7.8 9.2-4.7-1.6-7.8-4.8-7.8-9.2V6z"/></svg>默认</span>
               </div>
               <div class="m-ta"><span id="mTyped"></span><span class="cursor"></span></div>
               <div class="m-bar">
-                <span class="m-chip ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><rect x="4.4" y="4.4" width="15.2" height="15.2" rx="2.4"/><path d="M9 9.4h6.2v6.2H9z"/></svg>默认</span>
-                <span class="m-lbl">任务名（可留空）</span>
+                <span class="m-steps"><i>01</i>需求解析<i>02</i>方案拆解<i>…</i></span>
+                <span class="m-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><rect x="3.8" y="8" width="16.4" height="11.4" rx="3"/><path d="M12 4.2V8M8.8 13h.01M15.2 13h.01M9.6 16.4h4.8"/><circle cx="12" cy="3.2" r="1.3"/></svg>claude</span>
                 <span class="m-send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M12 19.4V5.2M6.2 11 12 5.2 17.8 11"/></svg></span>
               </div>
             </div>
-            <div class="m-try"><b>试试这些任务</b><span class="m-shuffle">换一批</span></div>
-            <button class="m-sug"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><circle cx="10.6" cy="10.6" r="6.1"/><path d="M15.2 15.2 20 20"/></svg>帮我把这份赛题拆成可执行的子问题</button>
-            <button class="m-sug"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><path d="M6.4 3.8h8.2l3 3v13.4H6.4z"/><path d="M9 11h6M9 15h4"/></svg>读一遍这份材料，整理方法和数据清单</button>
           </div>
         </div>
       </div>
@@ -897,8 +920,16 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="lead">SSE 把工具调用、输出和耗时逐行推过来；右上角那张进程卡对应每一步的状态，跑完一步翻一步。工作区面板列的就是你磁盘上真实的文件。</p>
     </div>
     <div class="mock mock-wide" data-rise>
-      <div class="mock-bar">
-        <span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span>
+      <div class="mock-bar plain">
+        <div class="mb-left"></div>
+        <div class="mb-right">
+          <span class="mb-drag"></span>
+          <span class="mb-win">
+            <span class="mb-wb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:13px;height:13px"><path d="M6 12h12"/></svg></span>
+            <span class="mb-wb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:13px;height:13px"><rect x="6" y="6" width="12" height="12" rx="1.6"/></svg></span>
+            <span class="mb-wb mb-wclose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:13px;height:13px"><path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"/></svg></span>
+          </span>
+        </div>
       </div>
       <div class="mock-body one">
           <div class="m-main">
@@ -913,7 +944,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
               <div class="ln"><b>12:21:04</b><span class="tag t-run">RUN</span>正在绘制模型对比折线图<span class="cursor"></span></div>
               <div class="ws">
                 <div class="m-sect">工作区文件<span class="cnt">(4)</span><em class="wslive"><i></i>实时</em><span class="rf"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:11px;height:11px"><path d="M20 11a8 8 0 1 0-1.6 5.6"/><path d="M20 5v6h-6"/></svg>刷新</span></div>
-                <div class="ws-r"><span>EXECUTION.md</span><em>24 KB · now</em><b>刚写入</b></div>
+                <div class="ws-r"><span>EXECUTION.md</span><b>刚写入</b><em>24 KB · now</em></div>
                 <div class="ws-r"><span>figures/Figure_2.png</span><em>2.4 MB · 1 分钟前</em></div>
                 <div class="ws-r"><span>FINDINGS.md</span><em>18 KB · 12 分钟前</em></div>
                 <div class="ws-r"><span>results/参数对比.csv</span><em>3.1 KB · 4 分钟前</em></div>
