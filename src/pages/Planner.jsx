@@ -7,6 +7,7 @@ import {
 import DateTimePicker from '../components/DateTimePicker';
 import { useAuth } from '../components/AuthGate';
 import { loadItems, groupByDate, urgency, urgentStyle, badgeText } from './HomeworkBoard';
+import { MobileSection, useIsMobile } from './ClassSchedule';
 
 /* ============================================================
    个人日程表 · Planner
@@ -121,8 +122,9 @@ function CatSelect({ value, onChange }) {
   );
 }
 
-export default function Planner({ active = true }) {
+export default function Planner({ active = true, drawerPanel = null, drawerHost = null }) {
   const { guard, authed } = useAuth();
+  const isMobile = useIsMobile();
   const CLOUD_KEY = 'schedule-planner-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const today = new Date();
   const [view, setView] = useState({ y: today.getFullYear(), m: today.getMonth() + 1 });
@@ -438,7 +440,8 @@ export default function Planner({ active = true }) {
         </div>
       </div>
 
-      {/* 选中日期详情 + 添加 */}
+      {/* 选中日期详情 + 添加 —— 手机上收进页头「功能」打开的抽屉 */}
+      <MobileSection mobile={isMobile} host={drawerHost} id="day" panel={drawerPanel}>
       <div className="pl-card">
         <div className="pl-top">
           <div className="pl-ico"><CalendarDays size={18} /></div>
@@ -522,6 +525,7 @@ export default function Planner({ active = true }) {
       <p style={{ fontSize: 12, color: '#6c757d', margin: 0 }}>
         公假与补班依据《国务院办公厅关于2026年部分节假日安排的通知》（国办发明电〔2025〕7号）自动植入；你添加的开学 / 放假等自定义日程保存在本机。
       </p>
+      </MobileSection>
       {toast && <div className="pl-toast">{toast}</div>}
     </div>
   );

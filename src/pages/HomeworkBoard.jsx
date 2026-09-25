@@ -6,6 +6,7 @@ import {
 import DateTimePicker from '../components/DateTimePicker';
 import { useAuth } from '../components/AuthGate';
 import { userKey, isAuthed } from '../lib/auth';
+import { MobileSection, useIsMobile } from './ClassSchedule';
 
 /* ============================================================
    作业看板 · HomeworkBoard
@@ -186,8 +187,9 @@ export function badgeText(it, now = new Date()) {
 
 /* ---------------- 组件 ---------------- */
 
-export default function HomeworkBoard({ active = true }) {
+export default function HomeworkBoard({ active = true, drawerPanel = null, drawerHost = null }) {
   const { guard, authed } = useAuth();
+  const isMobile = useIsMobile();
   const CLOUD_KEY = 'schedule-homework-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const [items, setItems] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -604,7 +606,8 @@ export default function HomeworkBoard({ active = true }) {
       </div>
     )}
 
-    {/* 三张独立卡片：需要留意 / 全部未交 / 按课程 */}
+    {/* 三张独立卡片：需要留意 / 更远的作业 / 按课程 —— 手机上各自收进抽屉一项 */}
+    <MobileSection mobile={isMobile} host={drawerHost} id="watch" panel={drawerPanel}>
     <div className="hw-card">
       <div className="hw-top hw-head">
         <div className="hw-ico"><AlertTriangle size={16} color={counts.overdue ? OVERDUE : ACCENT} /></div>
@@ -621,7 +624,9 @@ export default function HomeworkBoard({ active = true }) {
         ) : attention.map((it) => renderRow(it, true))}
       </div>
     </div>
+    </MobileSection>
 
+    <MobileSection mobile={isMobile} host={drawerHost} id="later" panel={drawerPanel}>
     <div className="hw-card">
       <div className="hw-top hw-head">
         <div className="hw-ico"><ClipboardList size={16} /></div>
@@ -638,7 +643,9 @@ export default function HomeworkBoard({ active = true }) {
         ) : farOut.map((it) => renderRow(it, true))}
       </div>
     </div>
+    </MobileSection>
 
+    <MobileSection mobile={isMobile} host={drawerHost} id="course" panel={drawerPanel}>
     <div className="hw-card hw-groups">
       <div className="hw-top hw-head">
         <div className="hw-ico"><BookOpen size={16} /></div>
@@ -683,6 +690,7 @@ export default function HomeworkBoard({ active = true }) {
         );
       })}
     </div>
+    </MobileSection>
 
     <p className="hw-foot">
       作业记录保存在本机浏览器（按登录账号分键），与课程表、日历日程同一层，不上传云端；更换设备或清除浏览器数据会丢失。

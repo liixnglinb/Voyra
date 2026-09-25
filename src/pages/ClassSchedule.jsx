@@ -1,11 +1,21 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 /* Voyra-schedule 独立仓库 · 同步链路验证标记 v1 */
+import { createPortal } from 'react-dom';
 import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
   MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
+
+/* 手机端把课表下方的整块内容搬进页头「功能」按钮打开的底部抽屉：
+   桌面端原样内联渲染（DOM 与引入本组件之前一致）；手机端只有抽屉打开时
+   才把同一份 children portal 到 ScheduleHub 提供的外壳里。
+   三个视图共用，故导出。 */
+export function MobileSection({ mobile, host, id, panel, children }) {
+  if (!mobile) return children;
+  return (host && panel === id) ? createPortal(children, host) : null;
+}
 
 /* ============================================================
    个人课表 · ClassSchedule
@@ -585,7 +595,7 @@ const MOBILE_MQ = '(max-width: 767px)';
    桌面端不受此开关影响：isMobile 恒 false，两列/格渲染与引入前一致。
    ============================================================ */
 const MOBILE_SLOT_IN_CELL = false;
-function useIsMobile() {
+export function useIsMobile() {
   const [mobile, setMobile] = useState(
     () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(MOBILE_MQ).matches : false),
   );
@@ -604,7 +614,7 @@ function useIsMobile() {
   return mobile;
 }
 
-export default function ClassSchedule({ stats = null, active = true }) {
+export default function ClassSchedule({ stats = null, active = true, drawerPanel = null, drawerHost = null, onWeekLabel = null }) {
   const { guard, authed } = useAuth();
   const CLOUD_KEY = 'schedule-classes-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const [courses, setCourses] = useState([]);
@@ -623,24 +633,11 @@ export default function ClassSchedule({ stats = null, active = true }) {
   const toastRef = useRef(null);
   const gridCardRef = useRef(null);
   const [rowH, setRowH] = useState(null);
-  /* 手机端：课表行高交给内容自己撑开，不再做「贴住可视区底端」的均摊，
-     所以 fitGrid 在手机上直接短路（见下）。用 ref 读是因为注册 resize 监听时
-     捕获的是首帧闭包，断点切换后那个闭包里的 isMobile 已经过期。 */
   const isMobile = useIsMobile();
-  const isMobileRef = useRef(isMobile);
-  isMobileRef.current = isMobile;
-  /* 「第 X 周课表 / 清空课表」那条工具栏：手机上默认收成一条把手，
-     把 62px 还给网格；桌面端恒展开（DOM 与改动前一致）。 */
-  const [gridHeadOpen, setGridHeadOpen] = useState(!isMobile);
-  /* 导入卡与手动添加卡：手机上默认折叠。两张卡实测 339 + 407px，
-     都在课表下方且不是每次都用到；折叠只藏表单，不删任何字段。 */
-  const [importOpen, setImportOpen] = useState(!isMobile);
-  const [addOpen, setAddOpen] = useState(!isMobile);
 
   /* 课表行高自适应：把视口内剩余高度均摊到 6 个节次行，
      使「第 X 周课表」卡片底边正好贴住可视区底端（明细卡被推出首屏） */
   const fitGrid = () => {
-    if (isMobileRef.current) { setRowH(null); return; } // 手机上网格卡是第一屏主体，行高随内容
     const card = gridCardRef.current;
     if (!card || !card.offsetWidth || !card.offsetHeight) return; // 视图隐藏时不测量
     const tbody = card.querySelector('tbody');
@@ -654,7 +651,16 @@ export default function ClassSchedule({ stats = null, active = true }) {
     }
     const rect = card.getBoundingClientRect();
     const scrollTop = scroller ? scroller.scrollTop : (window.scrollY || 0);
-    const limit = scroller ? Math.min(scroller.getBoundingClientRect().bottom, window.innerHeight) : window.innerHeight;
+    let limit = scroller ? Math.min(scroller.getBoundingClientRect().bottom, window.innerHeight) : window.innerHeight;
+    /* 手机上这张卡是页面唯一的内容，但它后面还跟着 .tool-content 的 30px 下内边距和
+       .tool-inner 的 34px 下内边距 —— 不扣掉这两段，卡底会顶到视口边缘之外，
+       整页就多出一屏 67px 的可滚距离。桌面端不走这个分支（行为与改动前一致）。 */
+    if (window.matchMedia(MOBILE_MQ).matches) {
+      const content = card.closest('.tool-content');
+      const inner = card.closest('.tool-inner');
+      const padOf = (el) => (el ? (parseFloat(getComputedStyle(el).paddingBottom) || 0) : 0);
+      limit -= padOf(content) + padOf(inner);
+    }
     const docTop = rect.top + scrollTop;
     const deficit = limit - docTop - card.offsetHeight;
     if (Math.abs(deficit) < 2) return;
@@ -756,6 +762,12 @@ export default function ClassSchedule({ stats = null, active = true }) {
     return Math.max(1, Math.min(MAX_WEEK, Math.floor((new Date() - start) / 864e5 / 7) + 1));
   }, [settings.startDate]);
   const currentWeek = settings.overrideWeek != null ? settings.overrideWeek : autoWeek;
+
+  /* 手机上「第 X 周」显示到页头去（课表卡自己的工具栏整条让位给网格）。
+     必须放在 currentWeek 之后 —— 放前面会在渲染期撞上 TDZ。 */
+  useEffect(() => {
+    if (onWeekLabel) onWeekLabel(isMobile ? `第${currentWeek}周` : '');
+  }, [currentWeek, isMobile, onWeekLabel]);
 
   const weekCourses = useMemo(() => courses.filter((c) => inWeek(c, currentWeek)), [courses, currentWeek]);
   const weekendEmpty = useMemo(() => !weekCourses.some((c) => c.day === 6 || c.day === 7), [weekCourses]);
@@ -957,7 +969,9 @@ export default function ClassSchedule({ stats = null, active = true }) {
              塌进同一列里竖着堆起来（实测 390 档一行三格叠成 587px 高）。
              改回表格原生行为，用 vertical-align:middle 让矮格子在行内居中，
              避免同一行里三格顶高不齐。min-height 只兜「整行无课」时的最小可辨识度。 */
-          .cs-grid tbody td { padding:1px; height:auto; min-height:44px; vertical-align:middle; }
+          /* 单元格高度必须走 --cs-row-h：表格单元格上的 min-height 是不生效的，
+             之前写 height:auto + min-height:44px，空格子实测只有 3px 高。 */
+          .cs-grid tbody td { padding:2px; height:var(--cs-row-h, 96px); vertical-align:middle; }
           .cs-cell { padding:3px 2px;border-radius:8px; gap:2px; }
           /* ── 格内的「第几节 + 起止时间」标记（手机端独有，桌面端不渲染该元素）──
              一行装不下 19 个字符，让它在连字符处自然断成两行：
@@ -977,17 +991,6 @@ export default function ClassSchedule({ stats = null, active = true }) {
           .cs-cell .t { display:none; }
           .cs-cell .w { font-size:var(--fs-meta); }
           .cs-h h3 { font-size:var(--fs-lead); }
-          /* 「第 X 周课表 / 清空课表」工具栏默认收成一条把手，把竖向还给网格。
-             把手视觉高 34px，命中区靠 ::before 上下各外扩 7px 补到 48px
-             —— 与首页 .vr-tab 用的是同一手法，不是把按钮做小了。 */
-          .cs-grid-h { margin-bottom:8px; }
-          .cs-fold-h { margin-bottom:8px; }
-          /* 展开后卡头与表单之间恢复原本的 14px 呼吸 */
-          .cs-fold-h:has(.cs-fold[aria-expanded="true"]) { margin-bottom:14px; }
-          .cs-fold { position:relative;display:flex;align-items:center;gap:6px;min-height:34px;padding:0 2px;
-            border:0;background:transparent;color:#212529;font-size:var(--fs-body);font-weight:700; }
-          .cs-fold::before { content:"";position:absolute;left:-2px;right:-2px;top:-7px;bottom:-7px; }
-          .cs-fold svg { color:#6A6F79; }
           /* 收紧间距让今日概览留在同一行，避免行尾出现孤立的分隔点 */
           .cs-today { gap:7px; font-size:12.5px; }
           .cs-today-date { gap:5px; font-size:13.5px; }
@@ -1059,7 +1062,8 @@ export default function ClassSchedule({ stats = null, active = true }) {
         @keyframes spin { to { transform:rotate(360deg); } }
       `}</style>
 
-      {/* 顶部：当前周边 + 操作 */}
+      {/* 顶部：当前周边 + 操作 —— 手机上收进抽屉「周次与时间设置」 */}
+      <MobileSection mobile={isMobile} host={drawerHost} id="week" panel={drawerPanel}>
       <div className="cs-card">
         <div className="cs-h">
           <div className="ico"><CalendarDays size={18} /></div>
@@ -1149,24 +1153,20 @@ export default function ClassSchedule({ stats = null, active = true }) {
             </p>
           </div>
         )}
+        {/* 手机上课表卡自己的工具栏没了，清空课表搬到这里，仍是原按钮原逻辑 */}
+        {isMobile && (
+          <div className="cs-row" style={{ marginTop: 12 }}>
+            <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
+          </div>
+        )}
       </div>
+      </MobileSection>
 
       {/* 周网格课表 */}
       <div className="cs-card" ref={gridCardRef} style={{ '--cs-row-h': rowH ? `${rowH}px` : undefined }}>
-        {isMobile ? (
-          <div className="cs-h cs-grid-h">
-            <button type="button" className="cs-fold" aria-expanded={gridHeadOpen} onClick={() => setGridHeadOpen((v) => !v)}>
-              {gridHeadOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              <span>第 {currentWeek} 周课表</span>
-            </button>
-            {gridHeadOpen && (
-              <>
-                <div className="sp" />
-                <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
-              </>
-            )}
-          </div>
-        ) : (
+        {/* 手机上这条工具栏整条不占位：「第 X 周」已经上报到页头，
+            清空课表挪进抽屉的「周次与时间设置」里 */}
+        {!isMobile && (
           <div className="cs-h">
             <div className="ico"><CalendarRange size={18} /></div>
             <h3>第 {currentWeek} 周课表</h3>
@@ -1238,6 +1238,7 @@ export default function ClassSchedule({ stats = null, active = true }) {
       </div>
 
       {/* 本周课程列表（默认折叠） */}
+      <MobileSection mobile={isMobile} host={drawerHost} id="detail" panel={drawerPanel}>
       <div className="cs-card">
         <div className="cs-h" style={{ marginBottom: detailOpen ? 14 : 0 }}>
           <div className="ico"><GraduationCap size={18} /></div>
@@ -1275,28 +1276,18 @@ export default function ClassSchedule({ stats = null, active = true }) {
           })
         )}
       </div>
+      </MobileSection>
 
       {/* 导入 */}
+      <MobileSection mobile={isMobile} host={drawerHost} id="import" panel={drawerPanel}>
       <div className="cs-card">
-        {isMobile ? (
-          <div className="cs-h cs-fold-h">
-            <button type="button" className="cs-fold" aria-expanded={importOpen} onClick={() => setImportOpen((v) => !v)}>
-              {importOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              <span>文本 / Excel 自动识别导入</span>
-            </button>
-            {xlsFileInput}
-          </div>
-        ) : (
-          <div className="cs-h">
-            <div className="ico"><Upload size={18} /></div>
-            <h3>文本 / Excel 自动识别导入</h3>
-            <div className="sp" />
-            {xlsActions}
-            {xlsFileInput}
-          </div>
-        )}
-        {(!isMobile || importOpen) && (<>
-        {isMobile && <div className="cs-row" style={{ marginBottom: 10 }}>{xlsActions}</div>}
+        <div className="cs-h">
+          <div className="ico"><Upload size={18} /></div>
+          <h3>文本 / Excel 自动识别导入</h3>
+          <div className="sp" />
+          {xlsActions}
+          {xlsFileInput}
+        </div>
         <textarea
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
@@ -1324,22 +1315,13 @@ export default function ClassSchedule({ stats = null, active = true }) {
         <p style={{ margin: '10px 0 0', fontSize: 12.5, color: '#6c757d' }}>
           支持连堂块：1-2节 / 3-4节 / 5-6节 / 7-8节 / 晚自习1 / 晚自习2。文本与 Excel 导入支持中英文混合课程名、「老师 / 教师」职称、以及「明理楼A201 / 5-601 / B305 / 实训中心302」等常见地点写法；识别结果会先列出地点，未识别时可手动补充。
         </p>
-        </>)}
       </div>
+      </MobileSection>
 
       {/* 手动新增 */}
+      <MobileSection mobile={isMobile} host={drawerHost} id="add" panel={drawerPanel}>
       <div className="cs-card">
-        {isMobile ? (
-          <div className="cs-h cs-fold-h">
-            <button type="button" className="cs-fold" aria-expanded={addOpen} onClick={() => setAddOpen((v) => !v)}>
-              {addOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-              <span>手动添加课程</span>
-            </button>
-          </div>
-        ) : (
-          <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>手动添加课程</h3></div>
-        )}
-        {(!isMobile || addOpen) && (
+        <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>手动添加课程</h3></div>
         <div className="cs-row">
           <div className="cs-field"><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
           <div className="cs-field"><label className="cs-l">老师（可含职称）</label><input className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
@@ -1363,8 +1345,8 @@ export default function ClassSchedule({ stats = null, active = true }) {
             </select></div>
           <div className="cs-field" style={{ alignSelf: 'flex-end' }}><button className="cs-btn primary" onClick={addOne}><Plus size={14} />添加</button></div>
         </div>
-        )}
       </div>
+      </MobileSection>
 
       {toast && <div className="cs-toast">{toast}</div>}
     </div>
