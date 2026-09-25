@@ -102,6 +102,90 @@ function useNativeSmoothScroll(rootRef) {
   }, [rootRef]);
 }
 
+/* 手机上首页滚的是 .vr-home 外面那个 overflow:auto 容器，而卡片是 window.open
+   到另一个文档（/checkin/ 等），内置浏览器里返回等于整页重载。浏览器只恢复
+   「文档」滚动位置，不管内层容器，于是实测 1379 → 0（tab 能恢复是因为它写在 URL hash 里）。
+   这里按 tab 把 scrollTop 记进 sessionStorage，重新挂载后贴回去。 */
+const SCROLL_MEM_KEY = 'voyra-home-scroll-v1';
+function readScrollMap() {
+  try { return JSON.parse(window.sessionStorage.getItem(SCROLL_MEM_KEY) || '{}') || {}; } catch { return {}; }
+}
+function writeScrollMap(map) {
+  try { window.sessionStorage.setItem(SCROLL_MEM_KEY, JSON.stringify(map)); } catch { /* 隐私模式写不进就不记 */ }
+}
+function useScrollMemory(rootRef, initialTab) {
+  const tabRef = useRef(initialTab);
+  tabRef.current = initialTab;
+  useEffect(() => {
+    const scroller = rootRef.current?.parentElement;
+    if (!scroller || !window.matchMedia('(max-width: 720px)').matches) return undefined;
+    const saved = Number(readScrollMap()[tabRef.current]) || 0;
+    let pending = 0;
+    let bound = false;
+    let raf = 0;
+    let lockTimer = 0;
+
+    const onScroll = () => {
+      if (pending) return;
+      pending = requestAnimationFrame(() => {
+        pending = 0;
+        const map = readScrollMap();
+        map[tabRef.current] = Math.round(scroller.scrollTop);
+        writeScrollMap(map);
+      });
+    };
+    const bind = () => {
+      if (bound) return;
+      bound = true;
+      scroller.addEventListener('scroll', onScroll, { passive: true });
+    };
+
+    if (saved <= 4) { bind(); return () => scroller.removeEventListener('scroll', onScroll); }
+
+    /* 光在挂载时贴一次不够：浏览器自己也会恢复这个容器的滚动位置，
+       而且它跑在我们的赋值之后。又因为 useNativeSmoothScroll 把
+       scroll-behavior 设成了 smooth，那次恢复表现为一段
+       「1398 → 1394 → … → 588」的下滑动画（实测返回后只有 1 次程序赋值，
+       其余位移全是浏览器发的），把我们刚贴好的位置又拖走。
+       所以贴到位之前每帧重申，直到用户真的自己滚动（触摸/滚轮/键盘）
+       或超时才放手；放手之前不开始记录，免得把这段恢复过程存成新位置。 */
+    const prev = scroller.style.scrollBehavior;
+    scroller.style.scrollBehavior = 'auto';
+    let frames = 0;
+    const release = () => {
+      if (raf) { cancelAnimationFrame(raf); raf = 0; }
+      clearTimeout(lockTimer);
+      scroller.style.scrollBehavior = prev;
+      scroller.removeEventListener('touchstart', release, true);
+      scroller.removeEventListener('wheel', release, true);
+      window.removeEventListener('keydown', release, true);
+      bind();
+    };
+    const hold = () => {
+      scroller.scrollTop = saved;
+      frames += 1;
+      if (frames > 150) { release(); return; }
+      raf = requestAnimationFrame(hold);
+    };
+    scroller.addEventListener('touchstart', release, { capture: true, passive: true });
+    scroller.addEventListener('wheel', release, { capture: true, passive: true });
+    window.addEventListener('keydown', release, true);
+    lockTimer = setTimeout(release, 2000);
+    raf = requestAnimationFrame(hold);
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      if (pending) cancelAnimationFrame(pending);
+      clearTimeout(lockTimer);
+      scroller.removeEventListener('touchstart', release, true);
+      scroller.removeEventListener('wheel', release, true);
+      window.removeEventListener('keydown', release, true);
+      scroller.style.scrollBehavior = prev;
+      scroller.removeEventListener('scroll', onScroll);
+    };
+  }, [rootRef]);
+}
+
 function useReveal(rootRef, activeTab) {
   useEffect(() => {
     const root = rootRef.current;
@@ -618,6 +702,7 @@ export default function Dashboard() {
   const rootRef = useRef(null);
   const panelRefs = useRef({});
   useNativeSmoothScroll(rootRef);
+  useScrollMemory(rootRef, activeTab);
   useReveal(rootRef, activeTab);
   useScrollRoll(rootRef, activeTab);
 
