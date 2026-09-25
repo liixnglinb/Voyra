@@ -33,6 +33,18 @@ const APPS = [
   { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机 AI 工作观测台：把 Codex、Claude、Qoder 等软件的会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'aichronicle' },
 ];
 
+/* 手机端专用短文案：应用卡在 390 宽下描述会占 4 行（实测 73~90 字），
+   卡片竖向因此多出 42px。这里换成两行以内的版本，桌面端仍用完整描述。
+   单独一张表按 to 关联，避免去动上面那 7 行超长字符串。 */
+const APP_SHORT = {
+  '/modelflow/': '本地智能体流水线工作台：流程可编辑，交给本机 CLI 逐步执行。仅支持 Windows。',
+  '/checkin/': '桌面端常驻后台，自动监听签到活动，支持普通 / 位置 / 二维码三种签到。',
+  '/billtrace/': 'Android 自动记账：付款后 2 秒自动入库、智能分类，数据本地加密。',
+  '/token-monitor/': '本机 AI 工具用量看板：一条命令扫出 9 类 Agent 的 Token 与成本。',
+  '/zenew/': '把课程变成记得住的练习：AI 生成问答卡片，FSRS 安排每次复习节奏。',
+  '/ai-chronicle/': '本机 AI 工作观测台：会话、任务与产出整理成每日日报与趋势看板。',
+};
+
 const MATHMODEL_SKILL = {
   href: 'https://github.com/liixnglinb/Mathmodel-skill',
   name: '数学建模 Skill',
@@ -90,6 +102,22 @@ function getTabFromHash() {
   const query = window.location.hash.split('?')[1] || '';
   const tab = new URLSearchParams(query).get('tab');
   return TABS.some(([id]) => id === tab) ? tab : 'products';
+}
+
+/* 手机断点与首页自己那套 @media(max-width:720px) 对齐 */
+const HOME_MOBILE_MQ = '(max-width: 720px)';
+function useIsMobileHome() {
+  const [mobile, setMobile] = useState(
+    () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(HOME_MOBILE_MQ).matches : false),
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia(HOME_MOBILE_MQ);
+    const on = (e) => setMobile(e.matches);
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+  return mobile;
 }
 
 function useNativeSmoothScroll(rootRef) {
@@ -597,6 +625,7 @@ function FeatureArt({ type }) {
 }
 
 function ProductPanel({ openProduct }) {
+  const isMobile = useIsMobileHome();
   return <div className="vr-product-list">{FEATURED.map((feature, index) => {
     const Icon = feature.Icon;
     const openFeature = (event) => {
@@ -606,7 +635,7 @@ function ProductPanel({ openProduct }) {
     return (
       <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}${feature.art === 'api' ? ' is-api' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProduct(feature.to, feature.external); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to, feature.external)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
+        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{isMobile && APP_SHORT[feature.to] ? APP_SHORT[feature.to] : feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to, feature.external)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
         <FeatureArt type={feature.art} />
       </article></div>
     );
@@ -631,6 +660,7 @@ function SkillsPanel() {
 }
 
 function AppsPanel({ openProduct }) {
+  const isMobile = useIsMobileHome();
   return <div className="vr-product-list">{APPS.map((app, index) => {
     const Icon = app.Icon;
     const openApp = (event) => {
@@ -640,7 +670,7 @@ function AppsPanel({ openProduct }) {
     return (
       <div className="vr-roll-wrap vr-panel-stagger" data-roll key={app.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openApp} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openApp(event); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{app.name}</h2></div><p>{app.desc}</p></div>
+        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{app.name}</h2></div><p>{isMobile && APP_SHORT[app.to] ? APP_SHORT[app.to] : app.desc}</p></div>
         <FeatureArt type={app.art} />
       </article></div>
     );
@@ -1144,6 +1174,22 @@ export default function Dashboard() {
         .vr-home .vr-skill-card { min-height: 0; padding: 18px; }
         .vr-home .vr-skill-groups { gap: 30px; }
         .vr-home .vr-contact-row { padding: 14px 3px; }
+
+        /* 演示面板里的列表在手机上只留前 2 行：面板是缩略示意而不是完整列表，
+           但每行都真占高度（AI 轨迹 4 行 216px、签到/Token/图鉴/热榜各 3 行）。
+           第 3 个起用相邻兄弟选择器定位，不依赖它在父级里的绝对序号。 */
+        .vr-home .vr-ac-task ~ .vr-ac-task ~ .vr-ac-task,
+        .vr-home .vr-art .vr-zn-opt ~ .vr-zn-opt ~ .vr-zn-opt,
+        .vr-home .vr-checkin-list > *:nth-child(n+3),
+        .vr-home .vr-uikit-list > *:nth-child(n+3),
+        .vr-home .vr-skill-rank > *:nth-child(n+3),
+        .vr-home .vr-tm-list > *:nth-child(n+3),
+        .vr-home .vr-bt-rows > *:nth-child(n+3),
+        .vr-home .vr-toolbox-cats > *:nth-child(n+3) { display: none; }
+        /* AI 模型对比秀那张是 174px 高的 SVG 场景，等比压到 120，不裁画面 */
+        .vr-home .vr-pelican-stage { max-height: 120px; }
+        /* 十阶段面板 10 行 × 30px 是这张卡最大的一笔竖向支出，行高收到 24 */
+        .vr-home .vr-mathmodel-art .vr-model-step { min-height: 24px; }
       }
       /* 演示面板内容压缩到统一高度内，保证任何一张卡片都不裁切 */
       .vr-home .vr-toolbox-drive { margin-top: 12px; }
