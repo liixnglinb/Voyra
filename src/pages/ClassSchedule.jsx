@@ -1206,6 +1206,28 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           .cs-grid .per .tm { display:none; }
           .cs-grid.is-rail-open .cs-col-period { width: 66px; }
           .cs-grid.is-rail-open .per .tm { display:block;font-size:10.5px;color:#8a8f98;font-variant-numeric:tabular-nums; }
+
+          /* ── 抽屉里的排版 ──
+             抽屉只有手机那么宽，控件得按手机来排：卡头按钮两两并排、
+             四种导入方式一行四个、周次条三等分、表单两列。
+             全部限定在 .shub-drawer-body 之内 —— 桌面没有抽屉，一律不受影响。 */
+          .shub-drawer-body .cs-h { flex-wrap:wrap; row-gap:8px; }
+          /* 抽屉标题已经写着「导入课表」，卡内那一行图标+标题就不必再占半行，
+             让两个动作按钮能并排 */
+          .shub-drawer-body .cs-h > .ico { display:none; }
+          .shub-drawer-body .cs-h > h3 { flex:1 1 100%; }
+          .shub-drawer-body .cs-h > .sp { display:none; }
+          .shub-drawer-body .cs-h > .cs-btn { flex:1 1 calc(50% - 5px); justify-content:center; }
+          .shub-drawer-body .cs-modes { display:grid;grid-template-columns:repeat(4,minmax(0,1fr)); }
+          .shub-drawer-body .cs-modes .cs-btn { justify-content:center;padding:0 4px;font-size:var(--fs-meta); }
+          .shub-drawer-body .cs-weekrow { display:grid;grid-template-columns:repeat(6,minmax(0,1fr)); }
+          .shub-drawer-body .cs-weekrow > *:nth-child(-n+3) { grid-column:span 2; }
+          .shub-drawer-body .cs-weekrow > *:nth-child(n+4) { grid-column:span 3; }
+          .shub-drawer-body .cs-weekrow > .cs-btn,
+          .shub-drawer-body .cs-weekrow > .cs-input { width:100%;justify-content:center; }
+          .shub-drawer-body .cs-forminfo > .cs-field,
+          .shub-drawer-body .cs-period > .cs-row > .cs-field { flex:1 1 calc(50% - 4px);min-width:0; }
+          .shub-drawer-body .cs-forminfo > .cs-f-full { flex:1 1 100%; }
           .cs-cell { padding:3px 2px;border-radius:8px; gap:2px; }
           /* ── 格内的「第几节 + 起止时间」标记（手机端独有，桌面端不渲染该元素）──
              一行装不下 19 个字符，让它在连字符处自然断成两行：
@@ -1313,7 +1335,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             </span>
           )}
           <div className="sp" />
-          <div className="cs-row">
+          <div className="cs-row cs-weekrow">
             <button className="cs-btn" onClick={() => goWeek(-1)}><ChevronLeft size={15} />上一周</button>
             <input type="number" min={1} max={MAX_WEEK} value={currentWeek} onChange={(e) => setWeekInput(e.target.value)} className="cs-input no-spin" style={{ width: 68 }} />
             <button className="cs-btn" onClick={() => goWeek(1)}>下一周<ChevronRight size={15} /></button>
@@ -1548,7 +1570,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           {xlsFileInput}
         </div>
         {/* 四种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
-        <div className="cs-row" style={{ gap: 6, marginBottom: 10 }}>
+        <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
           {[['file', '从文件'], ['share', '分享口令'], ['html', '教务网页'], ['backup', '备份']].map(([k, label]) => (
             <button key={k} type="button" className={`cs-btn${importMode === k ? ' primary' : ''}`}
               onClick={() => { setImportMode(k); setParsed([]); }}>{label}</button>
@@ -1639,13 +1661,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       <div className="cs-card">
         <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>手动添加课程</h3></div>
         {/* ── 课程信息 ── */}
-        <div className="cs-row">
-          <div className="cs-field"><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
+        <div className="cs-row cs-forminfo">
+          <div className="cs-field cs-f-full"><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
           <div className="cs-field"><label className="cs-l">老师（可含职称）</label><input className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
           <div className="cs-field"><label className="cs-l">教室</label><input className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="博学楼501（可留空）" /></div>
           <div className="cs-field"><label className="cs-l">学分（可留空）</label><input className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="3" /></div>
-          <div className="cs-field" style={{ flex: '1 1 260px', minWidth: 0 }}><label className="cs-l">备注（可留空）</label><input className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
-          <div className="cs-field" style={{ flex: '0 0 auto' }}>
+          <div className="cs-field cs-f-full" style={{ flex: '1 1 260px', minWidth: 0 }}><label className="cs-l">备注（可留空）</label><input className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
+          <div className="cs-field cs-f-full" style={{ flex: '0 0 auto' }}>
             <label className="cs-l">格子颜色</label>
             <div className="cs-colors">
               <button type="button" className={`cs-color-auto${form.color === null ? ' is-on' : ''}`}
