@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   AlertTriangle, CalendarDays, CalendarRange, ChevronDown, ClipboardCheck, Clock,
-  FolderOpen, ListChecks, Plus, Settings2, Upload, X,
+  FolderOpen, HelpCircle, ListChecks, Plus, Settings2, Upload, X,
 } from 'lucide-react';
 import ClassSchedule, { useIsMobile } from './ClassSchedule';
 import Planner from './Planner';
@@ -37,6 +37,15 @@ const PANELS = {
     ['course', '按课程分组', FolderOpen],
   ],
 };
+
+/* 首次进入的 3 步引导：只说清楚「视图在哪切、功能在哪、怎么导入」。
+   走完记 localStorage；功能菜单最后留一个「重看引导」的入口。 */
+const GUIDE_KEY = 'voyra-sched-guide-v1';
+const GUIDE_STEPS = [
+  { sel: '.shub-pick-btn', title: '这里切换视图', body: '课程表 / 日历 / 作业看板都收在这个下拉里。' },
+  { sel: '.shub-fn-btn', title: '功能都在这个按钮里', body: '周次与时间设置、课程明细、导入课表、添加课程 —— 点开就是，不占课表空间。' },
+  { sel: '.shub-drawer', title: '在这里导入课表', body: '从文件、同学分享的口令，或教务系统另存的网页导入；也能导出备份换设备。全程在本机完成，不上传。', open: 'import' },
+];
 
 /* 断点阈值与主仓库 Layout / index.css 的手机口径（767）一致，
    三个视图共用同一个 hook 与抽屉包装，都从 ClassSchedule 引。 */
@@ -81,6 +90,46 @@ export default function ScheduleHub() {
   const [drawerHost, setDrawerHost] = useState(null);
   const [weekLabel, setWeekLabel] = useState('');
   const fnRef = useRef(null);
+  /* 首次引导：-1 关闭，0..2 是当前步骤 */
+  const [guide, setGuide] = useState(-1);
+  const [spot, setSpot] = useState(null);
+
+  /* 聚光框的位置在 effect 里量：第 3 步要照亮刚打开的抽屉，
+     而抽屉是在同一次提交里挂上去的，渲染期读 DOM 会落空。 */
+  useEffect(() => {
+    if (!isMobile || guide < 0) { setSpot(null); return undefined; }
+    const st = GUIDE_STEPS[guide];
+    const measure = () => {
+      const el = st.sel ? document.querySelector(st.sel) : null;
+      if (!el) { setSpot(null); return; }
+      const r = el.getBoundingClientRect();
+      setSpot({ top: r.top - 6, left: r.left - 6, width: r.width + 12, height: r.height + 12 });
+    };
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure); };
+  }, [guide, isMobile, panel]);
+
+  const finishGuide = () => {
+    setGuide(-1);
+    setPanel(null);
+    try { window.localStorage.setItem(GUIDE_KEY, '1'); } catch { /* 隐私模式记不住就每次都给 */ }
+  };
+
+  /* 第一次进日程中心（手机端）自动起引导，桌面端不打扰 */
+  useEffect(() => {
+    if (!isMobile) return undefined;
+    try { if (window.localStorage.getItem(GUIDE_KEY) === '1') return undefined; } catch { return undefined; }
+    const t = setTimeout(() => setGuide(0), 900);
+    return () => clearTimeout(t);
+  }, [isMobile]);
+
+  const goStep = (next) => {
+    if (next >= GUIDE_STEPS.length) { finishGuide(); return; }
+    setGuide(next);
+    if (GUIDE_STEPS[next].open) setPanel(GUIDE_STEPS[next].open);
+    else setPanel(null);
+  };
 
   const refreshStats = () => setStats(computeStats());
 
@@ -238,6 +287,26 @@ export default function ScheduleHub() {
         }
         @keyframes shub-fade { from { opacity:0 } to { opacity:1 } }
         @keyframes shub-rise { from { transform:translateY(16px); opacity:.6 } to { transform:none; opacity:1 } }
+
+        /* ===== 首次引导：聚光罩在目标控件上，说明卡贴在底部 ===== */
+        .shub-spot { position:fixed; z-index:1300; border-radius:12px; border:2px solid #d7b846;
+          box-shadow:0 0 0 9999px rgba(16,18,24,.5); pointer-events:none;
+          transition:top .22s ease, left .22s ease, width .22s ease, height .22s ease; }
+        .shub-veil { position:fixed; inset:0; z-index:1300; background:rgba(16,18,24,.5); }
+        .shub-guide { position:fixed; left:14px; right:14px; bottom:calc(18px + env(safe-area-inset-bottom, 0px)); z-index:1301;
+          background:#fff; border-radius:14px; padding:14px 16px 14px; box-shadow:0 20px 46px -20px rgba(16,18,24,.6); }
+        .shub-guide-top { display:flex; align-items:baseline; gap:10px; }
+        .shub-guide-top b { font-size:var(--fs-lead); color:#1b1b1b; font-weight:750; }
+        .shub-guide-top span { margin-left:auto; color:#9aa0a8; font:700 var(--fs-meta)/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .shub-guide p { margin:7px 0 0; color:#5c6066; font-size:var(--fs-label); line-height:1.55; }
+        .shub-guide-acts { display:flex; align-items:center; gap:10px; margin-top:12px; }
+        .shub-guide-skip { border:0; background:transparent; color:#8a8f98; font-size:var(--fs-label); min-height:44px; padding:0 6px; }
+        .shub-guide-dots { display:inline-flex; align-items:center; gap:5px; margin-left:auto; border:0; background:transparent; padding:0; }
+        .shub-guide-dots i { width:6px; height:6px; border-radius:50%; background:rgba(27,27,27,.16); }
+        .shub-guide-dots i.is-on { width:16px; border-radius:99px; background:#d7b846; }
+        .shub-guide-next { min-height:44px; padding:0 20px; border:1px solid #d7b846; border-radius:10px;
+          background:#ffe08a; color:#1b1b1b; font-size:var(--fs-label); font-weight:750; }
+        .shub-fn-guide { border-top:1px solid rgba(27,27,27,.08); border-radius:0 0 8px 8px; }
       }
       @media (prefers-reduced-motion:reduce) {
         .shub-page *, .shub-page *::before, .shub-page *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
@@ -279,6 +348,10 @@ export default function ScheduleHub() {
                     <Icon size={16} strokeWidth={1.9} />{label}
                   </button>
                 ))}
+                <button type="button" role="menuitem" className="shub-pick-opt shub-fn-guide"
+                  onClick={() => { setFnOpen(false); setPanel(null); goStep(0); }}>
+                  <HelpCircle size={16} strokeWidth={1.9} />重看引导
+                </button>
               </div>
             )}
           </div>
@@ -328,6 +401,29 @@ export default function ScheduleHub() {
             </button>
           </div>
           <div className="shub-drawer-body" ref={setDrawerHost} />
+        </div>
+      </>
+    )}
+    {isMobile && guide >= 0 && (
+      <>
+        {spot
+          ? <div className="shub-spot" style={spot} />
+          : <div className="shub-veil" />}
+        <div className="shub-guide" role="dialog" aria-modal="true" aria-label="使用引导">
+          <div className="shub-guide-top">
+            <b>{GUIDE_STEPS[guide].title}</b>
+            <span>{guide + 1}/{GUIDE_STEPS.length}</span>
+          </div>
+          <p>{GUIDE_STEPS[guide].body}</p>
+          <div className="shub-guide-acts">
+            <button type="button" className="shub-guide-skip" onClick={finishGuide}>跳过</button>
+            <button type="button" className="shub-guide-dots" aria-hidden="true" tabIndex={-1}>
+              {GUIDE_STEPS.map((_, i) => <i key={i} className={i === guide ? 'is-on' : ''} />)}
+            </button>
+            <button type="button" className="shub-guide-next" onClick={() => goStep(guide + 1)}>
+              {guide === GUIDE_STEPS.length - 1 ? '开始使用' : '下一步'}
+            </button>
+          </div>
         </div>
       </>
     )}

@@ -146,6 +146,126 @@ function courseTheme(name) {
   return COURSE_THEMES[hash % COURSE_THEMES.length];
 }
 
+/* ── 多时段 ─────────────────────────────────────────────────────────
+   一门课可以挂多个时间段（同一门课一周上两次很常见）。旧数据只有
+   day/slot/f/t/type 这一组字段，这里统一成数组来读：
+     · 读：一律走 coursePeriods(c)，时段对象与旧字段同形，
+       inWeek(period, w) 等按 f/t/type 工作的函数可以直接复用
+     · 写：saveCourses 时把首段镜像回旧字段，旧导出、旧代码都还认
+   ───────────────────────────────────────────────────────────────── */
+function coursePeriods(c) {
+  if (!c) return [];
+  if (Array.isArray(c.periods) && c.periods.length) return c.periods;
+  return [{ day: c.day, slot: c.slot, f: c.f, t: c.t, type: c.type, customTime: c.customTime }];
+}
+
+/* 颜色：用户在表单里挑的色板序号优先，没挑过就沿用按课名哈希的老配色 */
+function themeOf(course) {
+  const picked = Number.isInteger(course?.color) ? COURSE_THEMES[course.color] : null;
+  return picked || courseTheme(course?.name);
+}
+
+/* ── 分享口令 / 备份 ─────────────────────────────────────────────────
+   口令：把整张课表压成一段可粘贴的短文本（VOYRA1: + base64url），纯前端、
+   不经服务器。勾选「含教室/老师」时把这两项一起带走，否则只带课名与时段。
+   备份：整份 courses + settings 的 JSON，用于换设备/换浏览器时搬课表。 */
+const SHARE_PREFIX = 'VOYRA1:';
+const BACKUP_APP = 'voyra-schedule';
+function b64urlEncode(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  bytes.forEach((b) => { bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function b64urlDecode(s) {
+  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
+  return new TextDecoder().decode(Uint8Array.from(bin, (ch) => ch.charCodeAt(0)));
+}
+const TYPE_CODE = { every: 0, odd: 1, even: 2 };
+const TYPE_FROM = ['every', 'odd', 'even'];
+function encodeShare(courses, withDetail) {
+  const slim = courses.map((c) => {
+    const row = {
+      /* 时段用数组压体积：[星期, 节次, 起始周, 结束周, 单双周, 自定义起止] */
+      p: coursePeriods(c).map((p) => [p.day, p.slot, p.f, p.t, TYPE_CODE[p.type] || 0,
+        p.customTime && p.customTime.start && p.customTime.end ? `${p.customTime.start}-${p.customTime.end}` : '']),
+    };
+    row.n = c.name;
+    if (withDetail) { row.t = c.teacher || ''; row.r = c.room || ''; }
+    if (Number.isInteger(c.color)) row.c = c.color;
+    if (c.credit) row.k = c.credit;
+    if (c.note) row.o = c.note;
+    return row;
+  });
+  return SHARE_PREFIX + b64urlEncode(JSON.stringify(slim));
+}
+function decodeShare(text) {
+  const raw = String(text || '').replace(/\s+/g, '');
+  const at = raw.indexOf(SHARE_PREFIX);
+  if (at < 0) return null;
+  try {
+    const list = JSON.parse(b64urlDecode(raw.slice(at + SHARE_PREFIX.length)));
+    if (!Array.isArray(list) || !list.length) return null;
+    return list.filter((o) => o && o.n).map((o, i) => {
+      const c = {
+        id: `share${Date.now().toString(36)}${i}`,
+        name: String(o.n).trim(),
+        teacher: o.t || '', room: o.r || '',
+        periods: (o.p || []).filter((p) => Array.isArray(p) && p.length >= 4)
+          .map(([day, slot, f, t, ty, ct]) => {
+            const one = { day: +day, slot: String(slot), f: +f || 1, t: +t || 16, type: TYPE_FROM[ty] || 'every' };
+            if (ct && ct.includes('-')) { const [s, e] = ct.split('-'); one.customTime = { start: s, end: e }; }
+            return one;
+          }),
+      };
+      if (Number.isInteger(o.c)) c.color = o.c;
+      if (o.k) c.credit = String(o.k);
+      if (o.o) c.note = String(o.o);
+      return c;
+    }).filter((c) => c.name && c.periods.length);
+  } catch { return null; }
+}
+/* 教务系统「另存为网页」的表格 → 二维数组 → 复用 Excel 那套识别 */
+function htmlToRows(html) {
+  try {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const tables = Array.from(doc.querySelectorAll('table'));
+    let best = [];
+    tables.forEach((tb) => {
+      const rows = Array.from(tb.querySelectorAll('tr')).map((tr) => Array.from(tr.children)
+        .map((td) => (td.textContent || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()));
+      const wide = rows.filter((r) => r.length >= 3).length;
+      if (wide > best.filter((r) => r.length >= 3).length) best = rows;
+    });
+    return best;
+  } catch { return []; }
+}
+
+/* 手动添加表单：一门课可以有多个时段，每个时段自己带星期/节次/周次/
+   单双周与可选的自定义起止时间 */
+function newPeriod(day = 1, slot = '1-2') {
+  return { day, slot, f: 1, t: 16, type: 'every', customOn: false, customStart: '', customEnd: '' };
+}
+function EMPTY_FORM() {
+  return { name: '', teacher: '', room: '', color: null, credit: '', note: '', periods: [newPeriod()] };
+}
+
+/* 保存前统一规整：旧形状补出 periods，多时段的课把首段镜像回 day/slot/f/t/type。
+   镜像是给「仍按老字段读」的地方兜底（旧导出、解析结果、零星引用），
+   页面上的读路径已经全部走 coursePeriods()。 */
+function withPeriods(course) {
+  const next = normalizeCourse(course);
+  const list = coursePeriods(next).map((p) => ({ ...p }));
+  next.periods = list;
+  const first = list[0];
+  if (first) {
+    next.day = first.day; next.slot = first.slot;
+    next.f = first.f; next.t = first.t; next.type = first.type;
+    if (first.customTime) next.customTime = first.customTime; else delete next.customTime;
+  }
+  return next;
+}
+
 function parseImport(text) {
   const blocks = String(text)
     .split(/\n\s*\n|\r\n\s*\r\n/)
@@ -625,9 +745,24 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [importText, setImportText] = useState('');
   const [parsed, setParsed] = useState([]);
   const [copied, setCopied] = useState(false);
+  /* 导入方式：文件（文本/Excel）/ 分享口令 / 教务网页 / 备份 */
+  const [importMode, setImportMode] = useState('file');
+  const [shareText, setShareText] = useState('');
+  const [shareDetail, setShareDetail] = useState(true);
+  const [backupSettings, setBackupSettings] = useState(null);
+  const backupFileRef = useRef(null);
+  const htmlFileRef = useRef(null);
   const [toast, setToast] = useState('');
-  const [form, setForm] = useState({ name: '', teacher: '', room: '', day: 1, slot: '1-2', f: 1, t: 16, type: 'every' });
+  const [form, setForm] = useState(EMPTY_FORM);
   const [detailOpen, setDetailOpen] = useState(false); // 课程明细默认折叠
+  /* 手机端左侧时间轴：默认收起成一条刻度，展开状态记住（在「时间设置」里改过的
+     节次时间会即时反映到展开后的刻度上） */
+  const [railOpen, setRailOpen] = useState(() => {
+    try { return window.localStorage.getItem('voyra-sched-rail') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem('voyra-sched-rail', railOpen ? '1' : '0'); } catch { /* ignore */ }
+  }, [railOpen]);
   const [xlsBusy, setXlsBusy] = useState(false);
   const xlsFileRef = useRef(null);
   const toastRef = useRef(null);
@@ -728,7 +863,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
   const persist = (nextCourses, nextSettings) => {
     if (!guard()) return;
-    const c = (nextCourses ?? courses).map(normalizeCourse);
+    const c = (nextCourses ?? courses).map(withPeriods);
     const s = nextSettings ?? settings;
     setCourses(c); setSettings(s);
     try { localStorage.setItem(LS_READ(), JSON.stringify({ courses: c, settings: s })); } catch { /* ignore */ }
@@ -769,7 +904,12 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     if (onWeekLabel) onWeekLabel(isMobile ? `第${currentWeek}周` : '');
   }, [currentWeek, isMobile, onWeekLabel]);
 
-  const weekCourses = useMemo(() => courses.filter((c) => inWeek(c, currentWeek)), [courses, currentWeek]);
+  /* 本周有课的「课」（用于计数与空态判断）与「课 × 时段」（用于格子、明细）：
+     一门课多段时，只要有一段落在本周就算这门课本周有课；格子按段铺，段与段互不覆盖。 */
+  const weekCourses = useMemo(
+    () => courses.filter((c) => coursePeriods(c).some((p) => inWeek(p, currentWeek))),
+    [courses, currentWeek],
+  );
   const weekendEmpty = useMemo(() => !weekCourses.some((c) => c.day === 6 || c.day === 7), [weekCourses]);
   /* 手机端列数收敛：当周（含单双周换算后）确实没有周六/周日的课，就不渲染这两列，
      否则 390 宽的屏上它们要白占 110px，周一~周五被挤到看不全。
@@ -783,21 +923,28 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const gridScrollable = isMobile && !weekendEmpty; // 手机上仍可能横滑的唯一情形：周末有课
   /* 手机端：左侧节次列整列不渲染（表头 + 每行的节次格），省下的宽度还给周几列；
      节次/时间按 MOBILE_SLOT_IN_CELL 降级进格内。桌面端两个标志恒为 false。 */
-  const hidePeriodCol = isMobile;
   const slotInCell = isMobile && MOBILE_SLOT_IN_CELL;
   /* 今日课程数：按今天星期几 + 当前周次实时统计（编辑课表立即生效） */
   const todayCourseCount = useMemo(() => {
     const dayIdx = (new Date().getDay() + 6) % 7 + 1;
-    return courses.filter((c) => c.day === dayIdx && inWeek(c, currentWeek)).length;
+    return courses.reduce((n, c) => n + coursePeriods(c).filter((p) => p.day === dayIdx && inWeek(p, currentWeek)).length, 0);
   }, [courses, currentWeek]);
+  /* 本周的「课 × 时段」：格子与明细都按段渲染，一门课几段就是几格 */
+  const weekPeriods = useMemo(() => {
+    const out = [];
+    weekCourses.forEach((c) => {
+      coursePeriods(c).forEach((p) => { if (inWeek(p, currentWeek)) out.push({ course: c, period: p }); });
+    });
+    return out;
+  }, [weekCourses, currentWeek]);
   const grid = useMemo(() => {
     const m = {};
-    weekCourses.forEach((c) => {
-      if (!m[c.day]) m[c.day] = {};
-      if (!m[c.day][c.slot]) m[c.day][c.slot] = c;
+    weekPeriods.forEach(({ course, period }) => {
+      if (!m[period.day]) m[period.day] = {};
+      if (!m[period.day][period.slot]) m[period.day][period.slot] = { course, period };
     });
     return m;
-  }, [weekCourses]);
+  }, [weekPeriods]);
 
   const goWeek = (step) => persist(null, { ...settings, overrideWeek: Math.max(1, Math.min(MAX_WEEK, currentWeek + step)) });
   const setWeekInput = (v) => persist(null, { ...settings, overrideWeek: Math.max(1, Math.min(MAX_WEEK, +v || 1)) });
@@ -809,23 +956,82 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     setImportText(''); setParsed([]);
     say(`已导入 ${parsed.length} 门课程`);
   };
+  /* 表单里某个时段的局部更新 / 增删 */
+  const setPeriod = (idx, patch) => setForm((f) => ({ ...f, periods: f.periods.map((p, i) => (i === idx ? { ...p, ...patch } : p)) }));
   const addOne = () => {
     if (!form.name.trim()) { say('请填写课程名称'); return; }
+    const periods = form.periods.map((p) => {
+      const one = { day: +p.day, slot: p.slot, f: +p.f, t: +p.t, type: p.type };
+      if (p.customOn && p.customStart && p.customEnd) one.customTime = { start: p.customStart, end: p.customEnd };
+      return one;
+    });
     const c = {
       id: Date.now() + Math.random().toString(36).slice(2, 5),
       name: form.name.trim(), teacher: form.teacher.trim(), room: form.room.trim(),
-      day: +form.day, slot: form.slot, f: +form.f, t: +form.t,
-      type: form.type,
-      weeksText: `${form.f}-${form.t}周${form.type !== 'every' ? `（${INC[form.type]}）` : ''}`,
+      periods,
     };
+    if (Number.isInteger(form.color)) c.color = form.color;
+    if (String(form.credit).trim()) c.credit = String(form.credit).trim();
+    if (form.note.trim()) c.note = form.note.trim();
     persist([...courses, c], null);
-    setForm({ ...form, name: '', teacher: '', room: '' });
-    say('已添加课程');
+    /* 保留节次与周次这类每次都要重填的设置，清掉课程自身的字段 */
+    setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
+    say(periods.length > 1 ? `已添加课程（${periods.length} 个时段）` : '已添加课程');
   };
   const remove = (id) => { persist(courses.filter((c) => c.id !== id), null); say('已删除'); };
   const clearAll = () => { persist([], null); say('已清空课表'); };
   const copyTemplate = async () => {
     try { await navigator.clipboard.writeText(IMPORT_TEMPLATE); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* ignore */ }
+  };
+
+  /* ── 导入的三种新方式（都在前端完成，不经过服务器） ── */
+  const importShare = () => {
+    const list = decodeShare(shareText);
+    if (!list) { say('这段口令识别不了：请确认从「VOYRA1:」开始整段粘贴'); return; }
+    setParsed(list);
+    say(`口令里含 ${list.length} 门课程，确认后导入`);
+  };
+  const makeShareCode = async () => {
+    if (!courses.length) { say('课表还是空的，先导入或添加课程'); return; }
+    const code = encodeShare(courses, shareDetail);
+    setShareText(code);
+    try { await navigator.clipboard.writeText(code); say('口令已复制，发给同学粘贴即可'); } catch { say('已生成口令，长按文本框复制'); }
+  };
+  const exportBackup = () => {
+    if (!courses.length) { say('课表还是空的，没什么可导出'); return; }
+    const data = JSON.stringify({ app: BACKUP_APP, v: 1, at: new Date().toISOString(), courses, settings });
+    const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url; a.download = `voyra-课表备份-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    say('备份已导出');
+  };
+  const onBackupFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const obj = JSON.parse(await file.text());
+      const list = Array.isArray(obj?.courses) ? obj.courses.map(withPeriods) : null;
+      if (!list) { say('这不是本站的备份文件'); return; }
+      setParsed(list);
+      setBackupSettings(obj.settings || null);
+      say(`备份里有 ${list.length} 门课程，可合并或覆盖`);
+    } catch { say('备份文件读不出来，可能已损坏'); }
+  };
+  const onHtmlFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const rows = htmlToRows(await file.text());
+      if (!rows.length) { say('这个网页里没找到表格：请在教务系统课表页「另存为网页」再上传'); return; }
+      const list = parseXlsRows(rows);
+      if (!list.length) { say('表格读到了，但没识别出课程：请把网页另存为「仅 HTML」再试一次'); return; }
+      setParsed(list);
+      say(`从网页里识别到 ${list.length} 门课程，确认后导入`);
+    } catch { say('网页解析失败'); }
   };
 
   /* Excel(.xls/.xlsx) 文件解析：SheetJS 按需加载，解析全部 sheet 的行式/表头式课表 */
@@ -879,6 +1085,17 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-h .ico { width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:${ACCENT_SOFT};color:${ACCENT}; }
         .cs-h .sp { flex:1; }
         .cs-row { display:flex;gap:8px;flex-wrap:wrap;align-items:center; }
+        .cs-row .sp { flex:1 1 auto; min-width:0; }
+        /* 时段列表：一門課多段时，每段是一个带描边的小块，段与段之间不粘连 */
+        .cs-period { border:1px solid rgba(20,24,33,.1); border-radius:10px; padding:10px 12px; margin-top:10px; background:rgba(255,255,255,.6); }
+        .cs-period-head { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
+        .cs-period-head b { font-size:13px;color:#212529; }
+        /* 颜色：6 个站点配色 + 一个「跟随课名」，选中给一圈金色 */
+        .cs-colors { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+        .cs-color-auto { border:1px solid rgba(20,24,33,.14);border-radius:99px;background:#fff;padding:6px 12px;font-size:12px;color:#555;min-height:36px; }
+        .cs-color-auto.is-on { border-color:${ACCENT_LINE};color:${ACCENT};font-weight:700; }
+        .cs-color-dot { width:32px;height:32px;border-radius:50%;border:1px solid rgba(20,24,33,.14);padding:0; }
+        .cs-color-dot.is-on { box-shadow:0 0 0 2px #fff,0 0 0 4px ${ACCENT_LINE}; }
         .cs-btn { display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(20,24,33,.12);background:#fff;color:#495057;border-radius:9px;font-size:13px;font-weight:600;padding:8px 13px;cursor:pointer;transition:all .15s ease; }
         .cs-btn:hover { border-color:${ACCENT_LINE};color:${ACCENT}; }
         .cs-btn.primary { background:${ACCENT};border-color:${ACCENT};color:#fff; }
@@ -972,6 +1189,15 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           /* 单元格高度必须走 --cs-row-h：表格单元格上的 min-height 是不生效的，
              之前写 height:auto + min-height:44px，空格子实测只有 3px 高。 */
           .cs-grid tbody td { padding:2px; height:var(--cs-row-h, 96px); vertical-align:middle; }
+          /* 左侧时间轴：默认收成 30px 刻度柱，点表头那一格展开到 66px 显示起止时间。
+             展开与否记在 localStorage，下次进来保持。 */
+          .cs-col-period { width: 30px; }
+          .cs-rail-toggle { display:grid;place-items:center;width:100%;min-height:32px;padding:0;
+            border:0;background:transparent;color:#6A6F79;font-size:var(--fs-meta);font-weight:700; }
+          .cs-grid .per b { display:block;font-size:var(--fs-meta);line-height:1.15; }
+          .cs-grid .per .tm { display:none; }
+          .cs-grid.is-rail-open .cs-col-period { width: 66px; }
+          .cs-grid.is-rail-open .per .tm { display:block;font-size:10.5px;color:#8a8f98;font-variant-numeric:tabular-nums; }
           .cs-cell { padding:3px 2px;border-radius:8px; gap:2px; }
           /* ── 格内的「第几节 + 起止时间」标记（手机端独有，桌面端不渲染该元素）──
              一行装不下 19 个字符，让它在连字符处自然断成两行：
@@ -1175,17 +1401,22 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           </div>
         )}
         <div className={`cs-gridwrap${gridScrollable ? ' cs-gridwrap-wide' : ''}`}>
-          <div className="cs-grid">
+          <div className={`cs-grid${isMobile && railOpen ? ' is-rail-open' : ''}`}>
             <table>
               <colgroup>
-                {!hidePeriodCol && <col className="cs-col-period" />}
+                <col className="cs-col-period" />
               {dayCols.map((w, i) => (
                 <col key={w} className={`cs-col-day${weekendEmpty && i >= 5 ? ' compact' : ''}`} />
               ))}
             </colgroup>
             <thead>
               <tr>
-                {!hidePeriodCol && <th className="per">节次</th>}
+                {(isMobile
+                  /* 手机上时间轴默认收起成一条窄刻度，点表头这一格展开看起止时间 */
+                  ? <th className="per"><button type="button" className="cs-rail-toggle" aria-expanded={railOpen}
+                      aria-label={railOpen ? '收起时间轴' : '展开时间轴'} title={railOpen ? '收起时间轴' : '展开时间轴'}
+                      onClick={() => setRailOpen((v) => !v)}>{railOpen ? '节次' : <Clock size={13} />}</button></th>
+                  : <th className="per">节次</th>)}
                 {dayCols.map((w) => <th key={w}>周{w}</th>)}
               </tr>
             </thead>
@@ -1194,16 +1425,22 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                 const slot = timeSlots[s.key];
                 return (
                 <tr key={slot.key}>
-                  {!hidePeriodCol && <td className="per"><b>{slot.label}</b>{slot.time}</td>}
+                  <td className="per"><b>{slot.label}</b><span className="tm">{slot.time}</span></td>
                   {dayCols.map((_, di) => {
                     const d = di + 1;
                     /* 手机上这一行的「第几节 + 起止时间」不再占一整列，改为落在该行
                        第一格顶部的一条 hairline 标记里 —— 每行都固定落在同一格，
                        读起来仍是一条左侧时间轴；空行也带着它，行身份不会丢。 */
                     const tagHere = slotInCell && di === 0;
-                    const c = grid[d]?.[slot.key];
-                    if (c) {
-                      const theme = courseTheme(c.name);
+                    const hit = grid[d]?.[slot.key];
+                    if (hit) {
+                      const c = hit.course;
+                      const p = hit.period;
+                      const theme = themeOf(c);
+                      /* 这一格有自己的起止时间（自定义时间）时，挂在 title 上，
+                         明细里也会单独列出来 */
+                      const ct = p.customTime && p.customTime.start && p.customTime.end
+                        ? ` · ${p.customTime.start}-${p.customTime.end}` : '';
                       return (
                         <td key={d}>
                           <div
@@ -1214,13 +1451,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                               '--course-text': theme.text,
                               '--course-room': theme.room,
                             }}
-                            title={c.name}
+                            title={`${c.name}${ct}`}
                           >
                             {tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}
                             <div className="n">{c.name}</div>
                             <div className="r"><MapPin size={10} strokeWidth={2.2} />{c.room || '地点未填'}</div>
                             <div className="t">{c.teacher || '老师未填'}</div>
-                            {c.type !== 'every' && <div className="w">{INC[c.type]}</div>}
+                            {p.type !== 'every' && <div className="w">{INC[p.type]}</div>}
                           </div>
                         </td>
                       );
@@ -1257,20 +1494,34 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             共 {weekCourses.length} 门课已折叠，点击「展开明细」查看每周安排
           </div>
         ) : (
-          weekCourses.map((c) => {
-            const meta = timeSlots[c.slot] || SLOT_META[c.slot];
+          weekPeriods.map(({ course: c, period: p }, idx) => {
+            /* 兜底到第一个节次：万一某条数据的 slot 键不认识（手改过存储、
+               旧版本遗留），这里 undefined.night 会把整页打崩 —— 实测过。 */
+            const base = timeSlots[p.slot] || SLOT_META[p.slot] || SLOT_META['1-2'];
+            /* 这一段有自己的起止时间就优先用它（自定义时间） */
+            const meta = p.customTime && p.customTime.start && p.customTime.end
+              ? { ...base, time: `${p.customTime.start}-${p.customTime.end}` }
+              : base;
+            const weeksText = `${p.f === p.t ? `${p.f}周` : `${p.f}-${p.t}周`}${p.type !== 'every' ? `（${INC[p.type]}）` : ''}`;
+            const segCount = coursePeriods(c).length;
             return (
-              <div key={c.id} className="cs-list-row">
+              <div key={`${c.id}-${p.slot}-${p.day}`} className="cs-list-row">
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14.5, fontWeight: 750, color: '#212529', letterSpacing: '.02em' }}>{c.name}</div>
-                  <span className="cs-tag" style={{ marginTop: 5, display: 'inline-flex' }}>{c.weeksText}</span>
+                  <div style={{ fontSize: 14.5, fontWeight: 750, color: '#212529', letterSpacing: '.02em' }}>
+                    {c.name}
+                    {c.credit ? <span className="cs-tag" style={{ marginLeft: 6, fontWeight: 600 }}>{c.credit} 学分</span> : null}
+                  </div>
+                  <span className="cs-tag" style={{ marginTop: 5, display: 'inline-flex' }}>
+                    {weeksText}{segCount > 1 ? ` · 第 ${idx + 1}/${segCount} 段` : ''}
+                  </span>
+                  {c.note && <span className="cs-tag" style={{ marginTop: 5, display: 'inline-flex' }}>{c.note}</span>}
                 </div>
-                <span className="cs-tag"><CalendarDays size={12} />周{WEEKDAY[c.day - 1]}</span>
+                <span className="cs-tag"><CalendarDays size={12} />周{WEEKDAY[p.day - 1]}</span>
                 <span className={`cs-tag${meta.night ? ' night' : ''}`}><Clock size={12} />{meta.label}</span>
                 <span className="cs-tag"><Clock size={12} />{meta.time}</span>
                 {c.room && <span className="cs-tag"><MapPin size={12} />{c.room}</span>}
                 <span className="cs-tag"><User size={12} />{c.teacher || '未填老师'}</span>
-                <button className="cs-btn danger" onClick={() => remove(c.id)}><Trash2 size={14} />删除</button>
+                <button className="cs-btn danger" onClick={() => remove(c.id)}><Trash2 size={14} />{segCount > 1 ? '删除整门' : '删除'}</button>
               </div>
             );
           })
@@ -1283,11 +1534,20 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       <div className="cs-card">
         <div className="cs-h">
           <div className="ico"><Upload size={18} /></div>
-          <h3>文本 / Excel 自动识别导入</h3>
+          <h3>导入课表</h3>
           <div className="sp" />
           {xlsActions}
           {xlsFileInput}
         </div>
+        {/* 四种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
+        <div className="cs-row" style={{ gap: 6, marginBottom: 10 }}>
+          {[['file', '从文件'], ['share', '分享口令'], ['html', '教务网页'], ['backup', '备份']].map(([k, label]) => (
+            <button key={k} type="button" className={`cs-btn${importMode === k ? ' primary' : ''}`}
+              onClick={() => { setImportMode(k); setParsed([]); }}>{label}</button>
+          ))}
+        </div>
+
+        {importMode === 'file' && (
         <textarea
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
@@ -1295,21 +1555,69 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           placeholder={'粘贴课程文本，例如：\n【高等数学】\n课程：高等数学\n星期：周一\n节次：1-2节\n周次：1-16周\n老师：龙承星副教授\n教室：博学楼501\n\n【晚自习】\n星期：周二\n节次：晚自习1'}
           className="cs-input" style={{ width: '100%', resize: 'vertical', lineHeight: 1.6 }}
         />
+        )}
+
+        {importMode === 'share' && (<>
+          <div className="cs-row">
+            <button type="button" className="cs-btn primary" onClick={makeShareCode}>生成我的课表口令</button>
+            <label className="cs-l" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
+              <input type="checkbox" checked={shareDetail} onChange={(e) => setShareDetail(e.target.checked)} />含教室与老师
+            </label>
+          </div>
+          <textarea
+            value={shareText} onChange={(e) => setShareText(e.target.value)} rows={3}
+            placeholder="同学发来的口令粘在这里；也可以点上面的按钮生成自己的口令再发出去"
+            className="cs-input" style={{ width: '100%', marginTop: 10, resize: 'vertical', lineHeight: 1.6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12 }}
+          />
+          <div className="cs-row" style={{ marginTop: 10 }}>
+            <button type="button" className="cs-btn" onClick={importShare}><Wand2 size={14} />识别口令</button>
+          </div>
+        </>)}
+
+        {importMode === 'html' && (<>
+          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
+            在教务系统打开课表页 → 浏览器菜单里「另存为网页」→ 把那个 .html 传上来。按「行=节次、列=星期」识别，全程在本机解析，不联网也不上传。
+          </p>
+          <div className="cs-row">
+            <button type="button" className="cs-btn primary" onClick={() => htmlFileRef.current && htmlFileRef.current.click()}>选择网页文件</button>
+            <input ref={htmlFileRef} type="file" accept=".html,.htm,.mht,.mhtml" style={{ display: 'none' }} onChange={onHtmlFile} />
+          </div>
+        </>)}
+
+        {importMode === 'backup' && (<>
+          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
+            导出的是本站备份（课程 + 周次/时间设置）。换手机、换浏览器或清缓存前先导一份，回来直接还原。
+          </p>
+          <div className="cs-row">
+            <button type="button" className="cs-btn" onClick={exportBackup}>导出备份</button>
+            <button type="button" className="cs-btn primary" onClick={() => backupFileRef.current && backupFileRef.current.click()}>选择备份文件</button>
+            <input ref={backupFileRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={onBackupFile} />
+          </div>
+        </>)}
         <div className="cs-row" style={{ marginTop: 10 }}>
-          <button className="cs-btn primary" onClick={reparse}><Wand2 size={14} />识别并预览</button>
-          <button className="cs-btn" onClick={() => { setImportText(''); setParsed([]); }}>清空</button>
-          <button className="cs-btn" onClick={addParsed} disabled={!parsed.length} style={parsed.length ? {} : { opacity: .5, cursor: 'not-allowed' }}>
-            <Upload size={14} />导入 {parsed.length ? `${parsed.length} 门` : ''}
+          {importMode === 'file' && (<>
+            <button className="cs-btn primary" onClick={reparse}><Wand2 size={14} />识别并预览</button>
+            <button className="cs-btn" onClick={() => { setImportText(''); setParsed([]); }}>清空</button>
+          </>)}
+          <button className="cs-btn primary" onClick={addParsed} disabled={!parsed.length} style={parsed.length ? {} : { opacity: .5, cursor: 'not-allowed' }}>
+            <Upload size={14} />合并导入 {parsed.length ? `${parsed.length} 门` : ''}
           </button>
+          {importMode === 'backup' && backupSettings && (
+            <button className="cs-btn danger" onClick={() => {
+              persist(parsed, backupSettings);
+              setParsed([]); setBackupSettings(null);
+              say('已用备份覆盖课表');
+            }}>覆盖导入（含设置）</button>
+          )}
         </div>
         {parsed.length > 0 && (
           <div className="cs-review">
             <div style={{ fontSize: 12, fontWeight: 700, color: ACCENT, marginBottom: 4 }}>识别到 {parsed.length} 门课程：</div>
-            {parsed.map((c) => (
-              <span key={c.id} className="cs-review-item">
-                {c.name} · 周{WEEKDAY[c.day - 1]} · {SLOT_META[c.slot]?.label} · {c.f}{c.t > c.f ? `-${c.t}` : ''}周{c.type !== 'every' ? `(${INC[c.type]})` : ''} · {c.teacher || '老师未识别'} · {c.room || '地点未识别'}
+            {parsed.map((c) => coursePeriods(c).map((p) => (
+              <span key={`${c.id}-${p.day}-${p.slot}`} className="cs-review-item">
+                {c.name} · 周{WEEKDAY[p.day - 1]} · {SLOT_META[p.slot]?.label} · {p.f}{p.t > p.f ? `-${p.t}` : ''}周{p.type !== 'every' ? `(${INC[p.type]})` : ''} · {c.teacher || '老师未识别'} · {c.room || '地点未识别'}
               </span>
-            ))}
+            )))}
           </div>
         )}
         <p style={{ margin: '10px 0 0', fontSize: 12.5, color: '#6c757d' }}>
@@ -1322,28 +1630,81 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       <MobileSection mobile={isMobile} host={drawerHost} id="add" panel={drawerPanel}>
       <div className="cs-card">
         <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>手动添加课程</h3></div>
+        {/* ── 课程信息 ── */}
         <div className="cs-row">
           <div className="cs-field"><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
           <div className="cs-field"><label className="cs-l">老师（可含职称）</label><input className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
           <div className="cs-field"><label className="cs-l">教室</label><input className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="博学楼501（可留空）" /></div>
-          <div className="cs-field"><label className="cs-l">星期</label>
-            <select className="cs-input" value={form.day} onChange={(e) => setForm({ ...form, day: +e.target.value })}>
-              {WEEKDAY.map((w, i) => <option key={w} value={i + 1}>周{w}</option>)}
-            </select></div>
-          <div className="cs-field"><label className="cs-l">节次（连堂块）</label>
-            <select className="cs-input" value={form.slot} onChange={(e) => setForm({ ...form, slot: e.target.value })}>
-              {DEFAULT_SLOTS.map((s) => <option key={s.key} value={s.key}>{timeSlots[s.key].label}（{timeSlots[s.key].time}）{s.night ? '晚自习' : ''}</option>)}
-            </select></div>
-          <div className="cs-field"><label className="cs-l">周次</label>
+          <div className="cs-field"><label className="cs-l">学分（可留空）</label><input className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="3" /></div>
+          <div className="cs-field" style={{ flexBasis: '100%' }}><label className="cs-l">备注（可留空）</label><input className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
+          <div className="cs-field" style={{ flexBasis: '100%' }}>
+            <label className="cs-l">格子颜色</label>
+            <div className="cs-colors">
+              <button type="button" className={`cs-color-auto${form.color === null ? ' is-on' : ''}`}
+                onClick={() => setForm({ ...form, color: null })}>跟随课名</button>
+              {COURSE_THEMES.map((t, i) => (
+                <button key={i} type="button" aria-label={`配色 ${i + 1}`}
+                  className={`cs-color-dot${form.color === i ? ' is-on' : ''}`}
+                  style={{ background: t.bg, borderColor: t.border }}
+                  onClick={() => setForm({ ...form, color: i })} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── 时段：一门课可以挂多段，一周上两次不用建两条 ── */}
+        {form.periods.map((p, pi) => (
+          <div className="cs-period" key={`p${pi}`}>
+            <div className="cs-period-head">
+              <b>时段 {pi + 1}</b>
+              <div className="sp" />
+              <button type="button" className="cs-btn" onClick={() => setForm((f) => {
+                const list = [...f.periods];
+                list.splice(pi + 1, 0, { ...p });
+                return { ...f, periods: list };
+              })}>复制</button>
+              {form.periods.length > 1 && (
+                <button type="button" className="cs-btn danger" onClick={() => setForm((f) => ({ ...f, periods: f.periods.filter((_, i) => i !== pi) }))}>删除</button>
+              )}
+            </div>
             <div className="cs-row">
-              <input type="number" className="cs-input" style={{ width: 64 }} value={form.f} onChange={(e) => setForm({ ...form, f: Math.max(1, +e.target.value || 1) })} />周~
-              <input type="number" className="cs-input" style={{ width: 64 }} value={form.t} onChange={(e) => setForm({ ...form, t: Math.max(1, +e.target.value || 1) })} />周
-            </div></div>
-          <div className="cs-field"><label className="cs-l">单双周</label>
-            <select className="cs-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-              <option value="every">每周</option><option value="odd">单周</option><option value="even">双周</option>
-            </select></div>
-          <div className="cs-field" style={{ alignSelf: 'flex-end' }}><button className="cs-btn primary" onClick={addOne}><Plus size={14} />添加</button></div>
+              <div className="cs-field"><label className="cs-l">星期</label>
+                <select className="cs-input" value={p.day} onChange={(e) => setPeriod(pi, { day: +e.target.value })}>
+                  {WEEKDAY.map((w, i) => <option key={w} value={i + 1}>周{w}</option>)}
+                </select></div>
+              <div className="cs-field"><label className="cs-l">节次（连堂块）</label>
+                <select className="cs-input" value={p.slot} onChange={(e) => setPeriod(pi, { slot: e.target.value })}>
+                  {DEFAULT_SLOTS.map((s) => <option key={s.key} value={s.key}>{timeSlots[s.key].label}（{timeSlots[s.key].time}）{s.night ? '晚自习' : ''}</option>)}
+                </select></div>
+              <div className="cs-field"><label className="cs-l">周次</label>
+                <div className="cs-row">
+                  <input type="number" className="cs-input" style={{ width: 64 }} value={p.f} onChange={(e) => setPeriod(pi, { f: Math.max(1, +e.target.value || 1) })} />周~
+                  <input type="number" className="cs-input" style={{ width: 64 }} value={p.t} onChange={(e) => setPeriod(pi, { t: Math.max(1, +e.target.value || 1) })} />周
+                </div></div>
+              <div className="cs-field"><label className="cs-l">单双周</label>
+                <select className="cs-input" value={p.type} onChange={(e) => setPeriod(pi, { type: e.target.value })}>
+                  <option value="every">每周</option><option value="odd">单周</option><option value="even">双周</option>
+                </select></div>
+              <div className="cs-field" style={{ flexBasis: '100%' }}>
+                <label className="cs-l" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <input type="checkbox" checked={p.customOn} onChange={(e) => setPeriod(pi, { customOn: e.target.checked })} />
+                  这一段用自定义时间（默认跟随上方「时间设置」）
+                </label>
+                {p.customOn && (
+                  <div className="cs-row" style={{ alignItems: 'center' }}>
+                    <input type="time" className="cs-input" style={{ width: 132 }} value={p.customStart} onChange={(e) => setPeriod(pi, { customStart: e.target.value })} />
+                    <span>~</span>
+                    <input type="time" className="cs-input" style={{ width: 132 }} value={p.customEnd} onChange={(e) => setPeriod(pi, { customEnd: e.target.value })} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="cs-row" style={{ marginTop: 10 }}>
+          <button type="button" className="cs-btn" onClick={() => setForm((f) => ({ ...f, periods: [...f.periods, newPeriod()] }))}><Plus size={14} />添加时段</button>
+          <div className="sp" />
+          <button className="cs-btn primary" onClick={addOne}><Plus size={14} />添加课程</button>
         </div>
       </div>
       </MobileSection>
