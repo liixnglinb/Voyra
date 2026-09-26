@@ -831,6 +831,28 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
    会常驻一条细条，窄屏上很碍眼。滚动行为完全不变，只是不画那一条。
    只在触屏设备生效 —— 电脑上把窗口拖窄时，滚动条是必需品。 */
 @media (max-width: 767px) and (pointer: coarse) {
+  /* 各页散落着 22–42px 的可点控件（实测：下载 41/42、排序 40、复制 40、视图切换 40、
+     搜索框 22–26…）。手机上统一补到 44 的拇指下限。
+     min-height 对行内元素本就不生效，所以这条只作用在块级按钮/链接上，
+     正文里那种行内文字链接不会被撑开。 */
+  .tool-content :is(button, a[href], [role="button"], select),
+  .vr-fullscreen-scroll :is(button, a[href], [role="button"], select) {
+    min-height: var(--ctl-md) !important;
+  }
+  /* 图标按钮还要管宽度：实测「返回主页 / 管理员解锁 / 复制安装命令」这类是 40×44，
+     高度够了宽度还差 4。组件自己的 .pl-icon-btn{min-width:40px} 选择器更具体，
+     这里是拇指下限，用 !important 压过去。只对 button 加，行内文字链接不会被拉宽。 */
+  .tool-content button, .vr-fullscreen-scroll button {
+    min-width: var(--ctl-md) !important;
+  }
+
+  /* 搜索框的命中区：输入框本体只有 20–24px 高，外面那层 label/行虽然更高，
+     但点空白处并不聚焦 —— 等于可点区域就那 20 多像素。按 44 的拇指下限给足。
+     不限祖先：技能页的搜索框在页头里，全屏页（agents 等）没有 .tool-content 外壳。 */
+  :is(.pl-search, .sk-search, .agx-searchrow, .ag-search, .hub-search, .nw-search, .search-box) :is(input, textarea) {
+    min-height: var(--ctl-md);
+  }
+
   html, body, .tool-wrap, .tool-wrap *, .vr-fullscreen, .vr-fullscreen * {
     scrollbar-width: none;
     -ms-overflow-style: none;

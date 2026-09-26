@@ -506,8 +506,9 @@ export default function Layout({ children }) {
           .tool-head { align-items: flex-start; padding-bottom: 8px; }
           .tool-inner.tool-inner-prompt { width: 100%; padding-left: 0; padding-right: 0; padding-top: 18px; }
           .tool-head-right { display: none; }
-          /* 手机上返回按钮反而要比桌面更大，凑足拇指命中区 */
-          .tool-back { flex: 0 0 auto; width: 40px; height: 40px; }
+          /* 手机上返回按钮反而要比桌面更大，凑足拇指命中区（实测 40px 仍不达标，
+             按 44 的拇指下限来） */
+          .tool-back { flex: 0 0 auto; width: var(--ctl-md); height: var(--ctl-md); }
           .tool-back svg { width: 19px; height: 19px; }
           .tool-title { font-size: var(--fs-h4); line-height: 1.2; }
           .tool-sub { max-width: 300px; white-space: normal; line-height: 1.5; font-size: var(--fs-label); }
@@ -548,6 +549,9 @@ export default function Layout({ children }) {
           .tool-content td, .tool-content th { padding: 8px 10px; }
           .tool-content .flex.items-end.justify-between { align-items: flex-start; flex-wrap: wrap; gap: 12px; }
           .tool-content :is(.search-box, .pl-search, .hub-search, .nw-search, .ag-search) { max-width: 100%; }
+          /* 搜索框命中区（输入框本体只有 20–24px 高）的规则放在 index.css：
+             全屏页走的是 Layout 的 early-return 分支，根本拿不到这里的样式，
+             而技能页的搜索框还在页头里。跨页规则统一由 index.css 兜。 */
           body [class*="modal"]:not([class*="backdrop"]):not([class*="overlay"]) { max-width: calc(100vw - 24px) !important; }
           /* 主操作按钮给足 44px 拇指区 */
           .tool-content .btn { min-height: 44px; }
