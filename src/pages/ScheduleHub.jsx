@@ -207,6 +207,11 @@ export default function ScheduleHub() {
           border:1px solid rgba(27,27,27,.14); border-radius:10px; background:rgba(255,255,255,.92);
           color:#3a3a3a; font:700 var(--fs-label)/1 inherit; }
         .shub-fn-btn.is-open { border-color:#d7b846; background:#fff4c8; color:#1b1b1b; }
+        /* 页头要挤在「返回键」和「账户头像」之间的一行里。带上「功能」二字时
+           整组实测 323px，在 360 档（可用 ~293px）会掉到第二行，所以文字收起来
+           只留齿轮方钮（44px），表意交给图标 + aria-label + 抽屉标题。 */
+        .shub-fn-text { display: none; }
+        .shub-fn-btn { width: 44px; padding: 0; justify-content: center; }
         /* 功能按钮靠右，菜单右对齐展开，否则会从屏幕右边溢出去 */
         .shub-fn-menu { left:auto; right:0; }
         .shub-week { flex:0 0 auto; display:inline-flex; align-items:center; min-height:44px; padding:0 2px;
@@ -263,8 +268,8 @@ export default function ScheduleHub() {
           {weekLabel && <span className="shub-week">{weekLabel}</span>}
           <div className="shub-fn" ref={fnRef}>
             <button type="button" className={`shub-fn-btn${fnOpen ? ' is-open' : ''}`}
-              aria-haspopup="true" aria-expanded={fnOpen} onClick={() => setFnOpen((v) => !v)}>
-              <Settings2 size={16} strokeWidth={1.9} />功能
+              aria-haspopup="true" aria-expanded={fnOpen} aria-label="功能" onClick={() => setFnOpen((v) => !v)}>
+              <Settings2 size={16} strokeWidth={1.9} /><span className="shub-fn-text">功能</span>
             </button>
             {fnOpen && (
               <div className="shub-pick-menu shub-fn-menu" role="menu" aria-label="本页功能">
