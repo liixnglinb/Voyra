@@ -260,6 +260,35 @@ img{display:block;max-width:100%}
   border:1px solid var(--d-line)}
 .m-up{margin-top:6px;display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--r-2);
   background:var(--d-accent-soft);color:var(--d-accent-deep);font-size:11.5px;font-weight:600}
+/* 更新浮层。软件里"胶囊 + 居中对话框"是两件套：胶囊只管报有没有事，动作全在浮层里，
+   而 1.2.4 开始浮层还会显示这一段发版说明。页里以前只画了左下角那枚胶囊 =
+   把软件里唯一真会改程序的那个界面藏起来了。
+   逐值对软件暗色：遮罩 color-mix(--ink 34%)、卡片 #2b2b2b + rgba(255,255,255,.15)
+   描边 + 16px 圆角（软件 --r-5 那一档的两个批准例外之一）+ --shadow-pop 那两个偏移、
+   进度条 8px 胶囊 / 轨道 rgba(255,255,255,.05)、字号 12 与 13 对 --fs-meta/--fs-sub。 */
+.m-mask{position:absolute;inset:0;z-index:6;
+  background:color-mix(in oklab, var(--d-ink) 34%, transparent)}
+.m-upd{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:7;
+  width:min(420px,86%);padding:16px;background:var(--d-float);border:1px solid var(--d-line-strong);
+  border-radius:var(--r-5);text-align:left;
+  box-shadow:0 18px 44px -12px rgba(0,0,0,.66),0 2px 6px -2px rgba(0,0,0,.5)}
+.m-upd-h{display:flex;align-items:center;gap:8px}
+.m-upd-h b{font-size:13px;font-weight:600;color:var(--d-ink);letter-spacing:-.01em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-upd-x{margin-left:auto;flex:none;color:var(--d-ink-4);display:inline-flex}
+.m-upd-v{font-family:var(--en);font-size:12px;color:var(--d-ink-3);margin-top:4px}
+.m-upd-bar{height:8px;margin-top:12px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.05);overflow:hidden}
+.m-upd-bar i{display:block;height:100%;background:var(--d-accent);border-radius:var(--r-pill)}
+.m-upd-mb{font-family:var(--en);font-size:12px;color:var(--d-ink-3);margin-top:4px;
+  font-variant-numeric:tabular-nums}
+.m-upd-nt{font-size:12px;line-height:1.55;color:var(--d-ink-2);margin-top:10px;
+  border-left:2px solid var(--d-line-strong);padding-left:9px}
+.m-upd-b{display:flex;gap:8px;margin-top:16px}
+.m-upd-b em{font-style:normal;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;
+  border-radius:var(--r-2);font-size:12.5px;font-weight:600}
+.m-upd-b .pri{background:var(--d-accent);color:var(--d-on-accent)}
+.m-upd-b .gho{border:1px solid var(--d-line);color:var(--d-ink-2)}
 .m-main{position:relative;min-width:0;padding:0;display:flex;flex-direction:column}
 /* 页头不铺底、不画下边线：它就是内容列顶部的一段空白，和下面同属一个表面。
    没有标题的页面（比如首页）这一行整个不收 —— 软件里它是 hidden 掉的。 */
@@ -859,6 +888,17 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
               </div>
             </div>
           </div>
+        </div>
+        <div class="m-mask"></div>
+        <div class="m-upd" role="dialog" aria-label="更新">
+          <div class="m-upd-h"><b>v1.2.4 已下载好</b>
+            <span class="m-upd-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"/></svg></span>
+          </div>
+          <div class="m-upd-v">当前 v1.2.3</div>
+          <div class="m-upd-bar"><i></i></div>
+          <div class="m-upd-mb">36.2 MB / 36.2 MB</div>
+          <div class="m-upd-nt">统计页不再只算最近 500 次运行；按停止时已经流出的正文会留在工作区；数据库改 WAL，跑任务时不再偶发接口 500。</div>
+          <div class="m-upd-b"><em class="pri">安装并重启</em><em class="gho">稍后</em></div>
         </div>
       </div>
   </div>
