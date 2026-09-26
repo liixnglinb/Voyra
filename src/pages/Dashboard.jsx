@@ -104,8 +104,11 @@ function getTabFromHash() {
   return TABS.some(([id]) => id === tab) ? tab : 'products';
 }
 
-/* 手机断点与首页自己那套 @media(max-width:720px) 对齐 */
-const HOME_MOBILE_MQ = '(max-width: 720px)';
+/* 手机断点与首页自己那套 @media(max-width:720px) 对齐。
+   额外要求「粗指针」：电脑上把窗口拖窄、或者把页面缩放放大，都会让 CSS 视口
+   掉到 720 以下；那条线以内有一套为手指做的压缩（列表只留 2 行、文案换短版），
+   用鼠标的用户不该莫名其妙看到内容变少，所以只有触屏设备才走。 */
+const HOME_MOBILE_MQ = '(max-width: 720px) and (pointer: coarse)';
 function useIsMobileHome() {
   const [mobile, setMobile] = useState(
     () => (typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(HOME_MOBILE_MQ).matches : false),
@@ -924,11 +927,11 @@ export default function Dashboard() {
       .vr-home .vr-mathmodel-art .vr-model-step.is-active::after { background: rgba(164, 136, 48, .42); }
       .vr-home .vr-mathmodel-art .vr-model-step.is-active i { color: #A48830; }
       .vr-home .vr-mathmodel-art .vr-model-step.is-active b { color: #1b1b1b; font-weight: 760; }
-      @media (max-width: 720px) { .vr-home .vr-top { width: min(100% - 40px, 756px); } .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(100svh - 14px); } .vr-home .vr-hero { min-height: calc(100svh - 14px); padding: 78px 0 54px; } .vr-home .vr-hero h1 { font-size: 76px; line-height: .84; } .vr-home .vr-hero-outline { -webkit-text-stroke-width: 1.25px; text-shadow: 4px 4px 0 rgba(255,226,138,.42); } .vr-home .vr-hero-meta { gap: 11px; margin-top: 31px; font-size: 10px; } .vr-home .vr-hero-meta strong { padding-right: 12px; font-size: 13px; } .vr-home .vr-hero-meta strong::after { width: 6px; } .vr-home .vr-scroll-cue { margin-top: 30px; } .vr-home .vr-tab { font-size: 28px; } .vr-home [data-roll] { transform: perspective(900px) translate3d(0, var(--roll-y), 0) rotateX(var(--roll-angle-mobile)); } .vr-home [data-reveal] { filter: none; transform: translateY(30px); } .vr-home [data-reveal].vr-is-visible { transform: translateY(0); } }
+      @media (max-width: 720px) and (pointer: coarse) { .vr-home .vr-top { width: min(100% - 40px, 756px); } .vr-home .vr-hero-shell { width: min(100% - 40px, 756px); min-height: calc(100svh - 14px); } .vr-home .vr-hero { min-height: calc(100svh - 14px); padding: 78px 0 54px; } .vr-home .vr-hero h1 { font-size: 76px; line-height: .84; } .vr-home .vr-hero-outline { -webkit-text-stroke-width: 1.25px; text-shadow: 4px 4px 0 rgba(255,226,138,.42); } .vr-home .vr-hero-meta { gap: 11px; margin-top: 31px; font-size: 10px; } .vr-home .vr-hero-meta strong { padding-right: 12px; font-size: 13px; } .vr-home .vr-hero-meta strong::after { width: 6px; } .vr-home .vr-scroll-cue { margin-top: 30px; } .vr-home .vr-tab { font-size: 28px; } .vr-home [data-roll] { transform: perspective(900px) translate3d(0, var(--roll-y), 0) rotateX(var(--roll-angle-mobile)); } .vr-home [data-reveal] { filter: none; transform: translateY(30px); } .vr-home [data-reveal].vr-is-visible { transform: translateY(0); } }
       /* 手机端：内容与结构一字不改，只改排版 —— 演示面板从右栏移到文字下方。
          字号一律落在站点手机阶梯上（--fs-micro/--fs-meta/--fs-label/--fs-lead），
          必要信息（阶段名、阶段序号）不低于 --fs-meta 12px。 */
-      @media (max-width: 720px) {
+      @media (max-width: 720px) and (pointer: coarse) {
         .vr-home .vr-mathmodel-card { grid-template-columns: minmax(0, 1fr); gap: 20px; min-height: 0; padding: 22px; }
         .vr-home .vr-mathmodel-top { grid-template-columns: minmax(0, 1fr) 29px; gap: 9px; }
         .vr-home .vr-mathmodel-kicker { font-size: var(--fs-micro); }
@@ -975,7 +978,7 @@ export default function Dashboard() {
       @keyframes vr-person-breathe { 0%, 100% { transform: translateY(0) rotate(1deg); } 50% { transform: translateY(-5px) rotate(.55deg); } }
       @keyframes vr-hair-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(1px) rotate(.65deg); } }
       @keyframes vr-collar-sway { 0%, 100% { transform: rotate(0); } 50% { transform: translateX(-.8px) rotate(-.45deg); } }
-      @media (max-width: 720px) {
+      @media (max-width: 720px) and (pointer: coarse) {
         /* hero 原本被强制撑到 88svh（约 733px）而内容只有 ~300px，
            人物图又是 absolute 钉底，左半屏因此空掉近一半。
            改成双栏网格、高度贴合内容，人物与文字同排。 */
@@ -1029,7 +1032,7 @@ export default function Dashboard() {
            选中项就永久比别的 tab 高 2px。触屏没有悬停，这个位移没有意义。 */
         .vr-home .vr-tab:hover { transform: none; }
       }
-      @media (max-width: 360px) {
+      @media (max-width: 360px) and (pointer: coarse) {
         .vr-home .vr-tabs { gap: 0; }
         .vr-home .vr-tab { font-size: 18px; }
         .vr-home .vr-tab-reel { font-size: 66px; }
@@ -1137,7 +1140,7 @@ export default function Dashboard() {
         .vr-home .vr-art { align-self: stretch; height: auto; min-height: 0; overflow: hidden; }
         .vr-home .vr-feature .vr-art { margin: 18px 24px; }
       }
-      @media (max-width: 720px) {
+      @media (max-width: 720px) and (pointer: coarse) {
         .vr-home .vr-roll-wrap { height: auto; }
         .vr-home .vr-art { overflow: hidden; }
         .vr-home .vr-tm-art .vr-tm-kpi em { display: none; }
