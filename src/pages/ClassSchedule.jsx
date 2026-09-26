@@ -812,8 +812,16 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   }, []);
 
   useEffect(() => {
-    if (active) requestAnimationFrame(fitGrid);
-  }, [active]);
+    if (!active) return undefined;
+    /* 展开/收起时间轴会改变左侧列宽与整卡高度，这里重算一次行高。
+       注意：这只解决"行高有余量"的情况；如果某门课的格子因为列变窄而
+       需要比行高更高的空间，表格会自己长高、整页随之可滚（实测 +23px）。
+       默认收起时是一屏，展开是用户主动要看时间，这个代价可接受 —— 
+       要彻底消掉得让时间轴改成浮层而不是占一列。 */
+    const raf = requestAnimationFrame(fitGrid);
+    const t = setTimeout(fitGrid, 320);
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); };
+  }, [active, railOpen]);
 
   /* 增删课程 / 设置面板展开收起都会改变卡片高度，联动重算 */
   useEffect(() => {
@@ -1636,8 +1644,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           <div className="cs-field"><label className="cs-l">老师（可含职称）</label><input className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
           <div className="cs-field"><label className="cs-l">教室</label><input className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="博学楼501（可留空）" /></div>
           <div className="cs-field"><label className="cs-l">学分（可留空）</label><input className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="3" /></div>
-          <div className="cs-field" style={{ flexBasis: '100%' }}><label className="cs-l">备注（可留空）</label><input className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
-          <div className="cs-field" style={{ flexBasis: '100%' }}>
+          <div className="cs-field" style={{ flex: '1 1 260px', minWidth: 0 }}><label className="cs-l">备注（可留空）</label><input className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
+          <div className="cs-field" style={{ flex: '0 0 auto' }}>
             <label className="cs-l">格子颜色</label>
             <div className="cs-colors">
               <button type="button" className={`cs-color-auto${form.color === null ? ' is-on' : ''}`}
@@ -1657,7 +1665,6 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           <div className="cs-period" key={`p${pi}`}>
             <div className="cs-period-head">
               <b>时段 {pi + 1}</b>
-              <div className="sp" />
               <button type="button" className="cs-btn" onClick={() => setForm((f) => {
                 const list = [...f.periods];
                 list.splice(pi + 1, 0, { ...p });
@@ -1703,7 +1710,6 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         ))}
         <div className="cs-row" style={{ marginTop: 10 }}>
           <button type="button" className="cs-btn" onClick={() => setForm((f) => ({ ...f, periods: [...f.periods, newPeriod()] }))}><Plus size={14} />添加时段</button>
-          <div className="sp" />
           <button className="cs-btn primary" onClick={addOne}><Plus size={14} />添加课程</button>
         </div>
       </div>
