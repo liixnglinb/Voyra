@@ -502,8 +502,8 @@ export default function Layout({ children }) {
            实测该档 .pl-btn / .cs-btn 只剩 index.css :where 兜的 40px。
            抬到 767 后与 index.css 同一条线，≥768 的桌面渲染一字未动（媒体查询上界变化）。 */
         @media (max-width: 767px) {
-          .tool-inner, .tool-inner.tool-inner-wide { width: 100%; padding-left: 0; padding-right: 0; padding-top: 18px; padding-bottom: 34px; }
-          .tool-head { align-items: flex-start; }
+          .tool-inner, .tool-inner.tool-inner-wide { width: 100%; padding-left: 0; padding-right: 0; padding-top: 10px; padding-bottom: 34px; }
+          .tool-head { align-items: flex-start; padding-bottom: 8px; }
           .tool-inner.tool-inner-prompt { width: 100%; padding-left: 0; padding-right: 0; padding-top: 18px; }
           .tool-head-right { display: none; }
           /* 手机上返回按钮反而要比桌面更大，凑足拇指命中区 */

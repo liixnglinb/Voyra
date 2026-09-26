@@ -181,7 +181,9 @@ export default function AuthGate({ children, variant = 'light' }) {
 
         /* 手机上右上角浮标不能压住页头标题：收紧尺寸，页头另行避让 */
         @media (max-width: 767px) {
-          .ag-fab { top: 10px; right: 10px; gap: 6px; }
+          /* 头像与页头里那排按钮同一中心线：页头 top 10，内容区（56 高减去 8 下内边距）
+             居中后中心在 34；头像 12 + 44/2 = 34 */
+          .ag-fab { top: 12px; right: 10px; gap: 6px; }
           .ag-fab-user { padding: 4px 4px 4px 10px; min-height: var(--ctl-md); }
           .ag-fab-name { max-width: 64px; font-size: var(--fs-meta); }
           .ag-fab-btn { min-height: var(--ctl-md); padding: 0 12px; font-size: var(--fs-meta); }
