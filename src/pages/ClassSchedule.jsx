@@ -241,6 +241,12 @@ function htmlToRows(html) {
   } catch { return []; }
 }
 
+/* 收起状态下左侧时间轴只有 30px 宽，「1-2 节」「晚自习 1」会被挤成两行、参差不齐；
+   给它一个短标（1-2 / 晚1）保持单行。展开后与桌面端仍用完整名称。 */
+function miniSlotLabel(label) {
+  return String(label || '').replace(/\s*节\s*$/, '').replace('晚自习', '晚');
+}
+
 /* 手动添加表单：一门课可以有多个时段，每个时段自己带星期/节次/周次/
    单双周与可选的自定义起止时间 */
 function newPeriod(day = 1, slot = '1-2') {
@@ -1128,6 +1134,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-grid thead tr:first-child th { border-top:1px solid rgba(20,24,33,.075); }
         .cs-grid tr th:first-child,.cs-grid tr td:first-child { border-left:1px solid rgba(20,24,33,.075); }
         .cs-grid tbody td { height:var(--cs-row-h,112px);vertical-align:top;padding:6px; }
+        /* 短标只在手机收起态用；桌面端（以及手机展开态）一律显完整名称 */
+        .cs-grid .per .mini { display:none; }
         .cs-grid thead th { position:sticky;top:0;z-index:2;background:#F8F9FB;color:#5A5F69;font-size:12px;font-weight:750;letter-spacing:.06em;padding:11px 4px;box-shadow:inset 0 -1px rgba(20,24,33,.08); }
         .cs-grid thead th.per { background:#FCFCFD; }
         .cs-col-period { width:88px; }
@@ -1202,10 +1210,15 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           .cs-col-period { width: 30px; }
           .cs-rail-toggle { display:grid;place-items:center;width:100%;min-height:32px;padding:0;
             border:0;background:transparent;color:#6A6F79;font-size:var(--fs-meta);font-weight:700; }
-          .cs-grid .per b { display:block;font-size:var(--fs-meta);line-height:1.15; }
+          .cs-grid .per b { display:block;font-size:var(--fs-meta);line-height:1.15;white-space:nowrap; }
           .cs-grid .per .tm { display:none; }
+          /* 收起：只留短标（1-2 / 晚1），单行不换行 */
+          .cs-grid .per .mini { display:block; }
+          .cs-grid:not(.is-rail-open) .per .full { display:none; }
+          .cs-grid.is-rail-open .per .mini { display:none; }
           .cs-grid.is-rail-open .cs-col-period { width: 66px; }
-          .cs-grid.is-rail-open .per .tm { display:block;font-size:10.5px;color:#8a8f98;font-variant-numeric:tabular-nums; }
+          /* 展开：完整名称 + 起止时间，各占一行且都不换行（时间 10px 才塞得进 66-8=58px） */
+          .cs-grid.is-rail-open .per .tm { display:block;font-size:10px;color:#8a8f98;white-space:nowrap;font-variant-numeric:tabular-nums; }
 
           /* ── 抽屉里的排版 ──
              抽屉只有手机那么宽，控件得按手机来排：卡头按钮两两并排、
@@ -1455,7 +1468,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                 const slot = timeSlots[s.key];
                 return (
                 <tr key={slot.key}>
-                  <td className="per"><b>{slot.label}</b><span className="tm">{slot.time}</span></td>
+                  <td className="per"><b><span className="full">{slot.label}</span><span className="mini">{miniSlotLabel(slot.label)}</span></b><span className="tm">{slot.time}</span></td>
                   {dayCols.map((_, di) => {
                     const d = di + 1;
                     /* 手机上这一行的「第几节 + 起止时间」不再占一整列，改为落在该行
