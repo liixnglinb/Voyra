@@ -665,7 +665,11 @@ function AppsPanel({ openProduct }) {
     const Icon = app.Icon;
     const openApp = (event) => {
       if (event.target.closest('button')) return;
-      window.open(window.location.origin + app.to, '_blank', 'noopener,noreferrer');
+      const url = window.location.origin + app.to;
+      /* 同 openProduct：手机端就地跳转，首页留在历史里，返回键才回得了首页。
+         这里的目标是 public/<dir>/ 静态下载页（不是 hash 路由），所以不用 getToolUrl。 */
+      if (isMobile) { window.location.href = url; return; }
+      window.open(url, '_blank', 'noopener,noreferrer');
     };
     return (
       <div className="vr-roll-wrap vr-panel-stagger" data-roll key={app.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openApp} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openApp(event); } }} role="link" tabIndex={0}>
@@ -726,6 +730,7 @@ function ContactPanel() {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const isMobile = useIsMobileHome();
   const [activeTab, setActiveTab] = useState(getTabFromHash);
   const [progress, setProgress] = useState(0);
   const [personReady, setPersonReady] = useState(false);
@@ -778,8 +783,14 @@ export default function Dashboard() {
 
   const go = useCallback((to) => navigate(to), [navigate]);
   const openProduct = useCallback((target, external = false) => {
-    window.open(external ? target : getToolUrl(target), '_blank', 'noopener,noreferrer');
-  }, []);
+    const url = external ? target : getToolUrl(target);
+    /* 手机端站内目标就地跳转，不开新页：window.open 开出来那个文档的 history.length
+       实测为 1（首页是 2），内置浏览器里「返回」无处可去，只能退出整个站点。
+       就地跳转则首页留在历史里，返回即回网站首页。外链仍开新页 ——
+       那是别人的站，不该顶掉我们自己的历史。 */
+    if (!external && isMobile) { window.location.href = url; return; }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, [isMobile]);
   const changeTab = useCallback((next, updateHash = true) => {
     setActiveTab(next);
     if (updateHash) {
