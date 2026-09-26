@@ -526,11 +526,12 @@ export default function Layout({ children }) {
           /* slot 是 flex 子项，不撑开的话 .shub-modes 的 width:100% 会绕回内容宽度 */
           #tool-head-slot { flex: 1 1 auto; min-width: 0; }
           /* 日程中心手机页头：去掉「日程中心」大字和页头图标，
-             视图切换收成一个下拉后够矮，就和返回按钮并到同一行，
-             不再单独占一行（原来两行合计 ~119px）。 */
+             视图切换收成一个下拉后够矮，就和返回按钮并到同一行。
+             禁止换行 —— .tool-head 基础样式是 flex-wrap:wrap，
+             操作区一旦超宽就整组掉到第二行，页头从 63px 变两行。 */
           .tool-inner-schedule .tool-title,
           .tool-inner-schedule .tool-icon { display: none; }
-          .tool-inner-schedule .tool-head { align-items: center; }
+          .tool-inner-schedule .tool-head { align-items: center; flex-wrap: nowrap; }
           .tool-inner-schedule .tool-head-left { padding-right: 0; }
           .tool-inner-schedule .tool-head-actions { width: auto; flex: 1 1 auto; }
           .tool-content { padding: 14px 0 30px; }
