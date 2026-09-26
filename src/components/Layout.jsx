@@ -74,7 +74,7 @@ export default function Layout({ children }) {
           color: isDarkPage ? '#e5e7eb' : '#111111',
         }}
       >
-        <div style={{ height: '100%', overflow: 'auto' }}>
+        <div className="vr-fullscreen-scroll" style={{ height: '100%', overflow: 'auto' }}>
           {children}
         </div>
       </div>

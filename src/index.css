@@ -827,6 +827,26 @@ svg.lucide, svg[class*=lucide] { stroke-width: 1.6; }
   --m-tap-sm: var(--ctl-icon);
 }
 
+/* 手机上把滚动条本身去掉：系统滚动条多是浮层、自动隐藏，但微信一类内置浏览器
+   会常驻一条细条，窄屏上很碍眼。滚动行为完全不变，只是不画那一条。
+   只在触屏设备生效 —— 电脑上把窗口拖窄时，滚动条是必需品。 */
+@media (max-width: 767px) and (pointer: coarse) {
+  html, body, .tool-wrap, .tool-wrap *, .vr-fullscreen, .vr-fullscreen * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  .tool-wrap::-webkit-scrollbar,
+  .tool-wrap *::-webkit-scrollbar,
+  .vr-fullscreen::-webkit-scrollbar,
+  .vr-fullscreen *::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
 @media (max-width: 767px) {
   html {
     -webkit-text-size-adjust: 100%;
