@@ -1148,7 +1148,14 @@ export default function Dashboard() {
 
         /* ── 卡片竖向压缩：只削余量，不删卡、不裁演示内容 ──
            实测产品卡 450px = copy 220 + art 192 + art 上下 margin 36，
-           而 copy 的 220 里 padding 独占 84（26 顶 + 58 底），是最大一块纯余量。 */
+           而 copy 的 220 里 padding 独占 84（26 顶 + 58 底），是最大一块纯余量。
+           前后对比一律用「收敛式测量」取值（连读两次一致才算数，否则量到的是
+           异步画面还没铺开的高度，会偏小 ~80px，本文件这几处曾因此报错数字）：
+             产品 9 张 4135 → 3036px；应用 6 张 3406 → 2794px（且现为 7 张，
+             多出的 AI 轨迹是另一会话新增）；Skills 658 → 566px。
+           另外两处「规则值 ≠ 实际值」，别照声明值报数：
+           场景图 max-height:120px 实际落地 112px；十阶段 min-height:24px
+           实际行高 28px（min-height 是下限，行内容自己有高度）。 */
         .vr-home .vr-feature-copy { padding: 16px 18px 14px; }
         .vr-home .vr-feature-title h2 { font-size: 25px; }
         .vr-home .vr-feature-copy p { max-width: none; margin: 10px 0 12px; font-size: 13.5px; line-height: 1.55; }
