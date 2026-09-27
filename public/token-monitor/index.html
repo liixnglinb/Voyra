@@ -186,8 +186,8 @@ footer .sp{flex:1}
 'use strict';
 var REPO = 'https://github.com/liixnglinb/token-monitor/releases';
 var PROBE_FILE = 'TokenMonitor.exe';         /* 固定名资产，任意版本都存在 */
-var PROBE_BYTES = 1572864;                   /* 1.5 MB —— 足够跨越"突发速度"，测到持续速率 */
-var PROBE_TIMEOUT = 8000;
+var PROBE_BYTES = 2097152;                   /* 2 MB —— 足够跨越"突发速度"，测到持续速率 */
+var PROBE_TIMEOUT = 15000;                   /* 慢网（<150KB/s）也要放得下 2MB 的完整测量 */
 var CACHE_KEY = 'tm.src.v2', CACHE_TTL = 10 * 60 * 1000;
 var ORDER = ['gh-proxy', 'ghfast', 'direct'];
 var SRC = {
@@ -314,7 +314,7 @@ document.addEventListener('click', function(ev){
   ev.preventDefault();
   var label = $('dlHint');
   var go = function(){ location.href = urlFor(); };
-  var wait = (state.asset && !state.probe) ? null : Promise.race([ready(), new Promise(function(res){ setTimeout(res, 6000); })]);
+  var wait = (state.asset && !state.probe) ? null : Promise.race([ready(), new Promise(function(res){ setTimeout(res, 2000); })]);
   if (!wait){ go(); return; }
   a.classList.add('busy');
   if (label) label.textContent = '正在选择最快下载源并准备下载…';
