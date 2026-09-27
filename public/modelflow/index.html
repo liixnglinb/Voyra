@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>织流 Loom · 本地智能体流水线工作台</title>
-<meta name="description" content="织流 Loom：把一件事拆成可编辑的多步流程，交给本机已登录的 Claude Code / Codex CLI 逐步执行。产物实时落盘，全本地运行，无账号无遥测。Windows 10/11。">
-<meta property="og:title" content="织流 Loom · 本地智能体流水线工作台">
+<title>织流 Jacquard · 本地智能体流水线工作台</title>
+<meta name="description" content="织流 Jacquard：把一件事拆成可编辑的多步流程，交给本机已登录的 Claude Code / Codex CLI 逐步执行。产物实时落盘，全本地运行，无账号无遥测。Windows 10/11。">
+<meta property="og:title" content="织流 Jacquard · 本地智能体流水线工作台">
 <meta property="og:description" content="可编辑多步流程 + 本机 CLI 智能体执行 + 工作区实时反馈。全本地运行。">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/svg+xml" href="./logo.svg">
@@ -168,7 +168,7 @@ img{display:block;max-width:100%}
 @keyframes logIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 @keyframes sweep{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 
-/* ---------- 产品图：结构照 Loom 真实界面，色值取软件深色主题 ---------- */
+/* ---------- 产品图：结构照 Jacquard 真实界面，色值取软件深色主题 ---------- */
 /* 支点必须在底边：rotateX 才是"以底边为轴往下压平"（屏幕往架子上放），
    默认的 center 支点会转成绕自己中心翻，读起来就只是个普通 3D 倾斜。
    入场只补间 opacity —— 只碰 transform 以外的属性，JS 写的内联 transform 才不会被
@@ -805,14 +805,14 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 
 <nav class="nav" id="nav">
   <div class="nav-in">
-    <a class="brand" href="./"><img src="./logo-64.png" alt="织流 Loom"><b>Loom</b></a>
+    <a class="brand" href="./"><img src="./logo-64.png" alt="织流 Jacquard"><b>Jacquard</b></a>
     <div class="nav-links" id="navLinks">
       <a href="#cap">核心能力</a><a href="#pipeline">流程</a><a href="#how">怎么用</a>
       <a href="#req">前置要求</a><a href="#faq">常见问题</a>
     </div>
     <div class="nav-right">
       <a class="back" href="https://lxlrwxs.top">个人工具中心</a>
-      <a class="pill nav-dl" href="#dl" id="navDl">下载<span class="sep"></span><span class="ver" id="navVer">1.2.5</span></a>
+      <a class="pill nav-dl" href="#dl" id="navDl">下载<span class="sep"></span><span class="ver" id="navVer">1.2.6</span></a>
     </div>
   </div>
 </nav>
@@ -828,7 +828,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="hero-sub"><span class="stp-row"><span class="stp">需求解析</span> <span class="stp-ar">→</span> <span class="stp">方案拆解</span> <span class="stp-ar">→</span> <span class="stp">信息收集</span> <span class="stp-ar">→</span> <span class="stp">逐项执行</span> <span class="stp-ar">→</span> <span class="stp">自检复核</span> <span class="stp-ar">→</span> <span class="stp">修订打磨</span> <span class="stp-ar">→</span> <span class="stp">交付整合。</span></span><br><span class="stp-tail">每一步做什么、产出什么文件，都是你能改的。</span></p>
     </div>
     <div class="hero-cta">
-      <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.2.5</span></a>
+      <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.2.6</span></a>
       <a class="pill pill-ghost" href="#pipeline">看它怎么跑</a>
     </div>
     <p class="hero-note">Windows 10 / 11 x64 · 约 <b id="heroSize">36.2 MB</b> · 全本地运行，无账号无遥测</p>
@@ -869,7 +869,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
             <div class="m-sub"><span class="m-live"></span><span>支架拓扑优化第二轮</span><i>刚刚</i></div>
             <div class="m-foot">
               <div class="m-me"><span class="m-av"></span><span>claude</span></div>
-              <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.2.5</div>
+              <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.2.6</div>
             </div>
           </aside>
 
@@ -891,10 +891,10 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
         </div>
         <div class="m-mask"></div>
         <div class="m-upd" role="dialog" aria-label="更新">
-          <div class="m-upd-h"><b>v1.2.5 已下载好</b>
+          <div class="m-upd-h"><b>v1.2.6 已下载好</b>
             <span class="m-upd-x"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="width:13px;height:13px"><path d="M6.4 6.4 17.6 17.6M17.6 6.4 6.4 17.6"/></svg></span>
           </div>
-          <div class="m-upd-v">当前 v1.2.4</div>
+          <div class="m-upd-v">当前 v1.2.5</div>
           <div class="m-upd-bar"><i></i></div>
           <div class="m-upd-mb">36.2 MB / 36.2 MB</div>
           <div class="m-upd-nt">统计页不再只算最近 500 次运行；按停止时已经流出的正文会留在工作区；数据库改 WAL，跑任务时不再偶发接口 500。</div>
@@ -939,7 +939,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     <div class="s-head" data-rise>
       <p class="eyebrow">Capabilities</p>
       <h2>它不做代写，它管流程</h2>
-      <p class="lead">正文一律由你本机已登录的 Claude Code 或 Codex CLI 产出。Loom 负责把任务拆开、把提示词规范喂到位、盯着每一步的产物、在需要确认的地方停下来等你。</p>
+      <p class="lead">正文一律由你本机已登录的 Claude Code 或 Codex CLI 产出。Jacquard 负责把任务拆开、把提示词规范喂到位、盯着每一步的产物、在需要确认的地方停下来等你。</p>
     </div>
     <div class="grid">
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.6"/><path d="M14.6 4.6v14.8"/></svg></div><h3>可视化编排流程</h3><p>增删步骤、上下移调整顺序，每步绑定技能、产物文件名、角色（执行 / 复核 / 编辑）、引擎与模型，可设检查点暂停等确认。改完即存，流程本身就是一条可编辑的清单。</p><span class="more">流程 = 一个可编辑的 JSON<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
@@ -1064,7 +1064,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <div class="eng" data-rise>
         <div class="logo">C</div>
         <h3>Claude Code</h3>
-        <p>本机已登录的 <code>claude</code> 命令。Loom 自动探测它在不在这台机器上，在就能选为主引擎。</p>
+        <p>本机已登录的 <code>claude</code> 命令。Jacquard 自动探测它在不在这台机器上，在就能选为主引擎。</p>
       </div>
       <div class="eng" data-rise data-delay="1">
         <div class="logo">X</div>
@@ -1087,8 +1087,8 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <h2>四步上手</h2>
     </div>
     <div class="steps">
-      <div class="step" data-rise><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Loom 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
-      <div class="step" data-rise><span class="n">02</span><div><h4>装 Loom，打开就是工作台</h4><p>安装包约 36.2 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
+      <div class="step" data-rise><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Jacquard 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
+      <div class="step" data-rise><span class="n">02</span><div><h4>装 Jacquard，打开就是工作台</h4><p>安装包约 36.2 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
       <div class="step" data-rise><span class="n">03</span><div><h4>编一条你自己的流程</h4><p>从零加步骤，或者导入别人分享的流程 JSON 改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的 —— 软件不预设该怎么干活。</p></div></div>
       <div class="step" data-rise><span class="n">04</span><div><h4>下任务，看它跑</h4><p>写清任务说明就能开跑。转录区实时输出，进程卡显示走到第几步，工作区面板列出正在写的文件；跑完对着任意一步提修改要求即可。</p></div></div>
     </div>
@@ -1107,7 +1107,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <div data-rise><b>约 200 MB 磁盘</b><span>程序本体 + 数据目录。产物多大取决于你的任务。</span></div>
       <div data-rise><b>可选：API 预设</b><span>把端点/密钥/模型注入给 CLI，用于换模型或走中转。</span></div>
     </div>
-    <p class="note" data-rise><b>一条硬规则：</b>Loom 自己不直连任何大模型接口生成正文。设置里的 API 预设只用于配置 CLI 的端点与模型，正文只能出自你本机已登录的 Claude Code / Codex CLI。你的提示词、流程和产物都留在本机，软件没有账号体系，也没有埋点。</p>
+    <p class="note" data-rise><b>一条硬规则：</b>Jacquard 自己不直连任何大模型接口生成正文。设置里的 API 预设只用于配置 CLI 的端点与模型，正文只能出自你本机已登录的 Claude Code / Codex CLI。你的提示词、流程和产物都留在本机，软件没有账号体系，也没有埋点。</p>
   </div>
 </section>
 
@@ -1141,14 +1141,14 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <h2>常见问题</h2>
     </div>
     <div class="faq">
-      <details open><summary>为什么还要装 Claude Code / Codex CLI？<i>+</i></summary><p>因为正文由它们生成。它们各自带着你自己的登录态或密钥与模型通信，Loom 负责流程编排、提示词规范、产物落盘和过程可视化。这样换模型、走中转、调额度都在 CLI 那边，不会被软件锁死在某一家。</p></details>
+      <details open><summary>为什么还要装 Claude Code / Codex CLI？<i>+</i></summary><p>因为正文由它们生成。它们各自带着你自己的登录态或密钥与模型通信，Jacquard 负责流程编排、提示词规范、产物落盘和过程可视化。这样换模型、走中转、调额度都在 CLI 那边，不会被软件锁死在某一家。</p></details>
       <details><summary>我的数据和产物存在哪？<i>+</i></summary><p>安装目录下的 <code>data\</code>：SQLite 数据库、每次运行的工作区（<code>data\workspaces\run-xxx\</code>）、你自建的技能、导出件都在里面。设置页「本地目录」可以直接打开它们。</p></details>
       <details><summary>卸载会删掉我的流程吗？<i>+</i></summary><p>不会。卸载器刻意保留 <code>data\</code> 整个目录，重装后自动继续读取。要彻底清掉自己的数据，需要你自己删那个文件夹。</p></details>
       <details><summary>怎么更新？<i>+</i></summary><p>左下角会出现「更新」胶囊 —— 软件启动后自动读一次版本清单，有新版本才出现。点一下开始下载，进度实时显示，下载完成后确认即静默安装并退出；有任务在跑或停在检查点时会先弹提示。</p></details>
       <details><summary>检查点是做什么的？<i>+</i></summary><p>给关键步骤加检查点后，流程跑到那里会停下来等你看产物、给意见，确认了才往下走。哪几步该停由你在编排时决定 —— 通常是那种走偏了后面全白跑的步骤，比如需求界定和方案拆解。</p></details>
       <details><summary>跑一次大概多久？<i>+</i></summary><p>取决于你编了几步、每步的智能体干什么活。几十分钟的量级很常见；每步耗时、工具调用次数、累计 token 都会记在运行记录里，设置页「使用统计」有汇总。</p></details>
       <details><summary>有 macOS 版吗？<i>+</i></summary><p>安装包暂时只有 Windows。后端是 FastAPI，macOS / Linux 可以用源码运行：<code>pip install -r requirements.txt && python run.py</code>。</p></details>
-      <details><summary>源码在哪？<i>+</i></summary><p>GitHub：<code>liixnglinb/Loom</code>。带一整套回归测试，其中一部分专门看守静态资产契约 —— 配色令牌只许在 token 块里出现、圆角字号只能取刻度上的值、中英两套文案键位必须对齐、图标 ico 的档位和小尺寸五官都有用例钉着。界面文案中英双语，前端无框架无构建步骤。</p></details>
+      <details><summary>源码在哪？<i>+</i></summary><p>GitHub：<code>liixnglinb/Jacquard</code>。带一整套回归测试，其中一部分专门看守静态资产契约 —— 配色令牌只许在 token 块里出现、圆角字号只能取刻度上的值、中英两套文案键位必须对齐、图标 ico 的档位和小尺寸五官都有用例钉着。界面文案中英双语，前端无框架无构建步骤。</p></details>
     </div>
   </div>
 </section>
@@ -1159,7 +1159,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="eyebrow">Download</p>
       <h2>把流程握在自己手里</h2>
       <p class="lead">装在你自己的用户目录里，跑你自己登录的 CLI，产物落在你自己的磁盘上。</p>
-      <a class="pill" id="dlBtn" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.2.5-setup.exe">下载 Loom for Windows<span class="sep"></span><span class="ver" id="btnVer">1.2.5</span></a>
+      <a class="pill" id="dlBtn" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.2.6-setup.exe">下载 Jacquard for Windows<span class="sep"></span><span class="ver" id="btnVer">1.2.6</span></a>
       <p class="hero-note">约 <b id="btnSize">36.2 MB</b> · Windows 10/11 x64 · 用户级安装，无需管理员</p>
       <p class="sha" id="btnSha" title="点击复制完整校验和"></p>
     </div>
@@ -1169,8 +1169,8 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 <footer>
   <div class="wrap foot">
     <a class="brand" href="./"><img src="./logo-64.png" alt="" style="width:26px;height:26px;border-radius:var(--r-3)"></a>
-    <span>织流 Loom</span><span class="sep"></span>
-    <span>版本 <span class="en" id="ftVer">1.2.5</span></span><span class="sep"></span>
+    <span>织流 Jacquard</span><span class="sep"></span>
+    <span>版本 <span class="en" id="ftVer">1.2.6</span></span><span class="sep"></span>
     <a class="back" href="https://lxlrwxs.top">返回个人工具中心</a>
     <span style="margin-left:auto">本地运行 · 无遥测</span>
   </div>

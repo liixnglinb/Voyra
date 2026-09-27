@@ -24,7 +24,7 @@ const FEATURED = [
 
 
 const APPS = [
-  { to: '/modelflow/', external: false, no: '01', name: '织流 Loom', desc: '本地智能体流水线工作台：流程可编辑，交给本机 Claude Code / Codex CLI 逐步执行，产物实时落盘。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
+  { to: '/modelflow/', external: false, no: '01', name: '织流 Jacquard', desc: '本地智能体流水线工作台：流程可编辑，交给本机 Claude Code / Codex CLI 逐步执行，产物实时落盘。仅支持 Windows 10/11。', cta: '下载软件', Icon: Sparkles, art: 'modelflow' },
   { to: '/checkin/', external: false, no: '02', name: '学习通自动签到助手', desc: '桌面端常驻后台，自动监听课程签到活动，支持普通、位置、二维码三种签到（手势/拍照推送提醒，需 APP 手动完成），内置智能防风控，手机可远程查看。', cta: '下载软件', Icon: CalendarRange, art: 'checkin' },
   { to: '/local-toolbox/', external: false, no: '03', name: '磁盘清理助手', desc: 'Windows 磁盘清理专用工具：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
@@ -419,7 +419,7 @@ function FeatureArt({ type }) {
   if (type === 'modelflow') {
     const steps = ['需求', '方案', '收集', '执行', '复核', '修订', '交付'];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-modelflow-art">
-      <div className="vr-preview-top"><Sparkles size={15} /><span>织流 Loom 流程</span><b>7 步</b></div>
+      <div className="vr-preview-top"><Sparkles size={15} /><span>织流 Jacquard 流程</span><b>7 步</b></div>
       <div className="vr-model-flow">{steps.map((step, index) => <React.Fragment key={step}><button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}><i>{String(index + 1).padStart(2, '0')}</i>{step}</button>{index < steps.length - 1 && <span />}</React.Fragment>)}</div>
       <div className="vr-model-flow-status"><span>当前阶段：{['钉死需求', '拆解方案', '收集备料', '逐项执行', '自检复核', '修订打磨', '交付整合'][active]}</span><b>{active + 1}/7</b></div>
     </div>;
