@@ -1,787 +1,340 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Token Monitor · 本机 AI 用量看板 — Voyra</title>
-<meta name="description" content="Token Monitor 扫描本机 AI 编程工具的 Token 消耗与成本：Claude Code、Codex、ZCode、OpenCode 等。缓存命中率、模型单价与对话级明细，数据全部留在本机。">
-<meta name="theme-color" content="#0B0C0E">
-<link rel="icon" href="/token-monitor/favicon.png">
+<title>Token Monitor —— 本机 AI 用量看板 · Voyra</title>
+<meta name="description" content="自动发现本机已装的 AI 编程工具，读取本地日志并按模型单价逐条计价。Windows 10 / 11，数据不出本机。">
+<link rel="icon" href="/token-monitor/favicon.png?v=3">
 <style>
 :root{
-  --bg:#15161A; --pan:#1C1D22; --pan2:#22232A;   /* 参考 ZCode：中性灰阶，不用近黑 */
-  --line:rgba(255,255,255,.075); --line2:rgba(255,255,255,.14);
-  --txt:#F2F3F5; --sub:#9AA0A8; --dim:#666C75;
-  --accent:#4D6BFE; --accent-s:#7C93FF;   /* 品牌蓝，与软件图标一致 */
-  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Cascadia Mono","Liberation Mono","Microsoft YaHei UI","Microsoft YaHei",monospace;
-  --sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --bg:#08090B;--panel:#101318;--panel2:#0C0F13;--line:rgba(255,255,255,.075);--line2:rgba(255,255,255,.14);
+  --txt:#EDEFF2;--sub:#9BA3AE;--dim:#69717D;--blue:#6C9BFF;--bd:#3F73F5;--orange:#FF9A62;--green:#4AC08A;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei UI",monospace;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--txt);font-family:var(--sans);
-  font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;
-  overflow-x:clip}
-/* 32px 发丝网格：与 Voyra 主站同一身份，只是反相 */
-body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(255,255,255,.026) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.026) 1px,transparent 1px);
-  background-size:32px 32px;
-  -webkit-mask-image:radial-gradient(120% 74% at 50% 0,#000 12%,transparent 78%);
-  mask-image:radial-gradient(120% 74% at 50% 0,#000 12%,transparent 78%)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{background:var(--bg);color:var(--txt);font:15px/1.65 "Segoe UI","Microsoft YaHei UI",-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 a{color:inherit;text-decoration:none}
-.wrap{position:relative;z-index:1;width:min(100% - 40px,1160px);margin:0 auto}
-.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
-.r{text-align:right}
-.b{color:var(--txt);font-weight:600}
-.dim{color:var(--dim)}
-.unk{color:#5F6772;font-style:normal}
-.plan{color:#6E9FE0;font-style:normal}
-.pnote{margin:14px 4px 0;font-size:12.5px;line-height:1.85;color:#6B7280}
-.pnote b{color:#9BA3B4;font-weight:600}
-
-/* ---------- nav ---------- */
-.nav{position:sticky;top:0;z-index:60;border-bottom:1px solid var(--line);
-  background:rgba(11,12,14,.82);backdrop-filter:blur(14px) saturate(1.4)}
-.nav-in{display:flex;align-items:center;gap:26px;height:58px}
-.brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:650;letter-spacing:0}
-.mark{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;
-  background:linear-gradient(160deg,#2A3145,#121724);border:1px solid rgba(255,255,255,.13);
-  flex:0 0 auto}
-.mark svg{width:17px;height:17px}
-.nlinks{display:flex;gap:22px;margin-left:12px}
-.nlinks a{color:var(--sub);font-size:13px;transition:color .18s ease}
-.nlinks a:hover,.nlinks a.on{color:var(--txt)}
-.grow{flex:1 1 auto}
-.pill{border:1px solid var(--line2);border-radius:99px;padding:3px 10px;
-  color:var(--sub);font:11px/1.5 var(--mono);font-variant-numeric:tabular-nums}
-.ico{display:grid;place-items:center;width:30px;height:30px;border-radius:6px;
-  border:1px solid var(--line);color:var(--sub);transition:border-color .18s,color .18s,background .18s}
-.ico:hover{border-color:var(--line2);color:var(--txt);background:var(--pan)}
-.ico svg{width:16px;height:16px}
-
-/* ---------- buttons ---------- */
-.btn{position:relative;display:inline-flex;align-items:center;gap:9px;overflow:hidden;
-  border-radius:7px;padding:0 18px;height:44px;font-size:14px;font-weight:600;
-  border:1px solid transparent;transition:transform .18s cubic-bezier(.16,1,.3,1),
-    background .18s ease,border-color .18s ease,color .18s ease}
-.btn svg{width:16px;height:16px;flex:0 0 auto}
-.btn-p{background:#F2F3F5;color:#0B0C0E;font-weight:600}
-.btn-p:hover{background:#fff;transform:translateY(-1px)}
-.btn-p::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
-  background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);
-  transform:skewX(-18deg);animation:sheen 5.6s ease-in-out infinite}
-@keyframes sheen{0%,72%{left:-60%}88%,100%{left:130%}}
-.btn-g{border-color:var(--line2);color:var(--txt);background:rgba(255,255,255,.02)}
-.btn-g:hover{background:rgba(255,255,255,.06);transform:translateY(-1px)}
-.btn-sm{height:32px;padding:0 13px;font-size:13px;border-radius:6px}
-
-/* ---------- hero ---------- */
-.hero{padding:78px 0 66px;border-bottom:1px solid var(--line)}
-.hero-grid{display:grid;grid-template-columns:minmax(0,452px) minmax(0,1fr);
-  gap:56px;align-items:center}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);
-  border-radius:99px;padding:4px 12px;color:var(--sub);font:11px/1.5 var(--mono);
-  letter-spacing:.04em}
-.eyebrow i{width:5px;height:5px;border-radius:50%;background:var(--accent);
-  box-shadow:0 0 0 3px rgba(240,194,75,.16)}
-h1{margin:22px 0 0;font-size:clamp(34px,3.4vw,45px);font-weight:700;line-height:1.26;letter-spacing:0}
-h1 .hl{background:linear-gradient(100deg,#6C86FF,#9B8CFF 55%,#5DC3F0);-webkit-background-clip:text;background-clip:text;color:transparent}
-.lead{margin-top:18px;max-width:40ch;color:var(--sub);font-size:15px;line-height:1.85}
-.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
-.meta{margin-top:16px;color:var(--dim);font:11.5px/1.7 var(--mono);letter-spacing:.01em}
-
-/* ---------- app window ---------- */
-.win{border:1px solid var(--line2);border-radius:12px;background:var(--pan);
-  box-shadow:0 30px 70px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.02) inset;
-  overflow:hidden}
-.win-bar{display:flex;align-items:center;gap:12px;height:40px;padding:0 14px;
-  border-bottom:1px solid var(--line);background:var(--pan2)}
-.wdots{display:flex;gap:6px}
-.wdots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.13)}
-.wtitle{color:var(--sub);font:11.5px/1 var(--mono);letter-spacing:.02em}
-.wtitle b{color:var(--txt);font-weight:600}
-.live{margin-left:auto;display:inline-flex;align-items:center;gap:6px;
-  color:var(--dim);font:10.5px/1 var(--mono);letter-spacing:.04em}
-.live i{width:5px;height:5px;border-radius:50%;background:#4FC3A1;
-  animation:blink 2.1s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
-.kpi{padding:16px 16px 15px;border-right:1px solid var(--line)}
-.kpi:last-child{border-right:0}
-.kpi span{display:block;color:#7E858F;font:600 10.5px/1.4 var(--sans);letter-spacing:.05em}
-.kpi b{display:block;margin-top:7px;font:600 22px/1.15 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
-.kpi i{display:block;margin-top:3px;color:var(--sub);font:10.5px/1.5 var(--mono);font-style:normal}
-.kpi.hot b{color:#fff}
-
-.chart{padding:6px 14px 0;border-top:1px solid var(--line);color:var(--txt)}
-.chart svg{display:block;width:100%;height:auto;overflow:visible}
-.chart .bar{transform-origin:50% 100%;animation:grow .7s cubic-bezier(.16,1,.3,1) both;
-  transform-box:fill-box;
-  animation-delay:calc(var(--i) * 16ms + .25s)}
-@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
-.axis{display:flex;justify-content:space-between;padding:8px 2px 0;
-  color:var(--dim);font:10px/1 var(--mono);letter-spacing:.03em}
-.legend{display:flex;flex-wrap:wrap;gap:5px 14px;padding:13px 16px;
-  border-top:1px solid var(--line);background:var(--pan2)}
-.lg{display:inline-flex;align-items:center;gap:6px;color:var(--sub);font:10.5px/1 var(--mono)}
-.lg i{width:7px;height:7px;border-radius:2px;flex:0 0 auto}
-
-/* ---------- bands ---------- */
-.band{padding:74px 0;border-bottom:1px solid var(--line)}
-.bhead{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;margin-bottom:30px}
-.tag{color:#7B87A8;font:11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase}
-h2{margin-top:14px;font-size:clamp(24px,2.7vw,32px);font-weight:700;line-height:1.25;letter-spacing:0}
-.bhead p{margin-top:10px;max-width:56ch;color:var(--sub);font-size:14.5px}
-.bhead .n{flex:0 0 auto;color:var(--dim);font:11px/1 var(--mono);letter-spacing:.05em;
-  border:1px solid var(--line);border-radius:99px;padding:6px 12px;white-space:nowrap}
-
-/* ---------- sources table ---------- */
-.tablewrap{border:1px solid var(--line);border-radius:12px;background:rgba(16,18,21,.6);overflow:hidden}
-table{width:100%;border-collapse:collapse}
-thead th{border-bottom:1px solid var(--line2);background:var(--pan2);padding:11px 16px;
-  color:#7E858F;font:600 10.5px/1.4 var(--sans);letter-spacing:.06em;font-weight:500;text-align:left}
-thead th.r{text-align:right}
-thead th.sp{text-align:right}
-tbody tr{border-bottom:1px solid var(--line);transition:background .16s ease}
-tbody tr:last-child{border-bottom:0}
-tbody tr:hover{background:rgba(255,255,255,.028)}
-tbody td{padding:13px 16px;font-size:13.5px;vertical-align:middle}
-.nm{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12.5px;font-weight:500}
-.dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
-td.mono{font-size:12.5px}
-td.b{font-weight:600}
-.sh{width:170px}
-.gbar{display:block;width:100%;height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
-.gbar i{display:block;height:100%;border-radius:2px}
-.sh em{display:block;margin-top:6px;font-style:normal;font-size:10px;text-align:right}
-.sp{text-align:right;width:120px}
-.sp svg{display:block;margin-left:auto}
-.sp .ln{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.3s cubic-bezier(.22,1,.36,1) both}
-@keyframes draw{to{stroke-dashoffset:0}}
-tr.tot{background:var(--pan2)}
-tr.tot td{color:var(--sub);font-family:var(--mono);font-size:11.5px;
-  letter-spacing:.04em;text-transform:none;border-top:1px solid var(--line2)}
-tr.tot .b{color:#fff}
-
-/* ---------- bento ---------- */
-.bento{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.cell{position:relative;background:var(--pan);padding:26px 26px 28px;
-  transition:background .2s ease}
-.cell:hover{background:var(--pan2)}
-.cell.big{grid-column:span 2;grid-row:span 2;display:flex;flex-direction:column}
-.cell h3{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:650;letter-spacing:0}
-.cell h3 svg{width:16px;height:16px;color:var(--accent);flex:0 0 auto}
-.cell p{margin-top:11px;color:var(--sub);font-size:13.5px;line-height:1.8}
-.cell .k{position:absolute;top:20px;right:22px;color:var(--dim);
-  font:10px/1 var(--mono);letter-spacing:.08em}
-.term{margin-top:auto;padding:16px 18px;border:1px solid var(--line);border-radius:8px;
-  background:#0C0D0F;font-family:var(--mono);font-size:12px;line-height:1.95;overflow:hidden}
-.term div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.term .pr{color:#4ADE80}
-.term .ok{color:#4FC3A1}
-.term .cm{color:var(--dim)}
-.term .nu{color:#9AA0A8}
-
-/* ---------- 全部下载：平台分组 + 整行可点的紧凑行 ---------- */
-.plats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px}
-.plat-h{display:flex;align-items:center;gap:9px;margin:0 0 13px;
-  font-size:15px;font-weight:650;letter-spacing:0}
-.plat-h .wini{width:17px;height:17px;flex:0 0 auto}
-.plat-h .plat-n{margin-left:auto;color:var(--dim);font:11px/1 var(--mono);letter-spacing:.04em}
-.dl-list{display:grid;gap:10px}
-.dlrow{position:relative;display:flex;align-items:center;gap:10px;padding:15px 16px;
-  border:1px solid var(--line);border-radius:11px;background:var(--pan);
-  transition:border-color .18s ease,background .18s ease,transform .18s cubic-bezier(.16,1,.3,1)}
-.dlrow:hover{border-color:var(--line2);background:var(--pan2);transform:translateY(-1px)}
-.dlrow.rec{border-color:rgba(240,194,75,.34)}
-.dlrow.rec:hover{border-color:rgba(240,194,75,.55)}
-.dl-n{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:9px;
-  font-size:14px;font-weight:600;color:var(--txt)}
-.rt{flex:0 0 auto;border:1px solid rgba(240,194,75,.4);border-radius:99px;padding:1px 7px;
-  color:#7B87A8;font:10px/1.6 var(--mono);letter-spacing:.04em}
-.ext{flex:0 0 auto;border:1px solid var(--line2);border-radius:6px;padding:2px 8px;
-  background:rgba(255,255,255,.04);color:var(--sub);font:11px/1.5 var(--mono)}
-.dl-s{flex:0 0 auto;display:flex;align-items:center;gap:9px;
-  color:var(--dim);font:11.5px/1 var(--mono);font-variant-numeric:tabular-nums}
-.dl-s b{color:var(--sub);font-weight:500}
-.dl-s span{color:var(--dim)}
-.dl-go{display:grid;place-items:center;width:27px;height:27px;flex:0 0 auto;
-  border:1px solid var(--line2);border-radius:8px;color:var(--sub);
-  transition:border-color .18s ease,color .18s ease,background .18s ease}
-.dl-go svg{width:14px;height:14px}
-.dlrow:hover .dl-go{border-color:var(--accent);color:var(--accent);background:rgba(77,107,254,.12)}
-.sr{position:absolute;width:1px;height:1px;overflow:hidden;
-  clip:rect(0 0 0 0);white-space:nowrap}
-/* 后续推出：不可点的占位行（用 div 而非 a，避免误点与读屏误报） */
-.dlrow.off{border-style:dashed;border-color:var(--line);background:transparent}
-.dlrow.off:hover{transform:none;border-color:var(--line)}
-.dlrow.off .dl-n,.dlrow.off .ext{color:var(--dim)}
-.dlrow.off .ext{border-color:var(--line);background:transparent}
-.dlrow.off .plat-h{opacity:.75}
-.soon{flex:0 0 auto;border:1px dashed rgba(240,194,75,.34);border-radius:99px;
-  padding:3px 10px;color:var(--dim);font:11px/1.5 var(--mono);letter-spacing:.02em}
-.plat-h .soon-tag{flex:0 0 auto;border:1px solid var(--line2);border-radius:99px;
-  padding:2px 8px;color:var(--dim);font:10px/1.5 var(--mono);letter-spacing:.02em}
-.howto{margin-top:26px;display:grid;gap:9px;padding:17px 18px;min-width:0;
-  border:1px solid var(--line);border-radius:11px;background:rgba(16,18,21,.5)}
-.howto h4{margin:0;color:var(--dim);font:500 10.5px/1 var(--mono);
-  letter-spacing:.14em;text-transform:uppercase}
-.howto p{margin:0;color:var(--dim);font-size:12.5px;line-height:1.9}
-.howto b{color:var(--sub);font-weight:600}
-
-.mirror{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:22px;
-  padding:16px 20px;border:1px solid var(--line);border-radius:10px;background:rgba(16,18,21,.55)}
-.mirror>span{color:var(--dim);font:11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase}
-.seg{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line2);border-radius:8px;background:rgba(0,0,0,.3)}
-.seg button{border:0;border-radius:6px;padding:6px 14px;background:transparent;color:var(--sub);
-  font:12px/1 var(--sans);cursor:pointer;transition:background .16s ease,color .16s ease}
-.seg button:hover{color:var(--txt)}
-.seg button.on{background:var(--accent);color:#0B0C0E;font-weight:600}
-.tip{margin-top:14px;color:var(--dim);font-size:12.5px;line-height:1.9}
-
-/* ---------- footer ---------- */
-footer{padding:34px 0 44px}
-.foot{display:flex;align-items:center;gap:22px;flex-wrap:wrap;
-  color:var(--dim);font:12px/1.6 var(--mono)}
-.foot a{color:var(--sub);transition:color .18s ease}
-.foot a:hover{color:var(--accent)}
-
-/* ---------- reveal ---------- */
-html.anim [data-reveal]{opacity:0;transform:translateY(22px);
-  transition:opacity .8s cubic-bezier(.22,1,.36,1) var(--d,0s),transform .8s cubic-bezier(.22,1,.36,1) var(--d,0s)}
-html.anim [data-reveal].in{opacity:1;transform:none}
-
-/* ---------- 吸底下载条基态（手机端断点内点亮；桌面端这个层不存在） ---------- */
-.mbar{display:none}
-
-/* ---------- responsive ---------- */
-@media (max-width:1080px){
-  .hero-grid{grid-template-columns:1fr;gap:40px}
-  h1{font-size:clamp(30px,6.2vw,42px)}
-  .bento{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .cell.big{grid-column:span 2;grid-row:span 1}
-  .plats{grid-template-columns:minmax(0,1fr);gap:22px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+/* ── 顶栏 ── */
+.nav{position:sticky;top:0;z-index:40;background:rgba(8,9,11,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav .wrap{height:58px;display:flex;align-items:center;gap:26px}
+.brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:14.5px;letter-spacing:.1px}
+.ico{width:22px;height:22px;flex:none}
+.nav .lk{color:var(--sub);font-size:13px;transition:color .15s}
+.nav .lk:hover{color:var(--txt)}
+.nav .sp{flex:1}
+.pill{font-size:11.5px;color:var(--dim);border:1px solid var(--line2);border-radius:999px;padding:4px 11px;font-family:var(--mono)}
+.btn-sm{height:30px;padding:0 13px;border-radius:8px;background:#fff;color:#0B0D10;font-size:12.5px;font-weight:650;
+  display:inline-flex;align-items:center;gap:6px;transition:transform .12s ease,box-shadow .12s ease}
+.btn-sm:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,255,255,.12)}
+/* ── Hero ── */
+.hero .wrap{display:grid;grid-template-columns:minmax(380px,460px) minmax(0,1fr);gap:56px;align-items:center;
+  padding-top:64px;padding-bottom:56px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);border:1px solid var(--line2);
+  border-radius:999px;padding:5px 12px;margin-bottom:22px}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--green)}
+h1{font-size:clamp(34px,4vw,50px);line-height:1.12;letter-spacing:-1.2px;font-weight:720}
+.hl{color:var(--blue)}
+.lead{color:var(--sub);font-size:15px;margin-top:18px}
+.cta{margin-top:28px}
+.btn-main{display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 22px;border-radius:11px;background:var(--bd);
+  color:#fff;font-size:15px;font-weight:650;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .12s ease;
+  box-shadow:0 12px 30px rgba(63,115,245,.32)}
+.btn-main:hover{background:#4F80FF;transform:translateY(-1px);box-shadow:0 16px 36px rgba(63,115,245,.42)}
+.btn-main svg{width:17px;height:17px}
+.btn-main b{font-weight:650;font-family:var(--mono);font-size:13.5px}
+.btn-main.busy{opacity:.7;pointer-events:none}
+.src-status{margin-top:14px;font-size:12.5px;color:var(--sub);display:flex;align-items:center;gap:8px;min-height:20px}
+.src-status b{color:var(--txt);font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+.dot.ok{background:var(--green)}
+.dot.wait{background:var(--blue);animation:blink 1s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+.shot img{display:block;width:100%;height:auto;border:1px solid var(--line2);border-radius:14px;
+  box-shadow:0 40px 90px rgba(0,0,0,.55)}
+/* ── 数据源 chips ── */
+.chips{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:22px 0}
+.chips .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.chips-head{font-size:12.5px;color:var(--dim);font-family:var(--mono);white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;
+  background:var(--panel);font-size:12px}
+.chip b{font-weight:600;color:var(--sub)}
+.chip i{font-style:normal;color:var(--dim);font-family:var(--mono);font-size:11px}
+.chip.more{color:var(--dim)}
+/* ── 下载 ── */
+.dl .wrap{padding-top:56px;padding-bottom:72px}
+.dl h2{font-size:22px;font-weight:680;letter-spacing:-.3px}
+.dl-sub{color:var(--dim);font-size:13px;margin-top:8px}
+.dl-row{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:13px;background:var(--panel);
+  padding:16px 18px;margin-top:20px;cursor:pointer;transition:border-color .15s,background .15s}
+.dl-row:hover{border-color:var(--line2);background:#13171D}
+.dl-row .nm{font-size:14.5px;font-weight:650;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tag{font-style:normal;font-size:10.5px;font-weight:700;color:#0B0D10;background:#9FD0FF;border-radius:5px;padding:1.5px 7px}
+.ext{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line2);border-radius:999px;padding:2px 9px}
+.fn{color:var(--dim);font-size:11.5px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-row .sp{flex:1}
+.dl-row .meta{color:var(--dim);font-size:12px;font-family:var(--mono);white-space:nowrap}
+.go{width:34px;height:34px;border-radius:9px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;
+  color:var(--sub);flex:none;transition:background .15s,color .15s}
+.dl-row:hover .go{background:var(--bd);border-color:var(--bd);color:#fff}
+.seg{display:inline-flex;gap:3px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:3px;border-radius:10px;margin-top:18px}
+.seg button{appearance:none;border:0;background:transparent;color:var(--dim);font-size:12.5px;font-family:inherit;
+  padding:7px 14px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
+.seg button:hover{color:var(--txt);background:rgba(255,255,255,.06)}
+.seg button.on{background:rgba(255,255,255,.10);color:var(--txt)}
+.hint{color:var(--dim);font-size:12px;margin-top:14px}
+footer{border-top:1px solid var(--line);padding:22px 0 30px;color:var(--dim);font-size:12px}
+footer .wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+footer a:hover{color:var(--txt)}
+footer .sp{flex:1}
+@media (max-width:960px){
+  .wrap{padding:0 20px}
+  .nav .wrap{height:54px;gap:12px}
+  .brand{font-size:13.5px;white-space:nowrap}
+  .brand .ico{width:19px;height:19px}
+  .nav .lk.sec{display:none}
+  .nav .lk{white-space:nowrap}
+  .pill{font-size:11px;padding:3px 9px}
+  .btn-sm{height:32px;padding:0 12px;white-space:nowrap}
+  .hero .wrap{grid-template-columns:1fr;gap:34px;padding-top:36px;padding-bottom:34px}
+  .shot{order:2}
+  h1{letter-spacing:-.8px}
+  .lead{font-size:14px}
+  .btn-main{width:100%;justify-content:center;min-height:48px}
+  .seg{display:flex;width:100%;gap:4px}
+  .seg button{flex:1 1 0;min-width:0;padding:9px 4px;font-size:13px;min-height:42px}
+  .chips-head{width:100%;white-space:normal}
+  .dl-row{flex-wrap:wrap;gap:10px}
+  .fn{width:100%;order:5}
+  .dl .wrap{padding-top:38px;padding-bottom:48px}
 }
-@media (max-width:860px){
-  .nlinks{display:none}
-  .hero{padding:52px 0 44px}
-  .band{padding:54px 0}
-  .bhead{flex-direction:column;align-items:flex-start;gap:12px}
-  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .kpi{border-bottom:1px solid var(--line)}
-  .kpi:nth-child(2n){border-right:0}
-  .kpi:nth-child(n+3){border-bottom:0}
-  .hide-sm{display:none}
-  .sh{width:96px}
-}
-@media (max-width:640px){
-  .wrap{width:min(100% - 32px,1160px)}
-  .nav-in{height:54px;gap:12px}
-  .pill{display:none}
-  .btn{height:42px;padding:0 15px;font-size:13.5px}
-  .cta .btn{flex:1 1 auto;justify-content:center}
-  .bento{grid-template-columns:1fr}
-  .cell.big{grid-column:span 1}
-  /* 1fr 网格项的 min-width:auto 会被 .term 里 white-space:nowrap 的命令行顶开，
-     实测格子 347 > 容器 328，右边 4px 被 .bento 的 overflow:hidden 裁掉 */
-  .cell{padding:22px 20px 24px;min-width:0}
-  .dlrow{gap:8px;padding:13px 14px}
-  .dl-n{gap:7px;font-size:13.5px}
-  .dl-s b{display:none}
-  .legend{gap:4px 11px;padding:11px 14px}
-  thead th{padding:10px 12px;font-size:12px}
-  tbody td{padding:11px 12px}
-  /* ---------- 必要信息字号下限：辅助说明 12px ---------- */
-  .lg{font-size:12px}
-  .sh em{font-size:12px}
-  .cell .k{font-size:12px}
-  .kpi span{font-size:12px}
-  .kpi i{font-size:12px}
-  .axis{font-size:12px}
-  .live{font-size:12px}
-  .wtitle{font-size:12px}
-  .meta{font-size:12px}
-  .eyebrow{font-size:12px}
-  .tag{font-size:12px}
-  .bhead .n{font-size:12px}
-  .howto h4{font-size:12px}
-  .mirror>span{font-size:12px}
-  .rt{font-size:12px}
-  .ext{font-size:12px}
-  .soon,.plat-h .soon-tag{font-size:12px}
-  .plat-h .plat-n{font-size:12px}
-  .dl-s{font-size:12px}
-  tr.tot td{font-size:12px}
-  /* ---------- 触控下限 44px（纯图标 40px） ---------- */
-  .brand{min-height:44px}
-  .ico{width:40px;height:40px}
-  /* 镜像分段控件实测 76x24：撑满一行、每个按钮抬到 44，文字按控件档走 14px */
-  .seg{display:flex;width:100%;gap:4px;padding:4px}
-  .seg button{flex:1 1 0;min-width:0;padding:0 6px;min-height:44px;font-size:14px;line-height:1.25}
-  /* 字号抬到 12 之后走势列会把 table 顶到 355 > .tablewrap 的 328（基线本来就溢出 15px）。
-     只在 380 以下把走势线收一档，390/430 仍是原来的 104x28。 */
-  @media (max-width:380px){.sp svg{width:76px;height:auto}}
-  /* ===== 手机端吸底下载条：滚过首屏出现，进入 #download 下载区自动隐藏 ===== */
-  .mbar{position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;align-items:center;gap:10px;
-    padding:9px 14px calc(9px + env(safe-area-inset-bottom));background:rgba(21,22,26,.92);
-    backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
-    border-top:1px solid var(--line2);box-shadow:0 -14px 40px rgba(0,0,0,.5);
-    transform:translateY(115%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
-  .mbar.show{transform:none}
-  .mbar img{width:32px;height:32px;border-radius:8px;flex:0 0 auto;border:1px solid var(--line2)}
-  .mbar .mb-t{flex:1 1 auto;min-width:0}
-  .mbar .mt{font-size:13px;font-weight:650;line-height:1.3;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mbar .ms{font-family:var(--mono);font-size:12px;line-height:1.45;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mbar .ms b{color:var(--accent-s);font-weight:600}
-  .mbar .go{flex:0 0 auto;min-height:44px;display:inline-flex;align-items:center;justify-content:center;
-    padding:0 18px;border-radius:7px;font-size:14px;font-weight:600;color:#0B0C0E;background:#F2F3F5;white-space:nowrap}
-  .mbar .go:active{transform:translateY(1px)}
-  /* 页脚为吸底条 + 刘海安全区让位（条实测 63px 高，留 88px） */
-  footer{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
-}
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;
-    transition-duration:.01ms!important}
-  html.anim [data-reveal]{opacity:1;transform:none}
+/* ── 触屏：按钮抬到 44px 触控下限 ── */
+@media (pointer:coarse){
+  .btn-sm{height:40px;padding:0 16px}
+  .seg button{min-height:44px}
+  .dl-row{padding:18px}
 }
 </style>
 </head>
 <body>
 
-<header class="nav">
-  <div class="wrap nav-in">
-    <a class="brand" href="/">
-      <span class="mark"><svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="mkfg" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#6C86FF"/><stop offset="1" stop-color="#4FC3F0"/></linearGradient></defs><path d="M16.5 10.5h15a6 6 0 0 1 6 6v11.5L26 38.5H16.5a6 6 0 0 1-6-6v-16a6 6 0 0 1 6-6z" fill="url(#mkfg)"/></svg></span>
-      Token Monitor
-    </a>
-    <nav class="nlinks">
-      <a href="#overview">总览</a>
-      <a href="#sources">数据源</a>
-      <a href="#features">能力</a>
-      <a href="#download">下载</a>
-    </nav>
-    <span class="grow"></span>
-    <span class="pill" id="ver-pill">v1.1.4</span>
-    <a class="ico" href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener" aria-label="GitHub">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.95 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.03a9.5 9.5 0 0 1 5 0c1.91-1.3 2.75-1.03 2.75-1.03.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.85-2.34 4.7-4.57 4.95.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
-    </a>
-    <a class="btn btn-p btn-sm" href="#download">下载</a>
+<nav class="nav"><div class="wrap">
+  <a class="brand" href="/token-monitor/">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.6 14.6 9.4 22.4 12 14.6 14.6 12 22.4 9.4 14.6 1.6 12 9.4 9.4Z" fill="#BFD4FF"/><circle cx="12" cy="12" r="2.1" fill="#FF9A62"/></svg>
+    Token Monitor</a>
+  <a class="lk sec" href="#top">总览</a>
+  <a class="lk sec" href="#download">下载</a>
+  <span class="sp"></span>
+  <span class="pill" id="verPill">v1.9.0</span>
+  <a class="lk" href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener">GitHub</a>
+  <a class="btn-sm" href="#download">下载</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <div class="copy">
+    <span class="eyebrow"><i></i>Windows 10 / 11 · 数据不出本机</span>
+    <h1>看清每一枚 Token<br><span class="hl">究竟花在哪里</span></h1>
+    <p class="lead">自动发现本机已装的 AI 编程工具，读取本地日志并按模型单价逐条计价。缓存命中率、Agent 排行、对话级明细，全在同一块看板上。</p>
+    <div class="cta">
+      <a class="btn-main" id="dlMain" data-dl href="#download">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg>
+        下载安装版<b id="verBtn">v1.9.0</b></a>
+    </div>
+    <p class="src-status" id="srcStatus"><span class="dot wait"></span>正在测速选择最快下载源…</p>
   </div>
-</header>
+  <div class="shot"><img src="/token-monitor/app-shot.webp" width="1168" height="645" alt="Token Monitor 界面：用量总览"></div>
+</div></header>
 
-<main>
-<section class="hero" id="overview">
-  <div class="wrap hero-grid">
-    <div class="hero-copy">
-      <span class="eyebrow" data-reveal><i></i>Windows 10 / 11 &#183; 数据不出本机</span>
-      <h1 data-reveal style="--d:.06s">看清每一枚 Token<br><span class="hl">究竟花在哪里</span></h1>
-      <p class="lead" data-reveal style="--d:.12s">自动发现本机已装的 AI 编程工具，读取其本地日志并按模型单价逐条计价。缓存命中率、Agent 排行、对话级明细，全在同一块看板上。</p>
-      <div class="cta" data-reveal style="--d:.18s">
-        <a class="btn btn-p" id="dl-setup" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg>
-          下载安装版<span id="ver-btn">&#160;v1.1.4</span>
-        </a>
-        <a class="btn btn-g" id="dl-portable" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8M2 8h20l-2-4H4L2 8zM10 12h4"/></svg>
-          便携版（解压即用）
-        </a>
-      </div>
-      <p class="meta" data-reveal style="--d:.24s" id="head-meta">setup 约 18 MB &#183; 装一次，之后在软件里更新 &#183; 无需注册</p>
-    </div>
+<section class="chips" id="sources"><div class="wrap">
+  <span class="chips-head">本机实测 3.90 B tokens · 11 个数据源</span>
+  <span class="chip"><b>zcode</b><i>1.10 B</i></span><span class="chip"><b>codex</b><i>939.5 M</i></span><span class="chip"><b>claude-code</b><i>696.9 M</i></span><span class="chip"><b>hermes</b><i>418.2 M</i></span><span class="chip"><b>opencode</b><i>306.9 M</i></span><span class="chip"><b>box-agent</b><i>293.7 M</i></span><span class="chip"><b>mhagent</b><i>79.3 M</i></span><span class="chip"><b>cline</b><i>45.7 M</i></span><span class="chip more">+3</span>
+</div></section>
 
-    <div class="win" data-reveal style="--d:.3s" id="panel">
-      <div class="win-bar">
-        <span class="wdots"><i></i><i></i><i></i></span>
-        <span class="wtitle">token-monitor &#183; <b>用量总览</b></span>
-        <span class="live"><i></i>本机扫描</span>
-      </div>
-      <div class="kpis">
-        <div class="kpi hot"><span>Tokens</span><b data-count="3503920508" data-fmt="tok">0</b><i>缓存命中 82.3%</i></div>
-        <div class="kpi"><span>API 请求</span><b data-count="12099" data-fmt="int">0</b><i>逐条计价</i></div>
-        <div class="kpi"><span>估算成本</span><b data-count="9335" data-fmt="cny">0</b><i>按模型单价</i></div>
-        <div class="kpi"><span>数据源</span><b data-count="11" data-fmt="int">0</b><i>本机已发现</i></div>
-      </div>
-      <div class="chart">
-        <svg viewBox="0 0 660 200" aria-label="近 30 天每日 Token 消耗堆叠柱状图">
-          <g color="#F2F3F5"><line x1="0" y1="10.0" x2="660.0" y2="10.0" stroke="currentColor" stroke-width="1" stroke-opacity=".07"/><line x1="0" y1="53.0" x2="660.0" y2="53.0" stroke="currentColor" stroke-width="1" stroke-opacity=".07"/><line x1="0" y1="96.0" x2="660.0" y2="96.0" stroke="currentColor" stroke-width="1" stroke-opacity=".07"/><line x1="0" y1="139.0" x2="660.0" y2="139.0" stroke="currentColor" stroke-width="1" stroke-opacity=".07"/></g>
-          <rect class="bar" x="0.00" y="181.95" width="18.13" height="0.05" fill="#37B48F" style="--i:0"><title>2026-08-21 &#183; opencode &#183; 138.9 K tok</title></rect><rect class="bar" x="0.00" y="171.94" width="18.13" height="10.01" fill="#3F4760" style="--i:0"><title>2026-08-21 &#183; mhagent &#183; 26.0 M tok</title></rect><rect class="bar" x="44.27" y="171.15" width="18.13" height="10.85" fill="#3F4760" style="--i:2"><title>2026-08-23 &#183; mhagent &#183; 28.2 M tok</title></rect><rect class="bar" x="66.40" y="181.98" width="18.13" height="0.02" fill="#37B48F" style="--i:3"><title>2026-08-24 &#183; opencode &#183; 45.9 K tok</title></rect><rect class="bar" x="110.67" y="128.88" width="18.13" height="53.12" fill="#8E7CFF" style="--i:5"><title>2026-08-26 &#183; claude-code &#183; 137.8 M tok</title></rect><rect class="bar" x="132.80" y="137.94" width="18.13" height="44.06" fill="#4D6BFE" style="--i:6"><title>2026-08-27 &#183; zcode &#183; 114.3 M tok</title></rect><rect class="bar" x="132.80" y="120.00" width="18.13" height="17.94" fill="#8E7CFF" style="--i:6"><title>2026-08-27 &#183; claude-code &#183; 46.5 M tok</title></rect><rect class="bar" x="154.93" y="163.82" width="18.13" height="18.18" fill="#4D6BFE" style="--i:7"><title>2026-08-28 &#183; zcode &#183; 47.2 M tok</title></rect><rect class="bar" x="154.93" y="145.98" width="18.13" height="17.84" fill="#8E7CFF" style="--i:7"><title>2026-08-28 &#183; claude-code &#183; 46.3 M tok</title></rect><rect class="bar" x="154.93" y="136.26" width="18.13" height="9.72" fill="#3F4760" style="--i:7"><title>2026-08-28 &#183; mhagent &#183; 25.2 M tok</title></rect><rect class="bar" x="177.07" y="160.68" width="18.13" height="21.32" fill="#4D6BFE" style="--i:8"><title>2026-08-29 &#183; zcode &#183; 55.3 M tok</title></rect><rect class="bar" x="199.20" y="98.29" width="18.13" height="83.71" fill="#4D6BFE" style="--i:9"><title>2026-08-30 &#183; zcode &#183; 217.1 M tok</title></rect><rect class="bar" x="221.33" y="180.01" width="18.13" height="1.99" fill="#4D6BFE" style="--i:10"><title>2026-08-31 &#183; zcode &#183; 5.1 M tok</title></rect><rect class="bar" x="221.33" y="179.41" width="18.13" height="0.60" fill="#5A6480" style="--i:10"><title>2026-08-31 &#183; box-agent &#183; 1.6 M tok</title></rect><rect class="bar" x="243.47" y="96.93" width="18.13" height="85.07" fill="#5A6480" style="--i:11"><title>2026-09-01 &#183; box-agent &#183; 220.7 M tok</title></rect><rect class="bar" x="265.60" y="162.33" width="18.13" height="19.67" fill="#8E7CFF" style="--i:12"><title>2026-09-02 &#183; claude-code &#183; 51.0 M tok</title></rect><rect class="bar" x="265.60" y="134.78" width="18.13" height="27.55" fill="#5A6480" style="--i:12"><title>2026-09-02 &#183; box-agent &#183; 71.5 M tok</title></rect><rect class="bar" x="354.13" y="10.58" width="18.13" height="171.42" fill="#4D6BFE" style="--i:16"><title>2026-09-06 &#183; zcode &#183; 444.7 M tok</title></rect><rect class="bar" x="376.27" y="147.73" width="18.13" height="34.27" fill="#4D6BFE" style="--i:17"><title>2026-09-07 &#183; zcode &#183; 88.9 M tok</title></rect><rect class="bar" x="376.27" y="147.17" width="18.13" height="0.56" fill="#8E7CFF" style="--i:17"><title>2026-09-07 &#183; claude-code &#183; 1.5 M tok</title></rect><rect class="bar" x="420.53" y="169.75" width="18.13" height="12.25" fill="#8E7CFF" style="--i:19"><title>2026-09-09 &#183; claude-code &#183; 31.8 M tok</title></rect><rect class="bar" x="420.53" y="169.71" width="18.13" height="0.04" fill="#5DC3F0" style="--i:19"><title>2026-09-09 &#183; codex &#183; 100.4 K tok</title></rect><rect class="bar" x="442.67" y="144.63" width="18.13" height="37.37" fill="#5DC3F0" style="--i:20"><title>2026-09-10 &#183; codex &#183; 96.9 M tok</title></rect><rect class="bar" x="486.93" y="105.45" width="18.13" height="76.55" fill="#4D6BFE" style="--i:22"><title>2026-09-12 &#183; zcode &#183; 198.6 M tok</title></rect><rect class="bar" x="486.93" y="10.00" width="18.13" height="95.45" fill="#5DC3F0" style="--i:22"><title>2026-09-12 &#183; codex &#183; 247.6 M tok</title></rect><rect class="bar" x="509.07" y="115.41" width="18.13" height="66.59" fill="#5DC3F0" style="--i:23"><title>2026-09-13 &#183; codex &#183; 172.8 M tok</title></rect><rect class="bar" x="553.33" y="181.22" width="18.13" height="0.78" fill="#5DC3F0" style="--i:25"><title>2026-09-15 &#183; codex &#183; 2.0 M tok</title></rect><rect class="bar" x="597.60" y="181.99" width="18.13" height="0.01" fill="#5DC3F0" style="--i:27"><title>2026-09-17 &#183; codex &#183; 17.4 K tok</title></rect><rect class="bar" x="619.73" y="163.52" width="18.13" height="18.48" fill="#5DC3F0" style="--i:28"><title>2026-09-18 &#183; codex &#183; 47.9 M tok</title></rect><rect class="bar" x="619.73" y="145.92" width="18.13" height="17.60" fill="#485270" style="--i:28"><title>2026-09-18 &#183; cline &#183; 45.7 M tok</title></rect><rect class="bar" x="641.87" y="152.81" width="18.13" height="29.19" fill="#5DC3F0" style="--i:29"><title>2026-09-19 &#183; codex &#183; 75.7 M tok</title></rect><rect class="bar" x="641.87" y="152.81" width="18.13" height="0.00" fill="#485270" style="--i:29"><title>2026-09-19 &#183; cline &#183; 6.1 K tok</title></rect>
-          <line x1="0" y1="182" x2="660" y2="182" stroke="currentColor" stroke-opacity=".16" stroke-width="1"/>
-        </svg>
-        <div class="axis"><span>08/21</span><span>近 30 天 &#183; 每日 Token</span><span>09/19</span></div>
-      </div>
-      <div class="legend"><span class="lg"><i style="background:#4D6BFE"></i>zcode</span><span class="lg"><i style="background:#8E7CFF"></i>claude-code</span><span class="lg"><i style="background:#5DC3F0"></i>codex</span><span class="lg"><i style="background:#37B48F"></i>opencode</span><span class="lg"><i style="background:#5A6480"></i>box-agent</span><span class="lg"><i style="background:#4C5570"></i>hermes</span><span class="lg"><i style="background:#3F4760"></i>mhagent</span><span class="lg"><i style="background:#485270"></i>cline</span><span class="lg"><i style="background:#4D6BFE"></i>agnes</span><span class="lg"><i style="background:#8E7CFF"></i>dsh</span><span class="lg"><i style="background:#5DC3F0"></i>mavis</span></div>
-    </div>
+<section class="dl" id="download"><div class="wrap">
+  <h2>下载</h2>
+  <p class="dl-sub">Windows 10 / 11 · 装完之后在软件内点「检查更新」即可升级</p>
+  <div class="dl-row" data-dl id="dlRow">
+    <span class="nm">Token Monitor 安装版<i class="tag">推荐</i></span>
+    <span class="ext">.exe</span>
+    <span class="fn" id="fileName">TokenMonitor-setup-v1.9.0.exe</span>
+    <span class="sp"></span>
+    <span class="meta" id="dlMeta">约 30 MB · v1.9.0</span>
+    <span class="go"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg></span>
   </div>
-</section>
-
-<section class="band" id="sources">
-  <div class="wrap">
-    <div class="bhead" data-reveal>
-      <div>
-        <span class="tag">Sources</span>
-        <h2>数据源用量排行</h2>
-        <p>下面每个数字都来自本机真实扫描，不是示例数据。右侧折线是该工具最近 30 个活跃日的走势。</p>
-      </div>
-      <span class="n">08/21 &#8594; 09/19</span>
-    </div>
-    <div class="tablewrap" data-reveal style="--d:.08s">
-      <table>
-        <colgroup><col><col><col><col><col style="width:190px"><col><col></colgroup>
-        <thead><tr>
-          <th>数据源</th><th class="r">Tokens</th><th class="r hide-sm">请求</th><th class="r hide-sm">成本</th>
-          <th>占比</th><th class="sp">走势</th><th class="r hide-sm">活跃</th>
-        </tr></thead>
-        <tbody>
-<tr><td class="nm"><i class="dot" style="background:#4D6BFE"></i><span>zcode</span></td><td class="r mono b">1.17 B</td><td class="r mono dim hide-sm">3,555</td><td class="r mono hide-sm">&#165;258 <em class="plan">+套餐</em></td><td class="sh"><span class="gbar"><i style="width:100.0%;background:#4D6BFE"></i></span><em class="mono dim">100.0%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path d="M3.0,19.3 L17.0,22.7 L31.0,22.3 L45.0,14.3 L59.0,24.7 L73.0,3.0 L87.0,20.6 L101.0,15.2 L101.0,28.0 L3.0,28.0 Z" fill="#4D6BFE" fill-opacity=".11"></path><path class="ln" d="M3.0,19.3 L17.0,22.7 L31.0,22.3 L45.0,14.3 L59.0,24.7 L73.0,3.0 L87.0,20.6 L101.0,15.2" pathLength="1" fill="none" stroke="#4D6BFE" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">8 天</td></tr><tr><td class="nm"><i class="dot" style="background:#8E7CFF"></i><span>claude-code</span></td><td class="r mono b">696.8 M</td><td class="r mono dim hide-sm">6,086</td><td class="r mono hide-sm">&#165;4,703 <em class="plan">+套餐</em></td><td class="sh"><span class="gbar"><i style="width:59.5%;background:#8E7CFF"></i></span><em class="mono dim">59.5%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path d="M3.0,24.9 L6.9,25.0 L10.8,22.9 L14.8,25.0 L18.7,21.5 L22.6,17.6 L26.5,22.1 L30.4,23.6 L34.4,3.0 L38.3,23.7 L42.2,24.9 L46.1,25.0 L50.0,25.0 L54.0,24.8 L57.9,24.9 L61.8,24.3 L65.7,25.0 L69.6,25.0 L73.6,10.0 L77.5,19.9 L81.4,20.0 L85.3,25.0 L89.2,19.4 L93.2,24.8 L97.1,21.5 L101.0,25.0 L101.0,28.0 L3.0,28.0 Z" fill="#8E7CFF" fill-opacity=".11"></path><path class="ln" d="M3.0,24.9 L6.9,25.0 L10.8,22.9 L14.8,25.0 L18.7,21.5 L22.6,17.6 L26.5,22.1 L30.4,23.6 L34.4,3.0 L38.3,23.7 L42.2,24.9 L46.1,25.0 L50.0,25.0 L54.0,24.8 L57.9,24.9 L61.8,24.3 L65.7,25.0 L69.6,25.0 L73.6,10.0 L77.5,19.9 L81.4,20.0 L85.3,25.0 L89.2,19.4 L93.2,24.8 L97.1,21.5 L101.0,25.0" pathLength="1" fill="none" stroke="#8E7CFF" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">26 天</td></tr><tr><td class="nm"><i class="dot" style="background:#5DC3F0"></i><span>codex</span></td><td class="r mono b">643.1 M</td><td class="r mono dim hide-sm">27</td><td class="r mono hide-sm">&#165;2,881 <em class="plan">+套餐</em></td><td class="sh"><span class="gbar"><i style="width:54.9%;background:#5DC3F0"></i></span><em class="mono dim">54.9%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path d="M3.0,25.0 L17.0,16.4 L31.0,3.0 L45.0,9.7 L59.0,24.8 L73.0,25.0 L87.0,20.7 L101.0,18.3 L101.0,28.0 L3.0,28.0 Z" fill="#5DC3F0" fill-opacity=".11"></path><path class="ln" d="M3.0,25.0 L17.0,16.4 L31.0,3.0 L45.0,9.7 L59.0,24.8 L73.0,25.0 L87.0,20.7 L101.0,18.3" pathLength="1" fill="none" stroke="#5DC3F0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">8 天</td></tr><tr><td class="nm"><i class="dot" style="background:#37B48F"></i><span>opencode</span></td><td class="r mono b">306.9 M</td><td class="r mono dim hide-sm">74</td><td class="r mono hide-sm">&#165;1,380 <em class="plan">+套餐</em></td><td class="sh"><span class="gbar"><i style="width:26.2%;background:#37B48F"></i></span><em class="mono dim">26.2%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path d="M3.0,25.0 L7.9,24.5 L12.8,24.7 L17.7,24.9 L22.6,23.5 L27.5,15.4 L32.4,15.7 L37.3,3.0 L42.2,20.6 L47.1,13.4 L52.0,19.5 L56.9,23.1 L61.8,9.4 L66.7,23.7 L71.6,24.3 L76.5,22.5 L81.4,25.0 L86.3,21.8 L91.2,25.0 L96.1,25.0 L101.0,25.0 L101.0,28.0 L3.0,28.0 Z" fill="#37B48F" fill-opacity=".11"></path><path class="ln" d="M3.0,25.0 L7.9,24.5 L12.8,24.7 L17.7,24.9 L22.6,23.5 L27.5,15.4 L32.4,15.7 L37.3,3.0 L42.2,20.6 L47.1,13.4 L52.0,19.5 L56.9,23.1 L61.8,9.4 L66.7,23.7 L71.6,24.3 L76.5,22.5 L81.4,25.0 L86.3,21.8 L91.2,25.0 L96.1,25.0 L101.0,25.0" pathLength="1" fill="none" stroke="#37B48F" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">21 天</td></tr><tr><td class="nm"><i class="dot" style="background:#5A6480"></i><span>box-agent</span></td><td class="r mono b">293.7 M</td><td class="r mono dim hide-sm">1,074</td><td class="r mono hide-sm"><span class="plan">套餐不计费</span></td><td class="sh"><span class="gbar"><i style="width:25.1%;background:#5A6480"></i></span><em class="mono dim">25.1%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path class="ln" d="M3.0,24.8 L52.0,3.0 L101.0,17.9" pathLength="1" fill="none" stroke="#5A6480" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">3 天</td></tr><tr><td class="nm"><i class="dot" style="background:#4C5570"></i><span>hermes</span></td><td class="r mono b">254.8 M</td><td class="r mono dim hide-sm">9</td><td class="r mono hide-sm"><span class="unk">价格未知</span></td><td class="sh"><span class="gbar"><i style="width:21.8%;background:#4C5570"></i></span><em class="mono dim">21.8%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path class="ln" d="" pathLength="1" fill="none" stroke="#4C5570" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">0 天</td></tr><tr><td class="nm"><i class="dot" style="background:#3F4760"></i><span>mhagent</span></td><td class="r mono b">79.3 M</td><td class="r mono dim hide-sm">892</td><td class="r mono hide-sm">&#165;111</td><td class="sh"><span class="gbar"><i style="width:6.8%;background:#3F4760"></i></span><em class="mono dim">6.8%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path class="ln" d="M3.0,4.7 L52.0,3.0 L101.0,5.3" pathLength="1" fill="none" stroke="#3F4760" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">3 天</td></tr><tr><td class="nm"><i class="dot" style="background:#485270"></i><span>cline</span></td><td class="r mono b">45.7 M</td><td class="r mono dim hide-sm">2</td><td class="r mono hide-sm"><span class="plan">套餐不计费</span></td><td class="sh"><span class="gbar"><i style="width:3.9%;background:#485270"></i></span><em class="mono dim">3.9%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path class="ln" d="M3.0,3.0 L101.0,25.0" pathLength="1" fill="none" stroke="#485270" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path><line x1="3.0" y1="3.0" x2="101.0" y2="3.0" stroke="#485270" stroke-opacity=".3" stroke-width="1" stroke-dasharray="2 3"/><circle cx="3.0" cy="3.0" r="2.1" fill="#485270"/><circle cx="101.0" cy="25.0" r="2.1" fill="#485270"/></svg></td><td class="r mono dim hide-sm">2 天</td></tr><tr><td class="nm"><i class="dot" style="background:#4D6BFE"></i><span>agnes</span></td><td class="r mono b">6.7 M</td><td class="r mono dim hide-sm">113</td><td class="r mono hide-sm"><span class="plan">套餐不计费</span></td><td class="sh"><span class="gbar"><i style="width:0.6%;background:#4D6BFE"></i></span><em class="mono dim">0.6%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path class="ln" d="M3.0,19.8 L101.0,3.0" pathLength="1" fill="none" stroke="#4D6BFE" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path><line x1="3.0" y1="19.8" x2="101.0" y2="19.8" stroke="#4D6BFE" stroke-opacity=".3" stroke-width="1" stroke-dasharray="2 3"/><circle cx="3.0" cy="19.8" r="2.1" fill="#4D6BFE"/><circle cx="101.0" cy="3.0" r="2.1" fill="#4D6BFE"/></svg></td><td class="r mono dim hide-sm">2 天</td></tr><tr><td class="nm"><i class="dot" style="background:#8E7CFF"></i><span>dsh</span></td><td class="r mono b">4.7 M</td><td class="r mono dim hide-sm">4</td><td class="r mono hide-sm"><span class="unk">价格未知</span></td><td class="sh"><span class="gbar"><i style="width:0.4%;background:#8E7CFF"></i></span><em class="mono dim">0.4%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path class="ln" d="" pathLength="1" fill="none" stroke="#8E7CFF" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">0 天</td></tr><tr><td class="nm"><i class="dot" style="background:#5DC3F0"></i><span>mavis</span></td><td class="r mono b">896.3 K</td><td class="r mono dim hide-sm">263</td><td class="r mono hide-sm">&#165;3</td><td class="sh"><span class="gbar"><i style="width:0.1%;background:#5DC3F0"></i></span><em class="mono dim">0.1%</em></td><td class="sp"><svg viewBox="0 0 104 28" width="104" height="28" aria-hidden="true"><path d="M3.0,18.4 L19.3,18.8 L35.7,22.6 L52.0,20.0 L68.3,23.3 L84.7,3.0 L101.0,7.6 L101.0,28.0 L3.0,28.0 Z" fill="#5DC3F0" fill-opacity=".11"></path><path class="ln" d="M3.0,18.4 L19.3,18.8 L35.7,22.6 L52.0,20.0 L68.3,23.3 L84.7,3.0 L101.0,7.6" pathLength="1" fill="none" stroke="#5DC3F0" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"></path></svg></td><td class="r mono dim hide-sm">7 天</td></tr>
-<tr class="tot"><td>合计 11 类</td><td class="r mono b">3.50 B</td><td class="r mono dim hide-sm">12,099</td><td class="r mono hide-sm">&#165;9,335</td><td class="sh"></td><td class="sp"></td><td class="r mono dim hide-sm">53 天</td></tr>
-        </tbody>
-      </table>
-    </div>
-<p class="pnote"><b>套餐/订阅制 774.3 M tokens</b>（agnes-2.0-flash、agnes-2.5-flash、ark-code-latest、cline-free/kimi-k3等）按口径只记用量、不计金额 —— 表中「套餐不计费」即由此而来，与「价格未知」（走 API 但价表缺价）是两回事。</p>
+  <div class="seg" id="srcSeg">
+    <button type="button" data-s="auto" class="on">自动测速</button>
+    <button type="button" data-s="gh-proxy">国内镜像</button>
+    <button type="button" data-s="ghfast">备用镜像</button>
+    <button type="button" data-s="direct">官方直连</button>
   </div>
-</section>
+  <p class="hint" id="dlHint">下载前自动实测各源速度并选最快 · 首次运行若被 SmartScreen 提示，选择「更多信息 → 仍要运行」</p>
+</div></section>
 
-<section class="band" id="features">
-  <div class="wrap">
-    <div class="bhead" data-reveal>
-      <div>
-        <span class="tag">Capabilities</span>
-        <h2>六件事，做透</h2>
-        <p>从扫描、计价到看板，每一环都在本机完成，不上传任何对话内容。</p>
-      </div>
-    </div>
-    <div class="bento" data-reveal style="--d:.06s">
-      <article class="cell big">
-        <span class="k">01</span>
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 5v4h4"/><path d="M12 7v5l3 2"/></svg>81 个已知源，自动发现</h3>
-        <p>Claude Code、Codex、ZCode、Qoder、Cherry Studio、CatPaw、WorkBuddy、TRAE、Kimi、Gemini CLI…… 注册表内置 81 个已知数据源路径，装了就能扫到，不用填一个路径。</p>
-        <div class="term">
-          <div><span class="pr">&gt;</span> TokenMonitor.exe <span class="cm">--scan</span></div>
-          <div><span class="cm">发现数据源</span> <span class="ok">11</span> <span class="cm">个</span></div>
-          <div><span class="cm">解析记录</span> <span class="nu">12,099</span> <span class="cm">条</span></div>
-          <div><span class="cm">合计</span> <span class="ok">3.50B tokens</span> <span class="cm">· 缓存命中</span> <span class="ok">82.3%</span></div>
-          <div><span class="pr">&#10003;</span> <span class="cm">应用窗口直接打开，本地服务 127.0.0.1:8420</span></div>
-        </div>
-      </article>
-      <article class="cell">
-        <span class="k">02</span>
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M7 8.5C7 6.6 9 5.5 12 5.5s5 1.1 5 3-2 2.7-5 3-5 1.1-5 3 2 3 5 3 5-1.1 5-3"/></svg>按真实单价计价</h3>
-        <p>内置 1.2 万条模型价格。套餐/订阅制的模型只记用量、不计金额并单独标注；走 API 而价表缺价的如实标「价格未知」—— 两种情况分开说，绝不假装算得出。</p>
-      </article>
-      <article class="cell">
-        <span class="k">03</span>
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 15l3-4 2.5 3L17 9"/></svg>缓存命中率</h3>
-        <p>区分未命中输入、缓存写入、缓存命中与输出四类 token，一眼看出省钱空间。</p>
-      </article>
-      <article class="cell">
-        <span class="k">04</span>
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Agent 排行与下钻</h3>
-        <p>按消耗量排名，点开任一 Agent 即可看到它下面每个模型用了多少、请求了几次。</p>
-      </article>
-      <article class="cell">
-        <span class="k">05</span>
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4L4 21l1.2-3.6A8.4 8.4 0 1 1 21 11.5Z"/><path d="M9 10.5h6M9 14h4"/></svg>对话级明细</h3>
-        <p>把鼠标停在柱状图上，就能看到那一天的消耗分别来自哪些对话。</p>
-      </article>
-      <article class="cell">
-        <span class="k">06</span>
-        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>装完就不用管</h3>
-        <p>内置更新器，发现新版本一键下载替换重启；安装版与便携版都支持。</p>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="band" id="download">
-  <div class="wrap">
-    <div class="bhead" data-reveal>
-      <div>
-        <span class="tag">Download</span>
-        <h2>全部下载</h2>
-        <p>Token Monitor 的所有安装包 &#183; 当前仅支持 Windows 10 / 11，macOS 与 Linux 后续推出</p>
-      </div>
-      <span class="n">v1.1.4</span>
-    </div>
-
-    <div class="plats" data-reveal style="--d:.06s">
-      <div class="plat" id="plat-windows">
-        <div class="plat-h">
-          <svg class="wini" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F25022" d="M3 5.6 10.6 4.5v7H3z"/><path fill="#7FBA00" d="M11.7 4.3 21 3v8.5h-9.3z"/><path fill="#00A4EF" d="M3 12.5h7.6v7L3 18.4z"/><path fill="#FFB900" d="M11.7 12.5H21V21l-9.3-1.3z"/></svg>
-          Windows
-          <span class="plat-n">3 个包</span>
-        </div>
-        <div class="dl-list">
-          <a class="dlrow rec" id="dl-setup2" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
-            <span class="dl-n">安装版<span class="rt">推荐</span><span class="ext">.exe</span></span>
-            <span class="sr" id="fn-setup">TokenMonitor-setup.exe</span>
-            <span class="dl-s"><b id="s-setup">约 18 MB</b><span id="v-setup">v1.1.4</span></span>
-            <span class="dl-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg></span>
-          </a>
-          <a class="dlrow" id="dl-portable2" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
-            <span class="dl-n">便携版<span class="ext">.zip</span></span>
-            <span class="sr" id="fn-portable">TokenMonitor-portable.zip</span>
-            <span class="dl-s"><b id="s-portable">约 16 MB</b><span id="v-portable">v1.1.4</span></span>
-            <span class="dl-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg></span>
-          </a>
-          <a class="dlrow" id="dl-raw" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">
-            <span class="dl-n">单文件版<span class="ext">.exe</span></span>
-            <span class="sr">TokenMonitor.exe</span>
-            <span class="dl-s"><b id="s-raw">约 16 MB</b><span id="v-raw">v1.1.4</span></span>
-            <span class="dl-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg></span>
-          </a>
-        </div>
-      </div>
-
-      <!-- macOS：后续推出 -->
-      <div class="plat" id="plat-macos" aria-disabled="true">
-        <div class="plat-h">
-          <svg class="wini" viewBox="0 0 24 24" aria-hidden="true" style="color:#6A7280"><path fill="currentColor" d="M16.36 12.94c.02 2.5 2.19 3.33 2.22 3.34-.02.05-.35 1.19-1.15 2.36-.69 1.01-1.41 2.02-2.55 2.04-1.11.02-1.47-.66-2.74-.66-1.27 0-1.67.64-2.72.68-1.1.04-1.94-1.1-2.64-2.1-1.43-2.07-2.52-5.84-1.05-8.39.73-1.27 2.03-2.07 3.44-2.09 1.07-.02 2.08.72 2.74.72.65 0 1.88-.89 3.17-.76.54.02 2.05.22 3.02 1.63-.08.05-1.8 1.05-1.78 3.13zM14.6 5.4c.58-.7.97-1.68.86-2.65-.83.03-1.84.55-2.44 1.25-.53.61-1 1.6-.87 2.54.93.07 1.87-.47 2.45-1.14z"/></svg>
-          macOS
-          <span class="soon-tag">后续推出</span>
-        </div>
-        <div class="dl-list">
-          <div class="dlrow off" aria-disabled="true">
-            <span class="dl-n">macOS 版本<span class="ext">.dmg</span></span>
-            <span class="soon">后续推出</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Linux：后续推出 -->
-      <div class="plat" id="plat-linux" aria-disabled="true">
-        <div class="plat-h">
-          <svg class="wini" viewBox="0 0 24 24" aria-hidden="true" style="color:#6A7280"><ellipse cx="12" cy="14" rx="5.6" ry="7" fill="currentColor"/><ellipse cx="12" cy="15" rx="3.3" ry="5" fill="#0B0C0E" opacity=".55"/><circle cx="12" cy="6.4" r="3.3" fill="currentColor"/><circle cx="10.7" cy="6" r=".85" fill="#0B0C0E"/><circle cx="13.3" cy="6" r=".85" fill="#0B0C0E"/><path d="M10.9 7.7h2.2L12 9.4z" fill="#F0C24B"/><ellipse cx="9.4" cy="21" rx="1.5" ry=".7" fill="currentColor"/><ellipse cx="14.6" cy="21" rx="1.5" ry=".7" fill="currentColor"/></svg>
-          Linux
-          <span class="soon-tag">后续推出</span>
-        </div>
-        <div class="dl-list">
-          <div class="dlrow off" aria-disabled="true">
-            <span class="dl-n">Linux x64<span class="ext">.AppImage</span></span>
-            <span class="soon">后续推出</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="howto" data-reveal style="--d:.1s">
-      <h4>怎么选</h4>
-        <p><b>安装版</b> 装到当前用户目录（无需管理员权限），带开始菜单与桌面快捷方式，可在「应用和功能」卸载 &#183; <b>便携版</b> 压缩包里就是单个 TokenMonitor.exe，解压双击即运行，不写注册表、可放 U 盘 &#183; <b>单文件版</b> 同一个裸 exe，也是更新器下载的对象。</p>
-        <p>三者内置同一个更新器 —— 装完之后，后续更新都在软件里点「检查更新」完成，不必重新下载安装。</p>
-      <p><b>macOS / Linux 为什么还没有</b> 当前打包链是 PyInstaller + Inno Setup，只产出 Windows 产物；跨平台需要各自的原生打包与签名流程，做完会在这里放出真实下载链接，不会先挂一个点不动的地址。</p>
-    </div>
-
-    <div class="mirror" data-reveal style="--d:.14s">
-      <span>下载源</span>
-      <div class="seg" id="mirrorSw">
-        <button type="button" data-m="0" class="on">国内镜像</button>
-        <button type="button" data-m="1">备用镜像</button>
-        <button type="button" data-m="2">GitHub 官方</button>
-      </div>
-      <p class="tip">三个链接指向同一个官方版本 &#183; 首次运行若被 SmartScreen 提示，选择「更多信息 &#8594; 仍要运行」<br>安装版、便携版、单文件版都内置同一个更新器 —— 软件内点一次「检查更新」即可升级。</p>
-    </div>
-  </div>
-</section>
-</main>
-
-<footer>
-  <div class="wrap foot">
-    <span>&#169; 2026 <a href="/">Voyra</a> &#183; Token Monitor</span>
-    <span class="grow"></span>
-    <a href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener">源码仓库</a>
-    <a href="https://github.com/liixnglinb/token-monitor/releases" target="_blank" rel="noopener">全部版本</a>
-    <span id="foot-ver">v1.1.4 &#183; 81 个已知数据源</span>
-  </div>
-</footer>
-
-<!-- 手机端吸底下载条：href 镜像主下载按钮 #dl-setup（由本页已有的镜像逻辑赋值），版本/体积镜像 #ver-pill/#s-setup，不新起请求 -->
-<div class="mbar" id="mbar">
-  <img src="/token-monitor/favicon.png" alt="">
-  <div class="mb-t">
-    <div class="mt">Token Monitor</div>
-    <div class="ms"><b id="mbar-ver">v1.1.4</b> · 安装版 <span id="mbar-size">约 18 MB</span> · Win 10/11</div>
-  </div>
-  <a class="go" id="mbar-go" href="https://github.com/liixnglinb/token-monitor/releases/latest" target="_blank" rel="noopener">下载</a>
-</div>
+<footer><div class="wrap">
+  <span>&#169; 2026 <a href="/">Voyra</a> · Token Monitor</span>
+  <span class="sp"></span>
+  <a href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener">源码仓库</a>
+  <a href="https://github.com/liixnglinb/token-monitor/releases" target="_blank" rel="noopener">全部版本</a>
+  <span id="footVer">v1.9.0 · 81 个已知数据源</span>
+</div></footer>
 
 <script>
 (function(){
-  'use strict';
-  var MIRRORS = ['https://gh-proxy.com/', 'https://ghproxy.net/', ''];
-  var FALLBACK = 'https://github.com/liixnglinb/token-monitor/releases/latest';
-  var links = { setup: null, portable: null, raw: null };
-  var mirrorIdx = 0;
-  var PAIRS = [
-    ['dl-setup', 'setup'], ['dl-setup2', 'setup'],
-    ['dl-portable', 'portable'], ['dl-portable2', 'portable'],
-    ['dl-raw', 'raw']
-  ];
+'use strict';
+var REPO = 'https://github.com/liixnglinb/token-monitor/releases';
+var PROBE_FILE = 'TokenMonitor.exe';         /* 固定名资产，任意版本都存在 */
+var PROBE_BYTES = 1572864;                   /* 1.5 MB —— 足够跨越"突发速度"，测到持续速率 */
+var PROBE_TIMEOUT = 8000;
+var CACHE_KEY = 'tm.src.v2', CACHE_TTL = 10 * 60 * 1000;
+var ORDER = ['gh-proxy', 'ghfast', 'direct'];
+var SRC = {
+  'gh-proxy': { name: '国内镜像', pre: 'https://gh-proxy.com/' },
+  'ghfast':   { name: '备用镜像', pre: 'https://ghfast.top/' },
+  'direct':   { name: '官方直连', pre: '' }
+};
+var state = { asset: null, auto: null, manual: null, result: null, probe: null, assetDone: null };
 
-  function mb(n){ var m = n / 1048576; return m.toFixed(m >= 10 ? 0 : 1) + ' MB'; }
-  function tag(id, txt){ var el = document.getElementById(id); if (el && txt) el.textContent = txt; }
-  // 整行 title 显示真实文件名（文件名元素已视觉隐藏，只给读屏与悬停用）
-  function setTips(){
-    [['dl-setup2', 'fn-setup'], ['dl-portable2', 'fn-portable'],
-     ['dl-raw', null]].forEach(function(p){
-      var a = document.getElementById(p[0]); if (!a) return;
-      var f = p[1] && document.getElementById(p[1]);
-      var s = (f && f.textContent) || (a.querySelector('.sr') || {}).textContent;
-      if (s) a.title = s.trim();
-    });
-  }
-  setTips();
+function $(id){ return document.getElementById(id); }
+function setTxt(id, s){ var e = $(id); if (e && s) e.textContent = s; }
+function fmtSpeed(kbs){ return kbs >= 1024 ? (kbs / 1024).toFixed(1) + ' MB/s' : Math.round(kbs) + ' KB/s'; }
 
-  function applyMirror(){
-    var pre = MIRRORS[mirrorIdx];
-    document.querySelectorAll('#mirrorSw button').forEach(function(b, i){
-      b.classList.toggle('on', i === mirrorIdx);
-    });
-    PAIRS.forEach(function(pair){
-      var a = document.getElementById(pair[0]);
-      if (!a) return;
-      var url = links[pair[1]] || FALLBACK;
-      if (pre && links[pair[1]]) url = pre + links[pair[1]];
-      a.href = url;
-    });
-  }
-  document.getElementById('mirrorSw').addEventListener('click', function(e){
-    var b = e.target.closest('button[data-m]');
-    if (!b) return;
-    mirrorIdx = parseInt(b.getAttribute('data-m'), 10) || 0;
-    applyMirror();
+/* 当前下载地址：手动 > 自动测速 > 国内镜像兜底；资产未知时退到镜像中转的 releases 页 */
+function urlFor(){
+  var key = state.manual || state.auto || 'gh-proxy';
+  var pre = SRC[key].pre;
+  return state.asset ? pre + state.asset.url : pre + REPO + '/latest';
+}
+function apply(){
+  var u = urlFor();
+  document.querySelectorAll('[data-dl]').forEach(function(a){ a.href = u; });
+  document.querySelectorAll('#srcSeg button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-s') === (state.manual || 'auto'));
   });
+  statusLine();
+}
+function statusLine(){
+  var e = $('srcStatus'); if (!e) return;
+  if (state.manual){
+    e.innerHTML = '<span class="dot ok"></span>手动选择下载源：<b>' + SRC[state.manual].name + '</b>';
+  } else if (state.result && state.result.ok){
+    e.innerHTML = '<span class="dot ok"></span>已自动选择最快源 <b>' + SRC[state.result.id].name + '</b> · 实测 ' + fmtSpeed(state.result.speed);
+  } else if (state.probe){
+    e.innerHTML = '<span class="dot wait"></span>正在测速选择最快下载源…';
+  } else {
+    e.innerHTML = '<span class="dot"></span>下载源：<b>' + SRC[state.auto || 'gh-proxy'].name + '</b>';
+  }
+}
 
-  fetch('/tm-api/latest', { cache: 'no-store' })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if (!d || !d.version) return;
-    var ver = String(d.version).replace(/^v/, '');
-    var assets = d.assets || [];
-    function pick(kw, exact){
-      for (var i = 0; i < assets.length; i++){
-        var n = (assets[i].name || '').toLowerCase();
-        if (exact ? n === kw : n.indexOf(kw) >= 0) return assets[i];
+/* ── 单源测速：no-cors + Range 取 1.5MB，资源计时拿整段耗时 ── */
+function probe(src){
+  return new Promise(function(resolve){
+    var url = src.pre + REPO + '/latest/download/' + PROBE_FILE;
+    var ctl = new AbortController(), t0 = performance.now(), settled = false, poll = null;
+    function finish(r){
+      if (settled) return; settled = true;
+      clearTimeout(timer); if (poll) clearInterval(poll);
+      try { ctl.abort(); } catch (e) {}
+      resolve(r);
+    }
+    var timer = setTimeout(function(){ finish({ id: src.id, ok: false }); }, PROBE_TIMEOUT);
+    fetch(url, { mode: 'no-cors', headers: { Range: 'bytes=0-' + (PROBE_BYTES - 1) }, cache: 'no-store', signal: ctl.signal })
+      .then(function(){
+        poll = setInterval(function(){
+          var list = performance.getEntriesByName(url);
+          var e = list[list.length - 1];
+          if (e && e.duration > 0)
+            finish({ id: src.id, ok: true, ms: e.duration, speed: PROBE_BYTES / 1024 / (e.duration / 1000) });
+        }, 180);
+      })
+      .catch(function(){ finish({ id: src.id, ok: false }); });
+  });
+}
+function probeAll(){
+  if (state.probe) return state.probe;
+  try {
+    var c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
+    if (c && Date.now() - c.t < CACHE_TTL){
+      state.auto = c.id; state.result = { id: c.id, speed: c.speed, ok: true }; apply(); return Promise.resolve();
+    }
+  } catch (e) {}
+  state.probe = Promise.all(ORDER.map(function(id){
+    return probe({ id: id, name: SRC[id].name, pre: SRC[id].pre });
+  })).then(function(rs){
+    var best = null;
+    rs.forEach(function(r){ if (r.ok && (!best || r.speed > best.speed)) best = r; });
+    if (best){
+      state.auto = best.id; state.result = best;
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), id: best.id, speed: best.speed })); } catch (e) {}
+    } else {
+      state.auto = 'gh-proxy';
+    }
+    state.probe = null; apply();
+  });
+  return state.probe;
+}
+
+/* ── 资产信息（版本 / 文件名 / 体积），走本站 Function 代理 ── */
+function loadAsset(){
+  state.assetDone = fetch('/tm-api/latest', { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || !d.version) return;
+      var ver = String(d.version).replace(/^v/, '');
+      var list = d.assets || [], setup = null;
+      for (var i = 0; i < list.length; i++){
+        var n = (list[i].name || '').toLowerCase();
+        if (n.indexOf('setup') >= 0){ setup = list[i]; break; }
       }
-      return null;
-    }
-    var setup = pick('setup'), portable = pick('portable'), raw = pick('tokenmonitor.exe', true);
-    if (setup){ links.setup = setup.url; tag('fn-setup', setup.name);
-      if (setup.size > 0){ tag('s-setup', mb(setup.size)); tag('head-meta', 'setup ' + mb(setup.size) + ' \u00b7 装一次，之后在软件里更新 \u00b7 无需注册'); } }
-    if (portable){ links.portable = portable.url; tag('fn-portable', portable.name);
-      if (portable.size > 0) tag('s-portable', mb(portable.size)); }
-    if (raw){ links.raw = raw.url; if (raw.size > 0) tag('s-raw', mb(raw.size)); }
-    tag('ver-pill', 'v' + ver);
-    tag('ver-btn', ' v' + ver);
-    tag('v-setup', 'v' + ver);
-    tag('v-portable', 'v' + ver);
-    tag('v-raw', 'v' + ver);
-    tag('foot-ver', 'v' + ver + ' \u00b7 81 个已知数据源');
-    setTips();                     // 文件名已刷新，重挂 title
-    document.title = 'Token Monitor v' + ver + ' \u00b7 本机 AI 用量看板 — Voyra';
-    applyMirror();
-  }).catch(function(){});
+      if (!setup || !setup.url) return;
+      state.asset = setup;
+      setTxt('verPill', 'v' + ver);
+      setTxt('verBtn', 'v' + ver);
+      setTxt('fileName', setup.name);
+      var meta = (setup.size > 0 ? '约 ' + Math.round(setup.size / 1048576) + ' MB' : '约 30 MB') + ' · v' + ver;
+      setTxt('dlMeta', meta);
+      setTxt('footVer', 'v' + ver + ' · 81 个已知数据源');
+      document.title = 'Token Monitor v' + ver + ' —— 本机 AI 用量看板 · Voyra';
+      apply();
+    })
+    .catch(function(){});
+  return state.assetDone;
+}
 
-  applyMirror();
-
-  document.documentElement.classList.add('anim');
-  var io = new IntersectionObserver(function(es){
-    es.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
-  }, { threshold: 0.08, rootMargin: '0px 0px -5% 0px' });
-  function revealAll(){
-    document.querySelectorAll('[data-reveal]:not(.in)').forEach(function(el){
-      var r = el.getBoundingClientRect();
-      if (r.top < window.innerHeight * 0.96 && r.bottom > 0) el.classList.add('in');
-    });
-  }
-  document.querySelectorAll('[data-reveal]').forEach(function(el){ io.observe(el); });
-  var pending = false;
-  window.addEventListener('scroll', function(){
-    if (pending) return;
-    pending = true;
-    requestAnimationFrame(function(){ pending = false; revealAll(); });
-  }, { passive: true });
-  setTimeout(revealAll, 1200);
-  setTimeout(function(){
-    document.querySelectorAll('[data-reveal]:not(.in)').forEach(function(el){ el.classList.add('in'); });
-  }, 2600);
-
-  function fmt(n, kind){
-    if (kind === 'tok'){
-      if (n >= 1e9) return (n / 1e9).toFixed(2) + ' B';
-      if (n >= 1e6) return (n / 1e6).toFixed(1) + ' M';
-      return Math.round(n).toLocaleString('en-US');
-    }
-    if (kind === 'cny') return '\u00a5' + Math.round(n).toLocaleString('en-US');
-    return Math.round(n).toLocaleString('en-US');
-  }
-  document.querySelectorAll('[data-count]').forEach(function(el){
-    var target = parseFloat(el.getAttribute('data-count'));
-    var kind = el.getAttribute('data-fmt');
-    if (!isFinite(target)) return;
-    var t0 = null, dur = 1400;
-    function step(ts){
-      if (t0 === null) t0 = ts;
-      var p = Math.min((ts - t0) / dur, 1);
-      var eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = fmt(target * eased, kind);
-      if (p < 1) requestAnimationFrame(step); else el.textContent = fmt(target, kind);
-    }
-    requestAnimationFrame(step);
+/* ── 统一点击入口：绝不空点 —— 地址未就绪时先提示并等待（封顶 6 秒） ── */
+function ready(){
+  return Promise.all([state.assetDone || Promise.resolve(), state.probe || Promise.resolve()]);
+}
+document.addEventListener('click', function(ev){
+  var a = ev.target.closest ? ev.target.closest('[data-dl]') : null;
+  if (!a) return;
+  if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;  /* 修饰键走默认 */
+  ev.preventDefault();
+  var label = $('dlHint');
+  var go = function(){ location.href = urlFor(); };
+  var wait = (state.asset && !state.probe) ? null : Promise.race([ready(), new Promise(function(res){ setTimeout(res, 6000); })]);
+  if (!wait){ go(); return; }
+  a.classList.add('busy');
+  if (label) label.textContent = '正在选择最快下载源并准备下载…';
+  wait.then(function(){
+    a.classList.remove('busy');
+    if (label) label.textContent = '下载前自动实测各源速度并选最快 · 首次运行若被 SmartScreen 提示，选择「更多信息 → 仍要运行」';
+    go();
   });
+});
+document.querySelectorAll('#srcSeg button').forEach(function(b){
+  b.addEventListener('click', function(){
+    var s = b.getAttribute('data-s');
+    state.manual = (s === 'auto') ? null : s;
+    apply();
+  });
+});
 
-  var secs = [].slice.call(document.querySelectorAll('.nlinks a'));
-  if (secs.length){
-    var spy = new IntersectionObserver(function(es){
-      es.forEach(function(e){
-        if (!e.isIntersecting) return;
-        secs.forEach(function(a){ a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id); });
-      });
-    }, { rootMargin: '-45% 0px -50% 0px' });
-    secs.forEach(function(a){
-      var s = document.getElementById(a.getAttribute('href').slice(1));
-      if (s) spy.observe(s);
-    });
-  }
-})();
-</script>
-
-<script>
-/* 手机端吸底下载条：滚过首屏（阈值 520px ≈ hero 的两个下载按钮出屏）出现，
-   进入 #download（本页真正的下载区）时自动隐藏。
-   不新起任何请求，也不碰下载链路：条里的 href 镜像主按钮 #dl-setup（本页已有的镜像逻辑
-   会在 /tm-api/latest 解析成功后重写它，失败时保留 releases/latest 兜底），
-   版本号镜像 #ver-pill、体积镜像 #s-setup —— 都是同一次已解析出来的数据。 */
-(function(){
-  var bar = document.getElementById('mbar');
-  if (!bar) return;
-  var go = document.getElementById('mbar-go'),
-      bv = document.getElementById('mbar-ver'),
-      bs = document.getElementById('mbar-size');
-  function mirror(){
-    var src = document.getElementById('dl-setup');
-    if (src && go) { var h = src.getAttribute('href'); if (h) go.setAttribute('href', h); }
-    var v = document.getElementById('ver-pill');
-    if (v && bv && /^v[\d.]+/.test(v.textContent)) bv.textContent = v.textContent;
-    var s = document.getElementById('s-setup');
-    if (s && bs && s.textContent) bs.textContent = s.textContent;
-  }
-  var hidden = false;
-  function upd(){
-    bar.classList.toggle('show', (window.pageYOffset || 0) > 520 && !hidden);
-  }
-  var dl = document.getElementById('download');
-  if ('IntersectionObserver' in window) {
-    if (dl) new IntersectionObserver(function(es){
-      es.forEach(function(e){ hidden = e.isIntersecting; upd(); });
-    }, { threshold:.15 }).observe(dl);
-    ['dl-setup', 'ver-pill', 's-setup'].forEach(function(id){
-      var el = document.getElementById(id);
-      if (el) new MutationObserver(mirror).observe(el, { attributes:true, attributeFilter:['href'], childList:true, characterData:true, subtree:true });
-    });
-  }
-  mirror(); upd();
-  addEventListener('scroll', upd, { passive:true });
+probeAll();
+loadAsset();
+apply();
 })();
 </script>
 </body>
