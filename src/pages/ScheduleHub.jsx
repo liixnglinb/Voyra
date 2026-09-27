@@ -29,7 +29,7 @@ const PANELS = {
     ['add', '手动添加课程', Plus],
   ],
   planner: [
-    ['day', '当天安排与新增日程', CalendarDays],
+    ['day', '当天安排', CalendarDays],
   ],
   homework: [
     ['watch', '需要留意', AlertTriangle],
@@ -243,9 +243,11 @@ export default function ScheduleHub() {
         .shub-pick-menu { position:absolute; top:calc(100% + 6px); left:0; z-index:60; min-width:154px;
           display:grid; gap:2px; padding:6px; border:1px solid rgba(27,27,27,.14); border-radius:12px;
           background:#fff; box-shadow:0 16px 34px -18px rgba(20,20,20,.5); }
+        /* 菜单项文字不换行：原来「当天安排与新增日程」在 154px 的菜单里被折成两行，
+           看着像坏掉。菜单宽度随内容长，功能菜单锚在右边、向左展开，不会溢出屏幕。 */
         .shub-pick-opt { display:flex; align-items:center; gap:9px; min-height:44px; padding:0 10px;
           border:0; border-radius:8px; background:transparent; color:#3a3a3a;
-          font-size:var(--fs-label); text-align:left; }
+          font-size:var(--fs-label); text-align:left; white-space:nowrap; }
         .shub-pick-opt.is-active { background:#fff4c8; color:#1b1b1b; font-weight:750; }
 
         /* 功能按钮：挨在视图下拉右边，账户头像左边（头像 fixed 在 right:10、宽 44，

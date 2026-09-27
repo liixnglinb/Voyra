@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
-  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2,
+  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
 
@@ -15,6 +15,68 @@ import { useAuth } from '../components/AuthGate';
 export function MobileSection({ mobile, host, id, panel, children }) {
   if (!mobile) return children;
   return (host && panel === id) ? createPortal(children, host) : null;
+}
+
+/* 手机端的「小弹框」：屏幕正中一张小卡（遮罩 + 标题行 + 可滚正文 + 底部动作）。
+   加日程 / 加作业这类一次性表单走它，而不再往下铺开占满一屏、也不再靠下拉列表：
+   表单短、随手就关，填完不打断当前视图。三个视图共用，故导出。
+   - open/onClose 受控；点遮罩、点右上角、按 Esc 都能关
+   - actions 传两个按钮（取消 / 保存），它们自动等分底部一行
+   - 手机以外不渲染（桌面各页保留原有内联表单） */
+export function MobileBox({ open, onClose, icon, title, sub, actions, children, label }) {
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+  if (!open) return null;
+  return createPortal(
+    <div className="mbox-scrim" onClick={onClose}>
+      <div className="mbox" role="dialog" aria-modal="true" aria-label={label || title} onClick={(e) => e.stopPropagation()}>
+        <style>{`
+          .mbox-scrim { position:fixed; inset:0; z-index:1400; display:flex; align-items:center; justify-content:center;
+            padding:16px; background:rgba(16,18,24,.46); animation:mbox-fade .18s ease both; }
+          .mbox { width:min(100%,380px); max-height:min(84vh,620px); display:flex; flex-direction:column;
+            background:#fff; border-radius:16px; box-shadow:0 24px 60px -26px rgba(16,18,24,.55);
+            animation:mbox-in .2s cubic-bezier(.16,1,.3,1) both; }
+          .mbox-head { flex:0 0 auto; display:flex; align-items:center; gap:9px; padding:12px 10px 10px 14px;
+            border-bottom:1px solid rgba(27,27,27,.08); }
+          .mbox-head .ico { flex:none; width:30px; height:30px; border-radius:9px; display:flex; align-items:center;
+            justify-content:center; background:${ACCENT_SOFT}; color:${ACCENT}; }
+          .mbox-head .ttl { display:flex; flex-direction:column; gap:1px; min-width:0; }
+          .mbox-head .ttl b { font-size:15px; font-weight:750; color:#1b1b1b; line-height:1.25; }
+          .mbox-head .ttl i { font-style:normal; font-size:var(--fs-meta); color:#86898f; }
+          .mbox-x { flex:none; margin-left:auto; display:grid; place-items:center; width:var(--ctl-md); height:var(--ctl-md);
+            border:0; border-radius:10px; background:transparent; color:#6A6F79; }
+          .mbox-body { flex:1 1 auto; min-height:0; overflow:auto; -webkit-overflow-scrolling:touch;
+            padding:12px 14px 2px; display:flex; flex-direction:column; gap:10px; }
+          /* 弹框挂在 body 上，壳里的 .tool-content 触控兜底够不着它 ——
+             这里自己按手机阶梯补齐（输入框、选择器触发钮、类型标签等） */
+          .mbox-body :is(input, select, textarea, button) { min-height:var(--ctl-md); }
+          .mbox-body .hw-frow, .mbox-body .hw-frow > * { min-width:0; }
+          .mbox-foot { flex:0 0 auto; display:flex; gap:10px; padding:10px 14px calc(12px + env(safe-area-inset-bottom,0px)); }
+          .mbox-foot > * { flex:1 1 0; min-height:var(--ctl-md); justify-content:center; }
+          /* 主按钮跟站内手机口径一致：Layout 里把 .tool-content 内的 primary 统一成
+             深色实心，而弹框 portal 到 body、拿不到那条规则，这里自己补上 */
+          .mbox-foot :is(.pl-btn.primary, .hw-btn.primary, .cs-btn.primary, .btn-primary) {
+            background:#1b1b1b; border-color:#1b1b1b; color:#fff; border-radius:6px; }
+          .mbox-foot :is(.pl-btn, .hw-btn, .cs-btn) { font-size:var(--fs-label); font-weight:650; }
+          @keyframes mbox-fade { from { opacity:0 } to { opacity:1 } }
+          @keyframes mbox-in { from { opacity:.5; transform:translateY(10px) scale(.98) } to { opacity:1; transform:none } }
+          @media (prefers-reduced-motion:reduce) { .mbox-scrim, .mbox { animation:none !important; } }
+        `}</style>
+        <div className="mbox-head">
+          {icon ? <div className="ico">{icon}</div> : null}
+          <div className="ttl"><b>{title}</b>{sub ? <i>{sub}</i> : null}</div>
+          <button type="button" className="mbox-x" aria-label="关闭" onClick={onClose}><X size={18} /></button>
+        </div>
+        <div className="mbox-body">{children}</div>
+        {actions ? <div className="mbox-foot">{actions}</div> : null}
+      </div>
+    </div>,
+    document.body,
+  );
 }
 
 /* ============================================================

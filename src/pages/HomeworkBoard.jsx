@@ -6,7 +6,7 @@ import {
 import DateTimePicker from '../components/DateTimePicker';
 import { useAuth } from '../components/AuthGate';
 import { userKey, isAuthed } from '../lib/auth';
-import { MobileSection, useIsMobile } from './ClassSchedule';
+import { MobileSection, MobileBox, useIsMobile } from './ClassSchedule';
 
 /* ============================================================
    作业看板 · HomeworkBoard
@@ -310,8 +310,8 @@ export default function HomeworkBoard({ active = true, drawerPanel = null, drawe
 
   const addHomework = () => {
     const title = form.title.trim();
-    if (!title) { say('请填写作业内容'); return; }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.dueDate)) { say('请选择截止日期'); return; }
+    if (!title) { say('请填写作业内容'); return false; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.dueDate)) { say('请选择截止日期'); return false; }
     const name = form.course.trim();
     const hit = courses.find((c) => String(c.name || '').trim() === name) || null;
     const item = normalizeItem({
@@ -329,7 +329,9 @@ export default function HomeworkBoard({ active = true, drawerPanel = null, drawe
     if (persist([...items, item])) {
       say('已添加作业');
       setForm({ ...form, title: '', note: '' });
+      return true;
     }
+    return false;
   };
 
   const toggleDone = (id) => {
@@ -345,6 +347,94 @@ export default function HomeworkBoard({ active = true, drawerPanel = null, drawe
   const removeItem = (id) => {
     if (persist(items.filter((it) => it.id !== id))) say('已删除');
   };
+
+  /* 表单字段只写一份，两种壳共用：桌面内联卡按 .hw-frow 铺两行；
+     手机小框里靠 .hw-frow 自动换行成单列，类型换成一排可直接点的标签
+     （原生下拉在手机上要多点一步，也和弹框里的其它控件不是一套长相）。 */
+  const hwFormBody = (
+    <>
+      <div className="hw-frow">
+        <div className="hw-fmain">
+          <label className="hw-label" htmlFor="hw-f-title">作业内容</label>
+          <input
+            id="hw-f-title" ref={titleRef} className="hw-input" style={{ width: '100%' }}
+            placeholder="例如：第三章课后题 1-8" value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            onKeyDown={(e) => { if (e.key === 'Enter' && addHomework()) { if (isMobile) setQuickOpen(false); } }}
+          />
+        </div>
+        <div>
+          <label className="hw-label" htmlFor="hw-f-course">课程</label>
+          <input
+            id="hw-f-course" className="hw-input" style={{ width: '9.5rem' }} list="hw-course-list"
+            placeholder="选或直接输" value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value })}
+          />
+          <datalist id="hw-course-list">
+            {courseNames.map((n) => <option key={n} value={n} />)}
+          </datalist>
+        </div>
+        <div>
+          <label className="hw-label" htmlFor="hw-f-date">截止日期</label>
+          <input
+            id="hw-f-date" className="hw-input" style={{ width: '9.5rem' }} type="date"
+            value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+          />
+        </div>
+        <div>
+          <span className="hw-label">截止时刻</span>
+          <DateTimePicker mode="time" value={form.dueTime} onChange={(v) => setForm({ ...form, dueTime: v })} width="8.5rem" />
+        </div>
+        <div>
+          {isMobile ? (
+            <>
+              <span className="hw-label">类型</span>
+              <div className="hw-typechips">
+                {Object.keys(TYPES).map((t) => {
+                  const on = form.type === t;
+                  return (
+                    <button
+                      key={t} type="button" className={`hw-typechip${on ? ' on' : ''}`} aria-pressed={on}
+                      style={on ? { borderColor: TYPES[t], background: `${TYPES[t]}1A` } : undefined}
+                      onClick={() => setForm({ ...form, type: t })}
+                    >
+                      <span className="dot" style={{ background: TYPES[t] }} />{t}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <>
+              <label className="hw-label" htmlFor="hw-f-type">类型</label>
+              <select id="hw-f-type" className="hw-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                {Object.keys(TYPES).map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </>
+          )}
+        </div>
+      </div>
+      <div className="hw-frow">
+        <div className="hw-fnote">
+          <label className="hw-label" htmlFor="hw-f-note">备注（选填）</label>
+          <input
+            id="hw-f-note" className="hw-input" style={{ width: '100%' }} placeholder="提交方式、章节范围等"
+            value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })}
+            onKeyDown={(e) => { if (e.key === 'Enter' && addHomework()) { if (isMobile) setQuickOpen(false); } }}
+          />
+        </div>
+        <div>
+          <div className={`hw-week${startDate ? '' : ' off'}`}>
+            {weekHint
+              ? `对应教学周：第 ${weekHint.week} 周 · 周${weekHint.weekday}`
+              : (startDate ? '该日期不在本学期周次范围内' : '课程表尚未设置开学日期，无法换算周次')}
+          </div>
+          {!isMobile && (
+            <button type="button" className="hw-btn primary" onClick={addHomework}><Plus size={15} />添加作业</button>
+          )}
+        </div>
+      </div>
+    </>
+  );
 
   const renderRow = (it, showCourse) => {
     const u = urgency(it, now);
@@ -442,6 +532,12 @@ export default function HomeworkBoard({ active = true, drawerPanel = null, drawe
       .hw-week { font-size:11.5px;color:${ACCENT};font-weight:650;margin-bottom:7px; }
       .hw-week.off { color:#adb5bd; }
       .hw-hint { font-size:11.5px;color:#adb5bd;margin:0; }
+      /* 类型：手机小框里是一排可直接点的标签，替换原生下拉 */
+      .hw-typechips { display:flex;flex-wrap:wrap;gap:6px; }
+      .hw-typechip { display:inline-flex;align-items:center;gap:5px;min-height:var(--ctl-md);padding:0 11px;
+        border:1px solid rgba(20,24,33,.13);border-radius:999px;background:#fff;
+        font-size:var(--fs-meta);font-weight:650;color:#3D424C; }
+      .hw-typechip .dot { flex:none;width:7px;height:7px;border-radius:999px; }
 
       /* 作业行 */
       .hw-head { margin-bottom:4px; }
@@ -530,80 +626,47 @@ export default function HomeworkBoard({ active = true, drawerPanel = null, drawe
       )}
     </div>
 
-    {/* 录入：默认收起成一行按钮，避免看板头部过重 */}
-    {quickOpen ? (
+    {/* 录入：桌面端点按钮在页内展开成表单卡（宽度够用）；手机端改成弹出小框，
+        不再把整张表单往下铺开把看板顶走 —— 表单内容两处共用同一份 JSX */}
+    {isMobile ? (
+      <div className="hw-addline">
+        <button type="button" className="hw-btn primary" onClick={() => setQuickOpen(true)} aria-haspopup="dialog"><Plus size={15} />添加我的作业</button>
+        {items.length === 0 && <span className="hw-hint">记录每门课留了什么作业、什么时候交。</span>}
+      </div>
+    ) : quickOpen ? (
       <div className="hw-card hw-quick">
         <div className="hw-top">
           <div className="hw-ico"><Plus size={16} /></div>
-          <h3>布置作业</h3>
+          <h3>添加我的作业</h3>
           <div className="hw-sp" />
           <button type="button" className="hw-btn" onClick={() => setQuickOpen(false)}>收起</button>
         </div>
-        <div className="hw-frow">
-          <div className="hw-fmain">
-            <label className="hw-label" htmlFor="hw-f-title">作业内容</label>
-            <input
-              id="hw-f-title" ref={titleRef} className="hw-input" style={{ width: '100%' }}
-              placeholder="例如：第三章课后题 1-8" value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              onKeyDown={(e) => { if (e.key === 'Enter') addHomework(); }}
-            />
-          </div>
-          <div>
-            <label className="hw-label" htmlFor="hw-f-course">课程</label>
-            <input
-              id="hw-f-course" className="hw-input" style={{ width: '9.5rem' }} list="hw-course-list"
-              placeholder="选或直接输" value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value })}
-            />
-            <datalist id="hw-course-list">
-              {courseNames.map((n) => <option key={n} value={n} />)}
-            </datalist>
-          </div>
-          <div>
-            <label className="hw-label" htmlFor="hw-f-date">截止日期</label>
-            <input
-              id="hw-f-date" className="hw-input" style={{ width: '9.5rem' }} type="date"
-              value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
-            />
-          </div>
-          <div>
-            <span className="hw-label">截止时刻</span>
-            <DateTimePicker mode="time" value={form.dueTime} onChange={(v) => setForm({ ...form, dueTime: v })} width="8.5rem" />
-          </div>
-          <div>
-            <label className="hw-label" htmlFor="hw-f-type">类型</label>
-            <select id="hw-f-type" className="hw-input" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-              {Object.keys(TYPES).map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="hw-frow">
-          <div className="hw-fnote">
-            <label className="hw-label" htmlFor="hw-f-note">备注（选填）</label>
-            <input
-              id="hw-f-note" className="hw-input" style={{ width: '100%' }} placeholder="提交方式、章节范围等"
-              value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })}
-              onKeyDown={(e) => { if (e.key === 'Enter') addHomework(); }}
-            />
-          </div>
-          <div>
-            <div className={`hw-week${startDate ? '' : ' off'}`}>
-              {weekHint
-                ? `对应教学周：第 ${weekHint.week} 周 · 周${weekHint.weekday}`
-                : (startDate ? '该日期不在本学期周次范围内' : '课程表尚未设置开学日期，无法换算周次')}
-            </div>
-            <button type="button" className="hw-btn primary" onClick={addHomework}><Plus size={15} />添加作业</button>
-          </div>
-        </div>
+        {hwFormBody}
         {courses.length === 0 && (
           <p className="hw-hint">课程表里还没有课程，也可以直接输入课程名记录，两者不冲突。</p>
         )}
       </div>
     ) : (
       <div className="hw-addline">
-        <button type="button" className="hw-btn primary" onClick={() => setQuickOpen(true)}><Plus size={15} />布置作业</button>
+        <button type="button" className="hw-btn primary" onClick={() => setQuickOpen(true)}><Plus size={15} />添加我的作业</button>
         {items.length === 0 && <span className="hw-hint">记录每门课留了什么作业、什么时候交。</span>}
       </div>
+    )}
+
+    {/* 手机端小弹框：屏幕正中一张小卡，保存即关 */}
+    {isMobile && (
+      <MobileBox
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        icon={<ClipboardList size={16} />}
+        title="添加我的作业"
+        actions={<>
+          <button type="button" className="hw-btn" onClick={() => setQuickOpen(false)}>取消</button>
+          <button type="button" className="hw-btn primary" onClick={() => { if (addHomework()) setQuickOpen(false); }}>保存</button>
+        </>}
+      >
+        {hwFormBody}
+      </MobileBox>
     )}
 
     {/* 三张独立卡片：需要留意 / 更远的作业 / 按课程 —— 手机上各自收进抽屉一项 */}
@@ -619,7 +682,7 @@ export default function HomeworkBoard({ active = true, drawerPanel = null, drawe
         {attention.length === 0 ? (
           <p className="hw-empty">
             <ClipboardCheck size={26} />
-            {items.length === 0 ? '还没有作业记录，点上方「布置作业」开始记录。' : '这几天没有到期的作业。'}
+            {items.length === 0 ? '还没有作业记录，点上方「添加我的作业」开始记录。' : '这几天没有到期的作业。'}
           </p>
         ) : attention.map((it) => renderRow(it, true))}
       </div>

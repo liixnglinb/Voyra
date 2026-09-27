@@ -7,7 +7,7 @@ import {
 import DateTimePicker from '../components/DateTimePicker';
 import { useAuth } from '../components/AuthGate';
 import { loadItems, groupByDate, urgency, urgentStyle, badgeText } from './HomeworkBoard';
-import { MobileSection, useIsMobile } from './ClassSchedule';
+import { MobileSection, MobileBox, useIsMobile } from './ClassSchedule';
 
 /* ============================================================
    个人日程表 · Planner
@@ -132,13 +132,30 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
   const [events, setEvents] = useState([]);
   const [hw, setHw] = useState([]);
   const [loaded, setLoaded] = useState(false);
-  // 添加表单
+  // 添加表单（date 由日历选中日驱动，见下方 useEffect）
   const [form, setForm] = useState({
     date: fmt(today), time: '12:00', title: '', cat: '自定义', note: '',
   });
+  /* 手机端的小弹框开关（加日程） */
+  const [addOpen, setAddOpen] = useState(false);
+  const addTitleRef = useRef(null);
   const [toast, setToast] = useState('');
   const toastRef = useRef(null);
   const say = (m) => { setToast(m); clearTimeout(toastRef.current); toastRef.current = setTimeout(() => setToast(''), 1800); };
+
+  /* 表单的日期永远跟随日历里选中的那天。
+     以前只在「添加成功」之后才把它同步成选中日，于是选了别的一天再保存，
+     第一条会记到今天（标题写着 9月30日、实际存到 9月27日）。 */
+  useEffect(() => {
+    setForm((f) => (f.date === selected ? f : { ...f, date: selected }));
+  }, [selected]);
+
+  /* 小弹框打开后把光标放到「具体事项」上，手机键盘直接起来 */
+  useEffect(() => {
+    if (!addOpen) return undefined;
+    const t = requestAnimationFrame(() => { if (addTitleRef.current) addTitleRef.current.focus(); });
+    return () => cancelAnimationFrame(t);
+  }, [addOpen]);
 
   useEffect(() => {
     try {
@@ -178,11 +195,14 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
   useEffect(reloadHw, []);
   useEffect(() => { if (active) reloadHw(); }, [active]);
 
+  /* 返回是否真的落盘：小弹框要靠它决定关不关（原来没有返回值，
+     于是「保存」永远关不上框，还会漏掉「已添加日程」的提示） */
   const persist = (next) => {
-    if (!guard()) return;
+    if (!guard()) return false;
     setEvents(next);
     try { localStorage.setItem(LS_READ(), JSON.stringify(next)); } catch { /* ignore */ }
     try { Promise.resolve(window.electronAPI?.saveData?.(CLOUD_KEY, next)).catch(() => {}); } catch { /* ignore */ }
+    return true;
   };
 
   const byDate = useMemo(() => {
@@ -226,11 +246,12 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
   const isWorkday = WORKDAYS.includes(selected);
 
   const addEvent = () => {
-    if (!form.title.trim()) { say('请填写具体事项'); return; }
-    const e = { id: Date.now() + Math.random().toString(36).slice(2, 6), ...form, title: form.title.trim(), note: form.note.trim() };
-    persist([...events, e]);
+    if (!form.title.trim()) { say('请填写具体事项'); return false; }
+    const e = { id: Date.now() + Math.random().toString(36).slice(2, 6), ...form, date: selected, title: form.title.trim(), note: form.note.trim() };
+    if (!persist([...events, e])) return false;
     say('已添加日程');
     setForm({ date: selected, time: form.time, title: '', cat: form.cat, note: '' });
+    return true;
   };
   const removeEvent = (id) => { persist(events.filter((e) => e.id !== id)); say('已删除'); };
   const clearAll = () => { persist([]); say('已清空自定义日程'); };
@@ -307,7 +328,10 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
           .pl-mbar { gap:8px; flex:0 0 auto; }
           .pl-mbar b { flex:0 0 auto; white-space:nowrap; font-size:14px; }
           .pl-mbar .pl-btn { padding:8px 10px; }
-          .pl-top > .pl-label { width:calc(100% - 42px); margin-left:42px !important; }
+          /* 日历卡头第二行：公假/补班图例在左（缩进对齐上一月的月份条），
+             新加的「添加日程」按钮靠右。图例以前写死 width:calc(100% - 42px)
+             独占整行，按钮会被挤到第三行。 */
+          .pl-top > .pl-label { width:auto; margin-left:42px !important; }
           /* 星期表头是月历的列头（主信息），抬到标签级；
              七列靠 1fr 自适应，两字列头 28px < 360 档单列宽 ~35px，不会折行 */
           .pl-dow { font-size:var(--fs-label); }
@@ -387,6 +411,18 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
           .pl-page .pl-catsel-btn { min-height:var(--ctl-md); }
           .pl-page .pl-catopt { min-height:var(--ctl-md); }
           .pl-page button[class*="py-2"] { min-height:var(--ctl-md); }
+          /* ── 手机端「添加日程」：入口按钮 + 小弹框里的字段与类型标签 ──
+             加日程从「功能菜单 → 抽屉 → 表单」提到日历卡上一点即开。
+             注意：小弹框是 portal 到 body 的，写 .pl-page 前缀的选择器够不着它，
+             所以这几个类不加前缀（pl- 是本页专属前缀，不会串到别的页）。 */
+          .pl-page .pl-quickadd { margin-left:auto; padding:8px 12px; }
+          .pl-field { display:flex; flex-direction:column; }
+          .pl-chips { display:flex; flex-wrap:wrap; gap:6px; }
+          .pl-chip { display:inline-flex; align-items:center; gap:5px; min-height:var(--ctl-md); padding:0 11px;
+            border:1px solid rgba(20,24,33,.13); border-radius:999px; background:#fff;
+            font-size:var(--fs-meta); font-weight:650; color:#3D424C; }
+          .pl-chip .dot { flex:none; width:7px; height:7px; border-radius:999px; }
+          .pl-chip.on { box-shadow:0 0 0 1px rgba(164,136,48,.35); }
         }
       `}</style>
 
@@ -402,6 +438,13 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
           </div>
           <div className="pl-sp" />
           <span className="pl-label" style={{ margin: 0 }}><span style={{ color: '#E8590C' }}>■ 公假</span>　<span style={{ color: '#AD8B00' }}>■ 补班</span></span>
+          {/* 手机端把「加日程」入口提到日历卡上：不用先点功能菜单再进抽屉填表，
+              一点就弹出小框（桌面端保持原有内联表单，不加此按钮） */}
+          {isMobile && (
+            <button className="pl-btn primary pl-quickadd" onClick={() => setAddOpen(true)} aria-haspopup="dialog">
+              <Plus size={15} />添加日程
+            </button>
+          )}
         </div>
 
         <div className="pl-grid">
@@ -489,6 +532,9 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
             </div>
           )}
 
+          {/* 添加表单：桌面端留在卡内（宽度够，一屏填完）；手机端收进小弹框，
+              抽屉里只留一个入口按钮 —— 详见文件末尾的 MobileBox */}
+          {!isMobile && (
           <div style={{ borderTop: '1px dashed rgba(20,24,33,.14)', marginTop: 6, paddingTop: 14 }}>
             <div className="pl-top" style={{ marginBottom: 10 }}>
               <div className="pl-ico" style={{ width: 28, height: 28 }}><CalendarPlus size={15} /></div>
@@ -519,6 +565,13 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
               </div>
             </div>
           </div>
+          )}
+          {isMobile && (
+            <div className="pl-top" style={{ marginTop: 6, gap: 10 }}>
+              <button className="pl-btn primary" onClick={() => setAddOpen(true)}><Plus size={15} />添加日程</button>
+              <button className="pl-btn danger" onClick={clearAll}>清空全部自定义日程</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -526,6 +579,60 @@ export default function Planner({ active = true, drawerPanel = null, drawerHost 
         公假与补班依据《国务院办公厅关于2026年部分节假日安排的通知》（国办发明电〔2025〕7号）自动植入；你添加的开学 / 放假等自定义日程保存在本机。
       </p>
       </MobileSection>
+
+      {/* 手机端「添加日程」小弹框：屏幕正中一张小卡，填完即关。
+          类型不再用下拉（11 个分类挂成一条长列表，手机上还超出屏幕），
+          改成一行可直接点的标签：一次点选，少一步。 */}
+      {isMobile && (
+        <MobileBox
+          open={addOpen}
+          onClose={() => setAddOpen(false)}
+          icon={<CalendarPlus size={16} />}
+          title="添加日程"
+          sub={`${+selected.slice(5, 7)}月${+selected.slice(8, 10)}日 · 周${selWeekday}${selHolidays.length ? ` · ${selHolidays.join('·')}` : ''}`}
+          actions={<>
+            <button className="pl-btn" onClick={() => setAddOpen(false)}>取消</button>
+            <button className="pl-btn primary" onClick={() => { if (addEvent()) setAddOpen(false); }}>保存</button>
+          </>}
+        >
+          <div className="pl-field">
+            <div className="pl-label">具体事项</div>
+            <input
+              ref={addTitleRef} className="pl-input" style={{ width: '100%' }}
+              placeholder="例如：开学报到 / 放假回家 / 期末考试"
+              value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+              onKeyDown={(e) => { if (e.key === 'Enter') { if (addEvent()) setAddOpen(false); } }}
+            />
+          </div>
+          <div className="pl-field">
+            <div className="pl-label">几点</div>
+            <DateTimePicker mode="time" value={form.time} onChange={(v) => setForm({ ...form, time: v })} width="100%" />
+          </div>
+          <div className="pl-field">
+            <div className="pl-label">类型</div>
+            <div className="pl-chips">
+              {Object.keys(CATS).map((k) => {
+                const c = CATS[k];
+                const Icon = c.icon;
+                const on = form.cat === k;
+                return (
+                  <button
+                    key={k} type="button" className={`pl-chip${on ? ' on' : ''}`}
+                    style={on ? { borderColor: c.color, background: `${c.color}1A` } : undefined}
+                    aria-pressed={on} onClick={() => setForm({ ...form, cat: k })}
+                  >
+                    <span className="dot" style={{ background: c.color }} /><Icon size={12} style={{ color: c.color }} />{k}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="pl-field">
+            <div className="pl-label">备注（选填）</div>
+            <input className="pl-input" style={{ width: '100%' }} placeholder="补充说明" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
+          </div>
+        </MobileBox>
+      )}
       {toast && <div className="pl-toast">{toast}</div>}
     </div>
   );
