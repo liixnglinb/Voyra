@@ -1165,6 +1165,21 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
              省下的横向余量全部给课表网格 */
           .tool-content .shub-panel .cs-page .cs-card { padding:10px !important; }
           .tool-content .shub-panel .cs-page .cs-card .cs-card { padding:8px !important; }
+          /* ── 课表贴到页头下沿 ──
+             页头下边线到表格顶边原本空着 25px：.tool-content 的 14px 上内边距，
+             再加网格卡自己的 10px 内边距与 1px 上边框。这圈白底 + 卡投影在页头
+             下方成了一条灰带（看着像阴影）。只对课程表这一屏收掉 ——
+             :has 认的是「课程表正显示着」的外壳：三个视图的 div 都在 DOM 里，
+             靠 hidden 属性切（ScheduleHub 里写的），所以取 :not([hidden]) 的那个、
+             再要求它里面有 .cs-page。日历 / 作业看板不会命中，抽屉更不受影响。
+             卡顶的内边距 / 上边框 / 投影同时归零，顶部只留表格自己那条 hairline
+             与页头相接，卡底保留圆角。 */
+          .tool-content:has(.shub-panel > div:not([hidden]) > .cs-page) { padding-top:0; }
+          .tool-content .shub-panel .cs-page > .cs-card {
+            padding-top:0 !important; border-top:0 !important;
+            border-radius:0 0 12px 12px !important; box-shadow:none !important;
+          }
+          .cs-grid thead tr:first-child th { border-top:0; }
           .cs-page { gap:12px; }
           /* ── 1. 进来就展示课程表：周次切换卡挪到网格卡紧后面 ──
              .cs-page 本就是 display:flex，重排只用 order，不动 DOM。
@@ -1208,6 +1223,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           /* 左侧时间轴：默认收成 30px 刻度柱，点表头那一格展开到 66px 显示起止时间。
              展开与否记在 localStorage，下次进来保持。 */
           .cs-col-period { width: 30px; }
+          /* 表头那一格不留内边距，按钮左右缘与列缘对齐。
+             按钮在手机端会被 index.css 的兜底规则压上 min-width:44px !important，
+             30px 的列里就溢出 14px 盖进「周一」：周一的 th 背景后画，直接把
+             时钟图标吃掉一半。这里用更高的特异性把宽度拉回列宽内，
+             min-height 仍留 44（竖向命中区不缩）。 */
+          .cs-grid thead th.per { padding:0; }
+          .cs-grid thead th.per .cs-rail-toggle { width:100%;min-width:0 !important; }
           .cs-rail-toggle { display:grid;place-items:center;width:100%;min-height:32px;padding:0;
             border:0;background:transparent;color:#6A6F79;font-size:var(--fs-meta);font-weight:700; }
           .cs-grid .per b { display:block;font-size:var(--fs-meta);line-height:1.15;white-space:nowrap; }
