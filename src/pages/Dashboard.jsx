@@ -1234,14 +1234,22 @@ export default function Dashboard() {
         to { background-position: 32px 32px, 32px 32px; }
       }
       .vr-home .vr-preview-top { position: relative; }
+      /* 分隔线本身是 1px 的 #e9e9e9。这条扫光必须与它同厚、同位：原来写
+         height:1.5px + bottom:-1px，深金色会从线上沿露出 0.5px，手机上就是
+         「分隔线边上多出来的一条线」（用户截图里圈的就是这里）。
+         改 1px 后正好只盖住分隔线，线还是那条线，只是被扫过时变金。
+         收尾用 mask 而不是渐变停止点：scaleX 会把整条渐变一起压缩，
+         靠渐变末尾的透明收尾会被切出硬边，mask 随元素一起缩放才是软头。 */
       .vr-home .vr-preview-top::after {
         content: "";
         position: absolute;
         left: 0; right: 0; bottom: -1px;
-        height: 1.5px;
+        height: 1px;
         transform: scaleX(0);
         transform-origin: left center;
-        background: linear-gradient(90deg, #a48830, #e0c35f 62%, rgba(224,195,95,0));
+        background: linear-gradient(90deg, #a48830, #e0c35f);
+        -webkit-mask-image: linear-gradient(90deg, #000 45%, rgba(0, 0, 0, 0));
+        mask-image: linear-gradient(90deg, #000 45%, rgba(0, 0, 0, 0));
         animation: vr-art-progress 2.6s linear infinite;
         pointer-events: none;
       }
