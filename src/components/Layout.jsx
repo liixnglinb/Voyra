@@ -62,6 +62,9 @@ export default function Layout({ children }) {
   /* 日程中心的页头介绍文字在手机上被账户浮标的避让挤成 6 行竖排，
      且它只是重复三个视图的名字 —— 手机端整条去掉，故给它一个页面级类名 */
   const isScheduleWorkspace = pathname === '/timetable' || pathname.startsWith('/timetable/');
+  /* AI 模型对比秀：页头那份「图标 + 标题 + 一句话介绍」与页面自己的大标题、
+     介绍段完全重复（手机上还被挤成 3 行、吃掉 93px 首屏），手机端整条去掉 */
+  const isGalleryWorkspace = pathname === '/pelican-gallery' || pathname.startsWith('/pelican-gallery/');
 
   if (isFullscreen) {
     const isDarkPage = pathname.startsWith('/agents');
@@ -84,7 +87,7 @@ export default function Layout({ children }) {
   // ===== 工具页：统一外壳（简约商务白底） =====
   return (
     <div className={`tool-wrap${isPromptWorkspace ? ' tool-wrap-prompt' : ''}`}>
-      <div className={`tool-inner${isWideWorkspace ? ' tool-inner-wide' : ''}${isPromptWorkspace ? ' tool-inner-prompt' : ''}${isScheduleWorkspace ? ' tool-inner-schedule' : ''}`}>
+      <div className={`tool-inner${isWideWorkspace ? ' tool-inner-wide' : ''}${isPromptWorkspace ? ' tool-inner-prompt' : ''}${isScheduleWorkspace ? ' tool-inner-schedule' : ''}${isGalleryWorkspace ? ' tool-inner-gallery' : ''}`}>
         {/* 页头：白卡片 */}
         {!isPromptWorkspace && meta && (() => {
           const { label, sub, Icon, accent } = meta;
@@ -535,6 +538,18 @@ export default function Layout({ children }) {
           .tool-inner-schedule .tool-head { align-items: center; flex-wrap: nowrap; }
           .tool-inner-schedule .tool-head-left { padding-right: 0; }
           .tool-inner-schedule .tool-head-actions { width: auto; flex: 1 1 auto; }
+          /* AI 模型对比秀：页头的图标/标题/介绍与页面自己的大标题重复，
+             手机上整条去掉，这一行只留返回键（44px 拇指区不变），
+             首屏因此多出 ~50px 给卡片 */
+          .tool-inner-gallery .tool-icon,
+          .tool-inner-gallery .tool-title,
+          .tool-inner-gallery .tool-sub { display: none; }
+          .tool-inner-gallery .tool-head { align-items: center; flex-wrap: nowrap; min-height: 0; padding-bottom: 0; }
+          /* 手机上 .tool-head-actions 被通用规则设成 width:100%（给换行后的操作区用），
+             这一页操作区是空的，于是它另起一行、白吃 16px 行距 → 收回自适应 */
+          .tool-inner-gallery .tool-head-actions { width: auto; flex: 1 1 auto; }
+          /* 页面自己带 34px 上边距（手机上会收到 10px），外壳这层不再另加 */
+          .tool-inner-gallery .tool-content { padding-top: 0; }
           .tool-content { padding: 14px 0 30px; }
           /* 上面那条通用卡片归一化规则写的是 16px 18px !important，
              手机上四层叠加会吃掉 35% 宽度，这里统一收紧 */
