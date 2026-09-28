@@ -5,89 +5,200 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Token Monitor —— 本机 AI 用量看板 · Voyra</title>
 <meta name="description" content="自动发现本机已装的 AI 编程工具，读取本地日志并按模型单价逐条计价。Windows 10 / 11，数据不出本机。">
+<meta name="theme-color" content="#08090C">
 <link rel="icon" href="/token-monitor/favicon.png?v=4">
 <style>
 :root{
-  --bg:#08090B;--panel:#101318;--panel2:#0C0F13;--line:rgba(255,255,255,.075);--line2:rgba(255,255,255,.14);
-  --txt:#EDEFF2;--sub:#9BA3AE;--dim:#69717D;--blue:#6C9BFF;--bd:#3F73F5;--orange:#FF9A62;--green:#4AC08A;
+  --bg:#08090C;--panel-a:#10141B;--panel-b:#0C0F14;--panel-hi:#141922;
+  --line:rgba(255,255,255,.07);--line2:rgba(255,255,255,.13);
+  --txt:#EDEFF2;--sub:#9BA3AE;--dim:#6C7581;
+  --m-token:#6C9BFF;--m-cost:#FFA05F;--m-req:#4AC08A;--m-cache:#5CC8DE;--bd:#3F73F5;
   --mono:ui-monospace,"Cascadia Mono",Consolas,"Microsoft YaHei UI",monospace;
+  --inset:inset 0 1px 0 rgba(255,255,255,.05);
+  --glow:0 22px 54px rgba(0,0,0,.42);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{color-scheme:dark}
+html{color-scheme:dark;scroll-behavior:smooth}
 body{background:var(--bg);color:var(--txt);font:15px/1.65 "Segoe UI","Microsoft YaHei UI",-apple-system,sans-serif;
-  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background-image:
+    radial-gradient(1100px 520px at 16% -14%,rgba(108,155,255,.13),transparent 62%),
+    radial-gradient(820px 440px at 95% -18%,rgba(255,160,95,.075),transparent 60%),
+    radial-gradient(940px 620px at 58% 116%,rgba(92,200,222,.05),transparent 62%);
+  background-attachment:fixed}
+/* 顶部淡出网格，只在首屏可见 —— 呼应软件里的量表刻度质感 */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(1000px 560px at 26% -6%,#000,transparent 74%);
+  mask-image:radial-gradient(1000px 560px at 26% -6%,#000,transparent 74%)}
 a{color:inherit;text-decoration:none}
-.wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+b,strong{font-weight:650}
+/* 锚点跳转不被吸顶导航压住 */
+#top,#sources,#download{scroll-margin-top:76px}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.wrap{max-width:1200px;margin:0 auto;padding:0 38px}
+/* ── 入场：淡入上浮，滚动到视口再触发 ── */
+.rv{opacity:0;transform:translateY(15px);transition:opacity .55s ease,transform .55s cubic-bezier(.22,.61,.36,1)}
+.rv.in{opacity:1;transform:none}
+@media print{.rv{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.rv{opacity:1;transform:none;transition:none}}
+/* ── 面板通用材质 ── */
+.panel{background:linear-gradient(180deg,var(--panel-a),var(--panel-b));border:1px solid var(--line);
+  border-radius:15px;box-shadow:var(--glow),var(--inset)}
+.hd{display:flex;align-items:baseline;gap:12px}
+.hd h2{font-size:19px;font-weight:680;letter-spacing:-.2px}
+.hd .note{font-size:11.5px;color:var(--dim);font-family:var(--mono);white-space:nowrap}
+.hd .sp{flex:1}
 /* ── 顶栏 ── */
-.nav{position:sticky;top:0;z-index:40;background:rgba(8,9,11,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.nav .wrap{height:58px;display:flex;align-items:center;gap:26px}
-.brand{display:flex;align-items:center;gap:9px;font-weight:650;font-size:14.5px;letter-spacing:.1px}
-.ico{width:22px;height:22px;flex:none}
+.nav{position:sticky;top:0;z-index:40;background:rgba(8,9,12,.82);backdrop-filter:blur(16px) saturate(140%);
+  border-bottom:1px solid var(--line)}
+.nav::after{content:"";position:absolute;left:0;bottom:-1px;height:1px;width:var(--sp,0%);
+  background:linear-gradient(90deg,var(--m-token),var(--m-cost));transition:width .1s linear}
+.nav .wrap{height:60px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:660;font-size:14.5px;letter-spacing:.1px}
+.ico{width:23px;height:23px;flex:none}
 .nav .lk{color:var(--sub);font-size:13px;transition:color .15s}
 .nav .lk:hover{color:var(--txt)}
 .nav .sp{flex:1}
 .pill{font-size:11.5px;color:var(--dim);border:1px solid var(--line2);border-radius:999px;padding:4px 11px;font-family:var(--mono)}
-.btn-sm{height:30px;padding:0 13px;border-radius:8px;background:#fff;color:#0B0D10;font-size:12.5px;font-weight:650;
-  display:inline-flex;align-items:center;gap:6px;transition:transform .12s ease,box-shadow .12s ease}
-.btn-sm:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,255,255,.12)}
+.btn-sm{height:32px;padding:0 14px;border-radius:9px;background:var(--bd);color:#fff;font-size:12.5px;font-weight:650;
+  display:inline-flex;align-items:center;gap:6px;transition:transform .14s ease,box-shadow .14s ease,background .14s ease;
+  box-shadow:0 8px 22px rgba(63,115,245,.28)}
+.btn-sm:hover{background:#4F80FF;transform:translateY(-1px);box-shadow:0 12px 28px rgba(63,115,245,.38)}
 /* ── Hero ── */
-.hero .wrap{display:grid;grid-template-columns:minmax(380px,460px) minmax(0,1fr);gap:56px;align-items:center;
-  padding-top:64px;padding-bottom:56px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);border:1px solid var(--line2);
-  border-radius:999px;padding:5px 12px;margin-bottom:22px}
-.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--green)}
-h1{font-size:clamp(34px,4vw,50px);line-height:1.12;letter-spacing:-1.2px;font-weight:720}
-.hl{color:var(--blue)}
-.lead{color:var(--sub);font-size:15px;margin-top:18px}
+.hero .wrap{display:grid;grid-template-columns:minmax(360px,450px) minmax(0,1fr);gap:54px;align-items:center;
+  padding-top:66px;padding-bottom:52px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);
+  border:1px solid var(--line2);border-radius:999px;padding:5px 12px;margin-bottom:22px;background:rgba(255,255,255,.02)}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--m-req);box-shadow:0 0 0 3px rgba(74,192,138,.14)}
+h1{font-size:clamp(33px,3.9vw,49px);line-height:1.12;letter-spacing:-1.3px;font-weight:730}
+.hl{background:linear-gradient(92deg,#CFE0FF,#8FB2FF 46%,#FFC79E);-webkit-background-clip:text;background-clip:text;
+  color:transparent}
+.lead{color:var(--sub);font-size:15px;margin-top:18px;max-width:46ch}
 .cta{margin-top:28px}
-.btn-main{display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 22px;border-radius:11px;background:var(--bd);
-  color:#fff;font-size:15px;font-weight:650;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease,background .12s ease;
-  box-shadow:0 12px 30px rgba(63,115,245,.32)}
-.btn-main:hover{background:#4F80FF;transform:translateY(-1px);box-shadow:0 16px 36px rgba(63,115,245,.42)}
+.btn-main{display:inline-flex;align-items:center;gap:9px;height:50px;padding:0 22px;border-radius:12px;
+  background:linear-gradient(180deg,#4F80FF,var(--bd));color:#fff;font-size:15px;font-weight:660;cursor:pointer;
+  transition:transform .14s ease,box-shadow .14s ease,filter .14s ease;
+  box-shadow:0 14px 34px rgba(63,115,245,.34),var(--inset)}
+.btn-main:hover{transform:translateY(-2px);filter:saturate(112%);box-shadow:0 20px 44px rgba(63,115,245,.44),var(--inset)}
+.btn-main:active{transform:translateY(0)}
 .btn-main svg{width:17px;height:17px}
-.btn-main b{font-weight:650;font-family:var(--mono);font-size:13.5px}
-.btn-main.busy{opacity:.7;pointer-events:none}
-.src-status{margin-top:14px;font-size:12.5px;color:var(--sub);display:flex;align-items:center;gap:8px;min-height:20px}
+.btn-main b{font-weight:650;font-family:var(--mono);font-size:13.5px;opacity:.92}
+.btn-main.busy{opacity:.62;pointer-events:none}
+.badges{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.badge{font-size:11.5px;color:var(--dim);font-family:var(--mono);border:1px solid var(--line);
+  border-radius:7px;padding:3px 9px;background:rgba(255,255,255,.02)}
+.src-status{margin-top:16px;font-size:12.5px;color:var(--sub);display:flex;align-items:center;gap:8px;min-height:20px}
 .src-status b{color:var(--txt);font-weight:600}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
-.dot.ok{background:var(--green)}
-.dot.wait{background:var(--blue);animation:blink 1s ease-in-out infinite}
-@keyframes blink{50%{opacity:.25}}
-.shot img{display:block;width:100%;height:auto;border:1px solid var(--line2);border-radius:14px;
-  box-shadow:0 40px 90px rgba(0,0,0,.55)}
-/* ── 数据源 chips ── */
-.chips{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:22px 0}
-.chips .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.chips-head{font-size:12.5px;color:var(--dim);font-family:var(--mono);white-space:nowrap}
-.chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;
-  background:var(--panel);font-size:12px}
-.chip b{font-weight:600;color:var(--sub)}
-.chip i{font-style:normal;color:var(--dim);font-family:var(--mono);font-size:11px}
-.chip.more{color:var(--dim)}
+.dot.ok{background:var(--m-req);box-shadow:0 0 0 3px rgba(74,192,138,.13)}
+.dot.wait{background:var(--m-token);animation:blink 1.05s ease-in-out infinite}
+@keyframes blink{50%{opacity:.22}}
+/* ── Hero 右侧：真实窗口截图 + 下方趋势卡 ── */
+.stage{position:relative}
+.stage::after{content:"";position:absolute;inset:8% 4% -10% 4%;z-index:-1;border-radius:26px;
+  background:radial-gradient(60% 60% at 50% 40%,rgba(108,155,255,.20),transparent 70%);filter:blur(26px)}
+.win{overflow:hidden;border-radius:15px;border:1px solid var(--line2);
+  background:#0A0D11;box-shadow:0 44px 96px rgba(0,0,0,.62),var(--inset)}
+.win img{display:block;width:100%;height:auto}
+.trend{margin-top:16px;padding:14px 16px 12px}
+.tr-hd{display:flex;align-items:center;gap:10px}
+.tr-hd .lab{font-size:11.5px;color:var(--sub);font-family:var(--mono)}
+.tr-hd .sp{flex:1}
+.tr-hd b{font-size:12.5px;color:#BFD4FF;font-family:var(--mono);font-weight:650;font-variant-numeric:tabular-nums}
+.spark{display:block;width:100%;height:auto;margin:9px 0 7px}
+.tr-ft{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--dim);font-family:var(--mono);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.tr-ft em{font-style:normal;color:var(--m-cost)}
+.tr-ft .ln{flex:1;height:1px;background:var(--line);min-width:16px}
+/* ── 指标条 ── */
+.mrow{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:26px 0 24px}
+.mrow .wrap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.mt{padding:2px 26px;border-left:1px solid var(--line);min-width:0}
+.mt:first-child{border-left:0;padding-left:0}
+.mt .lab{display:block;font-size:11.5px;color:var(--dim);letter-spacing:.2px}
+.mt .v{display:block;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:25px;font-weight:650;
+  letter-spacing:-.6px;margin-top:5px}
+.mt .msub{display:block;font-size:11px;color:var(--dim);font-family:var(--mono);margin-top:5px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ok-token .v{color:#BFD4FF}
+.ok-cost .v{color:#FFC79E}
+.ok-req .v{color:#8FDDB4}
+.ok-cache .v{color:#9ADDEE}
+.mcap{display:flex;align-items:center;gap:9px;margin-top:16px;font-size:11.5px;color:var(--dim);font-family:var(--mono)}
+.mcap span{white-space:nowrap}
+.mcap .ln{flex:1;height:1px;background:var(--line)}
+/* ── 数据源排行 ── */
+.srcs{padding:52px 0 6px}
+.srcs .panel{padding:20px 22px 14px}
+.srchead{display:flex;gap:12px;font-size:10.5px;color:var(--dim);font-family:var(--mono);
+  padding:0 0 9px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.srchead .a{flex:1;min-width:0}
+.srchead .b{width:104px;text-align:right}
+.srchead .c{width:94px;text-align:right}
+.src{display:flex;align-items:center;gap:12px;padding:7px 6px;border-radius:9px;list-style:none;
+  transition:background .14s ease}
+.src:hover{background:rgba(255,255,255,.032)}
+.src .nm{width:132px;flex:none;font-size:13px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.src .track{flex:1;min-width:0;height:6px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden;
+  box-shadow:inset 0 1px 1px rgba(0,0,0,.4)}
+.src .track i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,rgba(108,155,255,.55),var(--m-token));
+  box-shadow:0 0 12px rgba(108,155,255,.4);transition:filter .14s}
+.src:hover .track i{filter:brightness(1.16)}
+.src:first-child .track i{background:linear-gradient(90deg,rgba(108,155,255,.6),#A9C6FF)}
+.src .tk{width:104px;flex:none;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12.5px;color:#C8CFD8}
+.src .cq{width:94px;flex:none;text-align:right;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
 /* ── 下载 ── */
-.dl .wrap{padding-top:56px;padding-bottom:72px}
-.dl h2{font-size:22px;font-weight:680;letter-spacing:-.3px}
-.dl-sub{color:var(--dim);font-size:13px;margin-top:8px}
-.dl-row{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:13px;background:var(--panel);
-  padding:16px 18px;margin-top:20px;cursor:pointer;transition:border-color .15s,background .15s}
-.dl-row:hover{border-color:var(--line2);background:#13171D}
+.dl{padding:46px 0 68px}
+.dl .panel{padding:22px}
+.dl-row{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;
+  background:linear-gradient(180deg,#131820,#0E1218);padding:17px 18px;margin-top:18px;cursor:pointer;
+  transition:border-color .16s,transform .16s,box-shadow .16s;box-shadow:var(--inset)}
+.dl-row:hover{border-color:rgba(108,155,255,.42);transform:translateY(-1px);box-shadow:0 14px 30px rgba(0,0,0,.4),var(--inset)}
 .dl-row .nm{font-size:14.5px;font-weight:650;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .tag{font-style:normal;font-size:10.5px;font-weight:700;color:#0B0D10;background:#9FD0FF;border-radius:5px;padding:1.5px 7px}
 .ext{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line2);border-radius:999px;padding:2px 9px}
 .fn{color:var(--dim);font-size:11.5px;font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dl-row .sp{flex:1}
-.dl-row .meta{color:var(--dim);font-size:12px;font-family:var(--mono);white-space:nowrap}
-.go{width:34px;height:34px;border-radius:9px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;
-  color:var(--sub);flex:none;transition:background .15s,color .15s}
+.dl-row .meta{color:var(--sub);font-size:12px;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.go{width:34px;height:34px;border-radius:10px;border:1px solid var(--line2);display:flex;align-items:center;
+  justify-content:center;color:var(--sub);flex:none;transition:background .16s,border-color .16s,color .16s}
 .dl-row:hover .go{background:var(--bd);border-color:var(--bd);color:#fff}
-.seg{display:inline-flex;gap:3px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:3px;border-radius:10px;margin-top:18px}
+.sub{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.sub-hd{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--sub)}
+.sub-hd .sp{flex:1}
+.ghost{appearance:none;background:transparent;border:1px solid var(--line2);border-radius:8px;color:var(--sub);
+  font:12px/1 inherit;font-family:var(--mono);padding:6px 11px;cursor:pointer;transition:color .14s,border-color .14s,background .14s}
+.ghost:hover{color:var(--txt);border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.04)}
+.seg{display:inline-flex;gap:3px;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:3px;border-radius:11px}
 .seg button{appearance:none;border:0;background:transparent;color:var(--dim);font-size:12.5px;font-family:inherit;
   padding:7px 14px;border-radius:8px;cursor:pointer;transition:background .15s,color .15s}
 .seg button:hover{color:var(--txt);background:rgba(255,255,255,.06)}
-.seg button.on{background:rgba(255,255,255,.10);color:var(--txt)}
-.hint{color:var(--dim);font-size:12px;margin-top:14px}
-footer{border-top:1px solid var(--line);padding:22px 0 30px;color:var(--dim);font-size:12px}
+.seg button.on{background:rgba(108,155,255,.16);color:#D7E4FF;box-shadow:inset 0 0 0 1px rgba(108,155,255,.3)}
+.spd{margin-top:14px;display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden}
+.spd-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#0D1116;font-size:12.5px;transition:background .14s}
+.spd-row:hover{background:#111620}
+.spd-row .sn{width:140px;flex:none;color:var(--sub);white-space:nowrap;display:flex;align-items:center;gap:7px}
+.spd-row .st{flex:1;min-width:0;height:5px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden}
+.spd-row .st i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(108,155,255,.4),var(--m-token));
+  transition:width .5s cubic-bezier(.22,.61,.36,1)}
+.spd-row .sv{width:104px;flex:none;text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:11.5px;color:var(--dim)}
+.spd-row.fast .sn{color:var(--txt)}
+.spd-row.fast .st i{background:linear-gradient(90deg,rgba(74,192,138,.5),var(--m-req));box-shadow:0 0 10px rgba(74,192,138,.4)}
+.spd-row.fast .sv{color:#8FDDB4}
+.spd-row.picked{background:#121822}
+.spd-row.picked .sn{color:#D7E4FF}
+.spd-row .best{font-style:normal;font-size:10px;font-weight:700;color:#08090C;background:var(--m-req);
+  border-radius:5px;padding:1.5px 6px;letter-spacing:.2px}
+.spd-row.dead .sn{color:var(--dim)}
+.spd-row.dead .sv{color:#8A6A5F}
+.hint{color:var(--dim);font-size:12px;margin-top:16px;line-height:1.6}
+footer{border-top:1px solid var(--line);padding:24px 0 32px;color:var(--dim);font-size:12px}
 footer .wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+footer .brand{font-size:13px}
 footer a:hover{color:var(--txt)}
 footer .sp{flex:1}
 @media (max-width:960px){
@@ -98,26 +209,60 @@ footer .sp{flex:1}
   .nav .lk.sec{display:none}
   .nav .lk{white-space:nowrap}
   .pill{font-size:11px;padding:3px 9px}
-  .btn-sm{height:32px;padding:0 12px;white-space:nowrap}
-  .hero .wrap{grid-template-columns:1fr;gap:34px;padding-top:36px;padding-bottom:34px}
-  .shot{order:2}
+  .btn-sm{height:34px;padding:0 13px;white-space:nowrap}
+  .hero .wrap{grid-template-columns:1fr;gap:40px;padding-top:34px;padding-bottom:34px}
+  .stage{order:2;margin-bottom:6px}
+  .trend{margin-top:14px;padding:13px 14px 11px}
   h1{letter-spacing:-.8px}
   .lead{font-size:14px}
   .btn-main{width:100%;justify-content:center;min-height:48px}
-  .seg{display:flex;width:100%;gap:4px}
-  .seg button{flex:1 1 0;min-width:0;padding:9px 4px;font-size:13px;min-height:42px}
-  .chips-head{width:100%;white-space:normal}
+  .mrow .wrap{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 0}
+  .mt{padding:0 18px;min-width:0}
+  .mt:nth-child(3){border-left:0;padding-left:0}
+  .mt:nth-child(odd){border-left:0;padding-left:0}
+  .srcs,.dl{padding-top:38px}
+  .src .nm{width:104px;font-size:12.5px}
+  .src .tk{width:78px;font-size:12px}
+  .src .cq{width:70px;font-size:11px}
+  .srchead .b{width:78px}
+  .srchead .c{width:70px}
+  .dl .wrap{padding-bottom:52px}
   .dl-row{flex-wrap:wrap;gap:10px}
   .fn{width:100%;order:5}
-  .dl .wrap{padding-top:38px;padding-bottom:48px}
+  .sub{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .sub-hd{width:100%}
+  .hint{order:5;width:100%}
+  .seg{display:flex;width:100%;gap:4px;order:3}
+  .seg button{flex:1 1 0;min-width:0;padding:9px 4px;font-size:13px;min-height:42px}
+  .spd{width:100%;order:4}
+  .spd-row .sn{width:84px}
 }
-/* ── 触屏：按钮抬到 44px 触控下限 ── */
+/* ── 窄屏：排行行改为「名称+数值 / 整行条形」两行制，条形才有可读长度 ── */
+@media (max-width:520px){
+  .hd{flex-wrap:wrap;gap:6px 12px}
+  .hd .leg{display:none}
+  .srchead{display:none}
+  .src{flex-wrap:wrap;row-gap:8px;padding:10px 8px}
+  .src .nm{width:auto;flex:1 1 auto}
+  .src .tk{width:auto}
+  .src .cq{width:auto;flex:0 0 92px}
+  .src .track{order:9;flex:1 0 100%}
+  .spd-row .sn{width:104px}
+  .spd-row .sv{width:84px;font-size:11px}
+  .srcs .panel{padding:16px 14px 10px}
+}
+/* ── 触屏：触控下限 44px，隐藏行内悬停依赖 ── */
 @media (pointer:coarse){
   .btn-sm{height:40px;padding:0 16px}
   .seg button{min-height:44px}
   .dl-row{padding:18px}
+  .ghost{padding:10px 14px;min-height:44px}
+  .src:hover{background:none}
+  .spd-row{padding:12px 14px}
+  .spd-row .sn{width:120px}
 }
 </style>
+<noscript><style>.rv{opacity:1;transform:none}</style></noscript>
 </head>
 <body>
 
@@ -130,50 +275,95 @@ footer .sp{flex:1}
   <span class="sp"></span>
   <span class="pill" id="verPill">v1.9.7</span>
   <a class="lk" href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener">GitHub</a>
-  <a class="btn-sm" href="#download">下载</a>
+  <a class="btn-sm" href="#download">获取安装版</a>
 </div></nav>
 
 <header class="hero" id="top"><div class="wrap">
   <div class="copy">
-    <span class="eyebrow"><i></i>Windows 10 / 11 · 数据不出本机</span>
-    <h1>看清每一枚 Token<br><span class="hl">究竟花在哪里</span></h1>
-    <p class="lead">自动发现本机已装的 AI 编程工具，读取本地日志并按模型单价逐条计价。缓存命中率、Agent 排行、对话级明细，全在同一块看板上。</p>
-    <div class="cta">
+    <span class="eyebrow rv"><i></i>Windows 10 / 11 · 数据不出本机</span>
+    <h1 class="rv">看清每一枚 Token<br><span class="hl">究竟花在哪里</span></h1>
+    <p class="lead rv">自动发现本机已装的 AI 编程工具，读取本地日志并按模型单价逐条计价。缓存命中率、Agent 排行、对话级明细，全在同一块看板上。</p>
+    <div class="cta rv">
       <a class="btn-main" id="dlMain" data-dl href="#download">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg>
         下载安装版<b id="verBtn">v1.9.7</b></a>
     </div>
-    <p class="src-status" id="srcStatus"><span class="dot wait"></span>正在测速选择最快下载源…</p>
+    <div class="badges rv">
+      <span class="badge">64 位</span>
+      <span class="badge" id="badgeSize">约 30 MB</span>
+      <span class="badge">安装包 · 自动更新</span>
+    </div>
+    <p class="src-status rv" id="srcStatus"><span class="dot wait"></span>正在测速选择最快下载源…</p>
   </div>
-  <div class="shot"><img src="/token-monitor/app-shot.webp" width="1168" height="645" alt="Token Monitor 界面：用量总览"></div>
+  <div class="stage rv">
+    <div class="win">
+      <img src="/token-monitor/app-shot.webp" width="1168" height="645" alt="Token Monitor 界面：用量总览">
+    </div>
+    <div class="trend panel">
+      <div class="tr-hd"><span class="lab">最近 30 个活跃日 · 日 Tokens</span><span class="sp"></span><b>6.20 B</b></div>
+      <svg class="spark" viewBox="0 0 620 78" width="620" height="78" aria-hidden="true"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6C9BFF" stop-opacity=".34"/><stop offset="1" stop-color="#6C9BFF" stop-opacity="0"/></linearGradient></defs><path d="M9.0,68.8 L29.8,68.4 L50.5,69.0 L71.3,68.2 L92.0,67.2 L112.8,67.0 L133.6,69.0 L154.3,69.0 L175.1,59.4 L195.8,65.8 L216.6,61.3 L237.3,65.1 L258.1,53.9 L278.9,30.9 L299.6,9.0 L320.4,50.5 L341.1,38.0 L361.9,62.7 L382.7,66.8 L403.4,62.2 L424.2,37.5 L444.9,57.0 L465.7,68.9 L486.4,69.0 L507.2,65.2 L528.0,34.0 L548.7,69.0 L569.5,69.0 L590.2,65.8 L611.0,41.8 L611.0,69.0 L9.0,69.0 Z" fill="url(#sg)"/><path d="M9.0,68.8 L29.8,68.4 L50.5,69.0 L71.3,68.2 L92.0,67.2 L112.8,67.0 L133.6,69.0 L154.3,69.0 L175.1,59.4 L195.8,65.8 L216.6,61.3 L237.3,65.1 L258.1,53.9 L278.9,30.9 L299.6,9.0 L320.4,50.5 L341.1,38.0 L361.9,62.7 L382.7,66.8 L403.4,62.2 L424.2,37.5 L444.9,57.0 L465.7,68.9 L486.4,69.0 L507.2,65.2 L528.0,34.0 L548.7,69.0 L569.5,69.0 L590.2,65.8 L611.0,41.8" fill="none" stroke="#8FB2FF" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><line x1="299.6" y1="9.0" x2="299.6" y2="69" stroke="rgba(255,160,95,.45)" stroke-width="1" stroke-dasharray="2 3"/><circle cx="299.6" cy="9.0" r="6" fill="#FFA05F" opacity=".16"/><circle cx="299.6" cy="9.0" r="2.8" fill="#FFC79E"/><circle cx="611.0" cy="41.8" r="2.6" fill="#CFE0FF"/></svg>
+      <div class="tr-ft"><em>峰值 860.9 M</em><span>09-01</span><span class="ln"></span><span>2026-06-02 → 2026-09-27</span></div>
+    </div>
+  </div>
 </div></header>
 
-<section class="chips" id="sources"><div class="wrap">
-  <span class="chips-head">本机实测 6.20 B tokens · 12 个数据源</span>
-  <span class="chip"><b>Box Agent</b><i>1.62 B</i></span><span class="chip"><b>Codex</b><i>1.40 B</i></span><span class="chip"><b>ZCode</b><i>1.13 B</i></span><span class="chip"><b>Claude Code</b><i>696.9 M</i></span><span class="chip"><b>WorkBuddy AI</b><i>501.4 M</i></span><span class="chip"><b>Hermes</b><i>418.2 M</i></span><span class="chip"><b>OpenCode</b><i>306.9 M</i></span><span class="chip"><b>MHAgent</b><i>79.3 M</i></span><span class="chip more">+4</span>
+<section class="mrow"><div class="wrap">
+  <div class="mt ok-token"><span class="lab">Tokens</span><span class="v" data-to="6.1997" data-dec="2" data-suf=" B">6.20 B</span><span class="msub">其中套餐内 2.10 B</span></div><div class="mt ok-cost"><span class="lab">消耗金额</span><span class="v" data-to="13363.84" data-dec="0" data-pre="&#165;">¥13,364</span><span class="msub">$1,882 · 汇率 7.1</span></div><div class="mt ok-req"><span class="lab">API 请求次数</span><span class="v" data-to="18113" data-dec="0">18,113</span><span class="msub">本机 12 个数据源</span></div><div class="mt ok-cache"><span class="lab">缓存命中率</span><span class="v" data-to="67.85" data-dec="1" data-suf="%">67.9%</span><span class="msub">命中读取 / 输入与写入合计</span></div>
+</div><div class="wrap"><p class="mcap"><span>作者本机日志实测 · 与软件面板同一导出管道</span><span class="ln"></span></p></div></section>
+
+<section class="srcs rv" id="sources"><div class="wrap">
+  <div class="hd" style="margin-bottom:14px">
+    <h2>本机跑通的数据源</h2>
+    <span class="note">12 / 81</span>
+    <span class="sp"></span>
+    <span class="note leg">条形 = 相对榜首的 Tokens 占比</span>
+  </div>
+  <div class="panel">
+    <div class="srchead"><span class="a">Agent</span><span class="a">Tokens 占比</span><span class="b">Tokens</span><span class="c">金额（CNY）</span></div>
+    <ul><li class="src"><span class="nm">Box Agent</span><span class="track"><i style="width:100.0%"></i></span><span class="tk">1.62 B</span><span class="cq">套餐不计费</span></li><li class="src"><span class="nm">Codex</span><span class="track"><i style="width:86.3%"></i></span><span class="tk">1.40 B</span><span class="cq">¥3,019</span></li><li class="src"><span class="nm">ZCode</span><span class="track"><i style="width:69.7%"></i></span><span class="tk">1.13 B</span><span class="cq">¥242</span></li><li class="src"><span class="nm">Claude Code</span><span class="track"><i style="width:43.1%"></i></span><span class="tk">696.9 M</span><span class="cq">¥4,703</span></li><li class="src"><span class="nm">WorkBuddy AI</span><span class="track"><i style="width:31.0%"></i></span><span class="tk">501.4 M</span><span class="cq">¥3,905</span></li><li class="src"><span class="nm">Hermes</span><span class="track"><i style="width:25.9%"></i></span><span class="tk">418.2 M</span><span class="cq">未计价</span></li><li class="src"><span class="nm">OpenCode</span><span class="track"><i style="width:19.0%"></i></span><span class="tk">306.9 M</span><span class="cq">¥1,380</span></li><li class="src"><span class="nm">MHAgent</span><span class="track"><i style="width:4.9%"></i></span><span class="tk">79.3 M</span><span class="cq">¥111</span></li><li class="src"><span class="nm">Cline</span><span class="track"><i style="width:2.8%"></i></span><span class="tk">45.7 M</span><span class="cq">套餐不计费</span></li><li class="src"><span class="nm">Agnes</span><span class="track"><i style="width:1.6%"></i></span><span class="tk">6.7 M</span><span class="cq">套餐不计费</span></li><li class="src"><span class="nm">DSH</span><span class="track"><i style="width:1.6%"></i></span><span class="tk">4.7 M</span><span class="cq">未计价</span></li><li class="src"><span class="nm">Mavis</span><span class="track"><i style="width:1.6%"></i></span><span class="tk">896 k</span><span class="cq">¥2.60</span></li></ul>
+  </div>
 </div></section>
 
-<section class="dl" id="download"><div class="wrap">
-  <h2>下载</h2>
-  <p class="dl-sub">Windows 10 / 11 · 装完之后在软件内点「检查更新」即可升级</p>
-  <div class="dl-row" data-dl id="dlRow">
-    <span class="nm">Token Monitor 安装版<i class="tag">推荐</i></span>
-    <span class="ext">.exe</span>
-    <span class="fn" id="fileName">TokenMonitor-setup-v1.9.7.exe</span>
+<section class="dl rv" id="download"><div class="wrap">
+  <div class="hd" style="margin-bottom:16px">
+    <h2>下载</h2>
+    <span class="note">安装版</span>
     <span class="sp"></span>
-    <span class="meta" id="dlMeta">约 30 MB · v1.9.7</span>
-    <span class="go"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5v11.5M7 10l5 5 5-5M5 20.5h14"/></svg></span>
+    <span class="note" id="dlVer">v1.9.7</span>
   </div>
-  <div class="seg" id="srcSeg">
-    <button type="button" data-s="auto" class="on">自动测速</button>
-    <button type="button" data-s="gh-proxy">国内镜像</button>
-    <button type="button" data-s="ghfast">备用镜像</button>
-    <button type="button" data-s="direct">官方直连</button>
+  <div class="panel">
+    <div class="dl-row" data-dl id="dlRow">
+      <span class="nm">Token Monitor 安装版<i class="tag">推荐</i></span>
+      <span class="ext">.exe</span>
+      <span class="fn" id="fileName">TokenMonitor-setup-v1.9.7.exe</span>
+      <span class="sp"></span>
+      <span class="meta" id="dlMeta">约 30 MB · v1.9.7</span>
+      <span class="go"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></span>
+    </div>
+
+    <div class="sub">
+      <div class="sub-hd">
+        <span>下载源</span>
+        <span class="sp"></span>
+        <button type="button" class="ghost" id="reprobe">重新测速</button>
+        <button type="button" class="ghost" id="copyLink">复制链接</button>
+      </div>
+      <div class="seg" id="srcSeg" style="margin-top:12px">
+        <button type="button" data-s="auto" class="on">自动测速</button>
+        <button type="button" data-s="gh-proxy">国内镜像</button>
+        <button type="button" data-s="ghfast">备用镜像</button>
+        <button type="button" data-s="direct">官方直连</button>
+      </div>
+      <div class="spd" id="spdList"></div>
+      <p class="hint" id="dlHint">测速取各源 2 MB 持续速率，结果缓存 10 分钟 · 首次运行若被 SmartScreen 提示，选择「更多信息 → 仍要运行」</p>
+    </div>
   </div>
-  <p class="hint" id="dlHint">下载前自动实测各源速度并选最快 · 首次运行若被 SmartScreen 提示，选择「更多信息 → 仍要运行」</p>
 </div></section>
 
 <footer><div class="wrap">
+  <a class="brand" href="/token-monitor/">
+    <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.94 16.69 A6.56 6.56 0 1 1 17.06 16.69" fill="none" stroke="#26303E" stroke-width="2.5" stroke-linecap="round"/><path d="M6.94 16.69 A6.56 6.56 0 0 1 10.88 4.78" fill="none" stroke="#BFD4FF" stroke-width="2.5" stroke-linecap="round"/><circle cx="10.88" cy="4.78" r="1.95" fill="#FF9A62" stroke="#0B0E12" stroke-width=".7"/></svg>
+  </a>
   <span>&#169; 2026 <a href="/">Voyra</a> · Token Monitor</span>
   <span class="sp"></span>
   <a href="https://github.com/liixnglinb/token-monitor" target="_blank" rel="noopener">源码仓库</a>
@@ -196,6 +386,8 @@ var SRC = {
   'direct':   { name: '官方直连', pre: '' }
 };
 var state = { asset: null, auto: null, manual: null, result: null, probe: null, assetDone: null };
+var SPEEDS = {};
+var reduce = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
 
 function $(id){ return document.getElementById(id); }
 function setTxt(id, s){ var e = $(id); if (e && s) e.textContent = s; }
@@ -214,6 +406,7 @@ function apply(){
     b.classList.toggle('on', b.getAttribute('data-s') === (state.manual || 'auto'));
   });
   statusLine();
+  renderSpeeds();
 }
 function statusLine(){
   var e = $('srcStatus'); if (!e) return;
@@ -228,14 +421,38 @@ function statusLine(){
   }
 }
 
-/* ── 单源测速：no-cors + Range 取 1.5MB，资源计时拿整段耗时 ── */
+/* 逐源速率条：以本次最快为 100%，失败源标注不可达 */
+function renderSpeeds(){
+  var box = $('spdList'); if (!box) return;
+  var max = 0;
+  ORDER.forEach(function(id){ var s = SPEEDS[id]; if (s && s.ok && s.speed > max) max = s.speed; });
+  var pick = state.manual || state.auto;
+  var html = '';
+  ORDER.forEach(function(id){
+    var s = SPEEDS[id], w = 0, txt = '测速中…', cls = '';
+    if (s && s.ok){ w = Math.max(6, 100 * s.speed / max); txt = fmtSpeed(s.speed); }
+    else if (s){ txt = '不可达'; cls = ' dead'; }
+    if (state.result && state.result.id === id) cls += ' fast';
+    if (pick === id) cls += ' picked';
+    var best = cls.indexOf('fast') >= 0 ? '<i class="best">最快</i>' : '';
+    html += '<div class="spd-row' + cls + '" data-id="' + id + '">'
+      + '<span class="sn">' + SRC[id].name + best + '</span>'
+      + '<span class="st"><i style="width:' + w.toFixed(1) + '%"></i></span>'
+      + '<span class="sv">' + txt + '</span>'
+      + '</div>';
+  });
+  box.innerHTML = html;
+}
+
+/* ── 单源测速：no-cors + Range 取 2MB，资源计时拿整段耗时 ── */
 function probe(src){
   return new Promise(function(resolve){
     var url = src.pre + REPO + '/latest/download/' + PROBE_FILE;
-    var ctl = new AbortController(), t0 = performance.now(), settled = false, poll = null;
+    var ctl = new AbortController(), settled = false, poll = null;
     function finish(r){
       if (settled) return; settled = true;
       clearTimeout(timer); if (poll) clearInterval(poll);
+      SPEEDS[src.id] = r; renderSpeeds();
       try { ctl.abort(); } catch (e) {}
       resolve(r);
     }
@@ -252,14 +469,22 @@ function probe(src){
       .catch(function(){ finish({ id: src.id, ok: false }); });
   });
 }
-function probeAll(){
+function probeAll(force){
   if (state.probe) return state.probe;
-  try {
-    var c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
-    if (c && Date.now() - c.t < CACHE_TTL){
-      state.auto = c.id; state.result = { id: c.id, speed: c.speed, ok: true }; apply(); return Promise.resolve();
-    }
-  } catch (e) {}
+  if (!force){
+    try {
+      var c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || 'null');
+      if (c && Date.now() - c.t < CACHE_TTL){
+        state.auto = c.id; state.result = { id: c.id, speed: c.speed, ok: true };
+        if (!SPEEDS[c.id]) SPEEDS[c.id] = { id: c.id, ok: true, speed: c.speed };
+        apply(); return Promise.resolve();
+      }
+    } catch (e) {}
+  } else {
+    try { sessionStorage.removeItem(CACHE_KEY); } catch (e) {}
+    SPEEDS = {};
+  }
+  state.result = null;
   state.probe = Promise.all(ORDER.map(function(id){
     return probe({ id: id, name: SRC[id].name, pre: SRC[id].pre });
   })).then(function(rs){
@@ -273,6 +498,7 @@ function probeAll(){
     }
     state.probe = null; apply();
   });
+  apply();
   return state.probe;
 }
 
@@ -290,11 +516,13 @@ function loadAsset(){
       }
       if (!setup || !setup.url) return;
       state.asset = setup;
+      var mb = setup.size > 0 ? '约 ' + Math.round(setup.size / 1048576) + ' MB' : '约 30 MB';
       setTxt('verPill', 'v' + ver);
       setTxt('verBtn', 'v' + ver);
       setTxt('fileName', setup.name);
-      var meta = (setup.size > 0 ? '约 ' + Math.round(setup.size / 1048576) + ' MB' : '约 30 MB') + ' · v' + ver;
-      setTxt('dlMeta', meta);
+      setTxt('badgeSize', mb);
+      setTxt('dlVer', 'v' + ver);
+      setTxt('dlMeta', mb + ' · v' + ver);
       setTxt('footVer', 'v' + ver + ' · 81 个已知数据源');
       document.title = 'Token Monitor v' + ver + ' —— 本机 AI 用量看板 · Voyra';
       apply();
@@ -307,7 +535,14 @@ function loadAsset(){
 function ready(){
   return Promise.all([state.assetDone || Promise.resolve(), state.probe || Promise.resolve()]);
 }
+var HINT_DEFAULT = '测速取各源 2 MB 持续速率，结果缓存 10 分钟 · 首次运行若被 SmartScreen 提示，选择「更多信息 → 仍要运行」';
 document.addEventListener('click', function(ev){
+  var row = ev.target.closest ? ev.target.closest('.spd-row') : null;
+  if (row){
+    var id = row.getAttribute('data-id');
+    if (id && SPEEDS[id] && !SPEEDS[id].ok){ ev.preventDefault(); return; }  /* 不可达源不选中 */
+    state.manual = id; apply(); return;
+  }
   var a = ev.target.closest ? ev.target.closest('[data-dl]') : null;
   if (!a) return;
   if (ev.button !== 0 || ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;  /* 修饰键走默认 */
@@ -320,7 +555,7 @@ document.addEventListener('click', function(ev){
   if (label) label.textContent = '正在选择最快下载源并准备下载…';
   wait.then(function(){
     a.classList.remove('busy');
-    if (label) label.textContent = '下载前自动实测各源速度并选最快 · 首次运行若被 SmartScreen 提示，选择「更多信息 → 仍要运行」';
+    if (label) label.textContent = HINT_DEFAULT;
     go();
   });
 });
@@ -331,6 +566,66 @@ document.querySelectorAll('#srcSeg button').forEach(function(b){
     apply();
   });
 });
+$('reprobe').addEventListener('click', function(){
+  state.manual = null;          /* 重新测速 = 交还给自动选择，否则按钮看着没反应 */
+  probeAll(true);
+});
+$('copyLink').addEventListener('click', function(){
+  var btn = this, url = location.origin + urlFor();
+  var done = function(){ btn.textContent = '已复制'; setTimeout(function(){ btn.textContent = '复制链接'; }, 1600); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done, function(){});
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+});
+
+/* ── 滚动进度 + 分段入场 + 数字滚动 ── */
+var nav = document.querySelector('.nav');
+function onScroll(){
+  var h = document.documentElement.scrollHeight - window.innerHeight;
+  if (nav) nav.style.setProperty('--sp', (h > 0 ? Math.min(100, 100 * window.scrollY / h) : 0) + '%');
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+function fmtNum(v, dec, pre, suf){
+  var s = dec ? v.toFixed(dec) : String(Math.round(v));
+  var p = s.split('.');
+  p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (pre || '') + p.join('.') + (suf || '');
+}
+function countUp(el){
+  var to = parseFloat(el.getAttribute('data-to'));
+  if (isNaN(to)) return;
+  var dec = parseInt(el.getAttribute('data-dec') || '0', 10);
+  var pre = el.getAttribute('data-pre') || '', suf = el.getAttribute('data-suf') || '';
+  var t0 = performance.now(), dur = 900;
+  (function step(now){
+    var k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = fmtNum(to * e, dec, pre, suf);
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+var rvNodes = Array.prototype.slice.call(document.querySelectorAll('.rv'));
+rvNodes.forEach(function(el, i){ el.style.transitionDelay = Math.min(360, i * 70) + 'ms'; });
+if ('IntersectionObserver' in window && !reduce){
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(en){
+      if (!en.isIntersecting) return;
+      en.target.classList.add('in');
+      en.target.querySelectorAll('[data-to]').forEach(countUp);
+      io.unobserve(en.target);
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: .12 });
+  rvNodes.forEach(function(el){ io.observe(el); });
+} else {
+  rvNodes.forEach(function(el){ el.classList.add('in'); });
+}
 
 probeAll();
 loadAsset();
