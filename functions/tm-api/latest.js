@@ -64,8 +64,28 @@ async function fromRedirect() {
   }
 }
 
+// 安装包校验值：发布目录里与 exe 同名的 .sha256 是纯文本，但资产站不允许跨域直接取，
+// 这里由 Functions 代取一次（直连失败时走国内镜像兜底；都失败就只是没有该字段）
+async function attachSha(out) {
+  const sum = (out.assets || []).find(
+    (a) => /\.sha256$/i.test(a.name) && /setup/i.test(a.name) && /^https?:/i.test(a.url || "")
+  );
+  if (!sum) return out;
+  for (const url of [sum.url, "https://gh-proxy.com/" + sum.url]) {
+    try {
+      const r = await fetch(url, { headers: { "User-Agent": UA } });
+      if (!r.ok) continue;
+      const m = (await r.text()).match(/[0-9a-fA-F]{64}/);
+      if (m) { out.sha256 = m[0].toLowerCase(); break; }
+    } catch (_) {
+      /* 换下一个通道 */
+    }
+  }
+  return out;
+}
+
 export async function onRequestGet() {
-  const out = (await fromApi()) || (await fromRedirect());
+  const out = await attachSha((await fromApi()) || (await fromRedirect()) || null);
   if (!out) return reply({ error: "unavailable" });
   return reply(out);
 }
