@@ -18,6 +18,7 @@ const CFG = {
   mindmap: { label: 'MIND MAPPING', hint: '正在加载思维导图…', accent: '#9a7515' },
   baby: { label: 'BABY CARE', hint: '宝宝护理加载中…', accent: '#E8835E' },
   pelican: { label: 'AI MODEL SHOWCASE', hint: 'AI 模型对比秀加载中…', accent: '#a48830' },
+  draw: { label: 'RANDOM PICKER', hint: '随机抽人加载中…', accent: '#a48830' },
 };
 
 function Graphic({ variant }) {

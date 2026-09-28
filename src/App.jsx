@@ -16,6 +16,7 @@ const SkillHub = lazy(() => import('./pages/SkillHub'))
 const UIKit = lazy(() => import('./pages/UIKit'))
 const AgentSkills = lazy(() => import('./pages/AgentSkills'))
 const PelicanGallery = lazy(() => import('./pages/PelicanGallery'))
+const DrawPicker = lazy(() => import('./pages/DrawPicker'))
 
 
 function App() {
@@ -55,6 +56,7 @@ function App() {
                 <Route path="/skills" element={<Suspense fallback={<RouteLoader variant="skills" />}><SkillHub /></Suspense>} />
                 <Route path="/uikit" element={<Suspense fallback={<RouteLoader variant="uikit" />}><UIKit /></Suspense>} />
                 <Route path="/pelican-gallery" element={<Suspense fallback={<RouteLoader variant="pelican" />}><PelicanGallery /></Suspense>} />
+                <Route path="/draw" element={<Suspense fallback={<RouteLoader variant="draw" />}><DrawPicker /></Suspense>} />
 
                 {/* 未知路径重定向回首页，避免空白页 */}
                 <Route path="*" element={<Navigate to="/" replace />} />

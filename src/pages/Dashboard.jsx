@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Film, Github,
+  Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Dices, Film, Github,
   Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Receipt, Shapes,
   NotebookPen, BookOpen, Route, Sparkles, Star,
 } from 'lucide-react';
@@ -20,6 +20,7 @@ const FEATURED = [
   { to: '/agents', no: '07', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
   { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
   { to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
+  { to: '/draw', no: '10', name: '随机抽人', desc: '课堂点名、活动抽奖的随机抽取小工具：导入花名册自动识别姓名，或手动添加删除，设置人数一键抽取，抽中可自动排除，全程在本机完成。', cta: '开始抽取', Icon: Dices, art: 'draw' },
 ];
 
 
@@ -43,6 +44,7 @@ const APP_SHORT = {
   '/token-monitor/': '本机 AI 工具用量看板：一条命令扫出 9 类 Agent 的 Token 与成本。',
   '/zenew/': '把课程变成记得住的练习：AI 生成问答卡片，FSRS 安排每次复习节奏。',
   '/ai-chronicle/': '本机 AI 工作观测台：12 个数据源的日报、历史与趋势看板。',
+  '/draw': '随机抽人：导入花名册或手动添加姓名，设置人数一键抽取。',
 };
 
 const MATHMODEL_SKILL = {
@@ -309,7 +311,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, aichronicle: 4, mathmodel: MATHMODEL_STEPS.length };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, aichronicle: 4, draw: 6, mathmodel: MATHMODEL_STEPS.length };
 
 /* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
    天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
@@ -511,6 +513,29 @@ function FeatureArt({ type }) {
       {opts.map((o, i) => <div key={i} className={`vr-zn-opt${active === i ? ' is-on' : ''}`}><span className="k">{i + 1}</span>{o[0]}</div>)}
       <div className="vr-zn-ans"><b>WHY</b>由夹逼准则可证 sin x / x → 1，等价无穷小替换的基础。</div>
       <div className="vr-zn-grade">{['忘了 · 1', '想起 · 2', '记得 · 3', '秒答 · 4'].map((g, i) => <span key={g} className={active === i % 4 && i === 2 ? 'is-on' : ''}>{g}</span>)}</div>
+    </div>;
+  }
+
+  if (type === 'draw') {
+    const dwNames = ['张三', '李四', '王五', '赵六', '钱七'];
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-draw-art">
+      <style>{`
+        .vr-home .vr-draw-art{padding:0;color:#6B6455;background:#FDFBF4;border-color:rgba(184,139,23,.22);box-shadow:0 18px 38px -26px rgba(88,72,28,.38)}
+        .vr-home .vr-draw-art .vr-preview-top{padding:10px 13px;border-bottom-color:#EEE8D8;color:#5F5A4E;font-size:10.5px}
+        .vr-home .vr-draw-art .vr-preview-top b{color:#A87F14}
+        .vr-home .vr-draw-art .vr-dw-stage{display:flex;align-items:center;justify-content:center;margin:14px 14px 0;padding:17px 0;border:1px dashed #DFD8C6;border-radius:10px;background:rgba(255,255,255,.72)}
+        .vr-home .vr-draw-art .vr-dw-stage b{font-size:25px;font-weight:800;letter-spacing:.14em;color:#211E19;transition:color .3s ease}
+        .vr-home .vr-draw-art .vr-dw-stage.is-hit b{color:#A87F14}
+        .vr-home .vr-draw-art .vr-dw-pool{display:flex;flex-wrap:wrap;gap:5px;padding:11px 14px 0}
+        .vr-home .vr-draw-art .vr-dw-pool span{padding:3px 9px;border:1px solid #E7E1D2;border-radius:999px;background:rgba(255,255,255,.72);font-size:9.5px;color:#8D8880;transition:border-color .3s ease,background .3s ease,color .3s ease}
+        .vr-home .vr-draw-art .vr-dw-pool span.is-on{border-color:rgba(184,139,23,.45);background:#FFF7DC;color:#A87F14}
+        .vr-home .vr-draw-art .vr-dw-foot{display:flex;align-items:center;justify-content:space-between;margin:11px 14px 13px;padding:7px 11px;background:#FFF8DE;border-left:2px solid #E0B33C;border-radius:0 8px 8px 0;font-size:10.5px;color:#6B6455}
+        .vr-home .vr-draw-art .vr-dw-foot b{color:#A87F14;font-weight:700}
+      `}</style>
+      <div className="vr-preview-top"><Dices size={15} /><span>随机抽人 &#183; 课堂点名</span><b>本机运行</b></div>
+      <div className={`vr-dw-stage${active === dwNames.length ? ' is-hit' : ''}`}><b>{active === dwNames.length ? '🎉 抽中了！' : '？ ？ ？'}</b></div>
+      <div className="vr-dw-pool">{dwNames.map((n, i) => <span key={n} className={active === i ? 'is-on' : ''}>{n}</span>)}</div>
+      <div className="vr-dw-foot"><span>已抽中</span><b>{active === dwNames.length ? dwNames[dwNames.length - 1] : '等待抽取'}</b></div>
     </div>;
   }
 

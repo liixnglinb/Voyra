@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
-  ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, GitBranch, Sparkles, Film,
+  ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, Dices, GitBranch, Sparkles, Film,
 } from 'lucide-react';
 
 /**
@@ -39,6 +39,9 @@ const TOOL_META = {
   },
   '/pelican-gallery': {
     label: 'AI 模型对比秀', sub: '同一题交给 16 个 AI 模型分别生成 SVG 动画，一页对比', Icon: Film, accent: '#A48830',
+  },
+  '/draw': {
+    label: '随机抽人', sub: '导入花名册或手动添加姓名，设置人数一键随机抽取', Icon: Dices, accent: '#A48830',
   },
 };
 
