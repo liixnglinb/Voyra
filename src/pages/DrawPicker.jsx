@@ -137,9 +137,10 @@ export default function DrawPicker() {
   /* ---------- 抽取 ---------- */
   const draw = () => {
     const cur = liveRef.current;
-    if (cur.rolling || !cur.remaining.length) return;
-    const n = Math.max(1, Math.min(parseInt(cur.count, 10) || 1, cur.remaining.length));
-    const pool = [...cur.remaining];
+    /* 未勾选「抽中后不再参与」时，全员恢复可抽 */
+    const pool = [...(cur.exclude ? cur.remaining : cur.names)];
+    if (cur.rolling || !pool.length) return;
+    const n = Math.max(1, Math.min(parseInt(cur.count, 10) || 1, pool.length));
     for (let i = pool.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -219,6 +220,9 @@ export default function DrawPicker() {
     else { parts.running = false; ctx.clearRect(0, 0, canvas.width, canvas.height); }
   };
 
+  /* 勾选「抽中后不再参与」时池子为剩余名单，否则全员可抽 */
+  const pool = excludeDrawn ? remaining : names;
+
   return (
     <div className="dp-page">
       {/* 导入识别 */}
@@ -247,7 +251,7 @@ export default function DrawPicker() {
       {/* 名单管理 */}
       <section className="dp-card">
         <div className="dp-card-head">
-          <h2>名单 <span className="dp-badge">{remaining.length} 人</span></h2>
+          <h2>名单 <span className="dp-badge">{pool.length} 人</span></h2>
           <button className="dp-ghost" onClick={resetAll}><RotateCcw size={13} /> 重置名单</button>
         </div>
         <div className="dp-add-row">
@@ -265,7 +269,7 @@ export default function DrawPicker() {
           : (
             <div className="dp-grid">
               {names.map((name, i) => (
-                <div key={name} className={`dp-chip${remaining.includes(name) ? '' : ' is-taken'}`} style={{ animationDelay: `${Math.min(i * 14, 400)}ms` }}>
+                <div key={name} className={`dp-chip${pool.includes(name) ? '' : ' is-taken'}`} style={{ animationDelay: `${Math.min(i * 14, 400)}ms` }}>
                   <span className="dp-idx">{i + 1}</span>{name}
                   <button className="dp-chip-x" title="删除" onClick={() => deleteName(name)}><X size={11} /></button>
                 </div>
@@ -282,7 +286,7 @@ export default function DrawPicker() {
             <input
               type="number"
               min={1}
-              max={Math.max(remaining.length, 1)}
+              max={Math.max(pool.length, 1)}
               value={count}
               onChange={(e) => setCount(e.target.value)}
             />
@@ -291,8 +295,8 @@ export default function DrawPicker() {
             <input type="checkbox" checked={excludeDrawn} onChange={(e) => setExcludeDrawn(e.target.checked)} />
             {' '}抽中后不再参与
           </label>
-          <button className="dp-primary" disabled={rolling || remaining.length === 0} onClick={draw}>
-            <Dices size={16} /> {rolling ? '抽取中…' : remaining.length === 0 ? '名单已抽完' : '开始抽取'}
+          <button className="dp-primary" disabled={rolling || pool.length === 0} onClick={draw}>
+            <Dices size={16} /> {rolling ? '抽取中…' : pool.length === 0 ? '名单已抽完' : '开始抽取'}
           </button>
         </div>
         <div className={`dp-stage${rolling ? ' is-rolling' : ''}${stageFinal ? ' is-final' : ''}`}><span>{stage}</span></div>
