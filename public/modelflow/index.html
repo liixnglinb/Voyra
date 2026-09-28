@@ -42,15 +42,15 @@
   --r-xl:24px;--r-2xl:32px;
   --r-card:28px;   /* 按角色取值，等同 tabbit 自己的 --scroll-card-radius */
 
-  /* 阴影取 tabbit 实测的分层（大模糊、低透明度），着色端用软件的蓝不是它的橙 */
+  /* 阴影取 tabbit 实测的分层（大模糊、低透明度），着色端跟软件一样是中性的黑 */
   --sh-1:0 2px 5px rgba(0,0,0,.06);
   --sh-2:0 8px 32px rgba(0,0,0,.05);
   --sh-3:0 20px 50px rgba(0,0,0,.08);
   --sh-4:0 45px 60px rgba(0,0,0,.10);
   --sh-card:0 2px 5px rgba(0,0,0,.04),0 12px 32px rgba(0,0,0,.05);
   --sh-accent:0 15px 30px var(--accent-glow);
-  --sh-float:0 1px 2px rgba(0,0,0,.04),0 24px 48px -18px rgba(24,54,110,.20),
-             0 60px 100px -36px rgba(24,54,110,.14);
+  --sh-float:0 1px 2px rgba(0,0,0,.04),0 24px 48px -18px rgba(0,0,0,.12),
+             0 60px 100px -36px rgba(0,0,0,.09);
 
   /* tabbit 全站主控曲线是 .4,0,.2,1；hero 那种"弹一下"另留一条 */
   --e-std:cubic-bezier(.4,0,.2,1);
@@ -60,6 +60,12 @@
   --en:"Montserrat",var(--zh);
 
   --nav-h:64px;
+
+  /* 版面节奏只有两个值：分区自己的上边距、带与带/带内块之间的间距。
+     原来三套数互相不认识 —— section 写死 160、.runit 用 9vh 的 clamp、
+     .omni 又自带 60/120，于是产品图到下一条分区线之间能叠出 264px 空。 */
+  --sp-sec:144px;
+  --sp-band:40px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:calc(var(--nav-h) + 24px);-webkit-text-size-adjust:100%}
@@ -69,7 +75,7 @@ body{font-family:var(--zh);color:var(--ink);background:var(--bg-page);line-heigh
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 img{display:block;max-width:100%}
-::selection{background:rgba(47,111,228,.22);color:var(--accent-ink)}
+::selection{background:rgba(13,13,13,.16);color:var(--accent-ink)}
 ::-webkit-scrollbar{width:10px}
 ::-webkit-scrollbar-track{background:var(--bg-sunken)}
 ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent),var(--accent-deep));
@@ -90,6 +96,10 @@ img{display:block;max-width:100%}
   -webkit-backdrop-filter:blur(30px) saturate(1.6);
   border-bottom:1px solid transparent;transition:border-color .3s var(--e-std),box-shadow .3s var(--e-std)}
 .nav.scrolled{border-bottom-color:rgba(0,0,0,.06);box-shadow:0 6px 24px -12px rgba(0,0,0,.12)}
+/* 阅读进度：按文档滚动比例横向生长的 2px，压在导航条下沿。
+   逐帧改的是 transform 不是 width —— 导航条里全是 flex，动宽度会整条重排。 */
+.nav-progress{position:absolute;left:0;bottom:0;height:2px;width:100%;pointer-events:none;
+  transform:scaleX(0);transform-origin:0 50%;background:var(--accent);opacity:.5}
 .nav-in{max-width:1180px;margin:0 auto;padding:0 24px;height:var(--nav-h);display:flex;align-items:center;gap:28px}
 .brand{display:flex;align-items:center;gap:11px}
 .brand img{width:34px;height:34px;border-radius:var(--r-3);transition:transform .4s var(--e-out)}
@@ -116,13 +126,17 @@ img{display:block;max-width:100%}
 .pill::after{content:"";position:absolute;top:0;bottom:0;left:-60%;width:40%;
   background:linear-gradient(100deg,transparent,rgba(255,255,255,.28),transparent);
   transform:skewX(-18deg);transition:left .55s var(--e-std)}
-.pill:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 20px 40px rgba(36,90,184,.26)}
+.pill:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 20px 40px rgba(0,0,0,.22)}
 .pill:hover::after{left:120%}
 .pill:active{transform:translateY(0) scale(.99)}
 .pill svg{width:17px;height:17px;transition:transform .3s var(--e-out)}
 .pill:hover svg{transform:translateY(2px)}
 .pill .sep{width:1px;height:18px;background:rgba(255,255,255,.30)}
 .pill .ver{font-family:var(--en);font-size:13px;opacity:.85}
+/* 清单 fetch 回来时版本号、体积、校验和都是原地换字符。等宽数字让它们不推版面。 */
+.pill .ver,.hero-note b,.sha,.foot .en{font-variant-numeric:tabular-nums}
+/* 长段落收掉孤字行；不支持 text-wrap 的浏览器整条忽略，不是坏。 */
+.lead,details p{text-wrap:pretty}
 .pill-ghost{background:var(--bg-page);color:var(--ink);border:1px solid var(--line-strong);
   box-shadow:var(--sh-1)}
 .pill-ghost:hover{border-color:var(--accent-line);color:var(--accent);box-shadow:var(--sh-2)}
@@ -133,14 +147,14 @@ img{display:block;max-width:100%}
   min-height:clamp(800px,100vh,1080px);padding:0 24px;overflow:hidden;
   perspective:2000px;perspective-origin:50%;-webkit-perspective:2000px;
   background:
-    radial-gradient(58% 48% at 16% 88%,rgba(91,150,249,.16),transparent 70%),
-    radial-gradient(52% 46% at 84% 90%,rgba(47,111,208,.13),transparent 70%),
-    linear-gradient(180deg,#fff 0%,#f8fbff 60%,var(--hero-end,#eef4fe) 100%)}
+    radial-gradient(58% 48% at 16% 88%,rgba(13,13,13,.05),transparent 70%),
+    radial-gradient(52% 46% at 84% 90%,rgba(13,13,13,.04),transparent 70%),
+    linear-gradient(180deg,#fff 0%,#fbfbfb 60%,var(--hero-end,#f1f1f1) 100%)}
 /* 结构照 tabbit 的 .hero-gradient：400% 尺寸的色带 + 8s 位移循环 + 大模糊低不透明度。
-   它那条是彩虹，这里换成软件强调色的蓝调 —— 学机制不学色相。 */
+   它那条是彩虹，这里换成软件自己的黑白灰 —— 学机制不学色相。 */
 .hero-glow{position:absolute;left:50%;bottom:0;width:1128px;max-width:100%;height:348px;
-  transform:translateX(-50%);pointer-events:none;z-index:0;filter:blur(200px);opacity:.3;
-  background:linear-gradient(270deg,#2f6fe4,#5b96f9,#eaf1fd,#5b96f9,#245ab8,#2f6fe4);
+  transform:translateX(-50%);pointer-events:none;z-index:0;filter:blur(200px);opacity:.18;
+  background:linear-gradient(270deg,#0d0d0d,#4a4a4a,#ececec,#4a4a4a,#1f1f1f,#0d0d0d);
   background-size:400% 400%;animation:gradientFlow 8s ease-in-out infinite}
 @keyframes gradientFlow{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
 /* tabbit 的 hero 是 flex column + 固定高，标题区 flex:1 撑开，所以首屏构成不随内容漂移 */
@@ -163,8 +177,8 @@ img{display:block;max-width:100%}
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 @keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(79,139,247,.45)}
-  50%{opacity:.6;box-shadow:0 0 0 4px rgba(79,139,247,0)}}
+@keyframes breathe{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,255,255,.42)}
+  50%{opacity:.6;box-shadow:0 0 0 4px rgba(255,255,255,0)}}
 @keyframes logIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 @keyframes sweep{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 
@@ -179,8 +193,8 @@ img{display:block;max-width:100%}
 @keyframes heroFadeIn{from{opacity:0}to{opacity:1}}
 .hero-stage::before{content:"";position:absolute;left:50%;top:8%;bottom:8%;width:118%;
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:var(--r-2xl);
-  background:radial-gradient(38% 50% at 18% 50%,rgba(47,111,228,.20),transparent 70%),
-             radial-gradient(38% 50% at 82% 50%,rgba(91,150,249,.16),transparent 70%)}
+  background:radial-gradient(38% 50% at 18% 50%,rgba(13,13,13,.16),transparent 70%),
+             radial-gradient(38% 50% at 82% 50%,rgba(13,13,13,.10),transparent 70%)}
 /* 逐值取自软件 html[data-theme="dark"]。侧栏 #2b2b2b 和卡片/浮层同色，
    页面 #161616 最深——两栏靠色差分开，不靠一条竖线（软件同一条规则）。 */
 .mock{--d-page:#161616;--d-shell:#2b2b2b;--d-panel:#202020;
@@ -363,7 +377,7 @@ img{display:block;max-width:100%}
   justify-content:center;border-radius:var(--r-3);background:var(--d-accent);color:var(--d-on-accent)}
 /* 单独一屏的产品图（跑起来是什么样）没有侧栏，就一格 */
 .mock-body.one{grid-template-columns:minmax(0,1fr);min-height:392px}
-.runit{padding:clamp(52px,9vh,104px) 0}
+.runit{padding:var(--sp-sec) 0 var(--sp-band)}
 .runit .mock{max-width:920px;margin:0 auto;box-shadow:0 30px 70px -32px rgba(0,0,0,.7)}
 /* 进程卡是浮在正文上的，不是第三栏 —— 尺寸按软件实测值（宽 266 / 右 22 / 圆角 14）等比 0.83 缩 */
 .m-proc{position:absolute;z-index:3;top:104px;right:18px;width:222px;color:var(--d-ink-3);
@@ -453,8 +467,8 @@ img{display:block;max-width:100%}
 .omni-card h4{margin:0;font-family:var(--en);font-size:20px;line-height:24px;font-weight:600;color:var(--ink)}
 .omni-card p{margin:8px 0 0;padding:0;font-size:14px;line-height:20px;color:var(--ink-2)}
 /* ---------- 版面 ---------- */
-section{position:relative;max-width:1920px;margin:0 auto;padding:160px 24px 0;background:var(--bg-page)}
-section.flush{padding-top:40px}
+section{position:relative;max-width:1920px;margin:0 auto;padding:var(--sp-sec) 24px 0;background:var(--bg-page)}
+section.flush{padding-top:var(--sp-band)}
 .eyebrow{font-family:var(--en);font-size:12.5px;font-weight:700;letter-spacing:.14em;
   text-transform:uppercase;color:var(--accent);margin:0}
 h2{font-family:var(--en);font-size:48px;line-height:56px;font-weight:600;letter-spacing:-.024em;color:var(--ink)}
@@ -464,11 +478,11 @@ h2{font-family:var(--en);font-size:48px;line-height:56px;font-weight:600;letter-
 .s-head.center .lead{margin-left:auto;margin-right:auto}
 
 .grid{display:grid;grid-template-columns:repeat(3,minmax(320px,1fr));gap:24px;align-items:stretch}
-.card{position:relative;border:2px solid var(--line);border-radius:var(--r-card);
+.card{position:relative;border:1px solid var(--line);border-radius:var(--r-card);
   padding:32px 28px;background:var(--bg-page);display:flex;flex-direction:column;transition:border-color .25s var(--e-std),transform .35s var(--e-out),
              box-shadow .35s var(--e-out)}
 .card:hover{border-color:var(--accent-line);transform:translateY(-4px);box-shadow:var(--sh-card),var(--sh-accent)}
-.card .ic{width:38px;height:38px;border-radius:var(--r-3);background:var(--accent-soft);color:var(--accent);
+.card .ic{width:38px;height:38px;border-radius:var(--r-3);background:var(--bg-inset);color:var(--accent);
   display:flex;align-items:center;justify-content:center;transition:transform .4s var(--e-out)}
 .card:hover .ic{transform:scale(1.08) rotate(-4deg)}
 .card .ic svg{width:20px;height:20px}
@@ -482,7 +496,7 @@ h2{font-family:var(--en);font-size:48px;line-height:56px;font-weight:600;letter-
 /* ---------- 流水线：三段式接力 ---------- */
 .pipeline{background:var(--bg-shell);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .stages{margin-top:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.stage{position:relative;background:var(--bg-page);border:2px solid var(--line);border-radius:var(--r-card);
+.stage{position:relative;background:var(--bg-page);border:1px solid var(--line);border-radius:var(--r-card);
   padding:30px 26px;transition:transform .35s var(--e-out),box-shadow .35s var(--e-out)}
 .stage:hover{transform:translateY(-4px);box-shadow:var(--sh-card)}
 .stage-label{font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--ink-4)}
@@ -534,15 +548,15 @@ h2{font-family:var(--en);font-size:48px;line-height:56px;font-weight:600;letter-
 .req b{display:block;font-size:14.5px}
 .req span{display:block;margin-top:6px;font-size:13.5px;line-height:1.68;color:var(--ink-3)}
 .note{margin-top:28px;padding:18px 20px;border-radius:var(--r-4);background:var(--accent-soft);
-  border:1px solid rgba(47,111,228,.18);font-size:14.5px;line-height:1.72;color:var(--accent-ink)}
+  border:1px solid var(--line);font-size:14.5px;line-height:1.72;color:var(--accent-ink)}
 .note b{font-weight:600}
 .local{background:var(--bg-inset);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .local-grid{margin-top:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
-.lc{background:var(--bg-page);border:2px solid var(--line);border-radius:var(--r-card);padding:32px 28px;
+.lc{background:var(--bg-page);border:1px solid var(--line);border-radius:var(--r-card);padding:32px 28px;
   text-align:center;transition:transform .35s var(--e-out),box-shadow .35s var(--e-out)}
 .lc:hover{transform:translateY(-5px);box-shadow:var(--sh-card)}
 .lc .g{width:46px;height:46px;margin:0 auto;border-radius:var(--r-4);display:flex;align-items:center;
-  justify-content:center;background:var(--accent-soft);color:var(--accent)}
+  justify-content:center;background:var(--bg-inset);color:var(--accent)}
 .lc .g svg{width:22px;height:22px}
 .lc h3{margin-top:18px;font-size:16.5px;font-weight:600}
 .lc p{margin-top:8px;font-size:14px;line-height:1.72;color:var(--ink-3)}
@@ -574,13 +588,18 @@ details code{font-family:var(--en);font-size:13px;background:var(--bg-sunken);pa
 
 /* ---------- CTA ---------- */
 .cta{position:relative;text-align:center;padding:88px 28px;border-radius:var(--r-2xl);overflow:hidden;
-  background:linear-gradient(180deg,#f7faff,#eaf1fd);border:1px solid var(--line)}
+  background:linear-gradient(180deg,#fdfdfd,#eeeeee);border:1px solid var(--line)}
 .cta::before{content:"";position:absolute;left:50%;top:-40%;width:820px;max-width:130%;height:400px;
   transform:translateX(-50%);pointer-events:none;filter:blur(90px);
-  background:radial-gradient(45% 55% at 50% 50%,rgba(47,111,228,.18),transparent 70%)}
+  background:radial-gradient(45% 55% at 50% 50%,rgba(255,255,255,.9),transparent 70%)}
 .cta h2{position:relative;font-size:32px}
 .cta .lead{position:relative;margin-left:auto;margin-right:auto}
 .cta .pill{position:relative;margin-top:28px}
+/* 两个源并列：左边 COS 国内直连，右边 GitHub Release。
+   右边那颗只在清单真的写了 mirrors 时才出现 —— 前端自己拼直链会把
+   "忘了发 Release"变成一个静默 404；清单里有，才算那个源真的存在。 */
+.dl-row{position:relative;display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:28px}
+.dl-row .pill{margin-top:0}
 /* 修一处既有错位（桌面端）：.hero-note 的基础样式带着入场动画的
    transform:translateY(60px)，而 .cta .hero-note 只关了 animation 没关 transform，
    于是 CTA 区这行「约 36 MB · Windows 10/11 x64 · 用户级安装…」被画到 60px 之下，
@@ -588,6 +607,9 @@ details code{font-family:var(--en);font-size:13px;background:var(--bg-sunken);pa
    transform 不参与布局，所以这里只改这一行的绘制位置：
    其余元素的盒位置、卡片高度、页面无任何变化（窄屏那条同名规则见 860 块，现在冗余但保留）。 */
 .cta .hero-note{position:relative;animation:none;opacity:1;transform:none;margin-top:16px}
+/* 这行讲的是上面两颗按钮，不是又一个规格说明 —— 收半号、压一道字距，
+   免得和「约 36.2 MB · Windows 10/11 x64」读成同一层。 */
+.src-note{font-size:12.5px;letter-spacing:.01em}
 .sha{position:relative;margin-top:12px;display:inline-flex;align-items:center;gap:8px;
   font-family:var(--en);font-size:11.5px;color:var(--ink-4);cursor:pointer;
   border:1px solid transparent;border-radius:var(--r-pill);padding:3px 10px;
@@ -739,6 +761,8 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   .cta h2{font-size:24px;line-height:32px}
   .cta .lead{font-size:15px;line-height:22px}
   .cta .pill{margin-top:16px}
+  .dl-row{margin-top:16px;gap:10px}
+  .dl-row .pill{margin-top:0;width:100%;max-width:100%}
   /* 修一处既有错位：.hero-note 基础样式带着入场动画的 transform:translateY(60px)，
      而 .cta .hero-note 只关了 animation 没关 transform —— 这行说明被画到 60px 之下，
      正好压在下面的 SHA 上（桌面同样有，这里只按约束把窄屏修掉）。 */
@@ -804,6 +828,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 <body>
 
 <nav class="nav" id="nav">
+  <span class="nav-progress" id="navProgress" aria-hidden="true"></span>
   <div class="nav-in">
     <a class="brand" href="./"><img src="./logo-64.png" alt="织流 Jacquard"><b>Jacquard</b></a>
     <div class="nav-links" id="navLinks">
@@ -1159,8 +1184,12 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="eyebrow">Download</p>
       <h2>把流程握在自己手里</h2>
       <p class="lead">装在你自己的用户目录里，跑你自己登录的 CLI，产物落在你自己的磁盘上。</p>
-      <a class="pill" id="dlBtn" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.2.7-setup.exe">下载 Jacquard for Windows<span class="sep"></span><span class="ver" id="btnVer">1.2.7</span></a>
+      <div class="dl-row">
+        <a class="pill" id="dlBtn" title="腾讯云 COS · 国内直连" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.2.7-setup.exe">下载 Jacquard for Windows<span class="sep"></span><span class="ver" id="btnVer">1.2.7</span></a>
+        <a class="pill pill-ghost" id="dlGithub" hidden title="GitHub Releases · 与左边同一个安装包" href="#">GitHub Release</a>
+      </div>
       <p class="hero-note">约 <b id="btnSize">36.2 MB</b> · Windows 10/11 x64 · 用户级安装，无需管理员</p>
+      <p class="hero-note src-note" id="dlSrcNote" hidden>两个链接是<b>同一个包、同一份 SHA-256</b>：国内走 COS 更快，海外或 COS 不通时走 GitHub。</p>
       <p class="sha" id="btnSha" title="点击复制完整校验和"></p>
     </div>
   </div>
@@ -1193,8 +1222,16 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
     return r.json();
   }).then(function(d){
     if (d.version) { set('navVer', d.version); set('heroVer', d.version); set('btnVer', d.version); set('ftVer', d.version); }
-    if (d.size) { var mb = (d.size/1048576).toFixed(0) + ' MB'; set('heroSize', mb); set('btnSize', mb); }
+    /* 一位小数：兜底值写的是 36.2 MB，取整成 36 MB 会让 fetch 成败两种情况下
+       显示成两个不同的数。 */
+    if (d.size) { var mb = (d.size/1048576).toFixed(1) + ' MB'; set('heroSize', mb); set('btnSize', mb); }
     if (d.url) { var b = document.getElementById('dlBtn'); if (b) b.setAttribute('href', d.url); }
+    var gh = document.getElementById('dlGithub');
+    var mirror = (d.mirrors || [])[0];
+    if (gh && mirror) {
+      gh.setAttribute('href', mirror); gh.hidden = false;
+      var note = document.getElementById('dlSrcNote'); if (note) note.hidden = false;
+    }
     if (d.sha256) {
       FULL_SHA = d.sha256;
       var el = document.getElementById('btnSha');
@@ -1218,23 +1255,30 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var hero = document.querySelector('.hero');
   var nav = document.getElementById('nav');
   var links = [].slice.call(document.querySelectorAll('#navLinks a'));
+  var prog = document.getElementById('navProgress');
   var sections = links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
 
   /* 进度只认 scrollY：滚到 330px 就完全摊平，所以它在预览图进视口之前就动完了 ——
    tabbit 就是这个手感（先到 flatten、再到眼前），不需要 getBoundingClientRect。
    只写 rotateX，别的分量一个都不加。 */
   /* 与 transform 共用同一个 y，但颜色走 easeInOutCubic：tabbit 原式
-     A = y<.5 ? 4y³ : 1-(-2y+2)³/2，端点换成 #eef4fe → #ffffff */
+     A = y<.5 ? 4y³ : 1-(-2y+2)³/2，端点换成 #f1f1f1 → #ffffff */
   function heroEnd(y){
     var A = y < .5 ? 4*y*y*y : 1 - Math.pow(-2*y+2, 3)/2;
-    return 'rgb(' + Math.round(238+17*A) + ',' + Math.round(244+11*A) + ',' + Math.round(254+1*A) + ')';
+    var v = Math.round(241+14*A);
+    return 'rgb(' + v + ',' + v + ',' + v + ')';
   }
   function applyParallax(){
     if (!preview) return;
     var y = Math.min(Math.max(scrollY / 330, 0), 1);
     preview.style.transform = 'rotateX(' + (30 * (1 - y)).toFixed(2) + 'deg)';
-    /* 底色跟着摊平进度从蓝调收白，和 transform 同一个进度驱动，见 .hero 的 --hero-end */
+    /* 底色跟着摊平进度从灰收白，和 transform 同一个进度驱动，见 .hero 的 --hero-end */
     if (hero) hero.style.setProperty('--hero-end', heroEnd(y));
+  }
+  function applyProgress(){
+    if (!prog) return;
+    var max = document.documentElement.scrollHeight - innerHeight;
+    prog.style.transform = 'scaleX(' + (max > 0 ? Math.min(scrollY / max, 1) : 0) + ')';
   }
   function applySpy(){
     var y = scrollY + 120, cur = -1;
@@ -1244,7 +1288,7 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
     for (var j = 0; j < links.length; j++) links[j].classList.toggle('on', j === cur);
   }
   var ticking = false;
-  function update(){ applyParallax(); applySpy(); }
+  function update(){ applyParallax(); applyProgress(); applySpy(); }
   function onFrame(){ update(); ticking = false; }
   function onScroll(){
     nav.classList.toggle('scrolled', scrollY > 8);
@@ -1257,6 +1301,7 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
      是被 opacity:0 藏着的 —— 只等 rAF 的话，后台打开或刷新在页面中段时会是一片空白，
      非得手动滚一下才亮。字体/图片到位后位置会变，所以 load 后再重量一次。 */
   if (REDUCED){
+    applyProgress();
     applySpy();
   } else {
     nav.classList.toggle('scrolled', scrollY > 8);
