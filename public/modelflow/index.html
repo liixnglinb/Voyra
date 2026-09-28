@@ -438,14 +438,8 @@ img{display:block;max-width:100%}
    content max-width 800 + padding-top 15vh + gap 20；logo 120×120；
    浮卡带 absolute 在 content 下方 120px、宽 920，三张 248 / 248 / 300，
    圆角 24、内边距 16、底 #F4F4F6、描边 .5px 白、投影 0 45px 60px。 */
-.omni{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-  width:100%;min-height:clamp(700px,100vh,1080px);padding:60px 24px 120px;background:var(--bg-page)}
-.omni-in{width:100%;max-width:800px;margin:0 auto;padding-top:15vh;
+.omni-in{width:100%;max-width:800px;margin:0 auto;
   display:flex;flex-direction:column;align-items:center;gap:20px}
-.omni-mark{width:120px;height:120px;display:flex;align-items:center;justify-content:center}
-.omni-mark img{width:100%;height:100%;border-radius:var(--r-5);object-fit:contain}
-.omni-title{font-family:var(--en);font-size:20px;line-height:24px;font-weight:600;color:var(--ink);text-align:center}
-.omni-desc{font-size:14px;line-height:20px;color:var(--ink-2);text-align:center;max-width:620px}
 .omni-dialog{width:100%;max-width:800px;border:1px solid var(--line-strong);border-radius:var(--r-xl);
   background:var(--bg-page);box-shadow:var(--sh-3);overflow:hidden}
 .omni-row{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line-soft)}
@@ -457,7 +451,7 @@ img{display:block;max-width:100%}
   border-radius:var(--r-pill);background:var(--ink);color:#fff;font-size:13px;font-weight:500;flex-shrink:0;
   transition:transform .25s var(--e-out),opacity .2s var(--e-std)}
 .omni-send:hover{transform:translateY(-1px);opacity:.88}
-.omni-cards{width:920px;max-width:100%;margin:120px auto 0;align-self:center;
+.omni-cards{width:920px;max-width:100%;margin:48px auto 0;align-self:center;
   display:flex;justify-content:space-between;align-items:flex-start}
 .omni-card{width:248px;min-width:248px;max-width:248px;border-radius:var(--r-xl);padding:16px;
   background:var(--bg-sunken);border:.5px solid var(--bg-page);box-shadow:var(--sh-4);
@@ -477,7 +471,14 @@ h2{font-family:var(--en);font-size:48px;line-height:56px;font-weight:600;letter-
 .s-head.center{margin-left:auto;margin-right:auto;text-align:center;align-items:center}
 .s-head.center .lead{margin-left:auto;margin-right:auto}
 
-.grid{display:grid;grid-template-columns:repeat(3,minmax(320px,1fr));gap:24px;align-items:stretch}
+/* 上边距原来漏了：别的带都是 48，只有能力卡贴着标题段落 */
+.grid{margin-top:48px;display:grid;grid-template-columns:repeat(3,minmax(320px,1fr));gap:24px;align-items:stretch}
+/* 合并之后一段里会出现第二个标题。它不是 h2 —— 一段只留一个 h2，往下走
+   一律 .band-head；段内间距 96，刻意小于段间那 144，读起来才还是一段里的事。 */
+.band-head{margin-top:96px;display:flex;flex-direction:column;gap:12px;max-width:1000px}
+.band-head h3{font-family:var(--en);font-size:28px;line-height:36px;font-weight:600;
+  letter-spacing:-.02em;color:var(--ink)}
+.band-head p{font-size:16px;line-height:26px;color:var(--ink-3)}
 .card{position:relative;border:1px solid var(--line);border-radius:var(--r-card);
   padding:32px 28px;background:var(--bg-page);display:flex;flex-direction:column;transition:border-color .25s var(--e-std),transform .35s var(--e-out),
              box-shadow .35s var(--e-out)}
@@ -494,7 +495,6 @@ h2{font-family:var(--en);font-size:48px;line-height:56px;font-weight:600;letter-
 .card:hover .more{opacity:1;transform:none}
 
 /* ---------- 流水线：三段式接力 ---------- */
-.pipeline{background:var(--bg-shell);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .stages{margin-top:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
 .stage{position:relative;background:var(--bg-page);border:1px solid var(--line);border-radius:var(--r-card);
   padding:30px 26px;transition:transform .35s var(--e-out),box-shadow .35s var(--e-out)}
@@ -633,7 +633,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 
 /* ---------- 响应式：tabbit 那种逐级收窄，不是一档切到底 ---------- */
 @media (max-width:1040px){
-  .stats{grid-template-columns:repeat(3,1fr);margin:0 24px}
+  .stats{grid-template-columns:repeat(2,1fr);margin:0 24px}
   .stages,.local-grid{grid-template-columns:1fr;max-width:560px;margin-left:auto;margin-right:auto}
   .stage .arrow{display:none}
 }
@@ -694,6 +694,9 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   /* ---- 密度：整页留白逐级收紧，内容一个字不删 ---- */
   section{padding:20px 0}
   section.flush{padding-top:16px}
+  /* .runit 是类选择器，压得住上面那条 section —— 不补这一行，产品图带在手机上
+     会照抄桌面的 144/40（收成令牌之前这里是 clamp(52px,9vh,104px)，390 档实测 76）。 */
+  .runit{padding:var(--sp-band) 0}
   .wrap{padding:0 18px}
   .s-head{gap:8px}
   h2{font-size:26px;line-height:32px}
@@ -714,6 +717,9 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   .card .more{margin-top:6px;font-size:12.5px;line-height:17px}
   .card::after{content:"";display:table;clear:both}
   /* 流水线：原来 .stages 的 24px gap 之外每张卡还各自吃 44px 上边距，纯浪费 */
+  .band-head{margin-top:32px;gap:6px}
+  .band-head h3{font-size:22px;line-height:30px}
+  .band-head p{font-size:15px;line-height:22px}
   .stages{margin-top:16px;gap:8px}
   .stage{margin-top:0;padding:14px 12px;border:1px solid var(--line);border-radius:var(--r-xl)}
   .stage-label{font-size:12px;line-height:16px}
@@ -777,11 +783,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 
   /* ---- 解剖段（.omni）：桌面的 100vh 撑高 + 15vh 顶距 + 120px 卡带间距，
      在窄屏是两整屏空白；三张卡各自 min-width 248/248/300，横排撑到 796px 同样被剪掉 ---- */
-  .omni{min-height:0;padding:24px 18px 18px}
-  .omni-in{padding-top:0;gap:8px}
-  .omni-mark{width:56px;height:56px}
-  .omni-title{font-size:17px;line-height:23px}
-  .omni-desc{font-size:14.5px;line-height:21px}
+  .omni-in{gap:8px}
   .omni-dialog{border-radius:var(--r-2xl)}
   .omni-row{padding:8px 12px;gap:8px}
   .omni-q{font-size:14px}
@@ -800,7 +802,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   h2{font-size:24px;line-height:32px}
   .cta h2{font-size:22px;line-height:30px}
   /* 5 格横排一行比 3 列两行矮半格：数字都是单个字符，标签折两行也不影响读 */
-  .stats{grid-template-columns:repeat(5,1fr);gap:1px}
+  .stats{grid-template-columns:repeat(4,1fr);gap:1px}
   .stat{padding:10px 4px}
   .mock-body{grid-template-columns:minmax(0,1fr);min-height:340px}
   .m-proc{display:none}
@@ -832,8 +834,8 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   <div class="nav-in">
     <a class="brand" href="./"><img src="./logo-64.png" alt="织流 Jacquard"><b>Jacquard</b></a>
     <div class="nav-links" id="navLinks">
-      <a href="#cap">核心能力</a><a href="#pipeline">流程</a><a href="#how">怎么用</a>
-      <a href="#req">前置要求</a><a href="#faq">常见问题</a>
+      <a href="#flow">流程与能力</a><a href="#run">跑起来</a><a href="#start">怎么上手</a>
+      <a href="#local">本地运行</a><a href="#faq">常见问题</a>
     </div>
     <div class="nav-right">
       <a class="back" href="https://lxlrwxs.top">个人工具中心</a>
@@ -854,7 +856,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     </div>
     <div class="hero-cta">
       <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.2.7</span></a>
-      <a class="pill pill-ghost" href="#pipeline">看它怎么跑</a>
+      <a class="pill pill-ghost" href="#run">看它怎么跑</a>
     </div>
     <p class="hero-note">Windows 10 / 11 x64 · 约 <b id="heroSize">36.2 MB</b> · 全本地运行，无账号无遥测</p>
   </div>
@@ -930,39 +932,19 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
 </header>
 
 
-<section class="omni" id="omni">
-  <div class="omni-in">
-    <div class="omni-mark"><img src="./logo.svg" alt="" width="120" height="120"></div>
-    <p class="omni-title">跑完不满意，不用整条重跑</p>
-    <p class="omni-desc">转录区里指着某一步说怎么改 —— 修订指令只重写那一步，其余产物原样保留。下面这三张就是那条指令真正拿到的东西。</p>
-    <div class="omni-dialog">
-      <div class="omni-row"><span class="omni-step">STEP 05</span><span class="omni-q">灵敏度分析那张图改成热力图，并把阈值标注加回去</span><span class="omni-send">发送<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span></div>
-      <div class="omni-body">只有「自检复核」这一步重跑：REVIEW.md 覆盖写回，前面 4 步产物不动。</div>
-    </div>
-  </div>
-
-  <div class="omni-cards">
-      <div class="omni-card"><h4>技能</h4><p>这一步挂的是复核技能，提示词规范独立存在 —— 改坏了只影响这一步，改完也不用重跑前面几步。</p></div>
-      <div class="omni-card wide"><h4>产物</h4><p>输出钉死到 REVIEW.md，就地渲染；图片和 PDF 直接在面板里看，不用等跑完去翻文件夹。</p>
-</div>
-    <div class="omni-card"><h4>引擎</h4><p>这一步用 claude 还是 codex，单独选；两个都装了就能逐步换。</p></div>
-  </div>
-</section>
-
 <div class="wrap">
   <div class="stats">
     <div class="stat"><b data-count="2">0</b><span>本机智能体引擎</span></div>
-    <div class="stat"><b data-count="3">0</b><span>步骤角色</span></div>
-    <div class="stat"><b data-count="9">0</b><span>设置分区</span></div>
-    <div class="stat"><b data-count="9">0</b><span>图标尺寸档位</span></div>
-    <div class="stat"><b data-count="2">0</b><span>界面语言</span></div>
+    <div class="stat"><b data-count="7">0</b><span>步典型流程形态</span></div>
+    <div class="stat"><b data-count="0">0</b><span>账号与遥测</span></div>
+    <div class="stat"><b data-count="100">0</b><span>% 产物写在你自己磁盘</span></div>
   </div>
 </div>
 
-<section id="cap">
+<section id="flow">
   <div class="wrap">
     <div class="s-head" data-rise>
-      <p class="eyebrow">Capabilities</p>
+      <p class="eyebrow">Workflow</p>
       <h2>它不做代写，它管流程</h2>
       <p class="lead">正文一律由你本机已登录的 Claude Code 或 Codex CLI 产出。Jacquard 负责把任务拆开、把提示词规范喂到位、盯着每一步的产物、在需要确认的地方停下来等你。</p>
     </div>
@@ -974,10 +956,50 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8.5 4.5h7a1.6 1.6 0 0 1 1.6 1.6v9.4l-4.7-2.9-4.7 2.9V6.1a1.6 1.6 0 0 1 1.6-1.6z"/><path d="M4 19.5h16"/></svg></div><h3>对话式局部修订</h3><p>结果不满意不用整条重跑 —— 指着某一步说怎么改，只重写那一步，其余产物原样保留。</p><span class="more">不用从头再来<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
       <div class="card" data-rise><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3.4 21 8l-9 4.6L3 8z"/><path d="M3 12.4 12 17l9-4.6M3 16.4 12 21l9-4.6"/></svg></div><h3>流程导入导出</h3><p>一条流程 = 一个 JSON 文件。可分享、可备份、可导回；撞名会问你另存为副本，不会静默覆盖。</p><span class="more">可分享可备份<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
     </div>
-  </div>
+      <div class="band-head" data-rise>
+      <h3>七个环节，三段式接力</h3>
+      <p>下面这条「需求 → 拆解 → 备料 → 逐项执行 → 复核 → 修订 → 交付」是编排出来的一种典型形态：任意一段都能改成自己的样子，每一步加载你指定的技能作为方法内核，产物逐级往下传，环环自检。</p>
+    </div>
+  <div class="stages">
+      <div class="stage" data-rise>
+        <div class="stage-label">STAGE 01</div>
+        <h3>理解与建模</h3>
+        <p class="sd">把开放题变成可计算的问题：界定范围、拆出子问题、确定方法并跑出第一版结果。</p>
+        <ul>
+          <li><span class="n">01</span><span class="t">需求解析</span><span class="cp">检查点</span><span class="f">REQUIREMENTS.md</span></li>
+          <li><span class="n">02</span><span class="t">方案拆解</span><span class="cp">检查点</span><span class="f">PLAN.md</span></li>
+          <li><span class="n">03</span><span class="t">信息收集</span><span class="f">FINDINGS.md</span></li>
+        </ul>
+        <p class="stage-out">角色：<b>执行</b> · 产物逐级传给下一段</p>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="stage" data-rise data-delay="1">
+        <div class="stage-label">STAGE 02</div>
+        <h3>执行与复核</h3>
+        <p class="sd">按拆解逐项落地，再以复核视角独立审一遍 —— 写的人和查的人不是同一步。</p>
+        <ul>
+          <li><span class="n">04</span><span class="t">逐项执行</span><span class="cp">检查点</span><span class="f">EXECUTION.md</span></li>
+          <li><span class="n">05</span><span class="t">自检复核</span><span class="f">REVIEW.md</span></li>
+        </ul>
+        <p class="stage-out">角色：<b>执行 → 复核</b> · 复核步骤由 reviewer 角色独立跑</p>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+      <div class="stage" data-rise data-delay="2">
+        <div class="stage-label">STAGE 03</div>
+        <h3>打磨与交付</h3>
+        <p class="sd">按复核意见改稿，最后把分散产物整合成一份能直接交出去的东西。</p>
+        <ul>
+          <li><span class="n">06</span><span class="t">修订打磨</span><span class="f">FINAL.md</span></li>
+          <li><span class="n">07</span><span class="t">交付整合</span><span class="f">DELIVERABLE.md</span></li>
+        </ul>
+        <p class="stage-out">角色：<b>编辑 → 执行</b> · 只改被打回的那一步</p>
+        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
+      </div>
+    </div>
+</div>
 </section>
 
-<section class="runit" id="runit">
+<section class="runit" id="run">
   <div class="wrap">
     <div class="s-head center" data-rise>
       <p class="eyebrow">Running</p>
@@ -1039,53 +1061,54 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
           </div>
       </div>
     </div>
+      <div class="band-head" data-rise>
+      <h3>跑完不满意，不用整条重跑</h3>
+      <p>转录区里指着某一步说怎么改 —— 修订指令只重写那一步，其余产物原样保留。下面这三张就是那条指令真正拿到的东西。</p>
+    </div>
+  <div class="omni-in">
+    <div class="omni-dialog">
+      <div class="omni-row"><span class="omni-step">STEP 05</span><span class="omni-q">灵敏度分析那张图改成热力图，并把阈值标注加回去</span><span class="omni-send">发送<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M4 12h15M13 6l6 6-6 6"/></svg></span></div>
+      <div class="omni-body">只有「自检复核」这一步重跑：REVIEW.md 覆盖写回，前面 4 步产物不动。</div>
+    </div>
   </div>
+
+  <div class="omni-cards">
+      <div class="omni-card"><h4>技能</h4><p>这一步挂的是复核技能，提示词规范独立存在 —— 改坏了只影响这一步，改完也不用重跑前面几步。</p></div>
+      <div class="omni-card wide"><h4>产物</h4><p>输出钉死到 REVIEW.md，就地渲染；图片和 PDF 直接在面板里看，不用等跑完去翻文件夹。</p>
+</div>
+    <div class="omni-card"><h4>引擎</h4><p>这一步用 claude 还是 codex，单独选；两个都装了就能逐步换。</p></div>
+  </div>
+</div>
 </section>
 
-<section id="pipeline" class="pipeline">
+<section id="start">
   <div class="wrap">
-    <div class="s-head center" data-rise>
-      <p class="eyebrow">Pipeline</p>
-      <h2>七个环节，<br>三段式接力</h2>
-      <p class="lead">下面这条「需求 → 拆解 → 备料 → 逐项执行 → 复核 → 修订 → 交付」是编排出来的一种典型形态：任意一段都能改成自己的样子，每一步加载你指定的技能作为方法内核，产物逐级往下传，环环自检。</p>
+  <div class="s-head" data-rise>
+      <p class="eyebrow">How it works</p>
+      <h2>四步上手</h2>
     </div>
-    <div class="stages">
-      <div class="stage" data-rise>
-        <div class="stage-label">STAGE 01</div>
-        <h3>理解与建模</h3>
-        <p class="sd">把开放题变成可计算的问题：界定范围、拆出子问题、确定方法并跑出第一版结果。</p>
-        <ul>
-          <li><span class="n">01</span><span class="t">需求解析</span><span class="cp">检查点</span><span class="f">REQUIREMENTS.md</span></li>
-          <li><span class="n">02</span><span class="t">方案拆解</span><span class="cp">检查点</span><span class="f">PLAN.md</span></li>
-          <li><span class="n">03</span><span class="t">信息收集</span><span class="f">FINDINGS.md</span></li>
-        </ul>
-        <p class="stage-out">角色：<b>执行</b> · 产物逐级传给下一段</p>
-        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
-      </div>
-      <div class="stage" data-rise data-delay="1">
-        <div class="stage-label">STAGE 02</div>
-        <h3>执行与复核</h3>
-        <p class="sd">按拆解逐项落地，再以复核视角独立审一遍 —— 写的人和查的人不是同一步。</p>
-        <ul>
-          <li><span class="n">04</span><span class="t">逐项执行</span><span class="cp">检查点</span><span class="f">EXECUTION.md</span></li>
-          <li><span class="n">05</span><span class="t">自检复核</span><span class="f">REVIEW.md</span></li>
-        </ul>
-        <p class="stage-out">角色：<b>执行 → 复核</b> · 复核步骤由 reviewer 角色独立跑</p>
-        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
-      </div>
-      <div class="stage" data-rise data-delay="2">
-        <div class="stage-label">STAGE 03</div>
-        <h3>打磨与交付</h3>
-        <p class="sd">按复核意见改稿，最后把分散产物整合成一份能直接交出去的东西。</p>
-        <ul>
-          <li><span class="n">06</span><span class="t">修订打磨</span><span class="f">FINAL.md</span></li>
-          <li><span class="n">07</span><span class="t">交付整合</span><span class="f">DELIVERABLE.md</span></li>
-        </ul>
-        <p class="stage-out">角色：<b>编辑 → 执行</b> · 只改被打回的那一步</p>
-        <div class="arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M9 6l6 6-6 6"/></svg></div>
-      </div>
+  <div class="steps">
+      <div class="step" data-rise><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Jacquard 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
+      <div class="step" data-rise><span class="n">02</span><div><h4>装 Jacquard，打开就是工作台</h4><p>安装包约 36.2 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
+      <div class="step" data-rise><span class="n">03</span><div><h4>编一条你自己的流程</h4><p>从零加步骤，或者导入别人分享的流程 JSON 改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的 —— 软件不预设该怎么干活。</p></div></div>
+      <div class="step" data-rise><span class="n">04</span><div><h4>下任务，看它跑</h4><p>写清任务说明就能开跑。转录区实时输出，进程卡显示走到第几步，工作区面板列出正在写的文件；跑完对着任意一步提修改要求即可。</p></div></div>
     </div>
-    <div class="engines" id="engines">
+    <div class="band-head" data-rise>
+      <h3>跑起来需要什么</h3>
+      <p>两样硬条件、一样可选：Windows 10/11 x64，加一个已经登录好的智能体 CLI。</p>
+    </div>
+  <div class="req">
+      <div data-rise><b>Windows 10 / 11 x64</b><span>macOS / Linux 暂未提供安装包（源码可跑）。</span></div>
+      <div data-rise><b>Claude Code 或 Codex CLI</b><span>已安装并已登录。这是内容产出的唯一通道。</span></div>
+      <div data-rise><b>约 200 MB 磁盘</b><span>程序本体 + 数据目录。产物多大取决于你的任务。</span></div>
+      <div data-rise><b>可选：API 预设</b><span>把端点/密钥/模型注入给 CLI，用于换模型或走中转。</span></div>
+    </div>
+  <p class="note" data-rise><b>一条硬规则：</b>Jacquard 自己不直连任何大模型接口生成正文。设置里的 API 预设只用于配置 CLI 的端点与模型，正文只能出自你本机已登录的 Claude Code / Codex CLI。你的提示词、流程和产物都留在本机，软件没有账号体系，也没有埋点。</p>
+    <div class="band-head" data-rise>
+      <h3>引擎从哪来</h3>
+      <p>正文只出自你本机已经登录好的那两家 CLI —— 软件自己不直连任何大模型接口。</p>
+    </div>
+  <div class="engines" id="engines">
       <div class="eng" data-rise>
         <div class="logo">C</div>
         <h3>Claude Code</h3>
@@ -1105,38 +1128,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   </div>
 </section>
 
-<section id="how">
-  <div class="wrap">
-    <div class="s-head" data-rise>
-      <p class="eyebrow">How it works</p>
-      <h2>四步上手</h2>
-    </div>
-    <div class="steps">
-      <div class="step" data-rise><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Jacquard 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
-      <div class="step" data-rise><span class="n">02</span><div><h4>装 Jacquard，打开就是工作台</h4><p>安装包约 36.2 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
-      <div class="step" data-rise><span class="n">03</span><div><h4>编一条你自己的流程</h4><p>从零加步骤，或者导入别人分享的流程 JSON 改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的 —— 软件不预设该怎么干活。</p></div></div>
-      <div class="step" data-rise><span class="n">04</span><div><h4>下任务，看它跑</h4><p>写清任务说明就能开跑。转录区实时输出，进程卡显示走到第几步，工作区面板列出正在写的文件；跑完对着任意一步提修改要求即可。</p></div></div>
-    </div>
-  </div>
-</section>
-
-<section id="req">
-  <div class="wrap">
-    <div class="s-head" data-rise>
-      <p class="eyebrow">Requirements</p>
-      <h2>跑起来需要什么</h2>
-    </div>
-    <div class="req">
-      <div data-rise><b>Windows 10 / 11 x64</b><span>macOS / Linux 暂未提供安装包（源码可跑）。</span></div>
-      <div data-rise><b>Claude Code 或 Codex CLI</b><span>已安装并已登录。这是内容产出的唯一通道。</span></div>
-      <div data-rise><b>约 200 MB 磁盘</b><span>程序本体 + 数据目录。产物多大取决于你的任务。</span></div>
-      <div data-rise><b>可选：API 预设</b><span>把端点/密钥/模型注入给 CLI，用于换模型或走中转。</span></div>
-    </div>
-    <p class="note" data-rise><b>一条硬规则：</b>Jacquard 自己不直连任何大模型接口生成正文。设置里的 API 预设只用于配置 CLI 的端点与模型，正文只能出自你本机已登录的 Claude Code / Codex CLI。你的提示词、流程和产物都留在本机，软件没有账号体系，也没有埋点。</p>
-  </div>
-</section>
-
-<section id="local" class="local">
+<section id="local" class="local flush">
   <div class="wrap">
     <div class="s-head center" data-rise>
       <p class="eyebrow">Local by design</p>
@@ -1415,7 +1407,7 @@ var REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(function(en){
       en[0].isIntersecting ? start() : stop();
-    }, {threshold: .15}).observe(document.querySelector('#runit .mock'));
+    }, {threshold: .15}).observe(document.querySelector('#run .mock'));
   } else { start(); }
 })();
 
