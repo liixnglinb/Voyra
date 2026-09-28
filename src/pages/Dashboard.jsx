@@ -491,20 +491,20 @@ function FeatureArt({ type }) {
     const opts = [['不存在', false], ['1', true], ['∞', false]];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-zenew-art">
       <style>{`
-        .vr-home .vr-zenew-art{padding:0;color:#9AA0A8;background:#101215;border-color:rgba(27,27,27,.2);box-shadow:0 16px 30px rgba(22,22,28,.22)}
-        .vr-home .vr-zenew-art .vr-preview-top{padding:10px 12px;border-bottom-color:rgba(255,255,255,.08);color:#C6CBD2;font-size:10.5px}
-        .vr-home .vr-zenew-art .vr-preview-top b{color:#E0C35F}
-        .vr-home .vr-zenew-art .vr-zn-q{padding:13px 14px 4px;color:#EDEEF0;font-size:13px;font-weight:600;line-height:1.5}
-        .vr-home .vr-zenew-art .vr-zn-q small{display:block;color:#7E858F;font:500 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;letter-spacing:.14em;margin-bottom:7px}
-        .vr-home .vr-zenew-art .vr-zn-opt{display:flex;align-items:center;gap:8px;margin:5px 14px 0;padding:7px 10px;border:1px solid rgba(255,255,255,.08);border-radius:9px;font-size:11.5px;color:#B9BEC6;transition:border-color .3s ease,background .3s ease,color .3s ease}
-        .vr-home .vr-zenew-art .vr-zn-opt .k{display:grid;place-items:center;width:17px;height:17px;flex:0 0 auto;border:1px solid rgba(255,255,255,.16);border-radius:999px;color:#7E858F;font:600 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;transition:all .3s ease}
-        .vr-home .vr-zenew-art .vr-zn-opt.is-on{border-color:rgba(240,194,75,.55);background:rgba(240,194,75,.07);color:#EDEEF0}
-        .vr-home .vr-zenew-art .vr-zn-opt.is-on .k{border-color:#F0C24B;color:#F0C24B}
-        .vr-home .vr-zenew-art .vr-zn-ans{margin:11px 14px 0;padding:8px 11px;background:rgba(240,194,75,.06);border-left:2px solid #F0C24B;border-radius:0 8px 8px 0;font-size:10.5px;color:#9AA0A8;line-height:1.55}
-        .vr-home .vr-zenew-art .vr-zn-ans b{display:block;color:#E0C35F;font:500 8.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;letter-spacing:.14em;margin-bottom:3px}
+        .vr-home .vr-zenew-art{padding:0;color:#6B6455;background:#FDFBF4;border-color:rgba(184,139,23,.22);box-shadow:0 18px 38px -26px rgba(88,72,28,.38)}
+        .vr-home .vr-zenew-art .vr-preview-top{padding:10px 13px;border-bottom-color:#EEE8D8;color:#5F5A4E;font-size:10.5px}
+        .vr-home .vr-zenew-art .vr-preview-top b{color:#A87F14}
+        .vr-home .vr-zenew-art .vr-zn-q{padding:13px 14px 4px;color:#211E19;font-size:13px;font-weight:600;line-height:1.5}
+        .vr-home .vr-zenew-art .vr-zn-q small{display:block;color:#8D8880;font:500 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;letter-spacing:.14em;margin-bottom:7px}
+        .vr-home .vr-zenew-art .vr-zn-opt{display:flex;align-items:center;gap:8px;margin:5px 14px 0;padding:7px 10px;border:1px solid #E7E1D2;border-radius:9px;background:rgba(255,255,255,.72);font-size:11.5px;color:#6B6455;transition:border-color .3s ease,background .3s ease,color .3s ease}
+        .vr-home .vr-zenew-art .vr-zn-opt .k{display:grid;place-items:center;width:17px;height:17px;flex:0 0 auto;border:1px solid #DFD8C6;border-radius:999px;color:#8D8880;font:600 9px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;transition:all .3s ease}
+        .vr-home .vr-zenew-art .vr-zn-opt.is-on{border-color:rgba(184,139,23,.45);background:#FFF7DC;color:#211E19}
+        .vr-home .vr-zenew-art .vr-zn-opt.is-on .k{border-color:#C89A1B;color:#A87F14}
+        .vr-home .vr-zenew-art .vr-zn-ans{margin:11px 14px 0;padding:8px 11px;background:#FFF8DE;border-left:2px solid #E0B33C;border-radius:0 8px 8px 0;font-size:10.5px;color:#6B6455;line-height:1.55}
+        .vr-home .vr-zenew-art .vr-zn-ans b{display:block;color:#A87F14;font:500 8.5px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;letter-spacing:.14em;margin-bottom:3px}
         .vr-home .vr-zenew-art .vr-zn-grade{display:flex;gap:5px;padding:12px 14px 14px}
-        .vr-home .vr-zenew-art .vr-zn-grade span{flex:1;text-align:center;padding:5px 0;border:1px solid rgba(255,255,255,.08);border-radius:8px;font-size:9.5px;color:#7E858F;transition:all .3s ease}
-        .vr-home .vr-zenew-art .vr-zn-grade span.is-on{border-color:rgba(240,194,75,.55);color:#F0C24B}
+        .vr-home .vr-zenew-art .vr-zn-grade span{flex:1;text-align:center;padding:5px 0;border:1px solid #E7E1D2;border-radius:8px;background:rgba(255,255,255,.72);font-size:9.5px;color:#8D8880;transition:all .3s ease}
+        .vr-home .vr-zenew-art .vr-zn-grade span.is-on{border-color:rgba(184,139,23,.45);background:#FFF7DC;color:#A87F14}
       `}</style>
       <div className="vr-preview-top"><BookOpen size={15} /><span>zenew &#183; 今日复习</span><b>FSRS 调度</b></div>
       <div className="vr-zn-q"><small>RECALL · 高等数学（上）</small>极限 lim(x→0) sin x / x 的值是？</div>
