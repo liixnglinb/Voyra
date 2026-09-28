@@ -3,185 +3,611 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>AI 轨迹 · 本地 AI 工作观测台 — Voyra</title>
-  <meta name="description" content="AI 轨迹把 Codex、Claude、Qoder、CatPaw 等软件的会话、任务和产出整理成日报、历史档案与趋势看板。数据默认留在本机。">
-  <meta name="theme-color" content="#0C100F">
+  <title>AI 轨迹 v0.5.2 · 本地 AI 工作观测台 — Voyra</title>
+  <meta name="description" content="AI 轨迹自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个本机 AI 软件的数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板。数据默认留在本机。">
+  <meta property="og:title" content="AI 轨迹 · 本地 AI 工作观测台">
+  <meta property="og:description" content="12 个本机 AI 软件数据源 · 每日日报与历史档案 · 数据留在本机 · 仅支持 Windows 10/11">
+  <meta name="theme-color" content="#FAFCFB">
   <link rel="icon" href="/ai-chronicle/favicon.png">
   <style>
     :root{
-      --bg:#0C100F;--panel:#121715;--panel2:#171D1B;--txt:#F0F5F3;--sub:#9AA7A2;--dim:#697671;
-      --line:rgba(255,255,255,.075);--line2:rgba(255,255,255,.14);
-      --teal:#32BDA9;--teal-hi:#57D0BE;--teal-soft:rgba(50,189,169,.09);
-      --amber:#DFA94F;--coral:#E37C72;
-      --mono:"SF Mono","Cascadia Mono",Consolas,"Microsoft YaHei UI",monospace;
-      --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei UI","PingFang SC",sans-serif;
+      --bg:#FAFCFB;--card:#FFFFFF;--ink:#13201B;--sub:#5B6A64;--dim:#8C9A93;
+      --line:rgba(19,32,27,.09);--line-strong:rgba(19,32,27,.16);
+      --teal:#0F9D8A;--teal-ink:#0B8271;--teal-soft:rgba(15,157,138,.09);--teal-border:rgba(15,157,138,.24);
+      --shadow-lg:0 32px 70px -38px rgba(16,48,40,.35);
+      --shadow-sm:0 14px 34px -24px rgba(16,48,40,.28);
+      --mono:ui-monospace,SFMono-Regular,"Cascadia Mono",Consolas,"Microsoft YaHei UI",monospace;
+      --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei UI","PingFang SC",sans-serif;
     }
     *{margin:0;padding:0;box-sizing:border-box}
     html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-    body{background:var(--bg);color:var(--txt);font:15px/1.7 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
-    body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:32px 32px;-webkit-mask-image:radial-gradient(120% 72% at 50% 0,#000 10%,transparent 78%);mask-image:radial-gradient(120% 72% at 50% 0,#000 10%,transparent 78%)}
+    body{background:var(--bg);color:var(--ink);font:15px/1.75 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:clip}
+    body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+      background-image:linear-gradient(rgba(19,32,27,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(19,32,27,.028) 1px,transparent 1px);
+      background-size:32px 32px;
+      -webkit-mask-image:radial-gradient(130% 82% at 50% 0,#000 8%,transparent 72%);
+      mask-image:radial-gradient(130% 82% at 50% 0,#000 8%,transparent 72%)}
     a{color:inherit;text-decoration:none}button{font:inherit}
-    .wrap{position:relative;z-index:1;width:min(100% - 40px,1120px);margin:0 auto}
-    .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}.muted{color:var(--sub)}.dim{color:var(--dim)}
-    .nav{position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);background:rgba(12,16,15,.84);backdrop-filter:blur(14px) saturate(1.3)}
-    .nav-in{display:flex;align-items:center;gap:22px;height:60px}.brand{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700}.brand img{width:30px;height:30px;border-radius:9px;border:1px solid var(--line2)}
-    .nav-links{display:flex;gap:20px;margin-left:8px}.nav-links a{color:var(--sub);font-size:13px}.nav-links a:hover{color:var(--txt)}.grow{flex:1}.version-pill,.mono-pill{border:1px solid rgba(50,189,169,.28);border-radius:99px;padding:3px 10px;color:var(--teal);font:11px/1.5 var(--mono)}
-    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border:1px solid transparent;border-radius:8px;font-weight:700;font-size:14px;transition:transform .16s ease,background .16s ease,border-color .16s ease}
-    .btn:hover{transform:translateY(-1px)}.btn-primary{background:var(--teal);color:#07100D}.btn-primary:hover{background:var(--teal-hi)}.btn-ghost{border-color:var(--line2);color:var(--txt);background:rgba(255,255,255,.02)}.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
-    .hero{padding:86px 0 68px;border-bottom:1px solid var(--line)}.hero-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);align-items:center;gap:58px}
-    .eyebrow{display:inline-flex;align-items:center;gap:7px;color:var(--teal);font:700 11px/1 var(--mono);letter-spacing:.08em;margin-bottom:18px}.eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 5px var(--teal-soft)}
-    h1{font-size:50px;line-height:1.13;letter-spacing:-2px;font-weight:800}h1 em{font-style:normal;color:var(--teal)}.lead{max-width:590px;margin:18px 0 28px;color:var(--sub);font-size:16px}
-    .cta-row{display:flex;gap:11px;flex-wrap:wrap}.meta{display:flex;flex-wrap:wrap;gap:9px 17px;margin-top:19px;color:var(--dim);font-size:12px}.meta span{display:inline-flex;align-items:center;gap:6px}.meta i{width:5px;height:5px;border-radius:50%;background:var(--teal)}
-    .window{overflow:hidden;border:1px solid var(--line2);border-radius:15px;background:#111614;box-shadow:0 34px 80px -34px rgba(0,0,0,.82);transform:rotate(.5deg)}
-    .window-bar{display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-bottom:1px solid var(--line);color:var(--sub);font:10px/1 var(--mono)}.window-dots{display:flex;gap:5px}.window-dots i{width:8px;height:8px;border-radius:50%;background:#27302D}.window-dots i:first-child{background:var(--teal)}.window-bar b{margin-left:auto;color:var(--teal);font-weight:600}
-    .screen{padding:14px}.screen-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.screen-kpi{padding:11px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}.screen-kpi small{display:block;color:var(--dim);font-size:9px}.screen-kpi b{display:block;margin-top:4px;font:700 18px/1.15 var(--mono)}.screen-kpi em{display:block;margin-top:4px;color:var(--teal);font-size:9px;font-style:normal}
-    .screen-main{display:grid;grid-template-columns:1fr 170px;gap:8px;margin-top:8px}.screen-chart,.screen-tasks{min-width:0;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
-    .screen-title{display:flex;justify-content:space-between;color:var(--sub);font-size:10px}.screen-title b{color:var(--teal);font-family:var(--mono)}
-    .bars{display:flex;align-items:flex-end;gap:4px;height:108px;margin-top:14px;padding-bottom:7px;border-bottom:1px solid var(--line)}.bars i{flex:1;min-width:4px;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--teal),rgba(50,189,169,.18));opacity:.35}.bars i.on{opacity:1}.bars i:nth-child(3n){background:linear-gradient(180deg,#E6A64B,rgba(230,166,75,.18))}
-    .task-list{display:grid;gap:7px;margin-top:10px}.task{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:10px}.task i{display:grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--teal-soft);color:var(--teal);font:700 9px/1 var(--mono);font-style:normal}.task span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.task b{color:var(--teal);font-size:9px}
-    .section{padding:62px 0;border-top:1px solid var(--line)}.section-head{margin-bottom:30px}.section-head .eyebrow{margin-bottom:9px}.section-head h2{font-size:31px;letter-spacing:-1.1px}.section-head p{margin-top:8px;color:var(--sub);max-width:680px}
-    .bento{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--line)}.cell{padding:25px 23px;background:var(--panel)}.cell span{display:block;color:var(--teal);font:700 10px/1 var(--mono);margin-bottom:12px}.cell h3{font-size:16px;margin-bottom:8px}.cell p{color:var(--sub);font-size:13px}
-    .download-list{display:grid;gap:10px}.download-row{display:grid;grid-template-columns:150px minmax(0,1fr) 86px 150px;align-items:center;gap:18px;padding:15px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}.download-row.recommended{border-color:rgba(50,189,169,.33);background:linear-gradient(90deg,var(--teal-soft),transparent 58%),var(--panel)}
-    .download-name{font-weight:700}.download-name small{display:block;margin-top:2px;color:var(--dim);font:10px/1.4 var(--mono)}.download-desc{color:var(--sub);font-size:13px}.download-size{color:var(--dim);font:11px/1 var(--mono);text-align:right}.download-actions{display:flex;gap:7px;justify-content:flex-end}.download-actions .btn{min-height:38px;padding:0 14px;font-size:12px}
-    .note{margin-top:14px;padding:13px 15px;border:1px solid rgba(223,169,79,.24);border-radius:10px;background:rgba(223,169,79,.055);color:var(--sub);font-size:12px}.note b{color:var(--amber)}
-    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--line)}.step{padding:23px;background:var(--panel)}.step b{display:block;margin-bottom:8px;color:var(--teal);font:700 10px/1 var(--mono);letter-spacing:.08em}.step strong{display:block;margin-bottom:5px}.step p{color:var(--sub);font-size:13px}
-    footer{position:relative;z-index:1;padding:34px 0 46px;border-top:1px solid var(--line);color:var(--dim);font-size:12px}.foot-in{display:flex;align-items:center;gap:18px;flex-wrap:wrap}.foot-in a{color:var(--sub)}.foot-in a:hover{color:var(--teal)}.foot-in .right{margin-left:auto}
-    @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:42px;padding-top:58px}.bento,.steps{grid-template-columns:1fr}.download-row{grid-template-columns:1fr auto}.download-desc{grid-column:1/-1;grid-row:2}.download-size{grid-column:2;grid-row:1}.download-actions{grid-column:1/-1}.download-actions .btn{flex:1}.nav-links{display:none}.version-pill{display:none}}
-    @media(max-width:620px){h1{font-size:38px;letter-spacing:-1.4px}.hero{padding-top:50px}.screen-main{grid-template-columns:1fr}.screen-tasks{display:none}.screen-kpis{grid-template-columns:repeat(2,1fr)}.section{padding:50px 0}.section-head h2{font-size:28px}.nav-in{gap:12px}.brand{white-space:nowrap}.nav .btn{width:auto;min-height:38px;padding:0 16px}.download-row{grid-template-columns:1fr}.download-name{grid-column:1;grid-row:1}.download-desc{grid-column:1;grid-row:2}.download-size{grid-column:1;grid-row:1;justify-self:end;text-align:right}.download-actions{grid-column:1;grid-row:3}.foot-in .right{margin-left:0}.btn{width:100%}.nav .btn{width:auto}}
-    @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+    ::selection{background:rgba(15,157,138,.18)}
+    .wrap{position:relative;z-index:1;width:min(100% - 44px,1120px);margin:0 auto}
+    .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+    [data-reveal]{opacity:0;transform:translateY(24px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);transition-delay:var(--d,0s)}
+    [data-reveal].is-visible{opacity:1;transform:none}
+
+    /* ---------- nav ---------- */
+    .nav{position:sticky;top:0;z-index:60;border-bottom:1px solid var(--line);background:rgba(250,252,251,.82);backdrop-filter:blur(14px) saturate(1.4)}
+    .nav-in{display:flex;align-items:center;gap:26px;height:62px}
+    .brand{display:flex;align-items:center;gap:10px;font-size:14.5px;font-weight:750;letter-spacing:.01em}
+    .brand img{width:30px;height:30px;border-radius:9px;border:1px solid var(--line);box-shadow:0 3px 10px -4px rgba(16,48,40,.3);transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+    .brand:hover img{transform:rotate(-6deg) scale(1.06)}
+    .nav-links{display:flex;gap:22px}
+    .nav-links a{color:var(--sub);font-size:13px;font-weight:550;position:relative;padding:4px 0;transition:color .2s}
+    .nav-links a::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:2px;border-radius:2px;background:var(--teal);transform:scaleX(0);transform-origin:left;transition:transform .25s cubic-bezier(.16,1,.3,1)}
+    .nav-links a:hover{color:var(--ink)}.nav-links a:hover::after{transform:scaleX(1)}
+    .grow{flex:1}
+    .version-pill{border:1px solid var(--teal-border);border-radius:99px;padding:4px 12px;color:var(--teal-ink);font:600 11px/1.6 var(--mono);background:var(--teal-soft);display:inline-flex;align-items:center;gap:6px}
+    .version-pill i{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 2.2s ease-in-out infinite}
+    @keyframes pulse{50%{opacity:.35}}
+
+    /* ---------- hero ---------- */
+    .hero{padding:84px 0 72px;border-bottom:1px solid var(--line)}
+    .hero-grid{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(380px,.98fr);gap:56px;align-items:center}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--teal-ink);font:700 11px/1 var(--mono);letter-spacing:.14em;border:1px solid var(--teal-border);background:var(--teal-soft);border-radius:99px;padding:7px 14px;margin-bottom:22px}
+    .eyebrow i{width:6px;height:6px;border-radius:50%;background:var(--teal)}
+    h1{font-size:clamp(36px,5.2vw,56px);line-height:1.12;letter-spacing:-.025em;font-weight:800}
+    h1 em{font-style:normal;color:var(--teal);position:relative;white-space:nowrap}
+    h1 em::after{content:"";position:absolute;left:2%;bottom:.06em;width:96%;height:.14em;border-radius:99px;background:linear-gradient(90deg,rgba(15,157,138,.28),rgba(15,157,138,.06));z-index:-1}
+    .lead{max-width:560px;margin:20px 0 30px;color:var(--sub);font-size:16px}
+    .cta-row{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 24px;border:1px solid transparent;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:transform .22s cubic-bezier(.34,1.56,.64,1),background .2s,border-color .2s,box-shadow .2s}
+    .btn:active{transform:scale(.97)}
+    .btn-primary{background:var(--teal);color:#fff;box-shadow:0 14px 30px -14px rgba(15,157,138,.65)}
+    .btn-primary:hover{background:var(--teal-ink);transform:translateY(-2px);box-shadow:0 20px 38px -14px rgba(15,157,138,.7)}
+    .btn-ghost{border-color:var(--line-strong);color:var(--ink);background:var(--card)}
+    .btn-ghost:hover{border-color:var(--teal);color:var(--teal-ink);transform:translateY(-2px)}
+    .hero-stats{display:flex;gap:0;margin-top:36px;border-top:1px solid var(--line);padding-top:24px;max-width:560px}
+    .hero-stat{flex:1;min-width:0}
+    .hero-stat+.hero-stat{border-left:1px solid var(--line);padding-left:26px}
+    .hero-stat b{display:block;font:800 27px/1.1 var(--mono);letter-spacing:-.02em}
+    .hero-stat b small{font-size:15px;font-weight:700;color:var(--teal-ink)}
+    .hero-stat span{display:block;margin-top:5px;color:var(--dim);font-size:12px}
+
+    /* ---------- hero window ---------- */
+    .window{border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden;transform:perspective(1200px) rotateY(-4deg) rotateX(1.5deg);transition:transform .5s cubic-bezier(.16,1,.3,1)}
+    .window:hover{transform:perspective(1200px) rotateY(0) rotateX(0)}
+    .window-bar{display:flex;align-items:center;gap:9px;height:44px;padding:0 16px;border-bottom:1px solid var(--line);color:var(--dim);font:600 11px/1 var(--mono)}
+    .window-dots{display:flex;gap:6px}.window-dots i{width:9px;height:9px;border-radius:50%;background:#E4ECE8}
+    .window-dots i:first-child{background:var(--teal)}
+    .window-bar b{margin-left:auto;color:var(--teal-ink);font-weight:650;font-size:10.5px;border:1px solid var(--teal-border);border-radius:99px;padding:3px 9px;background:var(--teal-soft)}
+    .win-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px 14px 0}
+    .win-kpi{padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:linear-gradient(180deg,#fff, #FBFDFC)}
+    .win-kpi small{display:block;color:var(--dim);font-size:9.5px;font-weight:600}
+    .win-kpi b{display:block;margin-top:4px;font:750 17px/1.15 var(--mono);letter-spacing:-.02em}
+    .win-kpi em{display:block;margin-top:3px;color:var(--teal-ink);font-size:9px;font-style:normal;font-weight:650}
+    .win-chart{display:flex;align-items:flex-end;gap:4px;height:64px;margin:12px 14px 0;padding:0 2px 9px;border-bottom:1px solid var(--line)}
+    .win-chart i{flex:1;min-width:3px;border-radius:4px 4px 2px 2px;background:linear-gradient(180deg,#9ED9CE,#C9E9E1);transform-origin:bottom;animation:grow .9s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i)*60ms)}
+    .win-chart i.is-hot{background:linear-gradient(180deg,var(--teal),#3DB8A5);animation:growHot 2.6s ease-in-out infinite alternate;animation-delay:calc(.9s + var(--i)*60ms)}
+    @keyframes grow{from{transform:scaleY(.12)}to{transform:scaleY(1)}}
+    @keyframes growHot{from{transform:scaleY(.86)}to{transform:scaleY(1)}}
+    .win-tasks{display:grid;gap:7px;padding:11px 14px 0}
+    .win-task{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:9px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;transition:border-color .3s,transform .3s,box-shadow .3s}
+    .win-task:nth-child(2){animation:taskIn .7s cubic-bezier(.16,1,.3,1) .5s both}
+    .win-task:nth-child(3){animation:taskIn .7s cubic-bezier(.16,1,.3,1) .65s both}
+    .win-task:nth-child(4){animation:taskIn .7s cubic-bezier(.16,1,.3,1) .8s both}
+    @keyframes taskIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .win-task em{display:grid;place-items:center;width:23px;height:23px;border-radius:7px;background:var(--teal-soft);color:var(--teal-ink);font:750 9px/1 var(--mono);font-style:normal}
+    .win-task strong{overflow:hidden;color:var(--ink);font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+    .win-task small{display:block;margin-top:1px;color:var(--dim);font-size:8.5px}
+    .win-task .st{font-size:9px;font-weight:750;padding:3px 8px;border-radius:99px;white-space:nowrap}
+    .st-done{color:#0B8271;background:var(--teal-soft)}
+    .st-run{color:#B4720F;background:#FBF1DC}
+    .st-wait{color:#8C9A93;background:#F0F4F2}
+    .win-srcs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:11px 14px 14px;color:var(--dim);font-size:9.5px;font-weight:600}
+    .win-srcs span{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:99px;padding:3px 9px;background:#fff}
+    .win-srcs i{width:5px;height:5px;border-radius:50%}
+    .win-srcs .more{color:var(--teal-ink);background:var(--teal-soft);border-color:var(--teal-border)}
+
+    /* ---------- ticker ---------- */
+    .ticker{border-bottom:1px solid var(--line);overflow:hidden;padding:15px 0;background:linear-gradient(180deg,rgba(15,157,138,.028),transparent)}
+    .ticker-track{display:flex;gap:14px;width:max-content;animation:marquee 34s linear infinite}
+    .ticker:hover .ticker-track{animation-play-state:paused}
+    @keyframes marquee{to{transform:translateX(-50%)}}
+    .tick{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:99px;padding:7px 16px;background:#fff;color:var(--sub);font:600 12px/1.5 var(--sans);white-space:nowrap;transition:border-color .25s,color .25s,transform .25s}
+    .tick:hover{border-color:var(--teal-border);color:var(--teal-ink);transform:translateY(-2px)}
+    .tick i{width:7px;height:7px;border-radius:50%;background:var(--c,#999)}
+
+    /* ---------- sections ---------- */
+    .section{padding:78px 0;border-bottom:1px solid var(--line)}
+    .section-head{max-width:640px;margin-bottom:44px}
+    .section-head.center{margin-left:auto;margin-right:auto;text-align:center}
+    .section-head .eyebrow{margin-bottom:16px}
+    h2{font-size:clamp(26px,3.4vw,36px);line-height:1.2;letter-spacing:-.02em;font-weight:800}
+    .section-head p{margin-top:12px;color:var(--sub);font-size:15px}
+
+    /* ---------- features ---------- */
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .feature-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:var(--card);padding:24px 22px;box-shadow:var(--shadow-sm);transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,box-shadow .3s}
+    .feature-card::before{content:"";position:absolute;inset:0;background:radial-gradient(340px circle at var(--mx,50%) var(--my,50%),rgba(15,157,138,.08),transparent 65%);opacity:0;transition:opacity .3s;pointer-events:none}
+    .feature-card:hover{transform:translateY(-4px);border-color:var(--teal-border);box-shadow:0 24px 48px -26px rgba(16,48,40,.35)}
+    .feature-card:hover::before{opacity:1}
+    .feature-card .ico{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:var(--teal-soft);color:var(--teal-ink);margin-bottom:16px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+    .feature-card:hover .ico{transform:scale(1.1) rotate(-4deg)}
+    .feature-card h3{font-size:15.5px;font-weight:750;letter-spacing:-.01em}
+    .feature-card p{margin-top:7px;color:var(--sub);font-size:12.8px;line-height:1.7}
+    .feature-card .mini{display:flex;gap:4px;align-items:flex-end;height:26px;margin-top:15px}
+    .feature-card .mini i{flex:1;border-radius:2px 2px 0 0;background:var(--teal-soft);transition:background .3s,transform .3s}
+    .feature-card:hover .mini i{background:rgba(15,157,138,.4)}
+    .feature-card:hover .mini i:nth-child(3n){background:var(--teal);transform:scaleY(1.12)}
+
+    /* ---------- sources ---------- */
+    .source-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .source-chip{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:13px;background:#fff;padding:15px 16px;transition:transform .28s cubic-bezier(.16,1,.3,1),border-color .28s,box-shadow .28s}
+    .source-chip:hover{transform:translateY(-3px);border-color:var(--teal-border);box-shadow:var(--shadow-sm)}
+    .source-chip .dot{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 14%,transparent);flex:none}
+    .source-chip b{font-size:13px;font-weight:700;letter-spacing:-.01em}
+    .source-chip small{display:block;color:var(--dim);font-size:10px;margin-top:1px}
+    .source-note{margin-top:22px;color:var(--dim);font-size:12.5px;text-align:center}
+
+    /* ---------- update ---------- */
+    .update-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:48px;align-items:center}
+    .steps{display:grid;gap:0}
+    .step{display:grid;grid-template-columns:44px minmax(0,1fr);gap:16px;padding:20px 0;border-bottom:1px dashed var(--line)}
+    .step:last-child{border-bottom:0}
+    .step .no{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;border:1px solid var(--teal-border);background:var(--teal-soft);color:var(--teal-ink);font:800 13px/1 var(--mono)}
+    .step strong{display:block;font-size:14.5px;font-weight:750;letter-spacing:-.01em}
+    .step p{margin-top:5px;color:var(--sub);font-size:12.8px}
+    .step p .mono{font-size:11px;color:var(--teal-ink)}
+    .badge-mock{justify-self:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+    .ring{position:relative;width:132px;height:132px;border-radius:50%;background:conic-gradient(var(--teal) 68%,#E2ECE9 0);display:grid;place-items:center;box-shadow:0 22px 44px -22px rgba(15,157,138,.55);animation:ringFloat 5s ease-in-out infinite}
+    @keyframes ringFloat{50%{transform:translateY(-8px)}}
+    .ring::after{content:"";position:absolute;inset:11px;border-radius:50%;background:#fff;box-shadow:inset 0 2px 10px rgba(19,32,27,.05)}
+    .ring .val{position:relative;z-index:1;text-align:center}
+    .ring .val b{display:block;font:800 23px/1 var(--mono);letter-spacing:-.02em;color:var(--teal-ink)}
+    .ring .val span{display:block;margin-top:3px;font:650 9px/1 var(--mono);color:var(--dim);letter-spacing:.08em}
+    .ring-tip{position:relative;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:var(--shadow-sm);padding:13px 15px;width:238px;opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;pointer-events:none}
+    .badge-mock:hover .ring-tip{opacity:1;transform:none}
+    .ring-tip strong{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:750}
+    .ring-tip strong i{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+    .ring-tip p{margin-top:5px;color:var(--sub);font-size:11px;line-height:1.65}
+    .ring-cap{color:var(--dim);font-size:11.5px;font-weight:600}
+
+    /* ---------- download ---------- */
+    .download-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:16px;align-items:stretch}
+    .dl-card{position:relative;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:18px;background:var(--card);padding:28px 26px;box-shadow:var(--shadow-sm);transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s,box-shadow .3s}
+    .dl-card::before{content:"";position:absolute;inset:0;background:radial-gradient(420px circle at var(--mx,50%) var(--my,0%),rgba(15,157,138,.06),transparent 60%);opacity:0;transition:opacity .3s;pointer-events:none}
+    .dl-card:hover{transform:translateY(-4px);border-color:var(--teal-border);box-shadow:0 28px 56px -28px rgba(16,48,40,.4)}
+    .dl-card:hover::before{opacity:1}
+    .dl-card.reco{border-color:var(--teal-border);background:linear-gradient(180deg,#fff,#F5FBF9)}
+    .reco-badge{position:absolute;top:18px;right:18px;border:1px solid var(--teal-border);background:var(--teal-soft);color:var(--teal-ink);font:750 10px/1 var(--mono);letter-spacing:.08em;border-radius:99px;padding:6px 11px}
+    .dl-card .ico{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;background:var(--teal-soft);color:var(--teal-ink);margin-bottom:18px}
+    .dl-card h3{font-size:17px;font-weight:800;letter-spacing:-.01em}
+    .dl-card .file{margin-top:4px;color:var(--teal-ink);font:650 11.5px/1.5 var(--mono)}
+    .dl-card p{margin-top:10px;color:var(--sub);font-size:13px}
+    .dl-size{margin-top:16px;display:inline-flex;align-items:baseline;gap:7px}
+    .dl-size b{font:800 22px/1 var(--mono);letter-spacing:-.02em}
+    .dl-size span{color:var(--dim);font-size:11px;font-weight:600}
+    .dl-actions{margin-top:auto;padding-top:22px}
+    .dl-actions .btn{width:100%}
+    .mirrors{display:flex;align-items:center;gap:14px;margin-top:13px;color:var(--dim);font-size:11.5px;font-weight:600}
+    .mirrors a{color:var(--teal-ink);border-bottom:1px dashed var(--teal-border);padding-bottom:1px;transition:color .2s,border-color .2s}
+    .mirrors a:hover{color:var(--teal);border-color:var(--teal)}
+    .dl-note{margin-top:16px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:16px 20px;color:var(--sub);font-size:12.5px;display:flex;gap:10px;align-items:flex-start}
+    .dl-note svg{flex:none;color:var(--teal-ink);margin-top:2px}
+    .dl-note .mono{color:var(--teal-ink);font-size:11px}
+
+    /* ---------- faq ---------- */
+    .faq{display:grid;gap:10px;max-width:760px;margin:0 auto}
+    .faq details{border:1px solid var(--line);border-radius:14px;background:#fff;overflow:hidden;transition:border-color .25s,box-shadow .25s}
+    .faq details:hover{border-color:var(--teal-border)}
+    .faq summary{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:17px 20px;cursor:pointer;font-size:14.5px;font-weight:700;letter-spacing:-.01em;list-style:none}
+    .faq summary::-webkit-details-marker{display:none}
+    .faq summary::after{content:"+";color:var(--teal-ink);font:600 20px/1 var(--mono);transition:transform .3s cubic-bezier(.16,1,.3,1)}
+    .faq details[open] summary::after{transform:rotate(45deg)}
+    .faq details p{padding:0 20px 18px;color:var(--sub);font-size:13px}
+
+    /* ---------- footer ---------- */
+    footer{padding:36px 0 44px}
+    .foot-in{display:flex;align-items:center;gap:18px;flex-wrap:wrap;color:var(--dim);font-size:12px}
+    .foot-in .brand{font-size:13px}
+    .foot-in .brand img{width:24px;height:24px;border-radius:7px}
+    .foot-in a:hover{color:var(--teal-ink)}
+    .foot-in .right{margin-left:auto;font-family:var(--mono);font-size:11px}
+
+    @media (max-width:960px){
+      .hero-grid{grid-template-columns:1fr;gap:44px}
+      .window{transform:none}
+      .feature-grid{grid-template-columns:repeat(2,1fr)}
+      .source-grid{grid-template-columns:repeat(2,1fr)}
+      .update-grid{grid-template-columns:1fr;gap:36px}
+      .badge-mock{justify-self:start}
+      .download-grid{grid-template-columns:1fr}
+      .nav-links{display:none}
+    }
+    @media (max-width:560px){
+      .hero{padding:56px 0 52px}
+      .win-kpis{grid-template-columns:repeat(2,1fr)}
+      .hero-stats{flex-direction:column;gap:18px}
+      .hero-stat+.hero-stat{border-left:0;padding-left:0;border-top:1px solid var(--line);padding-top:18px}
+      .feature-grid{grid-template-columns:1fr}
+      .source-grid{grid-template-columns:1fr 1fr;gap:9px}
+      .source-chip{padding:12px 13px}
+      .section{padding:56px 0}
+      .dl-card{padding:22px 18px}
+    }
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+      html{scroll-behavior:auto}
+      [data-reveal]{opacity:1;transform:none}
+    }
   </style>
 </head>
 <body>
-  <header class="nav">
+
+  <nav class="nav">
     <div class="wrap nav-in">
-      <a class="brand" href="/"><img src="/ai-chronicle/icon.png" alt="">AI 轨迹</a>
-      <nav class="nav-links">
-        <a href="#overview">总览</a>
+      <a class="brand" href="/"><img src="/ai-chronicle/icon.png" alt="AI 轨迹图标">AI 轨迹</a>
+      <div class="nav-links">
         <a href="#features">功能</a>
+        <a href="#sources">数据源</a>
+        <a href="#update">自动更新</a>
         <a href="#download">下载</a>
-        <a href="https://github.com/liixnglinb/AI-Chronicle" target="_blank" rel="noopener">源码</a>
-      </nav>
+      </div>
       <span class="grow"></span>
-      <span class="version-pill mono" id="version-pill">v0.1.0</span>
-      <a class="btn btn-ghost" href="#download">下载</a>
+      <span class="version-pill"><i></i><span id="version-pill">v0.5.2</span></span>
     </div>
-  </header>
+  </nav>
 
   <main>
-    <section class="hero" id="overview">
+    <!-- hero -->
+    <section class="hero">
       <div class="wrap hero-grid">
-        <div>
-          <span class="eyebrow"><i></i>WINDOWS 10 / 11 · 本地优先</span>
-          <h1>把每天使用 AI 的过程，变成一份<em>可回看的档案</em></h1>
-          <p class="lead">自动整理 Codex、Claude、Qoder、CatPaw 等软件的工作会话、任务、时间和产出。每天生成日报，按月保留历史，并用趋势图看出真正把时间花在了哪里。</p>
-          <div class="cta-row">
-            <a class="btn btn-primary" id="hero-setup" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">下载安装版</a>
-            <a class="btn btn-ghost" id="hero-portable" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Portable.exe">便携版</a>
+        <div class="hero-copy">
+          <span class="eyebrow" data-reveal><i></i>LOCAL-FIRST AI OBSERVATORY</span>
+          <h1 data-reveal style="--d:.06s">AI 每天替你做了什么，<br>都记在这一本<em>轨迹</em>里</h1>
+          <p class="lead" data-reveal style="--d:.12s">AI 轨迹在本机自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个 AI 软件的工作数据，把零散的会话整理成每日日报、历史档案与趋势看板。会话内容不联网、不上传，一切留在你的电脑里。</p>
+          <div class="cta-row" data-reveal style="--d:.18s">
+            <a class="btn btn-primary" id="download-hero" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">下载安装版 <span class="mono" id="hero-size" style="font-weight:600;opacity:.85">112 MB</span></a>
+            <a class="btn btn-ghost" href="#sources">看看支持哪些软件</a>
           </div>
-          <div class="meta">
-            <span><i></i>数据默认留在本机</span>
-            <span><i></i>支持 GitHub Releases 自动更新</span>
-            <span><i></i>安装包约 111 MB</span>
+          <div class="hero-stats" data-reveal style="--d:.24s">
+            <div class="hero-stat"><b><span data-count="12">0</span></b><span>本机数据源自动接入</span></div>
+            <div class="hero-stat"><b><span data-count="8">0</span></b><span>页面看板，从今天到洞察</span></div>
+            <div class="hero-stat"><b><span data-count="100">0</span><small>%</small></b><span>数据留在本机，不上传</span></div>
           </div>
         </div>
-        <div class="window" aria-hidden="true">
-          <div class="window-bar"><span class="window-dots"><i></i><i></i><i></i></span><span>AI 轨迹 · 2026 年 9 月 24 日</span><b>数据覆盖 96%</b></div>
-          <div class="screen">
-            <div class="screen-kpis">
-              <div class="screen-kpi"><small>AI 活跃时长</small><b>7h 14m</b><em>较昨日 +18%</em></div>
-              <div class="screen-kpi"><small>今日任务</small><b>3 / 7</b><em>2 项进行中</em></div>
-              <div class="screen-kpi"><small>有效会话</small><b>20</b><em>4 个疑似</em></div>
-              <div class="screen-kpi"><small>生成成果</small><b>8</b><em>关联率 89%</em></div>
+        <div class="hero-visual" data-reveal style="--d:.15s">
+          <div class="window">
+            <div class="window-bar">
+              <span class="window-dots"><i></i><i></i><i></i></span>
+              <span>AI 轨迹 — 今天</span>
+              <b id="window-version">v0.5.2</b>
             </div>
-            <div class="screen-main">
-              <div class="screen-chart"><div class="screen-title"><span>今日活动脉冲</span><b>07:30 — 15:00</b></div><div class="bars" id="bars"></div></div>
-              <div class="screen-tasks"><div class="screen-title"><span>任务档案</span><b>09 / 24</b></div><div class="task-list"><div class="task"><i>01</i><span>完成信息架构</span><b>已完成</b></div><div class="task"><i>02</i><span>设计历史月历</span><b>进行中</b></div><div class="task"><i>03</i><span>接入真实适配器</span><b>待开始</b></div></div></div>
+            <div class="win-kpis">
+              <div class="win-kpi"><small>有效会话</small><b>20</b><em>+6 vs 昨天</em></div>
+              <div class="win-kpi"><small>今日任务</small><b>3 / 7</b><em>已完成 3 项</em></div>
+              <div class="win-kpi"><small>生成成果</small><b>8</b><em>代码 + 文档</em></div>
+              <div class="win-kpi"><small>聚焦时长</small><b>7h 14m</b><em>跨 12 个软件</em></div>
+            </div>
+            <div class="win-chart" id="win-chart" aria-hidden="true"></div>
+            <div class="win-tasks">
+              <div class="win-task"><em>01</em><div><strong>重构下载页信息架构</strong><small>Codex · 14:02</small></div><span class="st st-done">已完成</span></div>
+              <div class="win-task"><em>02</em><div><strong>盘点本机 AI 软件与数据源</strong><small>Claude Code · 11:36</small></div><span class="st st-done">已完成</span></div>
+              <div class="win-task"><em>03</em><div><strong>设计历史档案与月历浏览</strong><small>WorkBuddy · 16:20</small></div><span class="st st-run">进行中</span></div>
+              <div class="win-task"><em>04</em><div><strong>撰写自动更新合规清单</strong><small>CatPaw · 21:00</small></div><span class="st st-wait">待开始</span></div>
+            </div>
+            <div class="win-srcs">
+              <span><i style="background:#10A37F"></i>Codex</span>
+              <span><i style="background:#D97757"></i>Claude Code</span>
+              <span><i style="background:#2F9E77"></i>WorkBuddy</span>
+              <span><i style="background:#F2B33D"></i>CatPaw</span>
+              <span class="more">+8 个数据源</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- source ticker -->
+    <div class="ticker" aria-label="已接入数据源">
+      <div class="ticker-track" id="ticker-track"></div>
+    </div>
+
+    <!-- features -->
     <section class="section" id="features">
       <div class="wrap">
-        <div class="section-head"><span class="eyebrow"><i></i>WHAT IT DOES</span><h2>从活动记录到工作档案</h2><p>不是简单统计软件开了多久，而是把会话、任务、项目与文件产出连成可追溯的证据链。</p></div>
-        <div class="bento">
-          <article class="cell"><span>01 / DAILY</span><h3>每日 AI 日报</h3><p>自动归纳今天完成了什么、进展如何、生成了哪些文件，并标出每条结论的来源可信度。</p></article>
-          <article class="cell"><span>02 / HISTORY</span><h3>历史工作回看</h3><p>通过月历和每日档案回看过去的任务、投入时长与成果，不再依赖零散记忆。</p></article>
-          <article class="cell"><span>03 / TASKS</span><h3>任务与项目账本</h3><p>把不同软件的会话归入同一项目，显示任务状态、完成度、耗时、工具与结果。</p></article>
-          <article class="cell"><span>04 / INSIGHTS</span><h3>趋势分析</h3><p>查看 AI 活跃时长、Token、软件贡献和长期节奏，理解自己的高效时段。</p></article>
-          <article class="cell"><span>05 / LOCAL</span><h3>默认本地优先</h3><p>原文和任务默认保存在本机；敏感信息脱敏、云端摘要和排除目录均可独立控制。</p></article>
-          <article class="cell"><span>06 / UPDATE</span><h3>GitHub 自动更新</h3><p>桌面端自动识别 GitHub Releases 新版本，在应用内下载并安装，无需重新访问下载页。</p></article>
+        <div class="section-head" data-reveal>
+          <span class="eyebrow"><i></i>WHAT YOU GET</span>
+          <h2>从「用过什么」到「做出了什么」</h2>
+          <p>八个页面互相咬合：日报负责「今天」，历史负责「过去」，洞察负责「规律」。所有数字都来自本机真实日志，不是演示数据。</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card spot" data-reveal>
+            <span class="ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18M9 16l2 2 4-4"/></svg></span>
+            <h3>今日日报</h3>
+            <p>每晚自动汇总：做了哪些任务、用了哪些软件、生成了什么成果，一眼看完。</p>
+            <div class="mini" aria-hidden="true"><i style="height:36%"></i><i style="height:58%"></i><i style="height:44%"></i><i style="height:72%"></i><i style="height:52%"></i><i style="height:84%"></i></div>
+          </article>
+          <article class="feature-card spot" data-reveal style="--d:.06s">
+            <span class="ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>
+            <h3>历史档案</h3>
+            <p>月历视图回看任意一天，按周跳转，任何一天的工作都能完整还原。</p>
+            <div class="mini" aria-hidden="true"><i style="height:52%"></i><i style="height:34%"></i><i style="height:66%"></i><i style="height:48%"></i><i style="height:78%"></i><i style="height:42%"></i></div>
+          </article>
+          <article class="feature-card spot" data-reveal style="--d:.12s">
+            <span class="ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+            <h3>时间线</h3>
+            <p>按分钟还原会话节奏：几点开始、几点高峰、几点收尾，一目了然。</p>
+            <div class="mini" aria-hidden="true"><i style="height:28%"></i><i style="height:62%"></i><i style="height:88%"></i><i style="height:56%"></i><i style="height:38%"></i><i style="height:64%"></i></div>
+          </article>
+          <article class="feature-card spot" data-reveal style="--d:.06s">
+            <span class="ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></span>
+            <h3>项目聚合</h3>
+            <p>跨软件归到同一个项目：一个需求在 Codex 和 Claude 里的两段工作，算成一件事。</p>
+            <div class="mini" aria-hidden="true"><i style="height:64%"></i><i style="height:42%"></i><i style="height:74%"></i><i style="height:36%"></i><i style="height:58%"></i><i style="height:82%"></i></div>
+          </article>
+          <article class="feature-card spot" data-reveal style="--d:.12s">
+            <span class="ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg></span>
+            <h3>成果库</h3>
+            <p>代码、文档、脚本自动归档，做过什么产出随时找得回来。</p>
+            <div class="mini" aria-hidden="true"><i style="height:44%"></i><i style="height:70%"></i><i style="height:50%"></i><i style="height:82%"></i><i style="height:60%"></i><i style="height:46%"></i></div>
+          </article>
+          <article class="feature-card spot" data-reveal style="--d:.18s">
+            <span class="ico" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h4l2-7 4 14 3-9 2 4h5"/></svg></span>
+            <h3>洞察趋势</h3>
+            <p>哪个软件用得最多、哪个时段效率最高、一周投入了多少小时，趋势图说话。</p>
+            <div class="mini" aria-hidden="true"><i style="height:36%"></i><i style="height:48%"></i><i style="height:64%"></i><i style="height:56%"></i><i style="height:78%"></i><i style="height:92%"></i></div>
+          </article>
         </div>
       </div>
     </section>
 
+    <!-- sources -->
+    <section class="section" id="sources">
+      <div class="wrap">
+        <div class="section-head center" data-reveal>
+          <span class="eyebrow"><i></i>12 DATA SOURCES</span>
+          <h2>这些 AI 软件，装上就能被看见</h2>
+          <p>本机只读解析各软件的本地日志与数据库，不需要登录、不需要 API Key、不改动原软件的任何数据。</p>
+        </div>
+        <div class="source-grid">
+          <div class="source-chip" data-reveal style="--c:#D97757"><span class="dot"></span><div><b>Claude Code</b><small>Anthropic 终端 Agent</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#10A37F;--d:.04s"><span class="dot"></span><div><b>Codex</b><small>OpenAI 终端 Agent</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#7C6BF0;--d:.08s"><span class="dot"></span><div><b>ZCode</b><small>OpenCode 系会话</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#3B9EFF;--d:.12s"><span class="dot"></span><div><b>OpenCode</b><small>开源终端 Agent</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#2F9E77;--d:.04s"><span class="dot"></span><div><b>WorkBuddy</b><small>Claude 同构会话</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#5BB98C;--d:.08s"><span class="dot"></span><div><b>WorkBuddy AI</b><small>WorkBuddy 伴随通道</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#F2B33D;--d:.12s"><span class="dot"></span><div><b>CatPaw</b><small>本地会话日志</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#8B7CF6;--d:.16s"><span class="dot"></span><div><b>MHAgent</b><small>本地会话日志</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#3D8BFD;--d:.08s"><span class="dot"></span><div><b>织流 Loom</b><small>工作流会话</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#E8A33D;--d:.12s"><span class="dot"></span><div><b>Hermes</b><small>桌面 + 通道来源</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#4FC3A1;--d:.16s"><span class="dot"></span><div><b>Agnes</b><small>SQLite 会话</small></div></div>
+          <div class="source-chip" data-reveal style="--c:#5B8DEF;--d:.2s"><span class="dot"></span><div><b>DSH</b><small>zstd 会话档案</small></div></div>
+        </div>
+        <p class="source-note" data-reveal>数据源列表会随版本持续扩充 · 在应用「数据源」页可查看每个源的扫描状态</p>
+      </div>
+    </section>
+
+    <!-- update -->
+    <section class="section" id="update">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <span class="eyebrow"><i></i>AUTO UPDATE</span>
+          <h2>打开软件，更新自己会来</h2>
+          <p>应用内更新器同时测速 GitHub 直连与两个国内镜像，谁快用谁。检测、下载、安装全部自动完成，只在最后问你一句。</p>
+        </div>
+        <div class="update-grid">
+          <div class="steps" data-reveal>
+            <div class="step">
+              <span class="no">01</span>
+              <div><strong>固定位置提示</strong><p>发现新版本时，应用右下角常驻更新徽标，不打断你手头的工作。</p></div>
+            </div>
+            <div class="step">
+              <span class="no">02</span>
+              <div><strong>后台静默下载</strong><p>圆形进度环实时显示下载进度；鼠标悬停即可预览本次更新的完整内容说明。</p></div>
+            </div>
+            <div class="step">
+              <span class="no">03</span>
+              <div><strong>确认后重启安装</strong><p>下载完成后点击徽标，弹出「是否现在更新并重启？」确认框，一键完成升级。</p></div>
+            </div>
+          </div>
+          <div class="badge-mock" data-reveal style="--d:.12s">
+            <div class="ring"><span class="val"><b>68%</b><span>DOWNLOAD</span></span></div>
+            <div class="ring-tip">
+              <strong><i></i>v0.5.2 更新内容</strong>
+              <p>端到端发布链路验证：安装包、便携版与 latest.yml 全部就绪，应用内更新可直接命中本版本。</p>
+            </div>
+            <span class="ring-cap">悬停查看更新内容 · 点击安装并重启</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- download -->
     <section class="section" id="download">
       <div class="wrap">
-        <div class="section-head"><span class="eyebrow"><i></i>DOWNLOAD · <b id="download-version" style="color:var(--teal)">v0.1.0</b></span><h2>选择安装方式</h2><p>推荐安装版。应用内更新依赖 GitHub Releases，安装一次后后续版本会自动检查。</p></div>
-        <div class="download-list">
-          <div class="download-row recommended">
-            <div class="download-name">安装包<small>AI-Chronicle-Setup.exe</small></div>
-            <div class="download-desc">支持选择安装目录、桌面快捷方式和开始菜单入口，适合长期使用。</div>
-            <span class="download-size" id="setup-size">111 MB</span>
-            <div class="download-actions"><a class="btn btn-primary" id="download-setup" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">下载</a></div>
-          </div>
-          <div class="download-row">
-            <div class="download-name">便携版<small>AI-Chronicle-Portable.exe</small></div>
-            <div class="download-desc">单文件运行，不写入安装目录，适合临时体验或放在移动硬盘中使用。</div>
-            <span class="download-size" id="portable-size">111 MB</span>
-            <div class="download-actions"><a class="btn btn-ghost" id="download-portable" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Portable.exe">下载</a></div>
-          </div>
+        <div class="section-head center" data-reveal>
+          <span class="eyebrow"><i></i>DOWNLOAD · <b id="download-version" style="color:var(--teal-ink)">v0.5.2</b></span>
+          <h2>选择安装方式</h2>
+          <p>推荐安装版：应用内自动更新依赖 GitHub Releases，装一次，之后每晚会自动检查新版本。</p>
         </div>
-        <div class="note"><b>更新说明：</b>安装版会读取 GitHub Releases 中的 <span class="mono">latest.yml</span>，在应用内提示、后台下载并安装更新。便携版不写入系统，新版本发布后请重新下载替换文件。</div>
+        <div class="download-grid">
+          <article class="dl-card reco spot" data-reveal>
+            <span class="reco-badge">推荐</span>
+            <span class="ico" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M8 10h.01M16 10h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"/></svg></span>
+            <h3>安装版</h3>
+            <div class="file">AI-Chronicle-Setup.exe</div>
+            <p>支持选择安装目录、桌面快捷方式和开始菜单入口。内置自动更新：GitHub 直连 + 国内镜像自动测速。</p>
+            <div class="dl-size"><b id="setup-size">112</b><span>MB · Windows 10/11 x64</span></div>
+            <div class="dl-actions">
+              <a class="btn btn-primary" id="download-setup" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">GitHub 直连下载</a>
+              <div class="mirrors">
+                <span>镜像</span>
+                <a id="mirror-setup-1" href="https://gh-proxy.com/https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">gh-proxy</a>
+                <a id="mirror-setup-2" href="https://ghfast.top/https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">ghfast.top</a>
+              </div>
+            </div>
+          </article>
+          <article class="dl-card spot" data-reveal style="--d:.08s">
+            <span class="ico" aria-hidden="true"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M13 2v7h7M8.5 13.5h7M8.5 17h4"/></svg></span>
+            <h3>便携版</h3>
+            <div class="file">AI-Chronicle-Portable.exe</div>
+            <p>单文件运行，不写注册表、不建安装目录，适合临时体验或放在移动硬盘里随用随开。</p>
+            <div class="dl-size"><b id="portable-size">112</b><span>MB · Windows 10/11 x64</span></div>
+            <div class="dl-actions">
+              <a class="btn btn-ghost" id="download-portable" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Portable.exe">GitHub 直连下载</a>
+              <div class="mirrors">
+                <span>镜像</span>
+                <a id="mirror-portable-1" href="https://gh-proxy.com/https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Portable.exe">gh-proxy</a>
+                <a id="mirror-portable-2" href="https://ghfast.top/https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Portable.exe">ghfast.top</a>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="dl-note" data-reveal>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M12 12v4"/></svg>
+          <span><b>更新说明：</b>安装版读取 Releases 中的 <span class="mono">latest.yml</span>，应用内提示、后台下载并一键重启安装，全程支持直连 / 镜像自动择优。便携版新版本发布后需重新下载替换。</span>
+        </div>
       </div>
     </section>
 
-    <section class="section">
+    <!-- faq -->
+    <section class="section" id="faq">
       <div class="wrap">
-        <div class="section-head"><span class="eyebrow"><i></i>GET STARTED</span><h2>三步开始记录</h2></div>
-        <div class="steps">
-          <div class="step"><b>STEP 01</b><strong>安装并启动</strong><p>下载安装版或便携版，首次运行会创建本地数据目录。</p></div>
-          <div class="step"><b>STEP 02</b><strong>扫描本机数据源</strong><p>在数据源页检查 Codex、Claude、Qoder、CatPaw 等本地路径。</p></div>
-          <div class="step"><b>STEP 03</b><strong>每天查看日报</strong><p>在“今天”查看任务和产出，在“历史”回看以前的工作档案。</p></div>
+        <div class="section-head center" data-reveal>
+          <span class="eyebrow"><i></i>FAQ</span>
+          <h2>几个常见问题</h2>
+        </div>
+        <div class="faq" data-reveal>
+          <details>
+            <summary>我的会话内容会被上传吗？</summary>
+            <p>不会。AI 轨迹只在本机读取各软件的本地日志与数据库做只读解析，不联网上传任何会话、代码或文件内容。所有统计都在你自己的电脑上完成。</p>
+          </details>
+          <details>
+            <summary>支持 macOS 或 Linux 吗？</summary>
+            <p>目前仅支持 Windows 10/11 x64。macOS 与 Linux 版本在规划中，可以关注 GitHub Releases 获取发布动态。</p>
+          </details>
+          <details>
+            <summary>安装版和便携版有什么区别？</summary>
+            <p>安装版支持应用内自动更新（直连 / 镜像自动择优），日常使用推荐安装版。便携版不写系统，随时可删，但需要手动下载新版本替换。</p>
+          </details>
+          <details>
+            <summary>如果某个 AI 软件没有被识别怎么办？</summary>
+            <p>打开应用内的「数据源」页，查看每个源的扫描状态；新软件的数据源适配会随版本持续增加，也可以在 GitHub 仓库提 Issue 反馈。</p>
+          </details>
         </div>
       </div>
     </section>
   </main>
 
-  <footer><div class="wrap foot-in"><a class="brand" href="/"><img src="/ai-chronicle/icon.png" alt="" style="width:24px;height:24px;border-radius:7px">AI 轨迹</a><span>数据留在本机 · 更新来自 GitHub Releases</span><a class="right" href="https://github.com/liixnglinb/AI-Chronicle" target="_blank" rel="noopener">liixnglinb/AI-Chronicle</a></div></footer>
+  <footer>
+    <div class="wrap foot-in">
+      <a class="brand" href="/"><img src="/ai-chronicle/icon.png" alt="">AI 轨迹</a>
+      <span>数据留在本机 · 更新来自 GitHub Releases</span>
+      <a class="right" href="https://github.com/liixnglinb/AI-Chronicle" target="_blank" rel="noopener">liixnglinb/AI-Chronicle</a>
+    </div>
+  </footer>
 
   <script>
     (function () {
       var REPO = 'liixnglinb/AI-Chronicle';
-      var RELEASES = 'https://github.com/' + REPO + '/releases';
-      var fallback = '0.1.0';
+      var GH = 'https://github.com/' + REPO + '/releases';
+      var MIRRORS = ['https://gh-proxy.com/', 'https://ghfast.top/'];
+      var fallback = '0.5.2';
+
+      /* hero chart bars */
       var bars = [34,52,41,68,49,86,63,77,56,91,69,83,58,74,46,88,65,79];
-      document.getElementById('bars').innerHTML = bars.map(function (h, i) {
-        return '<i class="' + (i % 4 === 0 ? 'on' : '') + '" style="height:' + h + '%"></i>';
+      var hot = [5, 9, 14];
+      document.getElementById('win-chart').innerHTML = bars.map(function (h, i) {
+        return '<i class="' + (hot.indexOf(i) >= 0 ? 'is-hot' : '') + '" style="height:' + h + '%;--i:' + i + '"></i>';
       }).join('');
-      function formatSize(bytes) {
-        if (!bytes) return '—';
-        return (bytes / 1024 / 1024).toFixed(bytes > 100 * 1024 * 1024 ? 0 : 1) + ' MB';
+
+      /* source ticker (12 sources, duplicated for seamless loop) */
+      var sources = [
+        ['Claude Code', '#D97757'], ['Codex', '#10A37F'], ['ZCode', '#7C6BF0'],
+        ['OpenCode', '#3B9EFF'], ['WorkBuddy', '#2F9E77'], ['WorkBuddy AI', '#5BB98C'],
+        ['CatPaw', '#F2B33D'], ['MHAgent', '#8B7CF6'], ['织流 Loom', '#3D8BFD'],
+        ['Hermes', '#E8A33D'], ['Agnes', '#4FC3A1'], ['DSH', '#5B8DEF']
+      ];
+      var ticks = sources.map(function (s) {
+        return '<span class="tick"><i style="--c:' + s[1] + '"></i>' + s[0] + '</span>';
+      }).join('');
+      document.getElementById('ticker-track').innerHTML = ticks + ticks;
+
+      /* release data */
+      function fmtSize(bytes) {
+        if (!bytes) return null;
+        return Math.round(bytes / 1048576);
+      }
+      function setLinks(prefix) {
+        var file = prefix === 'Setup' ? 'AI-Chronicle-Setup.exe' : 'AI-Chronicle-Portable.exe';
+        var base = GH + '/latest/download/' + file;
+        document.getElementById('download-' + (prefix === 'Setup' ? 'setup' : 'portable')).href = base;
+        MIRRORS.forEach(function (m, i) {
+          document.getElementById('mirror-' + (prefix === 'Setup' ? 'setup' : 'portable') + '-' + (i + 1)).href = m + base;
+        });
       }
       function applyVersion(version, assets) {
         version = String(version || fallback).replace(/^v/i, '');
         document.getElementById('version-pill').textContent = 'v' + version;
         document.getElementById('download-version').textContent = 'v' + version;
+        document.getElementById('window-version').textContent = 'v' + version;
         document.title = 'AI 轨迹 v' + version + ' · 本地 AI 工作观测台 — Voyra';
-        var setup = (assets || []).find(function (item) { return /Setup\.exe$/i.test(item.name || ''); });
-        var portable = (assets || []).find(function (item) { return /Portable\.exe$/i.test(item.name || ''); });
-        if (setup && setup.url) document.getElementById('download-setup').href = setup.url;
-        if (portable && portable.url) document.getElementById('download-portable').href = portable.url;
-        if (setup) document.getElementById('setup-size').textContent = formatSize(setup.size);
-        if (portable) document.getElementById('portable-size').textContent = formatSize(portable.size);
+        var setup = (assets || []).find(function (a) { return /Setup\.exe$/i.test(a.name || ''); });
+        var portable = (assets || []).find(function (a) { return /Portable\.exe$/i.test(a.name || ''); });
+        if (setup) {
+          var s = fmtSize(setup.size);
+          document.getElementById('setup-size').textContent = s;
+          document.getElementById('hero-size').textContent = s + ' MB';
+        }
+        if (portable) document.getElementById('portable-size').textContent = fmtSize(portable.size);
+        if (setup && setup.url) setLinks('Setup');
+        if (portable && portable.url) setLinks('Portable');
       }
-      fetch('/ac-api/latest', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (data) {
-        if (data && data.version) applyVersion(data.version, data.assets);
-      }).catch(function () {
-        document.getElementById('download-setup').href = RELEASES + '/latest/download/AI-Chronicle-Setup.exe';
-        document.getElementById('download-portable').href = RELEASES + '/latest/download/AI-Chronicle-Portable.exe';
-      });
+      fetch('/ac-api/latest', { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.version) applyVersion(d.version, d.assets); })
+        .catch(function () {
+          setLinks('Setup'); setLinks('Portable');
+        });
+
+      /* reveal on scroll */
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+      document.querySelectorAll('[data-reveal]').forEach(function (el) { io.observe(el); });
+
+      /* count-up */
+      var counted = false;
+      var cio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting || counted) return;
+          counted = true;
+          document.querySelectorAll('[data-count]').forEach(function (el) {
+            var end = parseInt(el.dataset.count, 10) || 0;
+            var t0 = null;
+            function tick(t) {
+              if (!t0) t0 = t;
+              var p = Math.min((t - t0) / 1100, 1);
+              el.textContent = Math.round(end * (1 - Math.pow(1 - p, 3)));
+              if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+          });
+        });
+      }, { threshold: 0.4 });
+      var stats = document.querySelector('.hero-stats');
+      if (stats) cio.observe(stats);
+
+      /* spotlight on cards */
+      document.addEventListener('pointermove', function (ev) {
+        var card = ev.target.closest('.spot');
+        if (!card) return;
+        var r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (ev.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (ev.clientY - r.top) + 'px');
+      }, { passive: true });
     })();
   </script>
 </body>
