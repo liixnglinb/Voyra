@@ -268,10 +268,28 @@ export default function PelicanGallery() {
          序号/统计/眉标属必要信息，按站点阶梯不低于 --fs-meta；
          「SORT」是控件文字，给到 --fs-label。 */
       @media(max-width:767px){
-        .pg-kicker{font-size:var(--fs-meta)}
+        .pg-kicker{font-size:var(--fs-meta);letter-spacing:.14em}
         .pg-stat{font-size:var(--fs-meta)}
         .pg-seq{font-size:var(--fs-meta)}
         .pg-tools .pg-tools-label{font-size:var(--fs-label)}
+        /* ── 手机端整块头部压缩（用户要求：只占上边一半，卡片早点出现）──
+           实测 390 档第一张卡片从 527px 提到 ~325px（844 视口的 39%）。
+           页头那份重复的标题+介绍已由 Layout 的 .tool-inner-gallery 去掉。 */
+        .pg-page{padding:10px 0 70px}
+        .pg-shell{width:calc(100% - 28px)}
+        .pg-head-row{margin-top:10px;padding-bottom:14px;gap:12px}
+        .pg-head h1{font-size:32px}
+        /* 介绍段的大头是 1.95 的行距（桌面好看、手机上白吃掉 ~50px），收到 1.55，
+           字号仍是站点手机阶梯的正文档 14px，一个字没删 */
+        .pg-head p{margin-top:8px;font-size:var(--fs-label);line-height:1.55}
+        .pg-stats{gap:6px}
+        .pg-stat{height:30px;padding:0 11px}
+        .pg-tools{margin-top:12px;gap:8px}
+        .pg-sort{gap:2px;padding:3px}
+        /* 「默认排序 / 点赞排序」原来在手机上折成两行（按钮被挤窄），
+           不换行 + 收内边距后整条工具栏回到一行；44px 触控下限由 index.css 兜 */
+        .pg-sort button{padding:0 10px;white-space:nowrap}
+        .pg-grid{margin-top:12px;gap:14px}
       }
     `}</style>
 
