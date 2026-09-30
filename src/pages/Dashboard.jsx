@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, Code2, Dices, Film, Github,
+  Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, ClipboardCheck, Code2, Dices, Film, Github,
   Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Receipt, Shapes,
   NotebookPen, BookOpen, Route, Sparkles, Star,
 } from 'lucide-react';
@@ -21,6 +21,7 @@ const FEATURED = [
   { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
   { to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
   { to: '/draw', no: '10', name: '随机抽人', desc: '课堂点名、活动抽奖的随机抽取小工具：导入花名册自动识别姓名，或手动添加删除，设置人数一键抽取，抽中可自动排除，全程在本机完成。', cta: '开始抽取', Icon: Dices, art: 'draw' },
+  { to: '/diet-checkin', no: '11', name: '饮食打卡', desc: '体重、三餐执行、饮水/步数/力量训练与血压的每日打卡：7 日均线看趋势、连续全勤与 14 天热力图，登录后手机电脑多端同步。', cta: '今日打卡', Icon: ClipboardCheck, art: 'draw' },
 ];
 
 
