@@ -312,7 +312,7 @@ function getToolUrl(path) {
 }
 
 /* 各卡片演示的节点数——驱动自动轮播 */
-const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, aichronicle: 4, draw: 6, mathmodel: MATHMODEL_STEPS.length };
+const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, aichronicle: 4, draw: 6, mathmodel: MATHMODEL_STEPS.length, diet: 3 };
 
 /* 抓取 GLM-5.3 生成页并只取其中的 SVG 画面注入卡片：
    天空渐变随 SVG 铺满、无深色留边，也不标注具体模型 */
@@ -362,6 +362,24 @@ function FeatureArt({ type }) {
     <div className="vr-preview-top"><Code2 size={15} /><span>Prompt.md</span><b>模板</b></div>
     <div className="vr-prompt-copy"><span>请基于以下资料</span><mark>{['提炼结构', '给出行动项', '保留语气'][active]}</mark><span>输出一份清晰的回答。</span></div>
     <div className="vr-preview-actions">{['结构', '行动', '语气'].map((item, index) => <button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)} key={item}>{item}</button>)}</div>
+  </div>;
+
+  if (type === 'diet') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-diet-art">
+    <div className="vr-preview-top" style={{ borderBottom: '1px solid #F0EDE4' }}><ClipboardCheck size={15} /><span>今日打卡</span><b>{active + 1}/3</b></div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 2px 2px' }}>
+      {[['早餐', '按方案', 'ok'], ['午餐', '按方案', 'ok'], ['晚餐', active === 2 ? '待打卡' : '按方案', 'ok']].map(([meal, state, st], i) => (
+        <div key={meal} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8,
+          border: `1px solid ${active === i ? '#A48830' : '#EDEAE0'}`, background: active === i ? '#FBF7EA' : '#FCFCFA' }}>
+          <i style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: 6,
+            fontSize: 11, fontWeight: 700, color: '#fff', background: active === i ? '#A48830' : '#C9C4B4' }}>{active === i ? '✓' : '·'}</i>
+          <span style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>{meal}</span>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#A48830', fontWeight: 600 }}>{state}</span>
+        </div>
+      ))}
+    </div>
+    <div style={{ marginTop: 8, fontSize: 11.5, color: '#8A8574', display: 'flex', gap: 10 }}>
+      <span>体重 <b style={{ color: '#333' }}>93.2kg</b></span><span>7 日均线 ↓0.6</span><span>连续 <b style={{ color: '#A48830' }}>12</b> 天</span>
+    </div>
   </div>;
 
   if (type === 'agents') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-agents-art">
