@@ -2,35 +2,25 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import {
   Scale, Droplets, Footprints, Dumbbell, ShieldCheck, CheckCircle2, MinusCircle,
   XCircle, ClipboardCheck, TrendingUp, CalendarDays, Info, Flame, Target, Wheat,
-  Sunrise, CloudSun, Moon, ChevronRight, Check,
+  Sunrise, CloudSun, Moon, Check, UserRound, Trophy, MessageSquareHeart, LogIn,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
 
 /* ================================================================
-   饮食打卡 · Diet Check-in（移动端优先 · 独立视觉）
-   体重 + 三餐三态 + 习惯 + 血压 的每日打卡；7 日均线趋势；方案速查
-   数据经共享层 electronAPI（登录后 Bmob 云端按账号隔离，未登录走本地）
+   饮食打卡 · Diet Check-in v3
+   多用户登录隔离（AuthGate + Bmob per-uid）· 每日打卡
+   坚持：连续全勤 / 累计打卡 / 最高纪录 / 里程碑徽章
+   反馈：今日寄语 + 打卡评语 + 本周数据反馈引擎（规则版）
    ================================================================ */
 
 const LS_KEY = 'diet-checkin';
 
-/* ---------- 主题（独立于主站黑金风，健康绿系） ---------- */
+/* ---------- 主题（独立健康绿系） ---------- */
 const C = {
-  page: '#EFF3EE',
-  card: '#FFFFFF',
-  ink: '#16221C',
-  text2: '#71837A',
-  text4: '#A9B5AD',
-  line: '#E1E8E2',
-  green: '#0E8A5F',
-  greenDeep: '#0B6B4A',
-  greenSoft: '#E2F2EA',
-  gold: '#A48830',
-  goldSoft: '#F7F2E4',
-  warn: '#B45309',
-  warnSoft: '#FCF1E2',
-  bad: '#D64545',
-  badSoft: '#FBEAEA',
+  page: '#EFF3EE', card: '#FFFFFF', ink: '#16221C', text2: '#71837A', text4: '#A9B5AD',
+  line: '#E1E8E2', green: '#0E8A5F', greenDeep: '#0B6B4A', greenSoft: '#E2F2EA',
+  gold: '#A48830', goldSoft: '#F7F2E4', warn: '#B45309', warnSoft: '#FCF1E2',
+  bad: '#D64545', badSoft: '#FBEAEA',
 };
 
 const MEALS = [
@@ -45,12 +35,47 @@ const MEAL_STATES = [
 ];
 
 const PROFILE = {
-  startWeight: 94,
-  goal1: 87,
-  goal2: 80,
-  startDate: '2026-09-27',
-  kcal: 2000,
+  startWeight: 94, goal1: 87, goal2: 80,
+  startDate: '2026-09-27', kcal: 2000, maxStreak: 0,
 };
+
+/* ---------- 鼓励语池 ---------- */
+const ENC = {
+  full: [
+    '今天 5/5 全勾——身体已经记下这一分。',
+    '全勤日 +1。反弹最怕的，就是这种日子。',
+    '稳稳的一天。不需要奇迹，需要重复。',
+    '执行到位。趋势线会替你说话。',
+  ],
+  partial: [
+    '做了 3/5 也比 0/5 强，明天补齐就好。',
+    '今天的坚持不会白费，趋势会记住。',
+    '节奏没乱，你就还在牌桌上。',
+    '完成度一般？没关系——回正从下一顿开始。',
+  ],
+  junk: [
+    '破戒一顿不至于报废一周，下一顿回正就行。',
+    '你把它记下来了，这本身就是控制。别自责。',
+    '聚餐不是失败，是方案的一部分。继续。',
+  ],
+  first: [
+    '第一次打卡——从今天起，数据替你做主。',
+  ],
+  milestones: {
+    3: '三天，习惯开始生根了。',
+    7: '连续一周全勤——你已经跑赢了大多数开始过的人。',
+    14: '两周。身体开始适应新的节奏，胃口在变安静。',
+    21: '三周，习惯成型期。现在的克制越来越省力了。',
+    30: '一个月。这已经不是坚持，是生活方式。',
+    60: '两个月。你跟一个月前的自己已经不是同一个人。',
+    100: '一百天。这件事你做到了大多数人做不到的程度。',
+  },
+};
+
+const pickFrom = (arr, seed) => arr[Math.abs(seed) % arr.length];
+const seedOf = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return h; };
+
+const MILESTONES = [3, 7, 14, 21, 30, 60, 100];
 
 const todayStr = () => {
   const d = new Date();
@@ -74,19 +99,20 @@ const dayComplete = (d) => !!d && ['breakfast', 'lunch', 'dinner'].every((k) => 
   && d.water && d.steps && !d.junk;
 
 export default function DietCheckin() {
-  const { guard } = useAuth();
+  const { guard, authed, username, openLogin } = useAuth();
   const [tab, setTab] = useState('today');
   const [days, setDays] = useState({});
+  const [profile, setProfile] = useState({ ...PROFILE });
   const [loaded, setLoaded] = useState(false);
   const [date, setDate] = useState(todayStr());
   const [toast, setToast] = useState(null);
   const toastRef = useRef(null);
-  const dataRef = useRef({ version: 1, profile: PROFILE, days: {} });
+  const dataRef = useRef({ version: 1, profile: { ...PROFILE }, days: {} });
 
   const showToast = useCallback((msg) => {
     setToast(msg);
     clearTimeout(toastRef.current);
-    toastRef.current = setTimeout(() => setToast(null), 1600);
+    toastRef.current = setTimeout(() => setToast(null), 1700);
   }, []);
 
   useEffect(() => {
@@ -100,23 +126,25 @@ export default function DietCheckin() {
           };
           dataRef.current = next;
           setDays(next.days);
+          setProfile(next.profile);
         }
       })
       .catch((e) => console.warn('load diet-checkin failed:', e))
       .finally(() => setLoaded(true));
   }, []);
 
-  const persist = useCallback((nextDays) => {
+  const persistAll = useCallback((nextDays, nextProfile) => {
     if (!guard()) return;
-    const next = { ...dataRef.current, days: nextDays };
+    const next = { ...dataRef.current, days: nextDays, profile: nextProfile };
     dataRef.current = next;
     setDays(nextDays);
+    setProfile(nextProfile);
     window.electronAPI?.saveData(LS_KEY, next);
   }, [guard]);
 
   const patchDay = (patch) => {
-    const cur = days[date] || emptyDay();
-    persist({ ...days, [date]: { ...cur, ...patch } });
+    const d = days[date] || emptyDay();
+    persistAll({ ...days, [date]: { ...d, ...patch } }, profile);
   };
 
   const cur = days[date] || emptyDay();
@@ -125,6 +153,7 @@ export default function DietCheckin() {
     () => Object.keys(days).filter((d) => days[d] && (days[d].weight || dayScore(days[d]) > 0)).sort(),
     [days],
   );
+  const totalDays = sortedDates.length;
   const weights = useMemo(
     () => sortedDates.filter((d) => days[d].weight).map((d) => ({ date: d, v: parseFloat(days[d].weight) })),
     [days, sortedDates],
@@ -148,6 +177,13 @@ export default function DietCheckin() {
     return n;
   }, [days]);
 
+  /* 最高纪录持久化 */
+  useEffect(() => {
+    if (streak > (profile.maxStreak || 0)) {
+      persistAll(days, { ...profile, maxStreak: streak });
+    }
+  }, [streak]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const rate7 = useMemo(() => {
     const out = [];
     const d = new Date();
@@ -159,15 +195,77 @@ export default function DietCheckin() {
     return out.length ? Math.round(out.reduce((a, b) => a + b, 0) / out.length) : 0;
   }, [days]);
 
+  /* 本周反馈引擎（规则版） */
+  const weeklyFeedback = useMemo(() => {
+    const out = [];
+    const week = [];
+    const d = new Date();
+    for (let i = 0; i < 7; i++) {
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      week.push(days[k] || null);
+      d.setDate(d.getDate() - 1);
+    }
+    const recDays = week.filter(Boolean).length;
+    const waterMiss = week.filter((x) => x && !x.water).length;
+    const stepsMiss = week.filter((x) => x && !x.steps).length;
+    const trainingCount = week.filter((x) => x && x.training).length;
+    const junkDays = week.filter((x) => x && x.junk).length;
+    const wRecs = week.filter((x) => x && x.weight).map((x) => parseFloat(x.weight));
+
+    if (recDays === 0) {
+      out.push('这周还没有打卡记录——不追求完美，先连续记 3 天。');
+      return out;
+    }
+    if (rate7 >= 90) out.push(`本周完成率 ${rate7}%——执行非常稳，这正是维持期需要的系统。`);
+    else if (rate7 >= 70) out.push(`本周完成率 ${rate7}%，整体在线，保持这个手感。`);
+    else out.push(`本周完成率 ${rate7}%，节奏掉了不要紧——先恢复「每天称重 + 三餐」两个锚点。`);
+
+    if (waterMiss >= 3) out.push(`有 ${waterMiss} 天喝水没到 2000ml——把水杯放桌上，饭后一杯最省力。`);
+    if (stepsMiss >= 3) out.push(`有 ${stepsMiss} 天步数不足——晚餐后散步 15 分钟是最容易补的缺口。`);
+    if (trainingCount < 2) out.push(`本周力量训练 ${trainingCount} 次（目标 4 次）——保肌肉靠它，给训练一个固定时间。`);
+    if (junkDays >= 2) out.push(`破戒 ${junkDays} 天——别自责，把触发场景写进备注，下次提前绕开。`);
+
+    if (wRecs.length >= 2) {
+      const delta = Math.round((wRecs[wRecs.length - 1] - wRecs[0]) * 10) / 10;
+      if (delta <= -0.5) out.push(`本周体重 ↓${Math.abs(delta)}kg——速率健康，继续。`);
+      else if (delta >= 1) out.push(`本周体重 ↑${delta}kg——先查记录误差与钠（汤/蘸料），再谈脂肪。`);
+      else if (recDays >= 5) out.push('体重基本持平——看 7 日均线；若连续 2-4 周不动，再按平台期流程处理。');
+    }
+    return out.slice(0, 5);
+  }, [days, rate7]);
+
+  /* 今日寄语 */
+  const motto = useMemo(() => {
+    const t = days[todayStr()];
+    const seed = seedOf(todayStr());
+    if (!t || dayScore(t) === 0) {
+      const h = new Date().getHours();
+      if (h < 11) return '晨起称重了吗？今天的第一步是站上体重秤。';
+      if (h < 15) return '午餐按「一荤两素一拳饭」走，下午就不容易崩。';
+      return '还没打卡？把今天记下来，哪怕只记体重。';
+    }
+    if (dayComplete(t)) {
+      if (streak > 0 && MILESTONES.includes(streak)) return ENC.milestones[streak];
+      return pickFrom(ENC.full, seed);
+    }
+    if (t.junk) return pickFrom(ENC.junk, seed);
+    return pickFrom(ENC.partial, seed);
+  }, [days, streak]);
+
+  const savedToast = useMemo(() => {
+    const t = days[todayStr()];
+    if (t && dayComplete(t)) return pickFrom(ENC.full, seedOf('save' + todayStr()));
+    if (t && t.junk) return '已保存。破戒一顿不致命，下一顿回正。';
+    return '已保存';
+  }, [days]);
+
   const doneCount = ['breakfast', 'lunch', 'dinner'].filter((k) => cur[k] === 'ok').length
     + (cur.water ? 1 : 0) + (cur.steps ? 1 : 0);
 
-  /* ---------------- 渲染 ---------------- */
   return (
     <div className="dck-app">
       <style>{DCK_CSS}</style>
 
-      {/* 顶栏 */}
       <header className="dck-head">
         <div className="dck-head-top">
           <div>
@@ -187,9 +285,20 @@ export default function DietCheckin() {
           <div className="dck-hero-meta">
             {latestW && <span>较起始 <b>−{(PROFILE.startWeight - latestW).toFixed(1)}</b> kg</span>}
             {ma7 && <span>7 日均线 <b>{ma7}</b></span>}
-            {latestW != null && <span>距 87kg 还差 <b>{Math.max(0, (latestW - PROFILE.goal1)).toFixed(1)}</b> kg</span>}
+            <span>累计打卡 <b>{totalDays}</b> 天</span>
+            <span>最高连续 <b>{profile.maxStreak || 0}</b> 天</span>
           </div>
         </div>
+        <div className="dck-motto"><MessageSquareHeart size={13} /> {motto}</div>
+
+        {/* 账号状态：多用户数据隔离入口 */}
+        {authed ? (
+          <div className="dck-acct on"><UserRound size={13} /> 账号 {username} · 数据云端同步中，多端可用</div>
+        ) : (
+          <button type="button" className="dck-acct login" onClick={() => openLogin()}>
+            <LogIn size={13} /> 未登录——数据只在本机。点击登录，多设备同步 + 不怕丢
+          </button>
+        )}
       </header>
 
       <main className="dck-main">
@@ -197,7 +306,15 @@ export default function DietCheckin() {
           <div className="dck-empty">加载中…</div>
         ) : tab === 'today' ? (
           <>
-            {/* 日期切换 */}
+            {/* 里程碑横幅 */}
+            {streak > 0 && MILESTONES.includes(streak) && (
+              <div className="dck-milestone">
+                <Trophy size={16} />
+                <span>{ENC.milestones[streak]}</span>
+                <b>🏆 连续 {streak} 天达成</b>
+              </div>
+            )}
+
             <div className="dck-card dck-date-row">
               <CalendarDays size={16} style={{ color: C.green, flexShrink: 0 }} />
               <input type="date" value={date} max={todayStr()} onChange={(e) => setDate(e.target.value || todayStr())} />
@@ -206,15 +323,13 @@ export default function DietCheckin() {
               )}
             </div>
 
-            {/* 体重 + 血压 */}
             <section className="dck-card">
               <h3 className="dck-sec"><Scale size={15} /> 晨起体重</h3>
               <div className="dck-weight-row">
                 <input
                   className="dck-weight-input"
                   type="number" step="0.1" inputMode="decimal" placeholder={latestW ? String(latestW) : '93.2'}
-                  value={cur.weight}
-                  onChange={(e) => patchDay({ weight: e.target.value })}
+                  value={cur.weight} onChange={(e) => patchDay({ weight: e.target.value })}
                 />
                 <span className="dck-weight-unit">kg</span>
                 {lastW != null && (
@@ -237,15 +352,11 @@ export default function DietCheckin() {
               </div>
             </section>
 
-            {/* 三餐 */}
             <section className="dck-card">
               <h3 className="dck-sec"><Wheat size={15} /> 三餐执行</h3>
               {MEALS.map(({ key, label, Icon }) => (
                 <div key={key} className="dck-meal">
-                  <div className="dck-meal-head">
-                    <Icon size={15} strokeWidth={2} style={{ color: C.text2 }} />
-                    <span>{label}</span>
-                  </div>
+                  <div className="dck-meal-head"><Icon size={15} strokeWidth={2} style={{ color: C.text2 }} /><span>{label}</span></div>
                   <div className="dck-seg">
                     {MEAL_STATES.map(({ key: sk, label: sl, color, Icon: SIcon }) => (
                       <button
@@ -262,7 +373,6 @@ export default function DietCheckin() {
               ))}
             </section>
 
-            {/* 习惯 */}
             <section className="dck-card">
               <h3 className="dck-sec"><Droplets size={15} /> 习惯四件套</h3>
               <div className="dck-habits">
@@ -283,9 +393,11 @@ export default function DietCheckin() {
                 <div className="dck-donebar-track"><i style={{ width: `${(doneCount / 5) * 100}%` }} /></div>
                 <span>今日 {doneCount}/5</span>
               </div>
+              <div className="dck-praise">
+                <MessageSquareHeart size={13} /> {doneCount >= 5 ? pickFrom(ENC.full, seedOf('done' + date)) : doneCount >= 3 ? pickFrom(ENC.partial, seedOf('done' + date)) : '点满五格，今天就赢了。'}
+              </div>
             </section>
 
-            {/* 备注 */}
             <section className="dck-card">
               <h3 className="dck-sec"><Info size={15} /> 备注</h3>
               <textarea
@@ -295,7 +407,7 @@ export default function DietCheckin() {
               />
             </section>
 
-            <div className="dck-foot">点击即保存 · 登录后多端同步</div>
+            <div className="dck-foot">{authed ? '点击即保存 · 云端多端同步' : '点击即保存（本地）· 登录后自动上传'}</div>
           </>
         ) : tab === 'trend' ? (
           <>
@@ -303,8 +415,31 @@ export default function DietCheckin() {
               <div><b>{latestW ?? '—'}</b><span>最新体重 kg</span></div>
               <div><b>{latestW ? Math.max(0, Math.round((PROFILE.startWeight - latestW) * 10) / 10) : '—'}</b><span>已减 kg</span></div>
               <div><b>{streak}</b><span>连续全勤 天</span></div>
-              <div><b>{rate7}%</b><span>7 日完成率</span></div>
+              <div><b>{totalDays}</b><span>累计打卡 天</span></div>
             </div>
+
+            {/* 里程碑徽章墙 */}
+            <section className="dck-card">
+              <h3 className="dck-sec"><Trophy size={15} /> 坚持里程碑</h3>
+              <div className="dck-badges">
+                {MILESTONES.map((m) => {
+                  const got = streak >= m || (profile.maxStreak || 0) >= m;
+                  return (
+                    <div key={m} className={`dck-badge${got ? ' got' : ''}`}>
+                      <b>{m}</b><span>{got ? '已达成' : '天'}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="dck-badges-note">最高连续纪录 {profile.maxStreak || 0} 天 · 已累计打卡 {totalDays} 天</div>
+            </section>
+
+            <section className="dck-card">
+              <h3 className="dck-sec"><MessageSquareHeart size={15} /> 本周反馈</h3>
+              <div className="dck-fb">
+                {weeklyFeedback.map((m, i) => <p key={i}>{m}</p>)}
+              </div>
+            </section>
 
             <section className="dck-card">
               <h3 className="dck-sec"><TrendingUp size={15} /> 体重趋势（近 30 次）</h3>
@@ -401,7 +536,6 @@ export default function DietCheckin() {
         )}
       </main>
 
-      {/* 底部 Tab Bar（移动端 App 式） */}
       <nav className="dck-tabbar">
         {[
           { key: 'today', label: '今日', Icon: ClipboardCheck },
@@ -415,7 +549,7 @@ export default function DietCheckin() {
         ))}
       </nav>
 
-      {toast && <div className="dck-toast"><Check size={14} strokeWidth={3} /> {toast}</div>}
+      {toast && <div className="dck-toast"><Check size={14} strokeWidth={3} /> {savedToast}</div>}
     </div>
   );
 }
@@ -459,24 +593,31 @@ function TrendChart({ weights, goal1 }) {
   );
 }
 
-/* ---------------- 样式（移动端优先 · 独立绿系） ---------------- */
+/* ---------------- 样式 ---------------- */
 const DCK_CSS = `
 .dck-app { min-height: 100vh; background: ${C.page}; color: ${C.ink};
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased; }
-.dck-head { background: ${C.greenDeep}; color: #fff; padding: max(18px, env(safe-area-inset-top)) 18px 18px; }
+.dck-head { background: ${C.greenDeep}; color: #fff; padding: max(18px, env(safe-area-inset-top)) 18px 16px; }
 .dck-head-top { display: flex; align-items: center; justify-content: space-between; }
 .dck-brand { font-size: 17px; font-weight: 700; letter-spacing: .02em; }
 .dck-head-sub { font-size: 12px; opacity: .72; margin-top: 2px; }
 .dck-streak { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700;
   padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.14); color: #CFE9DC; }
 .dck-streak.on { background: ${C.goldSoft}; color: ${C.gold}; }
-.dck-hero { margin-top: 14px; }
+.dck-hero { margin-top: 12px; }
 .dck-hero-w { display: flex; align-items: baseline; gap: 6px; }
-.dck-hero-num { font-size: 46px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.dck-hero-num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
 .dck-hero-unit { font-size: 15px; opacity: .7; }
-.dck-hero-meta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; opacity: .78; }
+.dck-hero-meta { display: flex; gap: 10px 12px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; opacity: .78; }
 .dck-hero-meta b { font-weight: 700; }
+.dck-motto { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; font-size: 12.5px;
+  line-height: 1.6; color: #DFF0E7; background: rgba(255,255,255,.09); border-radius: 10px; padding: 9px 11px; }
+.dck-motto svg { flex-shrink: 0; margin-top: 1px; }
+.dck-acct { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px;
+  padding: 8px 11px; border-radius: 10px; width: 100%; }
+.dck-acct.on { background: rgba(255,255,255,.1); color: #CFE9DC; }
+.dck-acct.login { background: ${C.goldSoft}; color: ${C.gold}; border: none; font-weight: 600; cursor: pointer; }
 .dck-main { max-width: 560px; margin: 0 auto; padding: 14px 14px calc(96px + env(safe-area-inset-bottom)); }
 .dck-card { background: ${C.card}; border-radius: 16px; padding: 16px; margin-bottom: 12px;
   box-shadow: 0 1px 2px rgba(20,32,26,.04); }
@@ -514,7 +655,6 @@ const DCK_CSS = `
   color: ${C.text2}; cursor: pointer; text-align: left; transition: transform .06s; }
 .dck-habit:active { transform: scale(.98); }
 .dck-habit.on { border-color: ${C.green}66; background: ${C.greenSoft}; color: ${C.greenDeep}; }
-.dck-habit.clean.on { border-color: ${C.green}66; }
 .dck-habit b { font-size: 14px; color: ${C.ink}; }
 .dck-habit.on b { color: ${C.greenDeep}; }
 .dck-habit span { font-size: 11.5px; }
@@ -522,6 +662,9 @@ const DCK_CSS = `
 .dck-donebar-track { flex: 1; height: 8px; border-radius: 999px; background: ${C.line}; overflow: hidden; }
 .dck-donebar-track i { display: block; height: 100%; background: ${C.green}; border-radius: 999px; transition: width .3s; }
 .dck-donebar span { font-size: 12px; font-weight: 700; color: ${C.greenDeep}; }
+.dck-praise { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px; font-size: 12.5px;
+  line-height: 1.55; color: ${C.greenDeep}; background: ${C.greenSoft}; border-radius: 10px; padding: 9px 11px; }
+.dck-praise svg { flex-shrink: 0; margin-top: 2px; }
 .dck-note { width: 100%; border: 1px solid ${C.line}; border-radius: 12px; padding: 10px 12px;
   font-size: 14px; color: ${C.ink}; resize: none; font-family: inherit; background: #fff; }
 .dck-foot { text-align: center; font-size: 11px; color: ${C.text4}; padding: 6px 0 10px; }
@@ -529,6 +672,20 @@ const DCK_CSS = `
 .dck-stat4 > div { background: ${C.card}; border-radius: 14px; padding: 13px 14px; }
 .dck-stat4 b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
 .dck-stat4 span { font-size: 11.5px; color: ${C.text2}; }
+.dck-milestone { display: flex; align-items: center; gap: 9px; background: ${C.goldSoft};
+  border: 1.5px solid ${C.gold}55; color: ${C.gold}; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
+  font-size: 13px; font-weight: 600; }
+.dck-milestone svg { flex-shrink: 0; }
+.dck-milestone b { margin-left: auto; white-space: nowrap; }
+.dck-badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.dck-badge { border: 1.5px solid ${C.line}; border-radius: 12px; text-align: center; padding: 10px 4px; color: ${C.text4}; }
+.dck-badge b { display: block; font-size: 17px; font-weight: 800; }
+.dck-badge span { font-size: 10.5px; }
+.dck-badge.got { border-color: ${C.gold}66; background: ${C.goldSoft}; color: ${C.gold}; }
+.dck-badges-note { margin-top: 10px; font-size: 12px; color: ${C.text2}; text-align: center; }
+.dck-fb p { margin: 0 0 9px; font-size: 13.5px; line-height: 1.65; color: ${C.ink};
+  padding-left: 12px; border-left: 3px solid ${C.greenSoft}; }
+.dck-fb p:last-child { margin-bottom: 0; }
 .dck-legend { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: ${C.text2}; }
 .dck-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
 .dck-heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
@@ -553,18 +710,20 @@ const DCK_CSS = `
 .dck-card.warn .dck-sec svg { color: ${C.bad}; }
 .dck-empty { font-size: 13.5px; color: ${C.text2}; text-align: center; padding: 24px 0; }
 .dck-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-  display: flex; justify-content: center; gap: 0; background: rgba(255,255,255,.96);
+  display: flex; justify-content: center; background: rgba(255,255,255,.96);
   backdrop-filter: blur(10px); border-top: 1px solid ${C.line};
   padding-bottom: env(safe-area-inset-bottom); }
 .dck-tabbtn { flex: 1; max-width: 160px; display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 9px 0 7px; background: none; border: none; color: ${C.text4}; font-size: 10.5px; font-weight: 600; cursor: pointer; }
 .dck-tabbtn.on { color: ${C.greenDeep}; }
+.dck-toast { position: fixed; bottom: calc(78px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 6px; background: ${C.ink}; color: #fff; font-size: 12.5px;
+  padding: 9px 16px; border-radius: 999px; box-shadow: 0 6px 24px rgba(0,0,0,.18); z-index: 60; max-width: 88vw; }
 @media (min-width: 640px) {
-  .dck-head { border-radius: 0; }
   .dck-tabbar { left: 50%; right: auto; transform: translateX(-50%); width: 380px;
     bottom: 20px; border: 1px solid ${C.line}; border-radius: 999px; padding: 4px;
     box-shadow: 0 8px 30px rgba(20,32,26,.14); padding-bottom: 4px; }
-  .dck-tabbtn { flex: 1; border-radius: 999px; padding: 8px 0 6px; }
+  .dck-tabbtn { border-radius: 999px; }
   .dck-tabbtn.on { background: ${C.greenSoft}; }
   .dck-main { padding-top: 20px; padding-bottom: 140px; }
 }
