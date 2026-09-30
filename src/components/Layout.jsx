@@ -2,6 +2,7 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   ArrowLeft, Lightbulb, BookOpen, Baby, CalendarRange, Bot, Dices, GitBranch, Sparkles, Film,
+  ClipboardCheck,
 } from 'lucide-react';
 
 /**
@@ -42,6 +43,9 @@ const TOOL_META = {
   },
   '/draw': {
     label: '随机抽人', sub: '导入花名册或手动添加姓名，设置人数一键随机抽取', Icon: Dices, accent: '#A48830',
+  },
+  '/diet-checkin': {
+    label: '饮食打卡', sub: '体重、三餐与习惯的每日打卡，7 日均线看趋势', Icon: ClipboardCheck, accent: '#A48830',
   },
 };
 
