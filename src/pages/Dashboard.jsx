@@ -563,36 +563,36 @@ function FeatureArt({ type }) {
     const svc = [["zcode", "1.17 B", "#4D6BFE", "Z", 100], ["claude-code", "696.8 M", "#7C93FF", "C", 59], ["codex", "643.1 M", "#5DC3F0", "X", 55]];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-tm-art">
       <style>{`
-        .vr-home .vr-tm-art{padding:0;color:#9BA3B4;border-color:rgba(255,255,255,.09);background:linear-gradient(180deg,#1C2231 0%,#151A27 100%);box-shadow:0 22px 48px -24px rgba(8,10,16,.8),0 0 0 1px rgba(255,255,255,.02) inset}
-        .vr-home .vr-tm-art .vr-preview-top{padding:10px 12px;border-bottom-color:rgba(255,255,255,.08);color:#C6CBD2;font-size:10.5px}
-        .vr-home .vr-tm-art .vr-preview-top b{color:#8FA8FF}
+        .vr-home .vr-tm-art{padding:0;color:#5A6579;border-color:rgba(47,95,224,.16);background:linear-gradient(168deg,#F3F6FE 0%,#FDFDFF 52%,#FFF9EE 100%);box-shadow:0 20px 44px -26px rgba(28,44,92,.35),inset 0 1px 0 #fff}
+        .vr-home .vr-tm-art .vr-preview-top{padding:10px 12px;border-bottom-color:rgba(47,95,224,.12);color:#48576E;font-size:10.5px}
+        .vr-home .vr-tm-art .vr-preview-top b{color:#2F5FE0}
         .vr-home .vr-tm-art .vr-tm-kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-        .vr-home .vr-tm-art .vr-tm-kpi>div{padding:9px 12px;border-right:1px solid rgba(255,255,255,.07);transition:background .35s ease}
+        .vr-home .vr-tm-art .vr-tm-kpi>div{padding:9px 12px;border-right:1px solid rgba(47,95,224,.1);transition:background .35s ease}
         .vr-home .vr-tm-art .vr-tm-kpi>div:last-child{border-right:0}
-        .vr-home .vr-tm-art .vr-tm-kpi>div.is-on{background:rgba(77,107,254,.12)}
-        .vr-home .vr-tm-art .vr-tm-kpi span{display:block;color:#7E858F;font-size:9.5px;font-weight:600;letter-spacing:.05em}
-        .vr-home .vr-tm-art .vr-tm-kpi b{display:block;margin-top:4px;color:#EDEEF0;font:600 15px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;font-variant-numeric:tabular-nums}
-        .vr-home .vr-tm-art .vr-tm-kpi>div.is-on b{color:#9DB2FF}
-        .vr-home .vr-tm-art .vr-tm-kpi em{display:block;margin-top:3px;color:#6E747E;font:9.5px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;font-style:normal}
-        .vr-home .vr-tm-art .vr-tm-chart{display:flex;flex:1 1 auto;min-height:48px;align-items:flex-end;gap:5px;margin:0 12px;padding:11px 0 0;border-top:1px solid rgba(255,255,255,.07)}
+        .vr-home .vr-tm-art .vr-tm-kpi>div.is-on{background:rgba(47,95,224,.07)}
+        .vr-home .vr-tm-art .vr-tm-kpi span{display:block;color:#8792A6;font-size:9.5px;font-weight:600;letter-spacing:.05em}
+        .vr-home .vr-tm-art .vr-tm-kpi b{display:block;margin-top:4px;color:#16202E;font:600 15px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;font-variant-numeric:tabular-nums}
+        .vr-home .vr-tm-art .vr-tm-kpi>div.is-on b{color:#2F5FE0}
+        .vr-home .vr-tm-art .vr-tm-kpi em{display:block;margin-top:3px;color:#93A0B4;font:9.5px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,"Microsoft YaHei UI",monospace;font-style:normal}
+        .vr-home .vr-tm-art .vr-tm-chart{display:flex;flex:1 1 auto;min-height:48px;align-items:flex-end;gap:5px;margin:0 12px;padding:11px 0 0;border-top:1px solid rgba(47,95,224,.1)}
         .vr-home .vr-tm-art .vr-tm-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:1px;height:100%}
-        .vr-home .vr-tm-art .vr-tm-col i{display:block;border-radius:1.5px;opacity:.28;transition:opacity .35s ease}
+        .vr-home .vr-tm-art .vr-tm-col i{display:block;border-radius:1.5px;opacity:.24;transition:opacity .35s ease}
         .vr-home .vr-tm-art .vr-tm-col i:nth-child(1){background:#3A57E8}
         .vr-home .vr-tm-art .vr-tm-col i:nth-child(2){background:#5B7CFF}
         .vr-home .vr-tm-art .vr-tm-col i:nth-child(3){background:#7C93FF}
         .vr-home .vr-tm-art .vr-tm-col i:nth-child(4){background:#5DC3F0}
-        .vr-home .vr-tm-art .vr-tm-col.is-on i{opacity:.96}
+        .vr-home .vr-tm-art .vr-tm-col.is-on i{opacity:.92}
         .vr-home .vr-tm-art .vr-tm-list{display:flex;flex:0 0 auto;flex-direction:column;gap:0;padding:8px 12px 12px;overflow:hidden}
-        .vr-home .vr-tm-art .vr-tm-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(255,255,255,.055);transition:padding-left .3s cubic-bezier(.16,1,.3,1)}
+        .vr-home .vr-tm-art .vr-tm-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(47,95,224,.08);transition:padding-left .3s cubic-bezier(.16,1,.3,1)}
         .vr-home .vr-tm-art .vr-tm-row:first-child{border-top:0}
         .vr-home .vr-tm-art .vr-tm-row.is-on{padding-left:4px}
-        .vr-home .vr-tm-art .vr-tm-logo{display:grid;place-items:center;width:18px;height:18px;flex:0 0 auto;border-radius:5px;color:#0B0C0E;font:700 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace}
-        .vr-home .vr-tm-art .vr-tm-name{flex:1 1 auto;min-width:0;overflow:hidden;color:#B9BEC6;font:11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-overflow:ellipsis;white-space:nowrap;transition:color .3s ease}
-        .vr-home .vr-tm-art .vr-tm-row.is-on .vr-tm-name{color:#EDEEF0}
-        .vr-home .vr-tm-art .vr-tm-val{flex:0 0 auto;color:#EDEEF0;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
-        .vr-home .vr-tm-art .vr-tm-track{width:46px;height:3px;flex:0 0 auto;border-radius:2px;background:rgba(255,255,255,.09);overflow:hidden}
-        .vr-home .vr-tm-art .vr-tm-track i{display:block;height:100%;border-radius:2px;background:#454B54;transition:background .35s ease}
-        .vr-home .vr-tm-art .vr-tm-row.is-on .vr-tm-track i{background:#6C86FF}
+        .vr-home .vr-tm-art .vr-tm-logo{display:grid;place-items:center;width:18px;height:18px;flex:0 0 auto;border-radius:5px;color:#fff;font:700 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;box-shadow:0 1px 3px rgba(28,44,92,.25)}
+        .vr-home .vr-tm-art .vr-tm-name{flex:1 1 auto;min-width:0;overflow:hidden;color:#5A6579;font:11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-overflow:ellipsis;white-space:nowrap;transition:color .3s ease}
+        .vr-home .vr-tm-art .vr-tm-row.is-on .vr-tm-name{color:#16202E}
+        .vr-home .vr-tm-art .vr-tm-val{flex:0 0 auto;color:#16202E;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}
+        .vr-home .vr-tm-art .vr-tm-track{width:46px;height:3px;flex:0 0 auto;border-radius:2px;background:rgba(47,95,224,.14);overflow:hidden}
+        .vr-home .vr-tm-art .vr-tm-track i{display:block;height:100%;border-radius:2px;background:#B9C4DE;transition:background .35s ease}
+        .vr-home .vr-tm-art .vr-tm-row.is-on .vr-tm-track i{background:#3A57E8}
         @media (prefers-reduced-motion:reduce){.vr-home .vr-tm-art .vr-tm-col i{animation:none}}
       `}</style>
       <div className="vr-preview-top"><Activity size={15} /><span>token-monitor &#183; 用量总览</span><b>81 个已知源</b></div>
