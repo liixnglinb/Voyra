@@ -17,6 +17,7 @@ const UIKit = lazy(() => import('./pages/UIKit'))
 const AgentSkills = lazy(() => import('./pages/AgentSkills'))
 const PelicanGallery = lazy(() => import('./pages/PelicanGallery'))
 const DrawPicker = lazy(() => import('./pages/DrawPicker'))
+const DietCheckin = lazy(() => import('./pages/DietCheckin'))
 
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
                 <Route path="/uikit" element={<Suspense fallback={<RouteLoader variant="uikit" />}><UIKit /></Suspense>} />
                 <Route path="/pelican-gallery" element={<Suspense fallback={<RouteLoader variant="pelican" />}><PelicanGallery /></Suspense>} />
                 <Route path="/draw" element={<Suspense fallback={<RouteLoader variant="draw" />}><DrawPicker /></Suspense>} />
+                <Route path="/diet-checkin" element={<AuthGate><Suspense fallback={<RouteLoader variant="baby" />}><DietCheckin /></Suspense></AuthGate>} />
 
                 {/* 未知路径重定向回首页，避免空白页 */}
                 <Route path="*" element={<Navigate to="/" replace />} />
