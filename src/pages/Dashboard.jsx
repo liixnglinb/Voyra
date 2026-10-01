@@ -1193,9 +1193,9 @@ export default function Dashboard() {
     <style>{`
       /* ============ 统一卡片尺寸：所有产品/应用卡片与首个卡片等高 ============ */
       @media (min-width: 721px) {
-        .vr-home .vr-roll-wrap { min-height: var(--vr-card-h, 344px); height: auto; }
-        .vr-home .vr-feature { min-height: var(--vr-card-h, 344px); height: auto; }
-        .vr-home .vr-art { align-self: stretch; height: auto; min-height: 0; overflow: visible; }
+        .vr-home .vr-roll-wrap { height: auto; min-height: 0; }
+        .vr-home .vr-feature { height: auto; }
+        .vr-home .vr-art { align-self: center; overflow: visible; }
         .vr-home .vr-feature .vr-art { margin: 18px 24px; }
       }
       @media (max-width: 720px) and (pointer: coarse) {
