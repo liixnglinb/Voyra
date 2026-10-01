@@ -1369,6 +1369,18 @@ export default function Dashboard() {
         .vr-home .vr-toolbox-drive i b::after, .vr-home .vr-bt-art .vr-bt-bar i::after { animation: none; opacity: 0; }
       }
     `}</style>
+        <style>{`
+      .vr-rail-dashes{position:fixed;left:28px;top:calc(42% - 80px);z-index:30;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+      .vr-rail-dashes i{display:block;height:2px;border-radius:1px;background:rgba(27,27,27,.13);transition:background .3s,width .3s}
+      .vr-rail-dashes i:nth-child(1){width:8px}
+      .vr-rail-dashes i:nth-child(2){width:14px}
+      .vr-rail-dashes i:nth-child(3){width:20px}
+      .vr-rail-dashes i:nth-child(4){width:12px}
+      .vr-rail-dashes i:nth-child(5){width:24px}
+      .vr-rail-dashes i:nth-child(6){width:18px}
+      .vr-rail-dashes i:nth-child(7){width:10px}
+    `}</style>
+    <div className="vr-rail-dashes" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
     <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
