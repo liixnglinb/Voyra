@@ -1270,20 +1270,26 @@ export default function Dashboard() {
         /* 十阶段面板 10 行 × 30px 是这张卡最大的一笔竖向支出，行高收到 24 */
         .vr-home .vr-mathmodel-art .vr-model-step { min-height: 24px; }
       }
-      /* 演示面板内容压缩到统一高度内，保证任何一张卡片都不裁切 */
+      /* 以下间距/布局微调对桌面和手机都适用 */
       .vr-home .vr-toolbox-drive { margin-top: 12px; }
-      .vr-home .vr-toolbox-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
-      .vr-home .vr-toolbox-cats button { padding: 8px 10px; }
-      .vr-home .vr-toolbox-cats button span { font-size: 11px; }
-      .vr-home .vr-toolbox-cats button em { color: #a48830; font-size: 11px; font-weight: 700; }
       .vr-home .vr-toolbox-foot { margin-top: auto; }
       .vr-home .vr-checkin-stats { margin-top: 12px; }
-      .vr-home .vr-checkin-stats span { padding: 8px; font-size: 9px; }
-      .vr-home .vr-checkin-stats span b { font-size: 18px; }
       .vr-home .vr-checkin-list { gap: 5px; margin-top: 12px; }
-      .vr-home .vr-checkin-list button { padding: 9px 11px; }
-      .vr-home .vr-checkin-list button span { font-size: 11.5px; }
       .vr-home .vr-tm-list { margin-top: auto; }
+
+      /* ── 以下仅在手机端生效：缩小字号/内边距，压缩面板高度 ──
+         之前这些规则写在 media query 外面，导致桌面端也被压缩了。
+         现在包进手机断点，桌面恢复基础样式（更大的字号和内边距）。 */
+      @media (max-width: 720px) and (pointer: coarse) {
+        .vr-home .vr-toolbox-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
+        .vr-home .vr-toolbox-cats button { padding: 8px 10px; }
+        .vr-home .vr-toolbox-cats button span { font-size: 11px; }
+        .vr-home .vr-toolbox-cats button em { color: #a48830; font-size: 11px; font-weight: 700; }
+        .vr-home .vr-checkin-stats span { padding: 8px; font-size: 9px; }
+        .vr-home .vr-checkin-stats span b { font-size: 18px; }
+        .vr-home .vr-checkin-list button { padding: 9px 11px; }
+        .vr-home .vr-checkin-list button span { font-size: 11.5px; }
+      }
 
       /* ============ 动态效果：网格缓慢流动 + 卡片轮播进度条 ============ */
       .vr-home { animation: vr-grid-drift 26s linear infinite; }
