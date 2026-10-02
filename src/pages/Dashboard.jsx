@@ -32,7 +32,7 @@ const APPS = [
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
   { to: '/token-monitor/', external: false, no: '05', name: 'Token Monitor', desc: '本机 AI 编程工具用量看板：一条命令扫出 9 类 Agent 的 Token 消耗与成本，缓存命中率、模型单价、对话级明细全都看得见。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'tokenmonitor' },
   { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把大学课程变成记得住的练习：选课程或导入讲义，AI 生成「先回忆再看答案」的知识卡片，FSRS 算法安排每次复习的最佳时机。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
-  { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机优先的 AI 工作观测台：自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'aichronicle' },
+  { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机优先的 AI 工作观测台：自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, iconSrc: '/ai-chronicle/icon.png', art: 'aichronicle' },
 ];
 
 /* 手机端专用短文案：应用卡在 390 宽下描述会占 4 行（实测 73~90 字），
@@ -654,7 +654,7 @@ function FeatureArt({ type }) {
         .vr-home .vr-ac-art .vr-ac-foot b{color:#0F9D8A;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
         @media (prefers-reduced-motion:reduce){.vr-home .vr-ac-art *{transition:none!important}}
       `}</style>
-      <div className="vr-preview-top"><Activity size={15} /><span>AI 轨迹 &#183; 今日工作</span><b>v0.5.2</b></div>
+      <div className="vr-preview-top"><img className="vr-app-icon" src="/ai-chronicle/icon.png" alt="" width="18" height="18" /><span>AI 轨迹 &#183; 今日工作</span><b>v0.6.1</b></div>
       <div className="vr-ac-kpis">
         <div className={`vr-ac-kpi${active % 3 === 0 ? ' is-on' : ''}`}><span>有效会话</span><b>20</b></div>
         <div className={`vr-ac-kpi${active % 3 === 1 ? ' is-on' : ''}`}><span>今日任务</span><b>3 / 7</b></div>
@@ -696,7 +696,7 @@ function ProductPanel({ openProduct }) {
     return (
       <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}${feature.art === 'api' ? ' is-api' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProduct(feature.to, feature.external); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{feature.name}</h2></div><p>{isMobile && APP_SHORT[feature.to] ? APP_SHORT[feature.to] : feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to, feature.external)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
+        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title">{feature.iconSrc ? <img className="vr-app-icon vr-feature-icon" src={feature.iconSrc} alt="" width="24" height="24" /> : <Icon size={24} strokeWidth={1.7} />}<h2>{feature.name}</h2></div><p>{isMobile && APP_SHORT[feature.to] ? APP_SHORT[feature.to] : feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to, feature.external)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
         <FeatureArt type={feature.art} />
       </article></div>
     );
@@ -735,7 +735,7 @@ function AppsPanel({ openProduct }) {
     return (
       <div className="vr-roll-wrap vr-panel-stagger" data-roll key={app.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openApp} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openApp(event); } }} role="link" tabIndex={0}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title"><Icon size={24} strokeWidth={1.7} /><h2>{app.name}</h2></div><p>{isMobile && APP_SHORT[app.to] ? APP_SHORT[app.to] : app.desc}</p></div>
+        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title">{app.iconSrc ? <img className="vr-app-icon vr-feature-icon" src={app.iconSrc} alt="" width="24" height="24" /> : <Icon size={24} strokeWidth={1.7} />}<h2>{app.name}</h2></div><p>{isMobile && APP_SHORT[app.to] ? APP_SHORT[app.to] : app.desc}</p></div>
         <FeatureArt type={app.art} />
       </article></div>
     );
@@ -1230,6 +1230,9 @@ export default function Dashboard() {
            实际行高 28px（min-height 是下限，行内容自己有高度）。 */
         .vr-home .vr-feature-copy { padding: 16px 18px 14px; }
         .vr-home .vr-feature-title h2 { font-size: 25px; }
+        .vr-home .vr-app-icon { display: block; flex: 0 0 auto; object-fit: contain; border-radius: 6px; }
+        .vr-home .vr-feature-icon { width: 24px; height: 24px; border: 1px solid rgba(15,157,138,.2); box-shadow: 0 4px 10px -6px rgba(16,48,40,.35); }
+        .vr-home .vr-ac-art .vr-app-icon { width: 18px; height: 18px; border-radius: 5px; }
         .vr-home .vr-feature-copy p { max-width: none; margin: 10px 0 12px; font-size: 13.5px; line-height: 1.55; }
         .vr-home .vr-art { min-height: 0; margin: 12px; }
         /* 描边序号原本钉在卡片左下角，copy 只能留 40px 下边距躲它；
