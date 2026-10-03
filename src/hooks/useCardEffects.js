@@ -39,10 +39,14 @@ export default function useCardEffects(rootRef, dependency) {
         const py = Math.min(1, Math.max(0, (y - rect.top) / rect.height));
         target.style.setProperty('--spot-x', `${px * 100}%`);
         target.style.setProperty('--spot-y', `${py * 100}%`);
-        target.style.setProperty('--tilt-x', `${(0.5 - py) * 4}deg`);
-        target.style.setProperty('--tilt-y', `${(px - 0.5) * 4}deg`);
-        target.style.setProperty('--art-x', `${(px - 0.5) * 8}px`);
-        target.style.setProperty('--art-y', `${(py - 0.5) * 6}px`);
+        /* 3D 物理倾斜：鼠标在右 → rotateY 正（卡片向右转）；
+           鼠标在下 → rotateX 正（卡片低头）。角度极限 ±6deg。 */
+        const maxTilt = 6;
+        target.style.setProperty('--tilt-x', `${(py - 0.5) * maxTilt * 2}deg`);
+        target.style.setProperty('--tilt-y', `${(px - 0.5) * maxTilt * 2}deg`);
+        /* 艺术图反向微移，增强透视厚度感（极限 ±12px） */
+        target.style.setProperty('--art-x', `${(0.5 - px) * 12}px`);
+        target.style.setProperty('--art-y', `${(0.5 - py) * 12}px`);
         target.setAttribute('data-pointer-active', '');
       });
     };

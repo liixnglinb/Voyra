@@ -364,6 +364,36 @@ function FeatureArt({ type }) {
     return () => { clearInterval(timer); observer.disconnect(); motion.removeEventListener('change', update); document.removeEventListener('visibilitychange', update); };
   }, [type]);
 
+  /* API 卡指标数字滚动：进入视口时从 0 递增到目标值（尊重 prefers-reduced-motion）。
+     不用 @property+counter：Firefox/Safari 对自定义属性动画插值支持不一，JS rAF 更稳。 */
+  useEffect(() => {
+    if (type !== 'api') return undefined;
+    const art = artRef.current;
+    if (!art) return undefined;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const targets = [...art.querySelectorAll('.is-rolling')];
+    if (!targets.length) return undefined;
+    const showFinal = () => targets.forEach((b) => { b.textContent = b.dataset.target; });
+    if (reduce.matches) { showFinal(); return undefined; }
+    let raf = 0;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || raf) return;
+      const duration = 1600;
+      const t0 = performance.now();
+      const tick = (t) => {
+        const p = Math.min(1, (t - t0) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        targets.forEach((b) => { b.textContent = Math.round(eased * Number(b.dataset.target)); });
+        if (p < 1) raf = requestAnimationFrame(tick);
+        else raf = 0;
+      };
+      raf = requestAnimationFrame(tick);
+    }, { threshold: 0.2 });
+    targets.forEach((b) => { b.dataset.target ||= b.textContent; b.textContent = '0'; });
+    observer.observe(art);
+    return () => { if (raf) cancelAnimationFrame(raf); observer.disconnect(); };
+  }, [type]);
+
   if (type === 'api') {
     const protocols = ['Chat', 'Responses', 'Claude', 'Gemini'];
     const endpoints = ['/v1/chat/completions', '/v1/responses', '/v1/messages', '/v1beta/models'];
@@ -371,7 +401,7 @@ function FeatureArt({ type }) {
       <div className="vr-api-tabs" role="tablist" aria-label="API 协议预览">{protocols.map((protocol, index) => <button type="button" key={protocol} role="tab" aria-selected={active === index} className={active === index ? 'is-active' : ''} onClick={() => setActive(index)}>{protocol}</button>)}</div>
       <div className="vr-api-route"><span><i /> 200 OK</span><b>POST</b><code>{endpoints[active]}</code></div>
       <div className="vr-api-pane"><div><span>REQUEST</span><code>{active === 2 ? 'model: claude-sonnet-4' : active === 3 ? 'model: gemini-2.5-pro' : 'model: gpt-5'}</code></div><div><span>RESPONSE</span><code>stream: connected</code></div></div>
-      <div className="vr-api-metrics"><span><b>142</b> MS</span><span><b>27</b> TOKENS</span><span><b>$0.002</b> COST</span></div>
+      <div className="vr-api-metrics"><span><b className="is-rolling" data-target="142">142</b> MS</span><span><b className="is-rolling" data-target="27">27</b> TOKENS</span><span><b>$0.002</b> COST</span></div>
     </div>;
   }
 
@@ -711,14 +741,14 @@ const clampStyle = {
   overflow: 'hidden',
 };
 
-function ShowcaseCard({ item, index, application = false, themeClass = '' }) {
+function ShowcaseCard({ item, index, application = false, themeClass = '', lead = false }) {
   const isMobile = useIsMobileHome();
   const Icon = item.Icon;
   const href = application ? item.to : item.external ? item.to : getToolUrl(item.to);
   const mode = application
     ? (item.to === '/billtrace/' ? 'ANDROID' : item.to === '/checkin/' ? 'WINDOWS / PWA' : 'WINDOWS')
     : item.external ? 'EXTERNAL' : 'ONLINE';
-  return <div className={`vr-roll-wrap vr-unified-wrap ${themeClass}`} data-roll>
+  return <div className={`vr-roll-wrap vr-unified-wrap ${themeClass}${lead ? ' is-lead' : ''}`} data-roll>
     <div className="vr-card-entry" data-reveal style={{ '--reveal-delay': `${Math.min(index * .04, .2)}s` }}>
       <a className="vr-feature vr-card vr-unified-card" data-voyra-card href={href} target={isMobile ? undefined : '_blank'} rel="noopener noreferrer" aria-label={`${item.name}：${item.cta}${isMobile ? '' : '（新标签页）'}`}>
         <span className="vr-spotlight" aria-hidden="true" />
@@ -738,7 +768,10 @@ function ShowcaseCard({ item, index, application = false, themeClass = '' }) {
 }
 
 function ProductPanel() {
-  return <div className="vr-product-list">{FEATURED.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} themeClass={item.theme} />)}</div>;
+  return <div className="vr-section-wrapper">
+    <div className="vr-section-watermark" aria-hidden="true">FEATURED</div>
+    <div className="vr-product-list">{FEATURED.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} lead={index === 0} themeClass={item.theme} />)}</div>
+  </div>;
 }
 
 /* 数学建模 Skill 转成统一卡片数据，复用 ShowcaseCard 渲染，融入栅格 */
@@ -754,7 +787,7 @@ const MATHMODEL_ITEM = {
 
 function SkillsPanel() {
   return <div className="vr-product-list vr-panel-stagger" data-roll>
-    <ShowcaseCard item={MATHMODEL_ITEM} index={0} themeClass="theme-github" />
+    <ShowcaseCard item={MATHMODEL_ITEM} index={0} lead themeClass="theme-github" />
   </div>;
 }
 
