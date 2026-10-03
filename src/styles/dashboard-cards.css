@@ -47,8 +47,8 @@ body{
   .vr-home header.vr-top {width:min(100% - 64px,858px);padding-inline:clamp(24px,4vw,56px);}
   /* 五个导航项收紧：不再 space-between 摊满整行，改为左对齐 + 固定 40px 间距
      （参考站实测间距 ~38）。左沿仍在「产品」上，与卡片左沿对齐不受影响。 */
-  .vr-home .vr-tab-zone .vr-tabs {justify-content:flex-start;gap:40px;padding:16px 56px 6px;align-items:center;}
-  .vr-home .vr-tab-zone .vr-tab {font-size:36px;line-height:1.25;letter-spacing:-.035em;}
+  .vr-home .vr-tab-zone .vr-tabs {justify-content:space-between;gap:24px;padding:16px 56px 6px;align-items:center;}
+  .vr-home .vr-tab-zone .vr-tab {font-size:42px;line-height:1.2;letter-spacing:-.035em;}
   /* 卡片与导航文字同宽同沿：各断点的列表内缩在自己的 media 里给
      （桌面 56 / 平板 20 / 手机 16），桌面档同样 56，卡片左右沿才与
      「产品」「交流」对齐。 */
