@@ -326,7 +326,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 <!-- 顶部公告 -->
 <div class="announce">
   <span class="dot"></span>
-  <span><b>v3.8.0</b> 全新版本上线！自动更新重做（测速选源）+ 图标与界面重做 + 一批失效功能修复</span>
+  <span><b>v3.8.1</b> 新版上线：统一界面与状态反馈，连接失败可恢复，手机六个导航入口完整可用。</span>
   <button class="ann-x" id="ann-x" type="button" hidden aria-label="关闭公告">×</button>
 </div>
 
@@ -367,7 +367,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         立即下载
         <span class="psep"></span>
-        <span class="ptag">v3.8.0 · Windows</span>
+        <span class="ptag">v3.8.1 · Windows</span>
       </a>
       <a href="intro.html" class="pill secondary">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -412,7 +412,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           国内镜像下载
           <span class="psep"></span>
-          <span class="ptag">v3.8.0 · 107MB</span>
+          <span class="ptag">v3.8.1 · 107MB</span>
         </a>
       </span>
       <a href="https://github.com/liixnglinb/Superstar-checkin/releases/latest/download/SuperstarCheckin-Setup.exe" class="pill secondary">
@@ -495,7 +495,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
   <img src="favicon.png?v=13" alt="">
   <div class="mb-t">
     <div class="mt">学习通自动签到助手</div>
-    <div class="ms">v3.8.0 · 107MB · Windows 10/11</div>
+    <div class="ms">v3.8.1 · 107MB · Windows 10/11</div>
   </div>
   <a class="go" id="mbar-go" href="https://github.com/liixnglinb/Superstar-checkin/releases/latest/download/SuperstarCheckin-Setup.exe">下载</a>
 </div>
@@ -582,7 +582,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
     var asset = (rel.assets || []).filter(function(a){ return /\.exe$/i.test(a.name || ''); })[0];
     var mb = asset && asset.size ? Math.round(asset.size / 1048576) : 0;
     walk(function(node){
-      // 更新日志（#changelog）里的版本号是历史版本号，不能被本脚本覆盖（否则 v3.6.0→v3.8.0 全被改写）
+      // 更新日志（#changelog）里的版本号是历史版本号，不能被本脚本覆盖（否则 v3.6.0→v3.8.1 全被改写）
       if (node.parentElement && node.parentElement.closest && node.parentElement.closest('#changelog')) return;
       var t = node.nodeValue;
       if (!t) return;
@@ -601,7 +601,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 <script>
 /* 手机端两件事：① 吸底下载条 ② 公告条可关闭。
    不碰下载链路：href 与主按钮同为 releases/latest/download/…（版本无关的稳定直链），
-   条里的「v3.8.0 · 107MB」写成与页面正文同样的模式，由本页已有的动态脚本一次解析后
+   条里的「v3.8.1 · 107MB」写成与页面正文同样的模式，由本页已有的动态脚本一次解析后
    顺带改写（它对 document.body 全量文本做替换），这里不新起任何请求。 */
 (function(){
   var bar = document.getElementById('mbar');

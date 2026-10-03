@@ -16,7 +16,7 @@ export default function useCardEffects(rootRef, dependency) {
     const reset = (card) => {
       if (!card) return;
       card.removeAttribute('data-pointer-active');
-      ['--tilt-x', '--tilt-y', '--spot-x', '--spot-y'].forEach((key) => card.style.removeProperty(key));
+      ['--tilt-x', '--tilt-y', '--spot-x', '--spot-y', '--art-x', '--art-y'].forEach((key) => card.style.removeProperty(key));
     };
     const onMove = (event) => {
       if (motion.matches || !pointer.matches || event.pointerType === 'touch') return;
@@ -41,6 +41,8 @@ export default function useCardEffects(rootRef, dependency) {
         target.style.setProperty('--spot-y', `${py * 100}%`);
         target.style.setProperty('--tilt-x', `${(0.5 - py) * 4}deg`);
         target.style.setProperty('--tilt-y', `${(px - 0.5) * 4}deg`);
+        target.style.setProperty('--art-x', `${(px - 0.5) * 8}px`);
+        target.style.setProperty('--art-y', `${(py - 0.5) * 6}px`);
         target.setAttribute('data-pointer-active', '');
       });
     };

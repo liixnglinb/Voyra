@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 
 // Explicit roots only; never scans the user's desktop or credentials.
 const workspace = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -29,6 +30,12 @@ for (const [id,root] of roots) {
     files.push(['voyra-ui.js',await readFile(resolve(workspace,'design-system/adapters/jacquard-ui.js'),'utf8')]);
   }
   if (id === 'checkin') files[0][1] += 'export const VOYRA_UI_JS = ' + JSON.stringify(dialogs) + '\n';
+  if (id === 'chronicle') {
+    // The product's release gate requires Prettier formatting, including generated CSS.
+    const prettier = createRequire(resolve(root,'package.json'))('prettier');
+    const settings = await prettier.resolveConfig(resolve(destination,'voyra-ui.css'));
+    for (const file of files) file[1] = await prettier.format(file[1], { ...settings, parser:'css' });
+  }
   for (const [name,content] of files) {
     const path=resolve(destination,name);
     if (write) { await mkdir(destination,{recursive:true}); await writeFile(path,content,'utf8'); }

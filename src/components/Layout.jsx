@@ -13,7 +13,7 @@ import {
  *    无渐变 / 无光晕 / 无玻璃 / 无弹跳动画
  */
 
-const FULLSCREEN_PATHS = ['/', '/articles', '/mindmap', '/agents', '/uikit', '/design-system', '/diet-checkin'];
+const FULLSCREEN_PATHS = ['/', '/articles', '/mindmap', '/agents', '/uikit', '/diet-checkin'];
 const WIDE_WORKSPACE_PATHS = ['/mindmap', '/timetable', '/learning', '/baby-care', '/skills', '/pelican-gallery'];
 
 const TOOL_META = {

@@ -62,3 +62,10 @@ test('Shared motion obeys reduced-motion and forced-colors settings',async()=>{
     if(!name.includes('foundation'))assert.ok(text.includes('forced-colors'));
   }
 });
+test('Public website no longer exposes the software UI specification',async()=>{
+  const app=await readFile(new URL('../src/App.jsx',import.meta.url),'utf8');
+  const home=await readFile(new URL('../src/pages/Dashboard.jsx',import.meta.url),'utf8');
+  assert.ok(!app.includes('path="/design-system"'));
+  assert.ok(!home.includes('DesignSystemEntry'));
+  assert.ok(!home.includes('软件 UI 规范'));
+});

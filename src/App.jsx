@@ -14,7 +14,6 @@ const BabyCare = lazy(() => import('./pages/BabyCare'))
 const ScheduleHub = lazy(() => import('./pages/ScheduleHub'))
 const SkillHub = lazy(() => import('./pages/SkillHub'))
 const UIKit = lazy(() => import('./pages/UIKit'))
-const DesignSystem = lazy(() => import('./pages/DesignSystem'))
 const AgentSkills = lazy(() => import('./pages/AgentSkills'))
 const PelicanGallery = lazy(() => import('./pages/PelicanGallery'))
 const DrawPicker = lazy(() => import('./pages/DrawPicker'))
@@ -57,7 +56,6 @@ function App() {
                 <Route path="/agents" element={<Suspense fallback={<RouteLoader variant="agents" />}><AgentSkills /></Suspense>} />
                 <Route path="/skills" element={<Suspense fallback={<RouteLoader variant="skills" />}><SkillHub /></Suspense>} />
                 <Route path="/uikit" element={<Suspense fallback={<RouteLoader variant="uikit" />}><UIKit /></Suspense>} />
-                <Route path="/design-system" element={<DesignSystem />} />
                 <Route path="/pelican-gallery" element={<Suspense fallback={<RouteLoader variant="pelican" />}><PelicanGallery /></Suspense>} />
                 <Route path="/draw" element={<Suspense fallback={<RouteLoader variant="draw" />}><DrawPicker /></Suspense>} />
                 <Route path="/diet-checkin" element={<AuthGate><Suspense fallback={<RouteLoader variant="baby" />}><DietCheckin /></Suspense></AuthGate>} />
