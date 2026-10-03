@@ -7,20 +7,22 @@ import {
 import { useAuth } from '../components/AuthGate';
 
 /* ================================================================
-   饮食打卡 · Diet Check-in v3
+   饮食打卡 · Diet Check-in v4 —— 「鼠尾草矿物翡翠」视觉体系
+   设计基调：浅色环境光 + 白卡微拟物；杜绝大面积深色块与高饱和红绿灯。
    多用户登录隔离（AuthGate + Bmob per-uid）· 每日打卡
-   坚持：连续全勤 / 累计打卡 / 最高纪录 / 里程碑徽章
-   反馈：今日寄语 + 打卡评语 + 本周数据反馈引擎（规则版）
+   坚持：连续全勤 / 累计打卡 / 最高纪录 / 里程碑徽章（香槟金）
+   反馈：今日寄语 + 打卡评语 + 本周数据反馈引擎（节奏/注意/趋势三联）
+   逻辑层（存储结构 / 连续计算 / 反馈规则）与 v3 完全一致，仅升级表现层。
    ================================================================ */
 
 const LS_KEY = 'diet-checkin';
 
-/* ---------- 主题（独立健康绿系） ---------- */
+/* ---------- 主题：鼠尾草矿物翡翠（Sage & Mineral Emerald） ---------- */
 const C = {
-  page: '#EFF3EE', card: '#FFFFFF', ink: '#16221C', text2: '#71837A', text4: '#A9B5AD',
-  line: '#E1E8E2', green: '#0E8A5F', greenDeep: '#0B6B4A', greenSoft: '#E2F2EA',
-  gold: '#A48830', goldSoft: '#F7F2E4', warn: '#B45309', warnSoft: '#FCF1E2',
-  bad: '#D64545', badSoft: '#FBEAEA',
+  page: '#F5F8F6', card: '#FFFFFF', ink: '#132219', text2: '#546B5F', text4: '#8FA498',
+  line: 'rgba(16,78,48,.10)', green: '#0D8253', greenDeep: '#08613C', greenSoft: '#E8F6EE',
+  gold: '#B8860B', goldSoft: '#FEF9EC', warn: '#C27803', warnSoft: '#FFFBEB',
+  bad: '#D94841', badSoft: '#FEF2F2', dot: '#7FAF9B',
 };
 
 const MEALS = [
@@ -28,10 +30,11 @@ const MEALS = [
   { key: 'lunch', label: '午餐', Icon: CloudSun },
   { key: 'dinner', label: '晚餐', Icon: Moon },
 ];
+/* 文案去审判化：「破戒」→「放纵餐」（数据键 junk 保持不变，兼容旧记录） */
 const MEAL_STATES = [
-  { key: 'ok', label: '按方案', color: C.green, Icon: CheckCircle2 },
-  { key: 'off', label: '小偏差', color: C.warn, Icon: MinusCircle },
-  { key: 'bad', label: '破戒', color: C.bad, Icon: XCircle },
+  { key: 'ok', label: '按方案', Icon: CheckCircle2 },
+  { key: 'off', label: '小偏差', Icon: MinusCircle },
+  { key: 'bad', label: '放纵餐', Icon: XCircle },
 ];
 
 const PROFILE = {
@@ -39,7 +42,7 @@ const PROFILE = {
   startDate: '2026-09-27', kcal: 2000, maxStreak: 0,
 };
 
-/* ---------- 鼓励语池 ---------- */
+/* ---------- 鼓励语池（文案与「放纵餐」口径一致） ---------- */
 const ENC = {
   full: [
     '今天 5/5 全勾——身体已经记下这一分。',
@@ -54,7 +57,7 @@ const ENC = {
     '完成度一般？没关系——回正从下一顿开始。',
   ],
   junk: [
-    '破戒一顿不至于报废一周，下一顿回正就行。',
+    '放纵餐一顿不至于报废一周，下一顿回正就行。',
     '你把它记下来了，这本身就是控制。别自责。',
     '聚餐不是失败，是方案的一部分。继续。',
   ],
@@ -97,6 +100,34 @@ const dayScore = (d) => {
 };
 const dayComplete = (d) => !!d && ['breakfast', 'lunch', 'dinner'].every((k) => d[k] === 'ok')
   && d.water && d.steps && !d.junk;
+
+/* 数字滚动：从上一值轻柔过渡到新值（尊重 prefers-reduced-motion） */
+function useCountUp(target, dur = 450) {
+  const [val, setVal] = useState(target);
+  const fromRef = useRef(target);
+  useEffect(() => {
+    const reduce = typeof window !== 'undefined' && window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const from = fromRef.current;
+    if (reduce || from === target || from == null || target == null) {
+      fromRef.current = target;
+      setVal(target);
+      return undefined;
+    }
+    let raf;
+    const t0 = performance.now();
+    const tick = (t) => {
+      const p = Math.min(1, (t - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setVal(Math.round((from + (target - from) * eased) * 10) / 10);
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else { fromRef.current = target; setVal(target); }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, dur]);
+  return val;
+}
 
 export default function DietCheckin() {
   const { guard, authed, username, openLogin } = useAuth();
@@ -195,9 +226,11 @@ export default function DietCheckin() {
     return out.length ? Math.round(out.reduce((a, b) => a + b, 0) / out.length) : 0;
   }, [days]);
 
-  /* 本周反馈引擎（规则版） */
+  /* 本周反馈引擎（规则版）——输出三联结构：节奏 pace / 注意 watch / 趋势 trend */
   const weeklyFeedback = useMemo(() => {
-    const out = [];
+    const pace = [];
+    const watch = [];
+    const trend = [];
     const week = [];
     const d = new Date();
     for (let i = 0; i < 7; i++) {
@@ -213,25 +246,29 @@ export default function DietCheckin() {
     const wRecs = week.filter((x) => x && x.weight).map((x) => parseFloat(x.weight));
 
     if (recDays === 0) {
-      out.push('这周还没有打卡记录——不追求完美，先连续记 3 天。');
-      return out;
+      pace.push('这周还没有打卡记录——不追求完美，先连续记 3 天。');
+      return [...pace, ...watch, ...trend].map((text) => ({ k: 'pace', text }));
     }
-    if (rate7 >= 90) out.push(`本周完成率 ${rate7}%——执行非常稳，这正是维持期需要的系统。`);
-    else if (rate7 >= 70) out.push(`本周完成率 ${rate7}%，整体在线，保持这个手感。`);
-    else out.push(`本周完成率 ${rate7}%，节奏掉了不要紧——先恢复「每天称重 + 三餐」两个锚点。`);
+    if (rate7 >= 90) pace.push(`执行极稳：完成率 ${rate7}%，这正是维持期需要的系统。`);
+    else if (rate7 >= 70) pace.push(`节奏在线：完成率 ${rate7}%，保持这个手感。`);
+    else pace.push(`完成率 ${rate7}%——先恢复「每天称重 + 三餐」两个锚点，节奏会自己回来。`);
 
-    if (waterMiss >= 3) out.push(`有 ${waterMiss} 天喝水没到 2000ml——把水杯放桌上，饭后一杯最省力。`);
-    if (stepsMiss >= 3) out.push(`有 ${stepsMiss} 天步数不足——晚餐后散步 15 分钟是最容易补的缺口。`);
-    if (trainingCount < 2) out.push(`本周力量训练 ${trainingCount} 次（目标 4 次）——保肌肉靠它，给训练一个固定时间。`);
-    if (junkDays >= 2) out.push(`破戒 ${junkDays} 天——别自责，把触发场景写进备注，下次提前绕开。`);
+    if (waterMiss >= 3) watch.push(`喝水未达标 ${waterMiss} 天——把水杯放桌上，饭后一杯最省力。`);
+    if (stepsMiss >= 3) watch.push(`步数不足 ${stepsMiss} 天——晚餐后散步 15 分钟是最容易补的缺口。`);
+    if (trainingCount < 2) watch.push(`力量训练 ${trainingCount} 次（目标 4 次）——保肌肉靠它，给训练一个固定时间。`);
+    if (junkDays >= 2) watch.push(`放纵餐 ${junkDays} 天——别自责，把触发场景写进备注，下次提前绕开。`);
 
     if (wRecs.length >= 2) {
       const delta = Math.round((wRecs[wRecs.length - 1] - wRecs[0]) * 10) / 10;
-      if (delta <= -0.5) out.push(`本周体重 ↓${Math.abs(delta)}kg——速率健康，继续。`);
-      else if (delta >= 1) out.push(`本周体重 ↑${delta}kg——先查记录误差与钠（汤/蘸料），再谈脂肪。`);
-      else if (recDays >= 5) out.push('体重基本持平——看 7 日均线；若连续 2-4 周不动，再按平台期流程处理。');
+      if (delta <= -0.5) trend.push(`周均线下行 ${Math.abs(delta)}kg——速率健康，继续。`);
+      else if (delta >= 1) trend.push(`周均线上行 ${delta}kg——先查记录误差与钠（汤/蘸料），再谈脂肪。`);
+      else if (recDays >= 5) trend.push('体重基本持平——看 7 日均线；若连续 2-4 周不动，再按平台期流程处理。');
     }
-    return out.slice(0, 5);
+    return [
+      ...pace.map((text) => ({ k: 'pace', text })),
+      ...watch.map((text) => ({ k: 'watch', text })),
+      ...trend.map((text) => ({ k: 'trend', text })),
+    ].slice(0, 5);
   }, [days, rate7]);
 
   /* 今日寄语 */
@@ -255,83 +292,103 @@ export default function DietCheckin() {
   const savedToast = useMemo(() => {
     const t = days[todayStr()];
     if (t && dayComplete(t)) return pickFrom(ENC.full, seedOf('save' + todayStr()));
-    if (t && t.junk) return '已保存。破戒一顿不致命，下一顿回正。';
+    if (t && t.junk) return '已保存。放纵餐一顿不致命，下一顿回正。';
     return '已保存';
   }, [days]);
 
   const doneCount = ['breakfast', 'lunch', 'dinner'].filter((k) => cur[k] === 'ok').length
     + (cur.water ? 1 : 0) + (cur.steps ? 1 : 0);
+  const allDone = doneCount >= 5;
+
+  const heroW = useCountUp(latestW);
+  /* 距目标还差多少：正值 = 还差这么多（当前体重大于目标），≤0 = 已达成 */
+  const goalGap = latestW != null ? Math.round((latestW - PROFILE.goal1) * 10) / 10 : null;
 
   return (
     <div className="dck-app">
       <style>{DCK_CSS}</style>
 
+      {/* 顶栏：浅色环境光，不再是深绿大色块 */}
       <header className="dck-head">
         <div className="dck-head-top">
           <div>
             <div className="dck-brand">饮食打卡</div>
-            <div className="dck-head-sub">{date === todayStr() ? '今天' : date} · 快速档 {PROFILE.kcal} kcal</div>
+            <div className="dck-head-sub">快速档 {PROFILE.kcal} kcal · {PROFILE.startDate.slice(0, 4)} 年至今</div>
           </div>
-          <div className={`dck-streak${streak > 0 ? ' on' : ''}`}>
-            <Flame size={14} strokeWidth={2.4} />
-            <span>{streak} 天</span>
+          <div className="dck-head-right">
+            {authed && <span className="dck-sync"><i />{username} · 云同步</span>}
+            <div className={`dck-streak${streak > 0 ? ' on' : ''}`}>
+              <Flame size={14} strokeWidth={2.4} />
+              <span>{streak} 天</span>
+            </div>
           </div>
         </div>
         <div className="dck-hero">
           <div className="dck-hero-w">
-            <span className="dck-hero-num">{latestW ?? '—'}</span>
+            <span className="dck-hero-num">{heroW != null ? heroW : '—'}</span>
             <span className="dck-hero-unit">kg</span>
           </div>
-          <div className="dck-hero-meta">
-            {latestW && <span>较起始 <b>−{(PROFILE.startWeight - latestW).toFixed(1)}</b> kg</span>}
-            {ma7 && <span>7 日均线 <b>{ma7}</b></span>}
-            <span>累计打卡 <b>{totalDays}</b> 天</span>
-            <span>最高连续 <b>{profile.maxStreak || 0}</b> 天</span>
+          <div className="dck-hero-pills">
+            <span className="dck-pill-stat">
+              {goalGap != null
+                ? (goalGap > 0 ? <>距目标还差 <b>{goalGap.toFixed(1)}</b> kg</> : <>已达成阶段目标</>)
+                : '记录体重解锁目标'}
+            </span>
+            <span className="dck-pill-stat alt">
+              {ma7 != null ? <>7 日均线 <b>{ma7}</b> kg</> : '7 日均线 待数据'}
+            </span>
           </div>
         </div>
-        <div className="dck-motto"><MessageSquareHeart size={13} /> {motto}</div>
-
-        {/* 账号状态：多用户数据隔离入口 */}
-        {authed ? (
-          <div className="dck-acct on"><UserRound size={13} /> 账号 {username} · 数据云端同步中，多端可用</div>
-        ) : (
-          <button type="button" className="dck-acct login" onClick={() => openLogin()}>
-            <LogIn size={13} /> 未登录——数据只在本机。点击登录，多设备同步 + 不怕丢
-          </button>
-        )}
+        <div className="dck-motto">
+          <span className="dck-motto-ico"><MessageSquareHeart size={13} /></span>
+          <span>{motto}</span>
+        </div>
       </header>
 
       <main className="dck-main">
         {!loaded ? (
-          <div className="dck-empty">加载中…</div>
-        ) : tab === 'today' ? (
+          /* 骨架屏：杜绝首屏闪烁 */
+          <div className="dck-skel-wrap" aria-busy="true">
+            <div className="dck-skel" style={{ height: 22, width: '46%' }} />
+            <div className="dck-skel" style={{ height: 58 }} />
+            <div className="dck-skel" style={{ height: 148 }} />
+            <div className="dck-skel" style={{ height: 190 }} />
+            <div className="dck-skel" style={{ height: 84 }} />
+          </div>
+        ) : (
+        <div className="dck-pane" key={tab}>
+        {tab === 'today' ? (
           <>
             {/* 里程碑横幅 */}
             {streak > 0 && MILESTONES.includes(streak) && (
               <div className="dck-milestone">
                 <Trophy size={16} />
                 <span>{ENC.milestones[streak]}</span>
-                <b>🏆 连续 {streak} 天达成</b>
+                <b>连续 {streak} 天达成</b>
               </div>
             )}
 
-            <div className="dck-card dck-date-row">
-              <CalendarDays size={16} style={{ color: C.green, flexShrink: 0 }} />
-              <input type="date" value={date} max={todayStr()} onChange={(e) => setDate(e.target.value || todayStr())} />
-              {date !== todayStr() && (
-                <button type="button" className="dck-chip" onClick={() => setDate(todayStr())}>回到今天</button>
-              )}
-            </div>
-
-            <section className="dck-card">
-              <h3 className="dck-sec"><Scale size={15} /> 晨起体重</h3>
+            {/* 模块一：晨间启动（日期 + 体重 + 血压，一张卡闭环） */}
+            <section className="dck-card dck-morning">
+              <div className="dck-morning-top">
+                <h3 className="dck-sec"><Scale size={15} /> 晨间启动</h3>
+                <div className="dck-date-box">
+                  <CalendarDays size={14} style={{ color: 'var(--dck-brand)', flexShrink: 0 }} />
+                  <input type="date" value={date} max={todayStr()} onChange={(e) => setDate(e.target.value || todayStr())} />
+                  {date !== todayStr() && (
+                    <button type="button" className="dck-chip" onClick={() => setDate(todayStr())}>回到今天</button>
+                  )}
+                </div>
+              </div>
               <div className="dck-weight-row">
-                <input
-                  className="dck-weight-input"
-                  type="number" step="0.1" inputMode="decimal" placeholder={latestW ? String(latestW) : '93.2'}
-                  value={cur.weight} onChange={(e) => patchDay({ weight: e.target.value })}
-                />
-                <span className="dck-weight-unit">kg</span>
+                <div className="dck-weight-field">
+                  <input
+                    className="dck-weight-input"
+                    type="number" step="0.1" inputMode="decimal" pattern="[0-9]*" placeholder={latestW ? String(latestW) : '93.2'}
+                    value={cur.weight} onChange={(e) => patchDay({ weight: e.target.value })}
+                  />
+                  <span className="dck-weight-unit">kg</span>
+                </div>
                 {lastW != null && (
                   <button type="button" className="dck-chip" onClick={() => patchDay({ weight: String(lastW) })}>
                     同上次 {lastW}
@@ -344,57 +401,75 @@ export default function DietCheckin() {
                 </div>
               )}
               <div className="dck-bp-row">
-                <ShieldCheck size={14} style={{ color: C.text2, flexShrink: 0 }} />
-                <input type="number" inputMode="numeric" placeholder="收缩压" value={cur.bpSys} onChange={(e) => patchDay({ bpSys: e.target.value })} />
+                <ShieldCheck size={14} style={{ color: 'var(--dck-t2)', flexShrink: 0 }} />
+                <input type="number" inputMode="numeric" pattern="[0-9]*" placeholder="收缩压" value={cur.bpSys} onChange={(e) => patchDay({ bpSys: e.target.value })} />
                 <span className="dck-bp-slash">/</span>
-                <input type="number" inputMode="numeric" placeholder="舒张压" value={cur.bpDia} onChange={(e) => patchDay({ bpDia: e.target.value })} />
+                <input type="number" inputMode="numeric" pattern="[0-9]*" placeholder="舒张压" value={cur.bpDia} onChange={(e) => patchDay({ bpDia: e.target.value })} />
                 <span className="dck-bp-unit">mmHg · 选填</span>
               </div>
             </section>
 
+            {/* 模块二：今日执行看板（三餐 + 习惯 + 进度，一张卡闭环） */}
             <section className="dck-card">
-              <h3 className="dck-sec"><Wheat size={15} /> 三餐执行</h3>
+              <div className="dck-daily-head">
+                <h3 className="dck-sec"><Wheat size={15} /> 今日执行</h3>
+                <span className={`dck-donechip${allDone ? ' full' : ''}`}>{doneCount}/5</span>
+              </div>
               {MEALS.map(({ key, label, Icon }) => (
                 <div key={key} className="dck-meal">
-                  <div className="dck-meal-head"><Icon size={15} strokeWidth={2} style={{ color: C.text2 }} /><span>{label}</span></div>
+                  <div className="dck-meal-head"><Icon size={15} strokeWidth={2} style={{ color: 'var(--dck-t2)' }} /><span>{label}</span></div>
                   <div className="dck-seg">
-                    {MEAL_STATES.map(({ key: sk, label: sl, color, Icon: SIcon }) => (
+                    {MEAL_STATES.map(({ key: sk, label: sl, Icon: SIcon }) => (
                       <button
                         key={sk} type="button"
-                        className={`dck-seg-btn${cur[key] === sk ? ' on' : ''}`}
-                        style={cur[key] === sk ? { background: color, borderColor: color } : {}}
+                        className={`dck-pill-btn dck-pill-${sk}${cur[key] === sk ? ' is-active' : ''}`}
                         onClick={() => patchDay({ [key]: cur[key] === sk ? '' : sk })}
                       >
-                        <SIcon size={15} strokeWidth={2.2} /> {sl}
+                        <SIcon size={14} strokeWidth={cur[key] === sk ? 2.5 : 2} />
+                        <span>{sl}</span>
                       </button>
                     ))}
                   </div>
                 </div>
               ))}
-            </section>
 
-            <section className="dck-card">
-              <h3 className="dck-sec"><Droplets size={15} /> 习惯四件套</h3>
               <div className="dck-habits">
                 <button type="button" className={`dck-habit${cur.water ? ' on' : ''}`} onClick={() => patchDay({ water: !cur.water })}>
-                  <Droplets size={18} /><b>喝水 2000ml+</b><span>{cur.water ? '已达标' : '点击达标'}</span>
+                  <span className="dck-habit-ico"><Droplets size={17} /></span>
+                  <span className="dck-habit-txt"><b>喝水 2000ml+</b><span>{cur.water ? '已达标' : '点击达标'}</span></span>
+                  <i className="dck-habit-check"><Check size={13} strokeWidth={3.2} /></i>
                 </button>
                 <button type="button" className={`dck-habit${cur.steps ? ' on' : ''}`} onClick={() => patchDay({ steps: !cur.steps })}>
-                  <Footprints size={18} /><b>步数 8000+</b><span>{cur.steps ? '已达标' : '点击达标'}</span>
+                  <span className="dck-habit-ico"><Footprints size={17} /></span>
+                  <span className="dck-habit-txt"><b>步数 8000+</b><span>{cur.steps ? '已达标' : '点击达标'}</span></span>
+                  <i className="dck-habit-check"><Check size={13} strokeWidth={3.2} /></i>
                 </button>
                 <button type="button" className={`dck-habit${cur.training ? ' on' : ''}`} onClick={() => patchDay({ training: !cur.training })}>
-                  <Dumbbell size={18} /><b>力量训练</b><span>{cur.training ? '已练' : '休息/未练'}</span>
+                  <span className="dck-habit-ico"><Dumbbell size={17} /></span>
+                  <span className="dck-habit-txt"><b>力量训练</b><span>{cur.training ? '已练' : '休息/未练'}</span></span>
+                  <i className="dck-habit-check"><Check size={13} strokeWidth={3.2} /></i>
                 </button>
                 <button type="button" className={`dck-habit clean${!cur.junk ? ' on' : ''}`} onClick={() => patchDay({ junk: !cur.junk })}>
-                  <ShieldCheck size={18} /><b>无破戒</b><span>{cur.junk ? '今天破戒了' : '零饮料零食'}</span>
+                  <span className="dck-habit-ico"><ShieldCheck size={17} /></span>
+                  <span className="dck-habit-txt"><b>无放纵餐</b><span>{cur.junk ? '今天有放纵餐' : '零饮料零食'}</span></span>
+                  <i className="dck-habit-check"><Check size={13} strokeWidth={3.2} /></i>
                 </button>
               </div>
-              <div className="dck-donebar">
-                <div className="dck-donebar-track"><i style={{ width: `${(doneCount / 5) * 100}%` }} /></div>
+
+              <div className={`dck-donebar${allDone ? ' is-full' : ''}`}>
+                <div className="dck-donebar-track">
+                  <i style={{ width: `${(doneCount / 5) * 100}%` }} />
+                  {allDone && (
+                    <span className="dck-sparks" aria-hidden="true">
+                      <i /><i /><i /><i /><i /><i />
+                    </span>
+                  )}
+                </div>
                 <span>今日 {doneCount}/5</span>
               </div>
               <div className="dck-praise">
-                <MessageSquareHeart size={13} /> {doneCount >= 5 ? pickFrom(ENC.full, seedOf('done' + date)) : doneCount >= 3 ? pickFrom(ENC.partial, seedOf('done' + date)) : '点满五格，今天就赢了。'}
+                <span className="dck-motto-ico"><MessageSquareHeart size={13} /></span>
+                <span>{allDone ? pickFrom(ENC.full, seedOf('done' + date)) : doneCount >= 3 ? pickFrom(ENC.partial, seedOf('done' + date)) : '点满五格，今天就赢了。'}</span>
               </div>
             </section>
 
@@ -407,6 +482,15 @@ export default function DietCheckin() {
               />
             </section>
 
+            {/* 未登录：下沉为柔和引导卡，不再占据核心视线 */}
+            {!authed && (
+              <div className="dck-guide">
+                <LogIn size={15} />
+                <span><b>本地已为您安全暂存</b> · 登录后多设备同步、数据不怕丢</span>
+                <button type="button" onClick={() => openLogin()}>登录</button>
+              </div>
+            )}
+
             <div className="dck-foot">{authed ? '点击即保存 · 云端多端同步' : '点击即保存（本地）· 登录后自动上传'}</div>
           </>
         ) : tab === 'trend' ? (
@@ -418,7 +502,7 @@ export default function DietCheckin() {
               <div><b>{totalDays}</b><span>累计打卡 天</span></div>
             </div>
 
-            {/* 里程碑徽章墙 */}
+            {/* 里程碑徽章墙：香槟金微渐变 */}
             <section className="dck-card">
               <h3 className="dck-sec"><Trophy size={15} /> 坚持里程碑</h3>
               <div className="dck-badges">
@@ -434,10 +518,16 @@ export default function DietCheckin() {
               <div className="dck-badges-note">最高连续纪录 {profile.maxStreak || 0} 天 · 已累计打卡 {totalDays} 天</div>
             </section>
 
+            {/* 本周反馈：节奏 / 注意 / 趋势 三联结构 */}
             <section className="dck-card">
               <h3 className="dck-sec"><MessageSquareHeart size={15} /> 本周反馈</h3>
               <div className="dck-fb">
-                {weeklyFeedback.map((m, i) => <p key={i}>{m}</p>)}
+                {weeklyFeedback.map(({ k, text }, i) => (
+                  <div key={i} className={`dck-fb-item is-${k}`}>
+                    <span className="dck-fb-tag">{k === 'pace' ? '节奏' : k === 'watch' ? '注意' : '趋势'}</span>
+                    <span className="dck-fb-text">{text}</span>
+                  </div>
+                ))}
               </div>
             </section>
 
@@ -447,9 +537,9 @@ export default function DietCheckin() {
                 <>
                   <TrendChart weights={weights} goal1={PROFILE.goal1} />
                   <div className="dck-legend">
-                    <span><i style={{ background: '#B8C4BC' }} /> 单日</span>
-                    <span><i style={{ background: C.green }} /> 7 日均线（看它）</span>
-                    <span><i style={{ background: C.bad, height: 2 }} /> 目标 87kg</span>
+                    <span><i className="lg-dot" /> 单日</span>
+                    <span><i className="lg-line" /> 7 日均线（看它）</span>
+                    <span><i className="lg-goal" /> 目标 87kg</span>
                   </div>
                 </>
               ) : <div className="dck-empty">再记录 1 次体重即可生成曲线</div>}
@@ -465,11 +555,13 @@ export default function DietCheckin() {
                   for (let i = 0; i < 14; i++) {
                     const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                     const sc = days[k] ? dayScore(days[k]) : -1;
-                    const bg = sc < 0 ? '#E7ECE8' : sc >= 80 ? C.green : sc >= 50 ? C.warn : sc > 0 ? C.bad : '#E7ECE8';
+                    const cls = sc < 0 ? 'none' : sc >= 80 ? 'hi' : sc >= 50 ? 'mid' : sc > 0 ? 'low' : 'none';
+                    const wd = '周' + '日一二三四五六'[d.getDay()];
+                    const isToday = k === todayStr();
                     cells.push(
                       <div key={k} className="dck-heat-cell">
-                        <div className="dck-heat-box" style={{ background: bg }} />
-                        <span>{d.getDate()}</span>
+                        <div className={`dck-heat-box lv-${cls}${isToday ? ' today' : ''}`} />
+                        <span>{wd} {d.getDate()}</span>
                       </div>,
                     );
                     d.setDate(d.getDate() + 1);
@@ -491,7 +583,7 @@ export default function DietCheckin() {
                         <span className="dck-row-date">{k.slice(5)}</span>
                         <span className="dck-row-w">{d.weight ? `${d.weight} kg` : '—'}</span>
                         {d.bpSys ? <span className="dck-row-bp">{d.bpSys}/{d.bpDia}</span> : <span className="dck-row-bp">—</span>}
-                        <span className="dck-row-score" style={{ color: sc >= 80 ? C.green : sc >= 50 ? C.warn : C.bad }}>{sc} 分</span>
+                        <span className={`dck-row-score s-${sc >= 80 ? 'hi' : sc >= 50 ? 'mid' : 'low'}`}>{sc} 分</span>
                         {d.note ? <span className="dck-row-note">{d.note}</span> : null}
                       </div>
                     );
@@ -534,6 +626,8 @@ export default function DietCheckin() {
             <div className="dck-foot">依据：《星历减重计划 v1.1》· 体重管理知识库 2026-09</div>
           </>
         )}
+        </div>
+        )}
       </main>
 
       <nav className="dck-tabbar">
@@ -554,7 +648,7 @@ export default function DietCheckin() {
   );
 }
 
-/* ---------------- 体重折线（纯 SVG） ---------------- */
+/* ---------------- 体重趋势（纯 SVG：Catmull-Rom 三阶贝塞尔平滑 + 渐变面积 + 末点脉冲） ---------------- */
 function TrendChart({ weights, goal1 }) {
   const W = 620, H = 230, PL = 42, PR = 14, PT = 14, PB = 28;
   const data = weights.slice(-30);
@@ -567,164 +661,382 @@ function TrendChart({ weights, goal1 }) {
     const s = data.slice(Math.max(0, i - 6), i + 1);
     return Math.round((s.reduce((a, b) => a + b.v, 0) / s.length) * 100) / 100;
   });
-  const line = (arr) => arr.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  /* Catmull-Rom → 三阶贝塞尔：折角变柔和曲线 */
+  const smooth = (pts) => {
+    if (!pts.length) return '';
+    if (pts.length === 1) return `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[Math.min(pts.length - 1, i + 2)];
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6;
+      const c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6;
+      const c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+    }
+    return d;
+  };
+  const maPts = ma.map((v, i) => [x(i), y(v)]);
+  const areaD = maPts.length > 1
+    ? `${smooth(maPts)} L${maPts[maPts.length - 1][0].toFixed(1)},${H - PB} L${maPts[0][0].toFixed(1)},${H - PB} Z`
+    : '';
+  const last = data[data.length - 1];
+  const lastX = x(data.length - 1);
+  const lastY = y(last.v);
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="dck-svg" role="img" aria-label="体重趋势">
+      <defs>
+        <linearGradient id="dckAreaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0D8253" stopOpacity="0.18" />
+          <stop offset="100%" stopColor="#0D8253" stopOpacity="0" />
+        </linearGradient>
+      </defs>
       {[0, 0.5, 1].map((t) => {
         const v = min + t * (max - min);
         return (
           <g key={t}>
-            <line x1={PL} x2={W - PR} y1={y(v)} y2={y(v)} stroke="#EAF0EB" strokeWidth="1" />
-            <text x={PL - 6} y={y(v)} textAnchor="end" dominantBaseline="central" fontSize="10" fill={C.text2}>{v.toFixed(1)}</text>
+            <line x1={PL} x2={W - PR} y1={y(v)} y2={y(v)} stroke="#E8EFEA" strokeWidth="1" />
+            <text x={PL - 6} y={y(v)} textAnchor="end" dominantBaseline="central" fontSize="10" fill={C.text4}>{v.toFixed(1)}</text>
           </g>
         );
       })}
       {goal1 >= min && goal1 <= max && (
-        <line x1={PL} x2={W - PR} y1={y(goal1)} y2={y(goal1)} stroke={C.bad} strokeWidth="1.2" strokeDasharray="5 4" />
+        <line x1={PL} x2={W - PR} y1={y(goal1)} y2={y(goal1)} stroke={C.bad} strokeWidth="1.2" strokeDasharray="5 4" opacity=".7" />
       )}
-      <path d={line(ma)} fill="none" stroke={C.green} strokeWidth="2.4" strokeLinejoin="round" strokeLinecap="round" />
-      {data.map((d, i) => <circle key={d.date} cx={x(i)} cy={y(d.v)} r="2.8" fill="#B8C4BC" />)}
+      {areaD && <path d={areaD} fill="url(#dckAreaGrad)" stroke="none" />}
+      <path d={smooth(maPts)} fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" />
+      {data.map((d, i) => <circle key={d.date} cx={x(i)} cy={y(d.v)} r="2.8" fill={C.dot} />)}
+      {/* 末点：实心点 + 呼吸脉冲光环 */}
+      <circle className="dck-ping" cx={lastX} cy={lastY} r="6" fill={C.green} />
+      <circle cx={lastX} cy={lastY} r="4" fill={C.green} stroke="#fff" strokeWidth="1.6" />
       {data.map((d, i) => (
         (i === data.length - 1 || i % Math.ceil(data.length / 6) === 0)
-          ? <text key={`t${d.date}`} x={x(i)} y={H - 8} textAnchor="middle" fontSize="10" fill={C.text2}>{d.date.slice(5)}</text>
+          ? <text key={`t${d.date}`} x={x(i)} y={H - 8} textAnchor="middle" fontSize="10" fill={C.text4}>{d.date.slice(5)}</text>
           : null
       ))}
     </svg>
   );
 }
 
-/* ---------------- 样式 ---------------- */
+/* ---------------- 样式：鼠尾草矿物翡翠 ---------------- */
 const DCK_CSS = `
-.dck-app { min-height: 100vh; background: ${C.page}; color: ${C.ink};
+.dck-app {
+  --dck-page: #F5F8F6; --dck-card: #FFFFFF;
+  --dck-line: rgba(16,78,48,.10);
+  --dck-ink: #132219; --dck-t2: #546B5F; --dck-t4: #8FA498;
+  --dck-brand: #0D8253; --dck-deep: #08613C; --dck-soft: #E8F6EE;
+  --dck-gold: #B8860B; --dck-gold-soft: #FEF9EC;
+  --dck-warn: #C27803; --dck-warn-soft: #FFFBEB; --dck-warn-line: rgba(194,120,3,.22);
+  --dck-bad: #D94841; --dck-bad-soft: #FEF2F2; --dck-bad-line: rgba(217,72,65,.22);
+  --dck-shadow: 0 1px 3px rgba(18,38,27,.03), 0 8px 24px -4px rgba(18,38,27,.06);
+  --dck-inner: inset 0 1px 0 rgba(255,255,255,.9);
+  --dck-ring: 0 0 0 3px rgba(13,130,83,.15);
+  min-height: 100vh; min-height: 100dvh;
+  color: var(--dck-ink);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  -webkit-font-smoothing: antialiased; }
-.dck-head { background: ${C.greenDeep}; color: #fff; padding: max(18px, env(safe-area-inset-top)) 18px 16px; }
-.dck-head-top { display: flex; align-items: center; justify-content: space-between; }
-.dck-brand { font-size: 17px; font-weight: 700; letter-spacing: .02em; }
-.dck-head-sub { font-size: 12px; opacity: .72; margin-top: 2px; }
+  -webkit-font-smoothing: antialiased;
+  /* 顶部微绿雾气：融入浅色基调，替代原来的深绿大色块断层 */
+  background:
+    radial-gradient(120% 460px at 50% -90px, rgba(13,130,83,.16), rgba(13,130,83,0) 70%),
+    radial-gradient(80% 300px at 88% -40px, rgba(184,134,11,.07), rgba(184,134,11,0) 70%),
+    var(--dck-page);
+}
+
+/* ── 顶栏（浅色） ── */
+.dck-head { padding: max(18px, env(safe-area-inset-top)) 18px 6px; }
+.dck-head-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dck-brand { font-size: 17px; font-weight: 800; letter-spacing: .01em; color: var(--dck-ink); }
+.dck-head-sub { font-size: 12px; color: var(--dck-t2); margin-top: 2px; }
+.dck-head-right { display: flex; align-items: center; gap: 8px; }
+.dck-sync { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+  color: var(--dck-deep); background: rgba(255,255,255,.8); border: 1px solid var(--dck-line);
+  padding: 5px 10px; border-radius: 999px; }
+.dck-sync i { width: 6px; height: 6px; border-radius: 50%; background: var(--dck-brand);
+  box-shadow: 0 0 0 3px rgba(13,130,83,.14); }
 .dck-streak { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700;
-  padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.14); color: #CFE9DC; }
-.dck-streak.on { background: ${C.goldSoft}; color: ${C.gold}; }
-.dck-hero { margin-top: 12px; }
+  padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.82);
+  border: 1px solid var(--dck-line); color: var(--dck-t2); }
+.dck-streak.on { background: var(--dck-gold-soft); border-color: rgba(184,134,11,.3); color: var(--dck-gold); }
+.dck-hero { margin-top: 14px; }
 .dck-hero-w { display: flex; align-items: baseline; gap: 6px; }
-.dck-hero-num { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
-.dck-hero-unit { font-size: 15px; opacity: .7; }
-.dck-hero-meta { display: flex; gap: 10px 12px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; opacity: .78; }
-.dck-hero-meta b { font-weight: 700; }
-.dck-motto { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; font-size: 12.5px;
-  line-height: 1.6; color: #DFF0E7; background: rgba(255,255,255,.09); border-radius: 10px; padding: 9px 11px; }
-.dck-motto svg { flex-shrink: 0; margin-top: 1px; }
-.dck-acct { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px;
-  padding: 8px 11px; border-radius: 10px; width: 100%; }
-.dck-acct.on { background: rgba(255,255,255,.1); color: #CFE9DC; }
-.dck-acct.login { background: ${C.goldSoft}; color: ${C.gold}; border: none; font-weight: 600; cursor: pointer; }
+.dck-hero-num { font-size: 52px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+  color: var(--dck-ink); font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+.dck-hero-unit { font-size: 15px; color: var(--dck-t4); font-weight: 600; }
+.dck-hero-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.dck-pill-stat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--dck-t2);
+  background: rgba(255,255,255,.85); border: 1px solid var(--dck-line); border-radius: 999px; padding: 6px 12px; }
+.dck-pill-stat b { font-weight: 800; color: var(--dck-deep); font-variant-numeric: tabular-nums; }
+.dck-pill-stat.alt b { color: var(--dck-brand); }
+.dck-motto { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; font-size: 12.5px;
+  line-height: 1.6; color: var(--dck-ink); background: rgba(255,255,255,.86);
+  border: 1px solid var(--dck-line); border-radius: 12px; padding: 10px 12px;
+  box-shadow: var(--dck-shadow); }
+.dck-motto-ico { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px;
+  border-radius: 8px; background: var(--dck-soft); color: var(--dck-brand); }
+.dck-motto svg { margin-top: 0; }
+
+/* ── 主内容 ── */
 .dck-main { max-width: 560px; margin: 0 auto; padding: 14px 14px calc(96px + env(safe-area-inset-bottom)); }
-.dck-card { background: ${C.card}; border-radius: 16px; padding: 16px; margin-bottom: 12px;
-  box-shadow: 0 1px 2px rgba(20,32,26,.04); }
-.dck-sec { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; margin: 0 0 12px; }
-.dck-sec svg { color: ${C.green}; }
-.dck-date-row { display: flex; align-items: center; gap: 10px; }
-.dck-date-row input { flex: 0 0 auto; border: 1px solid ${C.line}; border-radius: 10px; padding: 9px 12px; font-size: 15px; color: ${C.ink}; background: #fff; }
-.dck-chip { border: 1px solid ${C.green}44; background: ${C.greenSoft}; color: ${C.greenDeep};
-  font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 999px; cursor: pointer; }
-.dck-weight-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.dck-weight-input { width: 132px; height: 52px; border: 1.5px solid ${C.line}; border-radius: 12px;
-  font-size: 24px; font-weight: 700; text-align: center; color: ${C.ink}; background: #fff; }
-.dck-weight-input:focus { outline: none; border-color: ${C.green}; }
-.dck-weight-unit { font-size: 14px; color: ${C.text2}; }
-.dck-delta { margin-top: 8px; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 8px; display: inline-block; }
-.dck-delta.good { color: ${C.greenDeep}; background: ${C.greenSoft}; }
-.dck-delta.warn { color: ${C.warn}; background: ${C.warnSoft}; }
-.dck-bp-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
-.dck-bp-row input { width: 96px; height: 40px; border: 1px solid ${C.line}; border-radius: 10px; padding: 0 10px;
-  font-size: 15px; color: ${C.ink}; background: #fff; }
-.dck-bp-slash { color: ${C.text4}; font-weight: 600; }
-.dck-bp-unit { font-size: 11.5px; color: ${C.text4}; }
+.dck-pane { animation: dckPaneIn .22s cubic-bezier(.16,1,.3,1) both; }
+@keyframes dckPaneIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.dck-card { background: var(--dck-card); border: 1px solid var(--dck-line); border-radius: 16px;
+  padding: 16px; margin-bottom: 12px;
+  box-shadow: var(--dck-shadow), var(--dck-inner); }
+.dck-sec { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; margin: 0; color: var(--dck-ink); }
+.dck-sec svg { color: var(--dck-brand); }
+.dck-chip { border: 1px solid rgba(13,130,83,.35); background: #fff; color: var(--dck-deep);
+  font-size: 12.5px; font-weight: 600; padding: 8px 13px; border-radius: 999px; cursor: pointer;
+  transition: background .2s cubic-bezier(.16,1,.3,1); white-space: nowrap; }
+.dck-chip:hover { background: var(--dck-soft); }
+
+/* 晨间启动卡 */
+.dck-morning-top { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  flex-wrap: wrap; margin-bottom: 14px; }
+.dck-date-box { display: flex; align-items: center; gap: 7px; }
+/* 注意：主站 index.css 有全局表单重置 input[type=...]（特异度 0-1-1），
+   单类名选择器（0-1-0）会被它压掉字号/边框/圆角/内距。
+   所以本页所有输入框规则都加 .dck-app 前缀抬到 0-2-0 以上。 */
+.dck-app .dck-date-box input { border: 1px solid var(--dck-line); border-radius: 10px; padding: 8px 10px;
+  font-size: 13.5px; color: var(--dck-ink); background: #fff; max-width: 150px; }
+.dck-app .dck-date-box input:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
+.dck-weight-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dck-weight-field { display: flex; align-items: center; gap: 7px; }
+.dck-app .dck-weight-input { width: 138px; height: 56px; border: 1.5px solid var(--dck-line); border-radius: 14px;
+  font-size: 26px; font-weight: 700; text-align: center; color: var(--dck-ink); background: #fff;
+  font-variant-numeric: tabular-nums; font-feature-settings: 'tnum';
+  box-shadow: var(--dck-inner); }
+.dck-app .dck-weight-input:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
+.dck-weight-unit { font-size: 14px; font-weight: 600; color: var(--dck-t4); }
+.dck-delta { margin-top: 10px; font-size: 12.5px; font-weight: 600; padding: 5px 10px;
+  border-radius: 8px; display: inline-block; }
+.dck-delta.good { color: var(--dck-deep); background: var(--dck-soft); }
+.dck-delta.warn { color: var(--dck-warn); background: var(--dck-warn-soft); }
+.dck-bp-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.dck-app .dck-bp-row input { width: 96px; height: 42px; border: 1px solid var(--dck-line); border-radius: 10px;
+  padding: 0 10px; font-size: 15px; color: var(--dck-ink); background: #fff;
+  font-variant-numeric: tabular-nums; }
+.dck-app .dck-bp-row input:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
+.dck-bp-slash { color: var(--dck-t4); font-weight: 600; }
+.dck-bp-unit { font-size: 11.5px; color: var(--dck-t4); }
+
+/* 今日执行看板 */
+.dck-daily-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.dck-donechip { font-size: 12px; font-weight: 800; color: var(--dck-deep); background: var(--dck-soft);
+  border: 1px solid rgba(13,130,83,.25); border-radius: 999px; padding: 4px 11px;
+  font-variant-numeric: tabular-nums; transition: all .25s cubic-bezier(.16,1,.3,1); }
+.dck-donechip.full { background: var(--dck-brand); border-color: var(--dck-brand); color: #fff;
+  box-shadow: 0 0 0 4px rgba(13,130,83,.14); }
 .dck-meal { margin-bottom: 14px; }
-.dck-meal:last-of-type { margin-bottom: 0; }
-.dck-meal-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: ${C.text2}; margin-bottom: 7px; }
-.dck-seg { display: flex; gap: 8px; }
-.dck-seg-btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-  height: 44px; border-radius: 12px; border: 1.5px solid ${C.line}; background: #fff;
-  color: ${C.text2}; font-size: 14px; font-weight: 600; cursor: pointer; transition: transform .06s; }
-.dck-seg-btn:active { transform: scale(.97); }
-.dck-seg-btn.on { color: #fff !important; }
+.dck-meal:last-of-type { margin-bottom: 16px; }
+.dck-meal-head { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600;
+  color: var(--dck-t2); margin-bottom: 7px; }
+/* 三餐：柔和分段药丸（中性轨道 + 白底激活 + 语义色文字，杜绝红绿灯实色） */
+.dck-seg { display: flex; gap: 4px; background: #F0F4F1; border-radius: 12px; padding: 4px; }
+.dck-pill-btn { flex: 1; min-height: 38px; border: none; border-radius: 9px; background: transparent;
+  color: var(--dck-t2); font-size: 13px; font-weight: 500; display: inline-flex;
+  align-items: center; justify-content: center; gap: 5px; cursor: pointer;
+  transition: all .2s cubic-bezier(.16,1,.3,1); }
+.dck-pill-btn:hover { color: var(--dck-ink); }
+.dck-pill-btn.is-active { background: #fff; font-weight: 700;
+  box-shadow: 0 1px 3px rgba(18,38,27,.08); }
+.dck-pill-ok.is-active { color: var(--dck-brand); outline: 1px solid rgba(13,130,83,.28); }
+.dck-pill-off.is-active { color: var(--dck-warn); outline: 1px solid var(--dck-warn-line); }
+.dck-pill-bad.is-active { color: var(--dck-bad); outline: 1px solid var(--dck-bad-line); }
+
+/* 习惯四件套：触感卡 + 弹性对勾 */
 .dck-habits { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-.dck-habit { display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
-  border: 1.5px solid ${C.line}; background: #fff; border-radius: 14px; padding: 13px 14px;
-  color: ${C.text2}; cursor: pointer; text-align: left; transition: transform .06s; }
+.dck-habit { display: flex; align-items: center; gap: 9px; min-height: 60px;
+  border: 1px solid var(--dck-line); background: #fff; border-radius: 14px; padding: 11px 12px;
+  color: var(--dck-t2); cursor: pointer; text-align: left;
+  box-shadow: var(--dck-inner); transition: transform .1s, border-color .2s, background .2s; }
 .dck-habit:active { transform: scale(.98); }
-.dck-habit.on { border-color: ${C.green}66; background: ${C.greenSoft}; color: ${C.greenDeep}; }
-.dck-habit b { font-size: 14px; color: ${C.ink}; }
-.dck-habit.on b { color: ${C.greenDeep}; }
-.dck-habit span { font-size: 11.5px; }
-.dck-donebar { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
-.dck-donebar-track { flex: 1; height: 8px; border-radius: 999px; background: ${C.line}; overflow: hidden; }
-.dck-donebar-track i { display: block; height: 100%; background: ${C.green}; border-radius: 999px; transition: width .3s; }
-.dck-donebar span { font-size: 12px; font-weight: 700; color: ${C.greenDeep}; }
-.dck-praise { display: flex; align-items: flex-start; gap: 6px; margin-top: 10px; font-size: 12.5px;
-  line-height: 1.55; color: ${C.greenDeep}; background: ${C.greenSoft}; border-radius: 10px; padding: 9px 11px; }
-.dck-praise svg { flex-shrink: 0; margin-top: 2px; }
-.dck-note { width: 100%; border: 1px solid ${C.line}; border-radius: 12px; padding: 10px 12px;
-  font-size: 14px; color: ${C.ink}; resize: none; font-family: inherit; background: #fff; }
-.dck-foot { text-align: center; font-size: 11px; color: ${C.text4}; padding: 6px 0 10px; }
+.dck-habit.on { border-color: rgba(13,130,83,.4); background: var(--dck-soft); }
+.dck-habit-ico { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px;
+  border-radius: 10px; background: #F2F6F3; color: var(--dck-t2);
+  transition: background .2s, color .2s; }
+.dck-habit.on .dck-habit-ico { background: #fff; color: var(--dck-brand); }
+.dck-habit-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.dck-habit-txt b { font-size: 13.5px; color: var(--dck-ink); line-height: 1.25; }
+.dck-habit.on .dck-habit-txt b { color: var(--dck-deep); }
+.dck-habit-txt > span { font-size: 11px; color: var(--dck-t4); }
+.dck-habit-check { display: grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px;
+  border-radius: 50%; border: 1.5px solid var(--dck-line); color: transparent; background: #fff; }
+.dck-habit.on .dck-habit-check { background: var(--dck-brand); border-color: var(--dck-brand); color: #fff;
+  animation: dckPop .32s cubic-bezier(.34,1.56,.64,1); }
+@keyframes dckPop { 0% { transform: scale(.5); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+/* 进度条 + 5/5 庆祝微闪光 */
+.dck-donebar { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.dck-donebar-track { position: relative; flex: 1; height: 8px; border-radius: 999px;
+  background: #E7EEE9; overflow: visible; }
+.dck-donebar-track i { display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #2FA576, var(--dck-brand)); transition: width .3s cubic-bezier(.16,1,.3,1); }
+.dck-donebar.is-full .dck-donebar-track i {
+  background: linear-gradient(90deg, var(--dck-brand), #35C08A);
+  box-shadow: 0 0 10px rgba(13,130,83,.4); }
+.dck-donebar span { font-size: 12px; font-weight: 800; color: var(--dck-deep);
+  font-variant-numeric: tabular-nums; }
+.dck-sparks { position: absolute; right: 0; top: 50%; width: 0; height: 0; pointer-events: none; }
+.dck-sparks i { position: absolute; left: 0; top: 0; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--dck-gold); animation: dckSpark .7s cubic-bezier(.16,1,.3,1) both; }
+.dck-sparks i:nth-child(1) { --dx: -14px; --dy: -16px; }
+.dck-sparks i:nth-child(2) { --dx: 4px; --dy: -20px; background: #E0C35F; }
+.dck-sparks i:nth-child(3) { --dx: 16px; --dy: -10px; }
+.dck-sparks i:nth-child(4) { --dx: -18px; --dy: 4px; background: #E0C35F; }
+.dck-sparks i:nth-child(5) { --dx: 12px; --dy: 10px; }
+.dck-sparks i:nth-child(6) { --dx: 0px; --dy: 16px; background: #E0C35F; }
+@keyframes dckSpark { 0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+
+/* 评语气泡（教练 Whispers） */
+.dck-praise { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; font-size: 12.5px;
+  line-height: 1.55; color: var(--dck-ink); background: rgba(255,255,255,.9);
+  border: 1px solid var(--dck-line); border-radius: 12px; padding: 10px 12px; }
+.dck-praise svg { flex-shrink: 0; }
+
+.dck-app .dck-note { width: 100%; border: 1px solid var(--dck-line); border-radius: 12px; padding: 10px 12px;
+  font-size: 14px; color: var(--dck-ink); resize: none; font-family: inherit; background: #fff; }
+.dck-app .dck-note:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
+.dck-foot { text-align: center; font-size: 11px; color: var(--dck-t4); padding: 6px 0 10px; }
+
+/* 未登录引导卡（下沉到打卡流末尾） */
+.dck-guide { display: flex; align-items: center; gap: 9px; background: rgba(255,255,255,.9);
+  border: 1px dashed rgba(13,130,83,.35); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
+  font-size: 12.5px; color: var(--dck-t2); }
+.dck-guide svg { flex-shrink: 0; color: var(--dck-brand); }
+.dck-guide b { color: var(--dck-ink); font-weight: 700; }
+.dck-guide button { margin-left: auto; flex-shrink: 0; border: none; background: var(--dck-brand);
+  color: #fff; font-size: 12.5px; font-weight: 700; padding: 8px 16px; border-radius: 999px;
+  cursor: pointer; transition: transform .1s, box-shadow .2s; }
+.dck-guide button:hover { box-shadow: 0 4px 14px -4px rgba(13,130,83,.5); }
+.dck-guide button:active { transform: scale(.96); }
+
+/* 骨架屏 */
+.dck-skel-wrap { display: grid; gap: 12px; }
+.dck-skel { border-radius: 12px;
+  background: linear-gradient(90deg, #EAEFEA 25%, #F4F8F4 50%, #EAEFEA 75%);
+  background-size: 200% 100%; animation: dckShimmer 1.5s infinite; }
+@keyframes dckShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+.dck-empty { font-size: 13.5px; color: var(--dck-t2); text-align: center; padding: 24px 0; }
+
+/* 趋势页 */
 .dck-stat4 { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 12px; }
-.dck-stat4 > div { background: ${C.card}; border-radius: 14px; padding: 13px 14px; }
-.dck-stat4 b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-.dck-stat4 span { font-size: 11.5px; color: ${C.text2}; }
-.dck-milestone { display: flex; align-items: center; gap: 9px; background: ${C.goldSoft};
-  border: 1.5px solid ${C.gold}55; color: ${C.gold}; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
-  font-size: 13px; font-weight: 600; }
+.dck-stat4 > div { background: var(--dck-card); border: 1px solid var(--dck-line); border-radius: 14px;
+  padding: 13px 14px; box-shadow: var(--dck-shadow), var(--dck-inner); }
+.dck-stat4 b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.02em;
+  color: var(--dck-ink); font-variant-numeric: tabular-nums; }
+.dck-stat4 span { font-size: 11.5px; color: var(--dck-t2); }
+
+.dck-milestone { display: flex; align-items: center; gap: 9px; background: var(--dck-gold-soft);
+  border: 1px solid rgba(184,134,11,.35); color: var(--dck-gold); border-radius: 14px;
+  padding: 12px 14px; margin-bottom: 12px; font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 16px -6px rgba(184,134,11,.35); }
 .dck-milestone svg { flex-shrink: 0; }
 .dck-milestone b { margin-left: auto; white-space: nowrap; }
+
+/* 徽章墙：未解锁虚线灰 → 已解锁香槟金微渐变 */
 .dck-badges { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.dck-badge { border: 1.5px solid ${C.line}; border-radius: 12px; text-align: center; padding: 10px 4px; color: ${C.text4}; }
+.dck-badge { border: 1.5px dashed var(--dck-line); border-radius: 12px; text-align: center;
+  padding: 10px 4px; color: var(--dck-t4); opacity: .62; }
 .dck-badge b { display: block; font-size: 17px; font-weight: 800; }
 .dck-badge span { font-size: 10.5px; }
-.dck-badge.got { border-color: ${C.gold}66; background: ${C.goldSoft}; color: ${C.gold}; }
-.dck-badges-note { margin-top: 10px; font-size: 12px; color: ${C.text2}; text-align: center; }
-.dck-fb p { margin: 0 0 9px; font-size: 13.5px; line-height: 1.65; color: ${C.ink};
-  padding-left: 12px; border-left: 3px solid ${C.greenSoft}; }
-.dck-fb p:last-child { margin-bottom: 0; }
-.dck-legend { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: ${C.text2}; }
+.dck-badge.got { border: 1px solid rgba(184,134,11,.45); opacity: 1; color: #8A6A10;
+  background: linear-gradient(135deg, #FDF4DC, #F6E2B3);
+  box-shadow: 0 0 0 3px rgba(184,134,11,.08), 0 4px 12px -4px rgba(184,134,11,.35),
+    inset 0 1px 0 rgba(255,255,255,.8); }
+.dck-badge.got b { color: #8A6A10; }
+.dck-badges-note { margin-top: 10px; font-size: 12px; color: var(--dck-t2); text-align: center; }
+
+/* 本周反馈三联 */
+.dck-fb { display: grid; gap: 9px; }
+.dck-fb-item { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.6;
+  color: var(--dck-ink); background: #FAFCFA; border: 1px solid var(--dck-line);
+  border-radius: 10px; padding: 9px 11px; }
+.dck-fb-tag { flex-shrink: 0; font-size: 10px; font-weight: 800; letter-spacing: .08em;
+  padding: 2px 7px; border-radius: 999px; margin-top: 1px; }
+.dck-fb-item.is-pace .dck-fb-tag { color: var(--dck-brand); background: var(--dck-soft); }
+.dck-fb-item.is-watch .dck-fb-tag { color: var(--dck-warn); background: var(--dck-warn-soft); }
+.dck-fb-item.is-trend .dck-fb-tag { color: var(--dck-deep); background: #EAF2EE; }
+
+.dck-legend { display: flex; gap: 13px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: var(--dck-t2); }
 .dck-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
+.dck-legend .lg-dot { background: var(--dck-brand); opacity: .45; border-radius: 50%; }
+.dck-legend .lg-line { height: 3px; border-radius: 2px; background: var(--dck-brand); vertical-align: 0; }
+.dck-legend .lg-goal { height: 2px; background: repeating-linear-gradient(90deg, var(--dck-bad) 0 4px, transparent 4px 7px); }
+
+/* 热力：无记录→极浅；分值越高越翡翠；低分不再是刺眼警示红 */
 .dck-heat { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; }
 .dck-heat-cell { text-align: center; }
-.dck-heat-box { width: 100%; padding-top: 100%; border-radius: 9px; min-height: 20px; }
-.dck-heat-cell span { font-size: 10px; color: ${C.text4}; }
+.dck-heat-box { width: 100%; padding-top: 100%; border-radius: 9px; min-height: 20px;
+  border: 1px solid transparent; transition: transform .15s; }
+.dck-heat-box:hover { transform: scale(1.06); }
+.dck-heat-box.lv-none { background: #EDF1EE; }
+.dck-heat-box.lv-low { background: #CFE3D8; }
+.dck-heat-box.lv-mid { background: #7FB8A0; }
+.dck-heat-box.lv-hi { background: var(--dck-brand); box-shadow: 0 2px 8px -2px rgba(13,130,83,.45); }
+.dck-heat-box.today { border-color: var(--dck-ink); }
+.dck-heat-cell span { font-size: 9.5px; color: var(--dck-t4); font-variant-numeric: tabular-nums; }
+
 .dck-rows { display: flex; flex-direction: column; }
 .dck-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 2px;
-  border-bottom: 1px solid ${C.line}; flex-wrap: wrap; }
+  border-bottom: 1px solid var(--dck-line); flex-wrap: wrap; }
 .dck-row:last-child { border-bottom: none; }
-.dck-row-date { color: ${C.text2}; font-variant-numeric: tabular-nums; min-width: 44px; }
+.dck-row-date { color: var(--dck-t2); font-variant-numeric: tabular-nums; min-width: 44px; }
 .dck-row-w { font-weight: 700; }
-.dck-row-bp { color: ${C.text2}; font-size: 12px; }
+.dck-row-bp { color: var(--dck-t2); font-size: 12px; }
 .dck-row-score { margin-left: auto; font-weight: 800; }
-.dck-row-note { width: 100%; font-size: 12px; color: ${C.text2}; }
+.dck-row-score.s-hi { color: var(--dck-brand); }
+.dck-row-score.s-mid { color: var(--dck-warn); }
+.dck-row-score.s-low { color: var(--dck-t4); }
+.dck-row-note { width: 100%; font-size: 12px; color: var(--dck-t2); }
+
 .dck-plan { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-.dck-plan > div { border: 1px solid ${C.line}; border-radius: 14px; padding: 12px 14px; }
-.dck-plan b { display: block; font-size: 19px; font-weight: 800; color: ${C.greenDeep}; }
-.dck-plan span { font-size: 11.5px; color: ${C.text2}; }
-.dck-ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 2; color: ${C.ink}; }
-.dck-card.warn { border: 1.5px solid ${C.bad}44; background: ${C.badSoft}; }
-.dck-card.warn .dck-sec svg { color: ${C.bad}; }
-.dck-empty { font-size: 13.5px; color: ${C.text2}; text-align: center; padding: 24px 0; }
+.dck-plan > div { border: 1px solid var(--dck-line); border-radius: 14px; padding: 12px 14px; }
+.dck-plan b { display: block; font-size: 19px; font-weight: 800; color: var(--dck-deep); }
+.dck-plan span { font-size: 11.5px; color: var(--dck-t2); }
+.dck-ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 2; color: var(--dck-ink); }
+.dck-card.warn { border: 1px solid var(--dck-bad-line); background: var(--dck-bad-soft); }
+.dck-card.warn .dck-sec svg { color: var(--dck-bad); }
+
+.dck-svg { width: 100%; height: auto; display: block; }
+.dck-ping { transform-box: fill-box; transform-origin: center;
+  animation: dckPing 2.2s cubic-bezier(0, 0, .2, 1) infinite; }
+@keyframes dckPing { 0% { transform: scale(.4); opacity: .5; } 80%, 100% { transform: scale(2.6); opacity: 0; } }
+
+/* 底部导航（浅色玻璃胶囊，移动端通栏 / 桌面悬浮） */
 .dck-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
-  display: flex; justify-content: center; background: rgba(255,255,255,.96);
-  backdrop-filter: blur(10px); border-top: 1px solid ${C.line};
+  display: flex; justify-content: center; background: rgba(255,255,255,.92);
+  backdrop-filter: blur(12px); border-top: 1px solid var(--dck-line);
   padding-bottom: env(safe-area-inset-bottom); }
 .dck-tabbtn { flex: 1; max-width: 160px; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 9px 0 7px; background: none; border: none; color: ${C.text4}; font-size: 10.5px; font-weight: 600; cursor: pointer; }
-.dck-tabbtn.on { color: ${C.greenDeep}; }
+  padding: 9px 0 7px; background: none; border: none; color: var(--dck-t4);
+  font-size: 10.5px; font-weight: 600; cursor: pointer; min-height: 44px; }
+.dck-tabbtn.on { color: var(--dck-deep); }
 .dck-toast { position: fixed; bottom: calc(78px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-  display: flex; align-items: center; gap: 6px; background: ${C.ink}; color: #fff; font-size: 12.5px;
-  padding: 9px 16px; border-radius: 999px; box-shadow: 0 6px 24px rgba(0,0,0,.18); z-index: 60; max-width: 88vw; }
+  display: flex; align-items: center; gap: 6px; background: var(--dck-ink); color: #fff; font-size: 12.5px;
+  padding: 9px 16px; border-radius: 999px; box-shadow: 0 6px 24px rgba(0,0,0,.18); z-index: 60; max-width: 88vw;
+  animation: dckToastIn .28s cubic-bezier(.16,1,.3,1) both; }
+@keyframes dckToastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
 @media (min-width: 640px) {
   .dck-tabbar { left: 50%; right: auto; transform: translateX(-50%); width: 380px;
-    bottom: 20px; border: 1px solid ${C.line}; border-radius: 999px; padding: 4px;
+    bottom: 20px; border: 1px solid var(--dck-line); border-radius: 999px; padding: 4px;
     box-shadow: 0 8px 30px rgba(20,32,26,.14); padding-bottom: 4px; }
   .dck-tabbtn { border-radius: 999px; }
-  .dck-tabbtn.on { background: ${C.greenSoft}; }
+  .dck-tabbtn.on { background: var(--dck-soft); }
   .dck-main { padding-top: 20px; padding-bottom: 140px; }
+}
+
+/* 动效降级：prefers-reduced-motion 下全部动效静止 */
+@media (prefers-reduced-motion: reduce) {
+  .dck-app *, .dck-app *::before, .dck-app *::after {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
 }
 `;
