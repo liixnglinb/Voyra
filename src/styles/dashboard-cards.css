@@ -34,7 +34,7 @@ body{
      人物列 250（原 218，按需求向上放大）：图片本身比列盒宽约 18%（含 1deg 旋转外扩）。
      列间距 64→40 给标题让位 —— "useful." 字形实宽 470，文字列 456 时悬挂 14px，
      仍有 26px 净空，不会碰到人物。 */
-  .vr-home .vr-hero-shell .vr-hero {grid-template-columns:minmax(0,520px) 250px;justify-content:space-between;column-gap:40px;padding:34px clamp(24px,4vw,56px) 24px;}
+  .vr-home .vr-hero-shell .vr-hero {grid-template-columns:minmax(0,520px) 250px;justify-content:space-between;column-gap:40px;padding:34px clamp(24px,4vw,56px) 56px;}
   .vr-home .vr-hero-shell .vr-hero h1 {max-width:520px;}
   .vr-home .vr-hero-shell .vr-person-stage,
   .vr-home .vr-hero-shell .vr-person-frame {width:250px;height:620px;}
