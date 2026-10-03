@@ -1,10 +1,10 @@
 {
-  "version": "0.20.0",
-  "notes": "# Zenew v0.20.0 · 工程清债与新手引导\n\n这一版没有新功能，集中做《前端 UI 修改建议》第一波：工程清债 + 两个体验补丁。\n\n## 工程清债\n\n- `index.css` 删除整套 Sky v5 旧体系（**2867 → 1571 行，体积 179KB → 107.6KB，-40%**），打包后 CSS 128KB（gzip 22.5KB）\n- 删除前逐类盘点 378 个 v5 选择器：仍在用的三组（下拉选择 `sel-*`、日期面板 `dp-*`、排行榜锁星角标）已迁移到 v6 令牌下，其余确认无引用后删除（付费墙样式、悬浮胶囊、底部坞、旧词云等）\n- 全仓硬编码旧品牌色清零：纸屑色数组改用 v6 色系，头像渐变改 `#3A63E0 → #476FD8`；残留仅剩深色主题令牌定义本身\n\n## 体验补丁\n\n- **新用户首启引导**：首次使用（还没有学过词）时，首页顶部出现三步引导卡「① 选词书 → ② 导入 300 词 → ③ 开始第 1 组」，每步可直接点击；学过词后自动消失\n- **顶栏瘦身**：从 7 个图标收敛为 4 个（查词 / 主题 / 快捷键 / 设置），统计、任务、排行榜交给左侧导航，不再重复\n- **语言切换入口移除**：英文界面为半成品，先隐藏避免误切（i18n 能力保留）\n- **tooltip 键盘可达**：`Tab` 聚焦时与悬停同样显示提示\n- **字号基线**：最小字号 11px → 12px，侧栏快捷键等小字 ≥10px\n- **逾期提示去压迫**：单词列表的「已逾期 N 天」改为中性色弱提示（数据不变，统计页警示保留）\n\n验证：tsc 0 错误、vite build 通过、真机 CDP 浅/深色零未捕获异常。",
-  "pub_date": "2026-10-03T08:49:42Z",
+  "version": "0.21.0",
+  "notes": "# Zenew v0.21.0 · 今日驾驶舱、可解释记忆与质感统一\n\n这一版完成《前端 UI 修改建议》的第二、三波：首页改多栏驾驶舱、统计页图表化，以及学习流的质感与可解释性升级。\n\n## 首页 · 今日驾驶舱\n\n- 桌面宽屏改为**左右两栏**：左栏是主行动区（今日待复习大数字、新学/复习、断点续学、学习计划卡），右栏是状态区（五档掌握迷你分布、连续天数、最近学习的词）\n- 生词本不再占一整卡，降级为一行入口\n- 窄窗口自动退回单栏，功能与数据完全不变\n\n## 统计 · 从示意到可读\n\n- 未来十天预测图：悬停显示词数与星期，附「今天」基准线\n- 累计进展改为**真实 SVG 折线/面积图**，支持 **7 / 14 / 30 天**切换\n- 五档掌握：每档标注百分比与一句白话解释（如「巩固：还有 N 词处在 21 天内关键期」）\n\n## 学习流 · 可解释与质感\n\n- 媒体卡从\"词首字母 + 渐变\"升级为**程序化形义徽标**：按单词确定性生成渐变与几何纹样，同一个词永远同一张图\n- 学习详情新增「**为什么现在复习**」：距上次学习天数 · 记忆强度 · 预计遗忘概率（数据全部来自本地 FSRS 状态，一句话说清调度原因）\n- 学习完成页新增**本组小结**：正确率、用时、明日到期预告、连续天数反馈，并可一键「再学一组」\n\n## 质感统一\n\n- 排行榜不再整页深色，改为跟随主题的卡片式布局，季赛氛围保留在顶部横幅光晕里\n- 星星罐、领奖台、任务行统一为「哑光渐变 + 发丝描边 + 顶部内高光」模板；emoji 全部换成线性图标\n- 三处词书封面与学习媒体卡共用同一套生成体系\n\n## 其他\n\n- 深浅色两套主题全部覆盖；功能与数据库结构零改动\n- 验证：tsc 0 错误、vite build 通过、真机 CDP 浅/深色零未捕获异常",
+  "pub_date": "2026-10-03T09:57:44Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWJhMmR1NFdaczlrRDVmOEcxb1VGbEVraHc4YUR1TlVWdjFCZTZnQVU2TEhGWnNPM2hSYklIZk0xUk1QMlQrOVdGYlRxQjdxSSsyYTdjSVRlMmJSZ1FFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDE3MzgyCWZpbGU6WmVuZXdfMC4yMC4wX3g2NC1zZXR1cC5leGUKMStadlh4MVVqOUE1VzBUL21DbnJHc3NXZUxBeFFSZnpYamdlVTRXNkRRMFlqMXBwTE95aVpxNi8yWWltbHkrRDhTcStlYXdXRldqK0h3YnJycktJRFE9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWFtM09RbWw5c1dzbFBVakdBcnRkSStNNXhuemdybXgyV1o0bjE0WGpEV2tOUHppTzF6aFFYQzBteVh2cUR0UnF5bnlEbVExL1ZTaUFncXp1eXJsUmdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDIxNDY0CWZpbGU6WmVuZXdfMC4yMS4wX3g2NC1zZXR1cC5leGUKYUFCRFBhYXY1bUMybk9McGNORVlsRjhub0h0SjBQSloyRXYxdVNEdWxhNFNLZkE2akpmODZMbjB6TC9MbU01K1NKLzdpdTZtRk9sSFJQd1NUTzZUREE9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
