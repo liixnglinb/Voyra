@@ -1,10 +1,10 @@
 {
-  "version": "0.17.0",
-  "notes": "# Zenew v0.17.0 · 只做英语，专为电脑\n\n这一版做了两件结构性的事：**内容聚焦纯英语单词**，以及**按桌面软件重新优化交互**。\n\n## 内容：只留英语\n\n- 移除课程与知识点体系（课程列表 / 课程详情 / PDF 教材导入 / 自动建练习卡）\n- 移除考试日历与考前倒排\n- 复习队列、统计口径只针对单词卡，旧数据里的非单词卡不再进入队列\n- 保留：词书（四级/六级/高频/基础/生词本）、查词、单词学习流、复习统计、每日任务、排行榜、设置\n\n数据都在本机，升级不会清空已有的单词学习记录。\n\n## 桌面专项优化\n\n- **左侧固定导航**替代手机式底部栏：单词 / 学习 / 词书 / 查词 / 统计 / 任务 / 排行榜 / 我的，可折叠成图标列\n- **利用窗口宽度**：内容列加宽，统计、设置、词库等页面在宽窗口下双栏排布\n- **全键盘操作**：Ctrl+1..8 切换页面、Ctrl+K 全局搜索、学习页 1-4 作答 / 空格翻面与继续 / ←→ 上一词下一词 / S 斩 / P 朗读、Esc 返回\n- **窗口记忆**：记住窗口大小、位置与最大化状态，下次打开原样恢复；并记住上次停留的页面\n- 默认窗口 1360×860，最小 1040×680（贴合桌面分辨率）\n- 桌面密度：行更紧凑、悬停与右键上下文菜单、纯 CSS 悬停提示、快捷键提示角标\n\n## 验证\n\ntsc 0 错误、真机 CDP 浅/深色全页面零未捕获异常。",
-  "pub_date": "2026-10-03T05:38:19Z",
+  "version": "0.17.1",
+  "notes": "﻿# Zenew v0.17.1 · 桌面多栏布局\n\n## 界面\n- 复习统计改为桌面两栏：左侧「未来十天复习计划」主图，右侧「掌握现状 + 最近十天进展」辅栏（窗口窄于 1180px 自动退回单栏）\n- 词书页保持两栏书卡栅格，同一套栅格与间距\n\n## 承接 v0.17.0\n- 只做英语：无课程/知识点/教材导入/考试日历；队列与统计只算词书单词卡\n- 桌面：左侧固定导航、全键盘操作、窗口尺寸位置记忆、右键菜单、桌面密度\n\n验证：tsc 0 错误、真机 CDP 浅/深色零未捕获异常",
+  "pub_date": "2026-10-03T05:42:56Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVNhRTFaekxqZUttcUN1b2x5NjBSbUNrSXlMSXI4Q3p6MnFoZ2ovcjJXRUJOTWx4SktSWmhGZ0ZnY0d3SHJZTWVYbFAvVnpod3Rya1REcnE2MnIwL1FnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDA1ODI3CWZpbGU6WmVuZXdfMC4xNy4wX3g2NC1zZXR1cC5leGUKbGs1NmkrbFlMQ3lsZDExazZVTjlCQmt3LzBSREJZZGdKcTN2cE9JM3NRd0hBZ2lPeElWZmprOElXaWx2U2U2U1FCSnYreEVYWFM1aGtKR0lTQjkrQnc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWJITGRGM1NnOThwT1R5MGdHQTV5RHFSblpFaThGV01DRWlQWHdiWUYxMG04a1RYL1doUEUrVS9Lcmk1Mk5lRXdza3k1NnJ3SkRrMzkwVXRETFZUZWdvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDA2MTc2CWZpbGU6WmVuZXdfMC4xNy4xX3g2NC1zZXR1cC5leGUKMFo0VkZIYXFWZ0FYZFhkcVJvREo0T1kvUWFSV3FyMnl4QXBqZE9RYmNPZFAzRk8xQ0FRZS9WdUt2RUdLOXlSNjFia3B1VFIvT2ZUUkRzWDREVlRtQ0E9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
