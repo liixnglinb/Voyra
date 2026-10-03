@@ -1,10 +1,10 @@
 {
-  "version": "0.16.0",
-  "notes": "﻿# Zenew v0.16.0 · 界面整体重做\n\n针对「界面不够精致」的反馈，这一版把视觉语言与信息层级全部重做（KEEP 学习 App 的骨架，做足完成度）。\n\n## 视觉语言\n- 三级卡片层级（主卡/次卡/内嵌行）× 三级阴影 × 三级圆角，页面不再是\"一片一样的白卡\"\n- 色彩分工明确：蓝=主要动作、薄荷=进度与成功、琥珀=连续与能量、珊瑚=逾期与错误、藏蓝=沉浸与详情\n- 字阶 11→40px 八级、标题 800 字重负字距、微标签大写字距、数字等宽对齐\n- 背景加极淡点阵与多层天空渐变，大面积留白也有材质感\n\n## 首页\n- 知识云重做：椭圆螺旋避让排布（永不压字，窗口缩放自动重排）、按记忆状态分档配色（刚学会/巩固中/待复习）、词间连线成\"知识星图\"、底部图例带计数\n- 学习计划卡重做：词书封面 + 进度环 + 等宽主按钮 + 信息胶囊（预计学完天数/每日用时/连续天数），空词书不再显示无意义的 0% 环\n\n## 导航\n- 去掉两侧孤立的悬浮胶囊，任务/排行榜/统计/查词/主题/设置收进顶栏图标组（带分隔线）\n- 底部导航保留（学习 App 风格），但内容区预留安全高度，任何可点内容都不会被永久遮挡\n\n## 统计\n- 预测图重做：列轨道 + 网格线 + 基线 + 对齐的数值/日期标签，宁可显示\"零轨道\"也不出现\"像坏掉\"的柱子\n- 五档掌握改为等宽列 + 统一轨道 + 数值/标签对齐；进展柱末柱高亮\n\n## 其他\n- 词库书封做成真正的书（书脊高光 + 立体投影），操作按钮成组等宽\n- 星星罐画成真正的罐子（罐盖 + 罐身 + 星星散落）\n- 学习页媒体卡限制高度并垂直居中，不再大片留白；顶栏图标分组\n- 登录页、设置页、任务页按同一套栅格与间距统一\n\n验证：tsc 0 错误、真机 CDP 浅/深色 11 页零未捕获异常",
-  "pub_date": "2026-10-03T05:25:26Z",
+  "version": "0.17.0",
+  "notes": "# Zenew v0.17.0 · 只做英语，专为电脑\n\n这一版做了两件结构性的事：**内容聚焦纯英语单词**，以及**按桌面软件重新优化交互**。\n\n## 内容：只留英语\n\n- 移除课程与知识点体系（课程列表 / 课程详情 / PDF 教材导入 / 自动建练习卡）\n- 移除考试日历与考前倒排\n- 复习队列、统计口径只针对单词卡，旧数据里的非单词卡不再进入队列\n- 保留：词书（四级/六级/高频/基础/生词本）、查词、单词学习流、复习统计、每日任务、排行榜、设置\n\n数据都在本机，升级不会清空已有的单词学习记录。\n\n## 桌面专项优化\n\n- **左侧固定导航**替代手机式底部栏：单词 / 学习 / 词书 / 查词 / 统计 / 任务 / 排行榜 / 我的，可折叠成图标列\n- **利用窗口宽度**：内容列加宽，统计、设置、词库等页面在宽窗口下双栏排布\n- **全键盘操作**：Ctrl+1..8 切换页面、Ctrl+K 全局搜索、学习页 1-4 作答 / 空格翻面与继续 / ←→ 上一词下一词 / S 斩 / P 朗读、Esc 返回\n- **窗口记忆**：记住窗口大小、位置与最大化状态，下次打开原样恢复；并记住上次停留的页面\n- 默认窗口 1360×860，最小 1040×680（贴合桌面分辨率）\n- 桌面密度：行更紧凑、悬停与右键上下文菜单、纯 CSS 悬停提示、快捷键提示角标\n\n## 验证\n\ntsc 0 错误、真机 CDP 浅/深色全页面零未捕获异常。",
+  "pub_date": "2026-10-03T05:38:19Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWFoeFhIYUVCRGhKUzZpUHl3RGw5bHkza1VHaDI3UlRIekt1UnM2blRVbUtXeWdBWmk2ZE5ZRTNPZUpJVnlqdEVxRHVJUXd0bjVHMjVvemJUbFljVFFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDA1MTI2CWZpbGU6WmVuZXdfMC4xNi4wX3g2NC1zZXR1cC5leGUKbEhqdEN6TFpBY2F2TEJKbE56Rmx5MmlNVEtPbWJaT25rWjBEWEtPWTFVNTFOL0FNcXFFR3oyRmx4S1ljNXJYMkkwRUVVL016T2pkRjMrNzgrbFZRRHc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVNhRTFaekxqZUttcUN1b2x5NjBSbUNrSXlMSXI4Q3p6MnFoZ2ovcjJXRUJOTWx4SktSWmhGZ0ZnY0d3SHJZTWVYbFAvVnpod3Rya1REcnE2MnIwL1FnPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDA1ODI3CWZpbGU6WmVuZXdfMC4xNy4wX3g2NC1zZXR1cC5leGUKbGs1NmkrbFlMQ3lsZDExazZVTjlCQmt3LzBSREJZZGdKcTN2cE9JM3NRd0hBZ2lPeElWZmprOElXaWx2U2U2U1FCSnYreEVYWFM1aGtKR0lTQjkrQnc9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
