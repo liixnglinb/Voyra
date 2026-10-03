@@ -407,7 +407,7 @@ function FeatureArt({ type }) {
 
   if (type === 'prompts') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-pp2-art">
     <div className="pp2-paper">
-      <p>请作为<mark className="hl-yellow">资深前端架构师</mark>，基于以下代码片段，提炼出<mark className="hl-blue">3 个重构行动项</mark>，要求保持<mark className="hl-pink">严谨专业的语气</mark>。</p>
+      <p>请作为<mark className="hl-yellow">资深前端架构师</mark>，基于以下代码片段，提炼出<mark className="hl-blue">3 个重构行动项</mark>，要求保持<mark className="hl-pink">严谨专业的语气</mark><span className="vr-cursor-blink">|</span>。</p>
     </div>
   </div>;
 
@@ -416,9 +416,9 @@ function FeatureArt({ type }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '10px 2px 2px' }}>
       {[['早餐', '按方案', 'ok'], ['午餐', '按方案', 'ok'], ['晚餐', active === 2 ? '待打卡' : '按方案', 'ok']].map(([meal, state, st], i) => (
         <div key={meal} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 8,
-          border: `1px solid ${active === i ? '#A48830' : '#EDEAE0'}`, background: active === i ? '#FBF7EA' : '#FCFCFA' }}>
+          border: `1px solid ${active >= i ? '#A48830' : '#EDEAE0'}`, background: active >= i ? '#FBF7EA' : '#FCFCFA', transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
           <i style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: 6,
-            fontSize: 11, fontWeight: 700, color: '#fff', background: active === i ? '#A48830' : '#C9C4B4' }}>{active === i ? '✓' : '·'}</i>
+            fontSize: 11, fontWeight: 700, color: '#fff', background: active >= i ? '#A48830' : '#C9C4B4', transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)', transform: active === i ? 'scale(1.12)' : 'scale(1)' }}>{active >= i ? '✓' : '·'}</i>
           <span style={{ fontSize: 13, color: '#333', fontWeight: 500 }}>{meal}</span>
           <span style={{ marginLeft: 'auto', fontSize: 11, color: '#A48830', fontWeight: 600 }}>{state}</span>
         </div>
@@ -477,11 +477,40 @@ function FeatureArt({ type }) {
   </div>;
 
   if (type === 'uikit') {
-    const rows = [['变形胶囊导航', 'Morphing Navbar'], ['状态开关', 'Toggle Switch'], ['分页控件', 'Pagination']];
+    /* 真实可拨动的微型组件：Switch / Slider / Segmented 随轮播切换状态 */
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-uikit-art">
-      <div className="vr-preview-top"><Shapes size={15} /><span>UI 组件图鉴</span><b>52 组件</b></div>
-      <div className="vr-uikit-list">{rows.map((r, i) => <button key={r[0]} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><span>{r[0]}</span><em>{r[1]}</em></button>)}</div>
-      <div className="vr-uikit-foot">点击卡片 · 展开原理</div>
+      <style>{`
+        .vr-ui-showcase { display: flex; flex-direction: column; gap: 12px; padding: 10px 2px 2px; height: 100%; justify-content: center; }
+        .vr-ui-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px;
+          background: rgba(255,255,255,.72); border: 1px solid rgba(20,24,33,.09); border-radius: 12px;
+          box-shadow: 0 4px 12px rgba(0,0,0,.02); }
+        .vr-ui-label { font-size: 11.5px; font-weight: 600; color: #333; }
+        .vr-ui-switch { width: 38px; height: 21px; border-radius: 12px; position: relative; cursor: pointer;
+          background: ${active % 2 === 0 ? '#0EA5E9' : '#e2e2e2'}; transition: background .3s cubic-bezier(.16,1,.3,1); }
+        .vr-ui-switch::after { content: ''; position: absolute; top: 2px; width: 17px; height: 17px; background: #fff;
+          border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,.22);
+          left: ${active % 2 === 0 ? '19px' : '2px'}; transition: left .3s cubic-bezier(.16,1,.3,1); }
+        .vr-ui-slider { width: 84px; height: 4px; background: #e5e5e5; border-radius: 2px; position: relative; }
+        .vr-ui-slider::before { content: ''; position: absolute; left: 0; top: 0; height: 100%; border-radius: 2px;
+          width: ${active === 1 ? '78%' : '38%'}; background: #0EA5E9; transition: width .5s cubic-bezier(.16,1,.3,1); }
+        .vr-ui-slider::after { content: ''; position: absolute; top: 50%; width: 13px; height: 13px; background: #fff;
+          border: 2px solid #0EA5E9; border-radius: 50%; transform: translate(-50%, -50%);
+          left: ${active === 1 ? '78%' : '38%'}; transition: left .5s cubic-bezier(.16,1,.3,1);
+          box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+        .vr-ui-seg2 { display: flex; background: #efefef; padding: 3px; border-radius: 8px; gap: 2px; }
+        .vr-ui-seg2 span { padding: 4px 12px; font-size: 10px; font-weight: 700; border-radius: 6px; color: #777;
+          transition: all .2s cubic-bezier(.16,1,.3,1); }
+        .vr-ui-seg2 span.is-active { background: #fff; color: #0EA5E9; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+      `}</style>
+      <div className="vr-preview-top"><Shapes size={15} /><span>UI 组件图鉴</span><b>交互预览</b></div>
+      <div className="vr-ui-showcase">
+        <div className="vr-ui-row"><span className="vr-ui-label">状态开关</span><div className="vr-ui-switch" role="switch" aria-checked={active % 2 === 0} /></div>
+        <div className="vr-ui-row"><span className="vr-ui-label">范围滑块</span><div className="vr-ui-slider" role="slider" aria-valuenow={active === 1 ? 78 : 38} /></div>
+        <div className="vr-ui-row">
+          <span className="vr-ui-label">分段选择</span>
+          <div className="vr-ui-seg2"><span className={active !== 2 ? 'is-active' : ''}>日</span><span className={active === 2 ? 'is-active' : ''}>月</span></div>
+        </div>
+      </div>
     </div>;
   }
 
@@ -1197,7 +1226,14 @@ export default function Dashboard() {
       .vr-home .vr-api-tabs button.is-active { border-color: transparent; background: #2589ed; color: #fff; box-shadow: 0 2px 5px rgba(37, 137, 237, .25); }
       .vr-home .vr-api-route { display: flex; min-width: 0; align-items: center; gap: 6px; padding: 7px 8px; border: 1px solid #dbe8ee; border-radius: 5px; background: rgba(255, 255, 255, .86); font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
       .vr-home .vr-api-route span { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; color: #3b9b71; }
-      .vr-home .vr-api-route span i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(59, 155, 113, .12); }
+      .vr-home .vr-api-route span i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px rgba(59, 155, 113, .12); animation: vr-pulse-ring 2s cubic-bezier(.16,1,.3,1) infinite; }
+      @keyframes vr-pulse-ring {
+        0% { box-shadow: 0 0 0 0 rgba(59, 155, 113, .4); }
+        70% { box-shadow: 0 0 0 6px rgba(59, 155, 113, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 155, 113, 0); }
+      }
+      .vr-cursor-blink { animation: vr-blink 1s step-start infinite; color: #1b1b1b; font-weight: 700; }
+      @keyframes vr-blink { 50% { opacity: 0; } }
       .vr-home .vr-api-route b { flex: 0 0 auto; color: #9a60c4; font-weight: 800; }
       .vr-home .vr-api-route code { min-width: 0; overflow: hidden; color: #527286; text-overflow: ellipsis; white-space: nowrap; }
       .vr-home .vr-api-pane { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
