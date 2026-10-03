@@ -1,10 +1,10 @@
 {
-  "version": "0.17.1",
-  "notes": "﻿# Zenew v0.17.1 · 桌面多栏布局\n\n## 界面\n- 复习统计改为桌面两栏：左侧「未来十天复习计划」主图，右侧「掌握现状 + 最近十天进展」辅栏（窗口窄于 1180px 自动退回单栏）\n- 词书页保持两栏书卡栅格，同一套栅格与间距\n\n## 承接 v0.17.0\n- 只做英语：无课程/知识点/教材导入/考试日历；队列与统计只算词书单词卡\n- 桌面：左侧固定导航、全键盘操作、窗口尺寸位置记忆、右键菜单、桌面密度\n\n验证：tsc 0 错误、真机 CDP 浅/深色零未捕获异常",
-  "pub_date": "2026-10-03T05:42:56Z",
+  "version": "0.18.0",
+  "notes": "# Zenew v0.18.0 · 单词列表、词条详情与五种训练模式\n\n这一版把「学一个词」扩展成一套完整的词汇工作台。\n\n## 单词列表（词书 → 单词列表）\n\n- 六个筛选：**全部 / 今日 / 未学习 / 学习中 / 已熟识 / 已斩**\n- `共 N 词` + 排序（按词书默认顺序 / 到期时间 / 字母序 / 掌握度）+ 搜索 + 只看逾期\n- 每行：单词 · 右侧 `下次复习 18 天后` 或 `已逾期 8 天` · 左侧五段记忆状态 · 词下细进度条；当前词高亮\n- 桌面两栏：左列表 + 右词条详情；宽窗口一屏既能翻词表又能看释义\n- 大词书按需增量渲染，翻 4500 词也不卡\n\n## 词条详情\n\n- 单词 + **美/英双音标**（分别朗读，`en-US` / `en-GB`）\n- 全部释义、例句（英文高亮该词 + 中文对照）、记忆图卡\n- ⭐ 收藏、**斩**（移出计划）、上一词 / 下一词\n\n## 五种训练模式\n\n| 模式 | 做什么 |\n|---|---|\n| **速听** | 按设定间隔连续朗读，可自动下一词，适合通勤/闭眼听 |\n| **速刷** | 单词快速过，认识 / 模糊 / 不认识 / 斩 一键判定 |\n| **单词选义** | 四选一（干扰项取自同词书），额外提供 **「我不认识」** |\n| **拼写** | 给中文释义与图卡，键入英文单词；逐字符判定对错，提示逐字揭露 |\n| **听写** | 听发音（或看释义）写单词，配 **听写设置** |\n\n**听写设置**：听发音·写单词/释义 或 听释义·写单词；美音 / 英音；播放次数 1 / 2 / 3 次；播放间隔 2 / 4 / 6 / 8 秒；自动播放下一词。\n\n所有训练的结果都按 FSRS 落库（认识 = Good、模糊 = Hard、不认识 = Again、斩 = Easy 并暂停该卡），与主复习队列共用同一套记忆曲线。\n\n## 其他\n\n- 训练页顶部显示 `当前 / 总数` 与上一词释义，底部工具条：设置 / 图片 / 斩 / 提示 / 朗读\n- 深浅色、桌面布局与既有设计系统一致；键盘可达\n\n验证：tsc 0 错误、vite build 通过、真机 CDP 浅/深色零未捕获异常。",
+  "pub_date": "2026-10-03T07:31:27Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWJITGRGM1NnOThwT1R5MGdHQTV5RHFSblpFaThGV01DRWlQWHdiWUYxMG04a1RYL1doUEUrVS9Lcmk1Mk5lRXdza3k1NnJ3SkRrMzkwVXRETFZUZWdvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDA2MTc2CWZpbGU6WmVuZXdfMC4xNy4xX3g2NC1zZXR1cC5leGUKMFo0VkZIYXFWZ0FYZFhkcVJvREo0T1kvUWFSV3FyMnl4QXBqZE9RYmNPZFAzRk8xQ0FRZS9WdUt2RUdLOXlSNjFia3B1VFIvT2ZUUkRzWDREVlRtQ0E9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWFiY3hWb3J3TFlXRG1hNDdzUUwxUjBwallDWUpWWHBqWU9nOWd2RTlJa0UrbmtXcXRIdkxHUzR3MGVjdGR1cm9nNGxvVXRhZjYzNVo1cVhFa1czOUE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDEyNjg3CWZpbGU6WmVuZXdfMC4xOC4wX3g2NC1zZXR1cC5leGUKak9mZ3JaQUNvWDI4SmpkczFBTDl6ZWdQbE1LRy9lTzhYeVFDcWJuYnFVZnlPcUhMNDNXYkVXSEdCcStoNVdhcWhXdUN5Q0ZrWFQwMUQxWFhzeHpaQmc9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
