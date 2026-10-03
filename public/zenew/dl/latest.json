@@ -1,10 +1,10 @@
 {
-  "version": "0.19.0",
-  "notes": "# Zenew v0.19.0 · 美术风格优化\n\n这一版不动功能，只重做观感与信息密度。\n\n## 材质与形状\n\n- 左侧导航由通栏直角改为**浮动圆角面板**（22px 圆角、玻璃底、1px 发丝边、柔和外阴影）\n- 卡片圆角统一为三级（大卡 18px / 次级 14px / 内嵌 12px），按钮 13px；只有标签、分段与进度条保留胶囊形\n- **去塑料感**：主色降饱和为哑光蓝；卡片改极浅冷白渐变 + 顶部 1px 内高光；阴影改为「近距离硬 + 远距离柔」的分层阴影；大面积面板叠加不超过 3% 的极细颗粒，深色下更低\n- 按钮统一 4 类（主要 / 描边 / 幽灵 / 危险），尺寸 40·36·32·28，悬停抬升、按下回弹，禁用态降饱和\n\n## 首页\n\n- 移除「我的单词云」，改为克制的概览：三个指标（今日待复习 / 已学词 / 连续天数）+ 一排最近学习的词卡（点击进入对应词书的单词列表）\n- 词云相关的连线、图例、装饰文字一并删除\n\n## 文案\n\n- 只保留「做决定或看结果必需」的文字：删掉 kicker、面包屑、页面级说明句、操作提示与快捷键提示\n- 数据标签（如共 N 词）与按钮文字保留\n\n## 词书封面\n\n- 词库与首页的词书封面改为**程序生成的书封**：书脊高光 + 按词书固定的低饱和渐变 + 几何纹样 + 大小写缩写，哑光无高光反射\n\n## 其他\n\n- 深浅色两套主题同步更新；对比度仍满足 AA\n- 单词列表、词条详情、五种训练（速听 / 速刷 / 单词选义 / 拼写 / 听写）与听写设置面板功能不变\n\n验证：tsc 0 错误、vite build 通过、真机 CDP 浅/深色零未捕获异常。",
-  "pub_date": "2026-10-03T07:48:14Z",
+  "version": "0.20.0",
+  "notes": "# Zenew v0.20.0 · 工程清债与新手引导\n\n这一版没有新功能，集中做《前端 UI 修改建议》第一波：工程清债 + 两个体验补丁。\n\n## 工程清债\n\n- `index.css` 删除整套 Sky v5 旧体系（**2867 → 1571 行，体积 179KB → 107.6KB，-40%**），打包后 CSS 128KB（gzip 22.5KB）\n- 删除前逐类盘点 378 个 v5 选择器：仍在用的三组（下拉选择 `sel-*`、日期面板 `dp-*`、排行榜锁星角标）已迁移到 v6 令牌下，其余确认无引用后删除（付费墙样式、悬浮胶囊、底部坞、旧词云等）\n- 全仓硬编码旧品牌色清零：纸屑色数组改用 v6 色系，头像渐变改 `#3A63E0 → #476FD8`；残留仅剩深色主题令牌定义本身\n\n## 体验补丁\n\n- **新用户首启引导**：首次使用（还没有学过词）时，首页顶部出现三步引导卡「① 选词书 → ② 导入 300 词 → ③ 开始第 1 组」，每步可直接点击；学过词后自动消失\n- **顶栏瘦身**：从 7 个图标收敛为 4 个（查词 / 主题 / 快捷键 / 设置），统计、任务、排行榜交给左侧导航，不再重复\n- **语言切换入口移除**：英文界面为半成品，先隐藏避免误切（i18n 能力保留）\n- **tooltip 键盘可达**：`Tab` 聚焦时与悬停同样显示提示\n- **字号基线**：最小字号 11px → 12px，侧栏快捷键等小字 ≥10px\n- **逾期提示去压迫**：单词列表的「已逾期 N 天」改为中性色弱提示（数据不变，统计页警示保留）\n\n验证：tsc 0 错误、vite build 通过、真机 CDP 浅/深色零未捕获异常。",
+  "pub_date": "2026-10-03T08:49:42Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVpNc3k3RENOdFRCdi9EQnVReGk0MDdrM1JnKzI0cW9nRWRMM1VKVFFDdk82emd0UXB5WTRtUFhycUptVTVFRlVLZEExMEJERExpRm94ZXEyMWV6bFFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDEzNjk0CWZpbGU6WmVuZXdfMC4xOS4wX3g2NC1zZXR1cC5leGUKa3Y5cVFpcURCNVk2Rm81S1h3TnhJU1pvcTdYTzhsODUrUElnZk1GY1NKaUhxNE5UcFYxeW1jZndTTk5GU25JWWZmd0IzWXhuN3dPd3k4SUxSNTl1QUE9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWJhMmR1NFdaczlrRDVmOEcxb1VGbEVraHc4YUR1TlVWdjFCZTZnQVU2TEhGWnNPM2hSYklIZk0xUk1QMlQrOVdGYlRxQjdxSSsyYTdjSVRlMmJSZ1FFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDE3MzgyCWZpbGU6WmVuZXdfMC4yMC4wX3g2NC1zZXR1cC5leGUKMStadlh4MVVqOUE1VzBUL21DbnJHc3NXZUxBeFFSZnpYamdlVTRXNkRRMFlqMXBwTE95aVpxNi8yWWltbHkrRDhTcStlYXdXRldqK0h3YnJycktJRFE9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
