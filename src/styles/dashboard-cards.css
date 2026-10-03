@@ -1,4 +1,28 @@
 @import url('/design-system/voyra-foundation.css');
+
+/* ══════════════════════════════════════════════════════════════
+   全站杂志级 Design Tokens（在 foundation v1 之上的语义增强）
+   不并行造一套 mag-* 事实源：杂志色以别名落在这里，新增 spring
+   缓动与柔深阴影；卡片圆角 20 → 24（更 App Store）。
+   ══════════════════════════════════════════════════════════════ */
+:root{
+  /* 杂志语义：暖白纸张 / 极黑墨水 / 表面 / 辅助 / 细线 */
+  --vr-mag-bg:#FDFCF9; --vr-mag-ink:#111111; --vr-mag-surface:#FFFFFF;
+  --vr-mag-muted:#8A8F99; --vr-mag-line:rgba(17,17,17,.08);
+  /* 卡片圆角升级 */
+  --vr-radius-card:24px;
+  /* Apple 级弹簧（foundation --vr-ease 更克制；spring 用于入场/悬停） */
+  --vr-spring:cubic-bezier(.16,1,.3,1);
+  /* 柔深物理阴影 */
+  --vr-shadow-card:0 24px 48px -12px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.02);
+  --vr-shadow-hover:0 32px 64px -16px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.04);
+}
+/* body 纸张网格兜底（.vr-home 自身网格覆盖全屏，这里管加载瞬间/边缘） */
+body{
+  background-color:#FDFCF9;
+  background-image:linear-gradient(rgba(17,17,17,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(17,17,17,.03) 1px,transparent 1px);
+  background-size:32px 32px;
+}
 /* One editorial grid; hero geometry changes position, never the portrait scale. */
 @media(min-width:961px){
   /* 对齐基准：容器 1100。导航文字左右沿由 56 内边距定出；
@@ -616,3 +640,101 @@
   .vr-home .vr-arrow-link svg { transition:none !important; }
   .vr-home .vr-unified-visual { transform:none !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   第三轮 · 顶级数字艺术展
+   卡片 480 + 图文 50/50 · 纸片/高亮演示 · Skill 深色 · About/Contact 增强
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── 普通卡 480px、图文严格 50/50；首卡保持横排 400/40-60 ── */
+@media(min-width:961px){
+  .vr-home .vr-unified-card { height:480px !important; min-height:480px !important; border-radius:24px; }
+  .vr-home .vr-unified-wrap.is-lead .vr-unified-card { height:400px !important; min-height:400px !important; border-radius:24px; }
+  .vr-home .vr-unified-wrap:not(.is-lead) .vr-unified-content { flex:0 0 50%; padding:28px 28px 20px; }
+  .vr-home .vr-unified-wrap:not(.is-lead) .vr-unified-visual { flex:1 1 50%; margin-top:0; padding:0 28px 28px; display:flex; align-items:stretch; }
+}
+
+/* ── 图标装饰框放大到 40px（radius 12），标题更有分量 ── */
+.vr-home .vr-unified-card .vr-icon-box { padding:10px; border-radius:12px; }
+
+/* ── Hero：2026 EDITION 胶囊 ── */
+.vr-home .vr-hero-badge {
+  padding:4px 11px; border:1px solid var(--vr-line); border-radius:99px;
+  font-size:10px; letter-spacing:.08em; color:var(--vr-muted); white-space:nowrap;
+}
+
+/* ── Tabs：等宽小序号前缀；移动端横向 snap（金色 marker 保留） ── */
+.vr-home .vr-tab-num { font-family:var(--vr-mono); font-size:.42em; font-weight:600; opacity:.45; margin-right:.35em; vertical-align:.12em; }
+.vr-home .vr-tab.is-active .vr-tab-num { opacity:.75; }
+@media(max-width:720px){
+  .vr-home .vr-tab-zone .vr-tabs { scroll-snap-type:x mandatory; }
+  .vr-home .vr-tab-zone .vr-tab { scroll-snap-align:start; }
+}
+
+/* ── 02 日程：实体纸片 5 列错落（周几头 + 课程卡 + 事件条沉底） ── */
+.vr-home .vr-tt2-art {
+  padding:16px !important;
+  background:linear-gradient(145deg,#FFF 0%,#F5F4F0 100%) !important;
+  border:1px solid #FFF !important;
+  box-shadow:-10px 10px 30px -12px rgba(217,119,87,.18), 0 1px 3px rgba(0,0,0,.05) !important;
+}
+.vr-home .tt2-grid { width:100%; height:100%; display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:auto auto 1fr; gap:9px; }
+.vr-home .tt2-day { text-align:center; font-size:11px; font-weight:700; color:#9A8478; }
+.vr-home .tt2-card { padding:10px 6px; border-radius:9px; font-size:12px; font-weight:800; text-align:center; box-shadow:0 5px 13px rgba(0,0,0,.08), inset 0 1px 0 #fff; }
+.vr-home .tt2-alg { grid-column:2; background:#FFEDD5; color:#C2410C; border:1px solid #FED7AA; transform:rotate(-2deg); }
+.vr-home .tt2-math { grid-column:4; background:#E0E7FF; color:#4338CA; border:1px solid #C7D2FE; transform:rotate(2deg); }
+.vr-home .tt2-event {
+  grid-column:1 / -1; align-self:end; display:flex; align-items:center; gap:10px;
+  background:#fff; padding:11px 14px; border-radius:12px; border-left:4px solid #D97757;
+  font-size:13px; font-weight:700; color:#1b1b1b;
+  box-shadow:0 9px 19px -9px rgba(217,119,87,.45);
+}
+.vr-home .tt2-event i { width:7px; height:7px; border-radius:50%; background:#D97757; box-shadow:0 0 0 3px rgba(217,119,87,.18); flex:0 0 auto; }
+
+/* ── 04 提示词：三色高亮 paper（黄/蓝/粉） ── */
+.vr-home .vr-pp2-art { padding:18px !important; background:#FEFCE8 !important; display:flex; }
+.vr-home .pp2-paper {
+  width:100%; margin:auto; background:#fff; padding:20px 22px; border-radius:14px;
+  border:1px solid #FEF08A;
+  box-shadow:0 12px 32px -10px rgba(234,179,8,.25), inset 0 1px 0 #fff;
+  font-size:14px; line-height:1.95; color:#444;
+}
+.vr-home .pp2-paper mark { padding:1px 6px; border-radius:5px; font-weight:700; white-space:nowrap; }
+.vr-home .pp2-paper .hl-yellow { background:#FEF08A; color:#854D0E; }
+.vr-home .pp2-paper .hl-blue { background:#BAE6FD; color:#075985; }
+.vr-home .pp2-paper .hl-pink { background:#FECDD3; color:#9F1239; }
+
+/* ── Skill 深色极客卡（GitHub Dark），十阶段浅色面板作浮起终端 ── */
+.vr-home .theme-skilldark { --t-color:#58A6FF; --t-bg:#161b22; --t-glow:rgba(88,166,255,.18); }
+.vr-home .theme-skilldark .vr-unified-card { background:#0D1117 !important; color:#C9D1D9; border:1px solid #30363D !important; }
+.vr-home .theme-skilldark .vr-unified-card:is(:hover,:focus-visible) {
+  background:#0D1117 !important; border-color:#58A6FF !important;
+  box-shadow:0 20px 44px -12px rgba(88,166,255,.25) !important;
+}
+.vr-home .theme-skilldark .vr-feature-title h2 { color:#F0F6FC !important; background:none !important; -webkit-text-fill-color:#F0F6FC !important; }
+.vr-home .theme-skilldark .vr-unified-content>p { color:#8B949E !important; }
+.vr-home .theme-skilldark .vr-card-eyebrow { color:#6E7681 !important; border-color:#21262d !important; }
+.vr-home .theme-skilldark .vr-card-eyebrow>span:last-child { color:#58A6FF !important; }
+.vr-home .theme-skilldark .vr-arrow-link { color:#C9D1D9 !important; }
+.vr-home .theme-skilldark .vr-card-mode { color:#6E7681; border-color:#30363D; }
+.vr-home .theme-skilldark .vr-icon-box { background:#21262d !important; color:#58A6FF !important; }
+.vr-home .theme-skilldark:is(:hover,:focus-visible) .vr-icon-box { background:#58A6FF !important; color:#0D1117 !important; }
+.vr-home .theme-skilldark .vr-unified-visual .vr-mathmodel-art {
+  background:#f6f8fa !important; border:1px solid #d0d7de !important;
+  box-shadow:0 18px 40px -14px rgba(0,0,0,.6), inset 0 1px 0 #fff !important;
+}
+
+/* ── About：VOYRA 水印 + 自述放大 + 经历卡 hover 位移 ── */
+.vr-home .vr-about-panel { position:relative; }
+.vr-home .about-watermark {
+  position:absolute; top:-26px; left:-24px; z-index:0; pointer-events:none;
+  font-size:150px; font-weight:900; line-height:1; letter-spacing:-.04em; color:rgba(17,17,17,.03);
+}
+.vr-home .vr-about-intro, .vr-home .vr-experience { position:relative; z-index:1; }
+.vr-home .vr-about-intro p { font-size:24px !important; line-height:1.55; letter-spacing:-.02em; }
+.vr-home .vr-panel .vr-experience-card { transition:border-color .3s, box-shadow .3s, transform .4s var(--vr-spring) !important; }
+.vr-home .vr-panel .vr-experience-card:hover { transform:translateX(8px) !important; }
+
+/* ── Contact：末尾箭头 hover 位移（复制逻辑保留） ── */
+.vr-home .vr-panel .vr-contact-row svg:last-child { transition:transform .35s var(--vr-spring), color .3s !important; }
+.vr-home .vr-panel .vr-contact-row:hover svg:last-child { transform:translate(4px,-4px); }

@@ -405,10 +405,10 @@ function FeatureArt({ type }) {
     </div>;
   }
 
-  if (type === 'prompts') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-prompts-art">
-    <div className="vr-preview-top"><Code2 size={15} /><span>Prompt.md</span><b>模板</b></div>
-    <div className="vr-prompt-copy"><span>请基于以下资料</span><mark>{['提炼结构', '给出行动项', '保留语气'][active]}</mark><span>输出一份清晰的回答。</span></div>
-    <div className="vr-preview-actions">{['结构', '行动', '语气'].map((item, index) => <button className={active === index ? 'is-active' : ''} onClick={() => setActive(index)} key={item}>{item}</button>)}</div>
+  if (type === 'prompts') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-pp2-art">
+    <div className="pp2-paper">
+      <p>请作为<mark className="hl-yellow">资深前端架构师</mark>，基于以下代码片段，提炼出<mark className="hl-blue">3 个重构行动项</mark>，要求保持<mark className="hl-pink">严谨专业的语气</mark>。</p>
+    </div>
   </div>;
 
   if (type === 'diet') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-diet-art">
@@ -436,13 +436,15 @@ function FeatureArt({ type }) {
   </div>;
 
   if (type === 'timetable') {
-    const days = ['一', '二', '三', '四', '五'];
-    const courses = ['高数', '算法', '英语', '数据结构', '自习'];
-    const plans = ['09:30 课程资料整理', '15:00 项目复盘', '20:30 晚间阅读', '12:00 图书馆还书', '18:00 篮球局'];
-    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-timetable-art">
-      <div className="vr-preview-top"><CalendarRange size={15} /><span>第 3 周 · 课程 + 日程</span><b>2 合 1</b></div>
-      <div className="vr-week-strip">{days.map((d, i) => <button key={d} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><b>周{d}</b><span>{courses[i]}</span></button>)}</div>
-      <div className="vr-day-line"><i>{active === 1 ? <Check size={11} /> : ''}</i><span>{plans[active]}</span><em>日程</em></div>
+    /* 实体纸片日程：周几表头 + 两张错落课程卡 + 底部事件条（事件随轮播切换） */
+    const events = ['15:00 项目周报复盘', '09:30 课程资料整理', '20:30 晚间阅读', '12:00 图书馆还书', '18:00 篮球局'];
+    return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-tt2-art">
+      <div className="tt2-grid">
+        {['一', '二', '三', '四', '五'].map((d) => <div className="tt2-day" key={d}>周{d}</div>)}
+        <div className="tt2-card tt2-alg">算法设计</div>
+        <div className="tt2-card tt2-math">高等数学</div>
+        <div className="tt2-event"><i /><span>{events[active]}</span></div>
+      </div>
     </div>;
   }
 
@@ -787,7 +789,7 @@ const MATHMODEL_ITEM = {
 
 function SkillsPanel() {
   return <div className="vr-product-list vr-panel-stagger" data-roll>
-    <ShowcaseCard item={MATHMODEL_ITEM} index={0} lead themeClass="theme-github" />
+    <ShowcaseCard item={MATHMODEL_ITEM} index={0} lead themeClass="theme-skilldark" />
   </div>;
 }
 
@@ -804,11 +806,12 @@ function HomeTabs({ activeTab, onChange }) {
     onChange(TABS[next][0]);
     event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next].focus();
   };
-  return <div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label], index) => <button type="button" id={`work-tab-${id}`} key={id} role="tab" tabIndex={activeTab === id ? 0 : -1} aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onKeyDown={(e) => onKey(e, index)} onClick={() => onChange(id)}>{label}</button>)}</div>;
+  return <div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label], index) => <button type="button" id={`work-tab-${id}`} key={id} role="tab" tabIndex={activeTab === id ? 0 : -1} aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onKeyDown={(e) => onKey(e, index)} onClick={() => onChange(id)}><span className="vr-tab-num" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{label}</button>)}</div>;
 }
 
 function AboutPanel() {
   return <div className="vr-about-panel">
+    <div className="about-watermark" aria-hidden="true">VOYRA</div>
     <section className="vr-about-intro" data-roll><span>SHUAI SHUAI / VOYRA</span><p>个人开发者，持续把灵感、工具和 AI 能力整理成真正能反复使用的产品。</p><div className="vr-tags" aria-label="个人标签">{['VOYRA', 'FRONTEND', 'AI', 'CREATOR', 'CLOUDFLARE', 'BMOB'].map((tag) => <span key={tag}>{tag}</span>)}</div></section>
     <section className="vr-experience" data-reveal><div className="vr-experience-label"><span>经历 / EXPERIENCE</span><b>持续构建</b></div><div className="vr-experience-list">{EXPERIENCES.map((item, index) => {
       const Icon = item.Icon;
@@ -1463,7 +1466,7 @@ export default function Dashboard() {
     <div className="vr-rail-dashes" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
-    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><HomeTabs activeTab={activeTab} onChange={changeTab} /><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
+    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><span className="vr-hero-badge">2026 EDITION</span><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><HomeTabs activeTab={activeTab} onChange={changeTab} /><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
     <footer className="vr-footer" data-roll><span>© 2026 Voyra®</span><span style={{ marginLeft: 14, color: '#bbb' }}>Based on <a href="https://www.oiloil.org" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', textDecorationColor: '#ddd', textUnderlineOffset: 3 }} onMouseOver={(e) => { e.currentTarget.style.color = '#666'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'inherit'; }}>oiloil.org</a></span></footer>
   </div>;
 }

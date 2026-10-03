@@ -40,13 +40,13 @@ export default function useCardEffects(rootRef, dependency) {
         target.style.setProperty('--spot-x', `${px * 100}%`);
         target.style.setProperty('--spot-y', `${py * 100}%`);
         /* 3D 物理倾斜：鼠标在右 → rotateY 正（卡片向右转）；
-           鼠标在下 → rotateX 正（卡片低头）。角度极限 ±6deg。 */
-        const maxTilt = 6;
+           鼠标在下 → rotateX 正（卡片低头）。角度极限 ±8deg（杂志封面微翻转）。 */
+        const maxTilt = 8;
         target.style.setProperty('--tilt-x', `${(py - 0.5) * maxTilt * 2}deg`);
         target.style.setProperty('--tilt-y', `${(px - 0.5) * maxTilt * 2}deg`);
-        /* 艺术图反向微移，增强透视厚度感（极限 ±12px） */
-        target.style.setProperty('--art-x', `${(0.5 - px) * 12}px`);
-        target.style.setProperty('--art-y', `${(0.5 - py) * 12}px`);
+        /* 艺术图反向微移，增强透视厚度感（极限 ±16px） */
+        target.style.setProperty('--art-x', `${(0.5 - px) * 16}px`);
+        target.style.setProperty('--art-y', `${(0.5 - py) * 16}px`);
         target.setAttribute('data-pointer-active', '');
       });
     };
