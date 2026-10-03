@@ -1,11 +1,32 @@
 @import url('/design-system/voyra-foundation.css');
 /* One editorial grid; hero geometry changes position, never the portrait scale. */
 @media(min-width:961px){
-  .vr-home main .vr-hero-shell {width:min(100% - 64px,1100px);}
-  .vr-home .vr-hero-shell .vr-hero {grid-template-columns:460px 282px;justify-content:space-between;column-gap:0;padding-inline:clamp(24px,4vw,56px);}
-  .vr-home header.vr-top {width:min(100% - 64px,1100px);padding-inline:clamp(24px,4vw,56px);}
-  .vr-home .vr-tab-zone .vr-tabs {justify-content:space-between;gap:24px;padding:18px 56px 26px;align-items:center;}
-  .vr-home .vr-tab-zone .vr-tab {font-size:40px;line-height:1.25;letter-spacing:-.035em;}
+  /* 对齐基准：容器 1100。导航文字左右沿由 56 内边距定出；
+     下面两条把 hero 文字左沿与人物右沿也压到同一条基准线上。 */
+  /* 容器 858：截图实测卡片约 746 宽，而导航/卡片各有 56 内缩，
+     858 − 2×56 = 746，卡片盒子的左右沿才与导航文字沿重合。 */
+  .vr-home main .vr-hero-shell {width:min(100% - 64px,858px);min-height:calc(100svh - 32px);}
+  /* hero 内边距与导航同宽（56），「Voyra」左沿才与「产品」左沿在同一竖线上；
+     人物列 218：图片本身比列盒宽约 18%（含 1deg 旋转外扩），
+     算进去后人物右沿正好落到与「交流」右沿一致的位置。 */
+  .vr-home .vr-hero-shell .vr-hero {grid-template-columns:minmax(0,520px) 218px;justify-content:space-between;column-gap:64px;padding:34px clamp(24px,4vw,56px) 24px;}
+  .vr-home .vr-hero-shell .vr-hero h1 {max-width:520px;}
+  .vr-home .vr-hero-shell .vr-person-stage,
+  .vr-home .vr-hero-shell .vr-person-frame {width:218px;height:541px;}
+  /* 人物图带 1deg 倾斜，旋转会让图层包围盒向两侧各外扩约 6px（stage/frame 本身
+     已经正好落在基准线上，是这一层溢出去的）。把它整体左移 6px，
+     让「看得见的」人物右沿与「交流」右沿真正对齐。
+     translateY/rotate 保持与 --vr-person-breathe 关键帧一致，避免破坏呼吸动画。 */
+  .vr-home .vr-hero-shell .vr-person-motion {transform:translateX(-6px) translateY(0) rotate(1deg);}
+  .vr-home .vr-hero-shell .vr-person-frame.is-ready .vr-person-motion {animation-name:vr-person-breathe-aligned;}
+  @keyframes vr-person-breathe-aligned {0%,100%{transform:translateX(-6px) translateY(0) rotate(1deg);}50%{transform:translateX(-6px) translateY(-5px) rotate(.55deg);}}
+  .vr-home header.vr-top {width:min(100% - 64px,858px);padding-inline:clamp(24px,4vw,56px);}
+  .vr-home .vr-tab-zone .vr-tabs {justify-content:space-between;gap:24px;padding:16px 56px 6px;align-items:center;}
+  .vr-home .vr-tab-zone .vr-tab {font-size:36px;line-height:1.25;letter-spacing:-.035em;}
+  /* 卡片与导航文字同宽同沿：各断点的列表内缩在自己的 media 里给
+     （桌面 56 / 平板 20 / 手机 16），桌面档同样 56，卡片左右沿才与
+     「产品」「交流」对齐。 */
+  .vr-home .vr-product-list {padding-inline:56px;}
 }
 @media(min-width:721px) and (max-width:960px){
   .vr-home main .vr-hero-shell {width:calc(100% - 40px);}
@@ -13,15 +34,33 @@
   .vr-home .vr-hero-shell .vr-hero h1 {font-size:clamp(92px,12vw,116px);}
   .vr-home .vr-tab-zone .vr-tabs {justify-content:space-between;gap:16px;padding:16px 20px 22px;}
   .vr-home .vr-tab-zone .vr-tab {font-size:28px;line-height:1.25;}
+  /* 平板档导航内缩 20，卡片列表跟随，保持左右沿对齐 */
+  .vr-home .vr-product-list {padding-inline:20px;}
 }
-.vr-home .vr-stage.vr-tab-zone { width:min(100% - 64px,1100px); }
-.vr-home .vr-panels .vr-panel { padding-top:28px; }
+@media(max-width:720px){
+  /* 手机档：tab-zone 左右各缩 16，导航文字因此在容器内再缩 16（合计 32）？
+     不是 —— 实测首尾 tab 外沿正好落在容器内边，卡片因此给 0 内缩即可对齐。
+     这里用重复类名把特异性抬到 0-3-0，压过后面的 @media(max-width:960px) 块
+     （它与本规则特异度相同、源码序更靠后，否则会覆盖这里）。 */
+  .vr-home .vr-product-list.vr-product-list {padding-inline:0;}
+}
+.vr-home .vr-stage.vr-tab-zone { width:min(100% - 64px,858px); }
+/* 导航底边与首卡上沿：截图实测这一段是 53 图像px（比例 1.5233）= 34.8 CSS px。
+   原来 16 偏小、视觉上"贴着"，这里给 32，实测落点 39（含卡片列表自身 0 内距）。 */
+.vr-home .vr-panels .vr-panel { padding-top:32px; }
 .vr-home .vr-tabs .vr-tab {color:var(--vr-muted);}
 .vr-home .vr-tabs .vr-tab.is-active {color:var(--vr-ink);}
 .vr-home .vr-tab-zone .vr-tabs[data-roll] {transform:none!important;opacity:1!important;}
+/* 「关于我下面那道白底」= 吸顶条自带的毛玻璃：内联 .vr-tabs 有
+   background:rgba(255,255,255,.78) + backdrop-filter:blur(10px) + 下边框。
+   全部去掉，导航直接坐在页面网格底上；吸顶时深色文字压在近白的卡片上仍可读。 */
+.vr-home .vr-tab-zone .vr-tabs { background:transparent; backdrop-filter:none; border-bottom:0; }
 .vr-home .vr-panels .vr-panel.vr-panel-enter {animation-duration:360ms;}
 .vr-home .vr-panels .vr-panel-enter .vr-panel-stagger {animation-duration:360ms;animation-delay:0ms;}
-.vr-home .vr-product-list { grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:stretch; }
+/* 单列全宽卡：参考站产品区就是「一列全宽卡」，卡片宽高比才与参考一致；
+   间距 16px 取自参考站的 .plist{gap:16px}。注意这条基线必须在外部样式里就地改：
+   内联同名选择器（0-2-0）注入更晚，任何新加的 0-2-0 规则都会被它压掉。 */
+.vr-home .vr-product-list { grid-template-columns:minmax(0,1fr);gap:16px;align-items:stretch; }
 .vr-home .vr-product-list .vr-showcase-wrap { perspective:1400px;min-width:0; }
 .vr-home .vr-product-list .vr-showcase-wrap.is-lead { grid-column:1 / -1; }
 .vr-home .vr-card-entry { height:100%; }
@@ -40,12 +79,45 @@
 .vr-home .vr-product-list .vr-showcase:hover {border-color:#c2b17c;box-shadow:var(--vr-shadow-hover);}
 .vr-home .vr-product-list .vr-showcase:focus-visible {outline:2px solid var(--vr-ink);outline-offset:4px;border-color:var(--vr-brand);}
 .vr-home .vr-product-list .vr-showcase .vr-feature-copy {padding:28px 28px 22px;justify-content:flex-start;flex:1;min-width:0;order:0;}
-.vr-home .vr-card-eyebrow {display:flex;align-items:center;justify-content:space-between;width:100%;gap:16px;font:10px/1.5 var(--vr-mono);letter-spacing:.075em;color:var(--vr-muted);margin-bottom:22px;}
+.vr-home .vr-card-eyebrow {display:flex;align-items:center;justify-content:space-between;width:100%;gap:16px;font:10px/1.5 var(--vr-mono);letter-spacing:.075em;color:var(--vr-muted);margin-bottom:18px;}
 .vr-home .vr-card-eyebrow>span:last-child {color:var(--vr-brand);letter-spacing:0;}
 .vr-home .vr-product-list .vr-showcase .vr-feature-title {gap:12px;align-items:center;width:100%;}
 .vr-home .vr-product-list .vr-showcase .vr-feature-title>svg {flex-shrink:0;color:var(--vr-brand);}
 .vr-home .vr-product-list .vr-showcase .vr-feature-title h2 {font-size:27px;line-height:1.35;font-weight:600;letter-spacing:-.04em;overflow-wrap:anywhere;}
-.vr-home .vr-product-list .vr-showcase .vr-feature-copy>p {max-width:none;margin:14px 0 24px;font-size:13px;line-height:1.85;color:var(--vr-body);}
+/* ── 卡片标题排版（对齐参考站的「大字号 + 重字重 + 紧字距 + 紧行高」）────────────
+   原来 27px / 600 / 行高 1.35 偏轻偏松，且内联还有
+   `.vr-home .vr-feature-title h2{font-size:25px}`（0-4-0）等在生效，
+   所以这里用 0-5-0 / 0-6-0 的选择器统一覆盖。只在 ≥721px 生效：
+   手机版的 25px 是刻意压过的，不在此动。 */
+@media(min-width:721px){
+  /* 非首卡 35px：746 宽卡的文字列约 352px，9 个汉字的标题（学习通自动签到助手）
+     35×9+图标34=349 恰好放得下，38 会折行。 */
+  .vr-home .vr-product-list .vr-showcase .vr-feature-title h2 {font-size:clamp(26px,2.25vw,35px);font-weight:800;line-height:1.06;letter-spacing:-.04em;}
+  .vr-home .vr-showcase-wrap.is-lead .vr-feature-title h2 {font-size:clamp(30px,3vw,38px);}
+  .vr-home .vr-panel .vr-experience-card h2 {font-size:clamp(24px,2.1vw,31px);font-weight:800;line-height:1.1;letter-spacing:-.04em;}
+  .vr-home .vr-panel .vr-mathmodel-heading strong {font-weight:800;line-height:1.05;letter-spacing:-.04em;}
+}
+/* ── 标题的「高级文字样式」：墨色渐变字 + 悬停金色下划线从左扫入 ───────────
+   渐变字用 background-clip:text，因此原来的「整块金色背景扫光」必须退场
+   （两者抢同一个 background-image）。金线下划线与导航激活项的金色标记同语言。 */
+.vr-home .vr-feature-title h2,
+.vr-home .vr-mathmodel-heading strong,
+.vr-home .vr-experience-card h2 {
+  overflow-wrap:anywhere;
+  background-image:linear-gradient(180deg,#141414 0%,#414140 100%);
+  -webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+}
+.vr-home .vr-product-list .vr-showcase .vr-feature-title h2 { position:relative; }
+.vr-home .vr-product-list .vr-showcase .vr-feature-title h2::after {
+  content:"";position:absolute;left:0;bottom:-7px;height:3px;width:100%;border-radius:2px;
+  background:linear-gradient(90deg,#ffe08a,#c9a53f);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .45s var(--vr-ease);
+}
+.vr-home .vr-product-list .vr-showcase:is(:hover,:focus-visible) .vr-feature-title h2::after { transform:scaleX(1); }
+/* 正文 15px / 行高 1.95 —— 直接取自参考站实测（.pinfo p 计算值 15px / 29.25px）。 */
+.vr-home .vr-product-list .vr-showcase .vr-feature-copy>p {max-width:none;margin:14px 0 18px;font-size:15px;line-height:1.95;color:var(--vr-body);}
 .vr-home .vr-card-bottom {display:flex;justify-content:space-between;align-items:center;gap:16px;width:100%;margin-top:auto;padding-top:12px;}
 .vr-home .vr-product-list .vr-showcase .vr-arrow-link {margin:0;display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--vr-ink);min-height:32px;}
 .vr-home .vr-product-list .vr-showcase .vr-arrow-link svg {transition:transform 200ms var(--vr-ease);}
@@ -53,12 +125,29 @@
 .vr-home .vr-card-mode {font:9px var(--vr-mono);letter-spacing:.08em;color:var(--vr-muted);border:1px solid var(--vr-line);padding:5px 8px;border-radius:5px;white-space:nowrap;}
 .vr-home .vr-showcase-visual {padding:0 24px 24px;position:relative;z-index:1;min-width:0;}
 .vr-home .vr-product-list .vr-showcase-visual {transform:translate3d(var(--art-x,0px),var(--art-y,0px),0);transition:transform 320ms var(--vr-ease);}
-.vr-home .vr-product-list .vr-showcase-visual .vr-art {margin:0;width:100%;min-height:202px;border-color:#e4e2d9;border-radius:12px;background:#f8f7f3;box-shadow:0 1px 0 #fff inset,0 8px 16px -12px #0004;transition:transform 300ms var(--vr-ease);}
+/* max-height 与 min-height 同值：卡片改成单列全宽后行高不再被内联 height 撑开，
+   不限高的话 align-self:stretch 会把演示面板拉长，卡片又变回细高的矩形。 */
+.vr-home .vr-product-list .vr-showcase-visual .vr-art {margin:0;width:100%;min-height:202px;max-height:202px;border-color:#e4e2d9;border-radius:12px;background:#f8f7f3;box-shadow:0 1px 0 #fff inset,0 8px 16px -12px #0004;transition:transform 300ms var(--vr-ease);}
 .vr-home .vr-product-list .vr-showcase:hover .vr-art {transform:translateY(-2px);}
-.vr-home .vr-showcase-wrap.is-lead .vr-showcase {display:grid;grid-template-columns:1fr 1.1fr;align-items:center;}
-.vr-home .vr-showcase-wrap.is-lead .vr-feature-copy {padding:36px;}
-.vr-home .vr-showcase-wrap.is-lead .vr-showcase-visual {padding:28px 28px 28px 0;}
-.vr-home .vr-showcase-wrap.is-lead .vr-feature-title h2 {font-size:34px;}
+/* ── 桌面两栏卡（还原参考站 .pcard 的骨架）──────────────────────────────
+   参考站实测：card 内部 grid 1.15fr/1fr、gap 36、card padding 22px 26px、
+   所有卡都是「文字 | 演示面板」左右排，演示面板按奇偶左右交替。
+   原来 344/486 偏高的根因是非首卡走 .vr-showcase 的 flex-column（竖着堆），
+   且内联 .vr-roll-wrap/.vr-feature 的 min-height:344 把行高压着。
+   文字列固定占 1.15fr（宽列），标题才放得下；演示面板恒为 1fr。 */
+@media(min-width:961px){
+  .vr-home .vr-product-list .vr-showcase-wrap,
+  .vr-home .vr-product-list .vr-showcase { min-height:0; }
+  .vr-home .vr-product-list .vr-showcase {
+    display:grid;grid-template-columns:1.15fr 1fr;gap:36px;align-items:center;
+    padding:22px 26px;
+  }
+  /* 偶数位卡（第 2、4…张）：演示面板换到左边，与参考站的左右交替一致 */
+  .vr-home .vr-product-list .vr-showcase-wrap:nth-child(2n) .vr-showcase { grid-template-columns:1fr 1.15fr; }
+  .vr-home .vr-product-list .vr-showcase-wrap:nth-child(2n) .vr-feature-copy { order:2; }
+  .vr-home .vr-product-list .vr-showcase .vr-feature-copy { padding:0; }
+  .vr-home .vr-product-list .vr-showcase .vr-showcase-visual { padding:0; }
+}
 .vr-home .vr-product-list .vr-showcase .vr-spotlight {z-index:0;background:radial-gradient(380px circle at var(--spot-x,50%) var(--spot-y,50%),#f6dc9447,transparent 72%);}
 .vr-home .vr-panel .vr-mathmodel-card::after,.vr-home .vr-panel .vr-experience-card::after {content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;box-shadow:inset 0 1px 0 #fff;opacity:.65;}
 .vr-home .vr-panel .vr-mathmodel-card .vr-art {border-radius:12px;transform:translate3d(var(--art-x,0px),var(--art-y,0px),0);transition:transform 320ms var(--vr-ease);}
