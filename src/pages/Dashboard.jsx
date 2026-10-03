@@ -430,9 +430,22 @@ function FeatureArt({ type }) {
   </div>;
 
   if (type === 'agents') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-agents-art">
+    <style>{`
+      .vr-home .vr-agents-art .vr-agent-log { display: grid; gap: 4px; margin-top: 10px; padding: 9px 11px;
+        border-radius: 8px; background: #16181d; font: 10px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .vr-home .vr-agents-art .vr-agent-log span { color: #9fd3ae; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+      .vr-home .vr-agents-art .vr-agent-log span:last-child { color: #d8b34a; }
+      .vr-log-caret { display: inline-block; width: 6px; height: 10px; margin-left: 3px; background: #d8b34a;
+        vertical-align: -1px; animation: vr-blink 1s step-start infinite; }
+    `}</style>
     <div className="vr-preview-top"><Bot size={15} /><span>工作流</span><b>{active + 1}/3</b></div>
     <div className="vr-agent-flow">{['检索', '分析', '交付'].map((item, index) => <React.Fragment key={item}><button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''}><i>{String(index + 1).padStart(2, '0')}</i>{item}</button>{index < 2 && <span />}</React.Fragment>)}</div>
     <p>当前节点：{['收集资料', '整理判断', '输出结果'][active]}</p>
+    {/* Agent 的代表性内容 = 执行日志：每个节点配一行命令 + 一行结果，光标随轮播闪烁 */}
+    <div className="vr-agent-log" aria-hidden="true">
+      <span>{['$ web.search("Voyra 生态")', '$ memory.recall("用户偏好")', '$ report.render("本周交付")'][active]}</span>
+      <span>{['→ 命中 12 篇资料，已摘要', '→ 简洁中文 · 表格优先', '→ 已生成 1 页摘要'][active]}<i className="vr-log-caret" /></span>
+    </div>
   </div>;
 
   if (type === 'timetable') {
@@ -451,6 +464,18 @@ function FeatureArt({ type }) {
   if (type === 'skills') {
     const rows = [['anthropics/skills', '44.2k'], ['obra/superpowers', '17.9k'], ['fastmcp', '11.6k']];
     return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-skills-art">
+      <style>{`
+        .vr-home .vr-skills-art .vr-skill-rank button em { font-variant-numeric: tabular-nums;
+          transition: transform .3s cubic-bezier(.34,1.56,.64,1), color .3s ease; }
+        .vr-home .vr-skills-art .vr-skill-rank button.is-active em { transform: scale(1.18); color: #A48830; }
+        .vr-home .vr-skills-art .vr-skill-rank button.is-active i { background: #24292f; color: #fff; border-color: #24292f; }
+        .vr-home .vr-skills-art .vr-skill-foot { gap: 5px; }
+        .vr-home .vr-skills-art .vr-skill-foot svg { animation: vr-star-pulse 2.2s ease-in-out infinite; }
+        @keyframes vr-star-pulse {
+          0%, 100% { filter: drop-shadow(0 0 0 rgba(224,168,31,0)); transform: scale(1); }
+          50% { filter: drop-shadow(0 0 4px rgba(224,168,31,.8)); transform: scale(1.12); }
+        }
+      `}</style>
       <div className="vr-preview-top"><Sparkles size={15} /><span>GitHub Skill 热榜</span><b>每日更新</b></div>
       <div className="vr-skill-rank">{rows.map((r, i) => <button key={r[0]} className={active === i ? 'is-active' : ''} onClick={() => setActive(i)}><i>{String(i + 1).padStart(2, '0')}</i><span>{r[0]}</span><em>{r[1]}</em></button>)}</div>
       <div className="vr-skill-foot"><Star size={11} />优质精选 · 每周热点</div>
@@ -467,8 +492,44 @@ function FeatureArt({ type }) {
   </div>;
 
   if (type === 'learning') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-learning-art">
+    <style>{`
+      .vr-home .vr-learning-art .vr-material-stack { gap: 8px; }
+      .vr-home .vr-learning-art .vr-material-stack button { display: grid; grid-template-columns: 34px 1fr auto;
+        align-items: center; gap: 9px; padding: 10px 12px; border-radius: 12px;
+        border: 1px solid rgba(20,24,33,.09); background: rgba(255,255,255,.78); cursor: pointer;
+        transition: border-color .25s, background .25s, transform .25s cubic-bezier(.16,1,.3,1); }
+      .vr-home .vr-learning-art .vr-material-stack button:hover { transform: translateY(-1px); }
+      .vr-home .vr-learning-art .vr-material-stack button.is-active { border-color: rgba(13,130,83,.45); background: #fff;
+        box-shadow: 0 4px 14px -6px rgba(13,130,83,.28); }
+      .vr-home .vr-learning-art .vr-doc-badge { display: grid; place-items: center; width: 34px; height: 40px;
+        border-radius: 6px; font: 800 9px/1 ui-monospace, Menlo, Consolas, monospace; color: #fff; letter-spacing: .04em;
+        box-shadow: inset 0 -13px 0 -8px rgba(255,255,255,.4); }
+      .vr-home .vr-learning-art .vr-doc-badge.is-pdf { background: #C94F3D; }
+      .vr-home .vr-learning-art .vr-doc-badge.is-md { background: #3B6EC1; }
+      .vr-home .vr-learning-art .vr-doc-badge.is-js { background: #C99A2E; }
+      .vr-home .vr-learning-art .vr-doc-meta { display: grid; gap: 4px; min-width: 0; }
+      .vr-home .vr-learning-art .vr-doc-meta > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-size: 12.5px; font-weight: 650; color: #1b1b1b; }
+      .vr-home .vr-learning-art .vr-doc-bar { height: 3px; border-radius: 2px; background: #E7ECE9; overflow: hidden; }
+      .vr-home .vr-learning-art .vr-doc-bar i { display: block; height: 100%; border-radius: 2px; background: #0D8253;
+        transition: width .5s cubic-bezier(.16,1,.3,1); }
+      .vr-home .vr-learning-art .vr-doc-pct { font: 700 10px/1 ui-monospace, Menlo, Consolas, monospace; color: #0D8253;
+        font-variant-numeric: tabular-nums; }
+    `}</style>
     <div className="vr-preview-top"><LayoutGrid size={15} /><span>资料库</span><b>24 条</b></div>
-    <div className="vr-material-stack">{['论文精读', '课程笔记', '代码片段'].map((item, index) => <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}><i>{String(index + 1).padStart(2, '0')}</i><span>{item}</span><em>{['PDF', 'MD', 'JS'][index]}</em></button>)}</div>
+    {/* 学习资料的代表性内容 = 文档本体：类型徽章 + 标题 + 阅读进度，激活项进度条充能 */}
+    <div className="vr-material-stack">
+      {[['论文精读', 'PDF', 72], ['课程笔记', 'MD', 45], ['代码片段', 'JS', 88]].map(([item, ext, pct], index) => (
+        <button onClick={() => setActive(index)} className={active === index ? 'is-active' : ''} key={item}>
+          <span className={`vr-doc-badge is-${String(ext).toLowerCase()}`}>{ext}</span>
+          <span className="vr-doc-meta">
+            <span>{item}</span>
+            <span className="vr-doc-bar"><i style={{ width: `${active === index ? pct : Math.max(12, pct - 34)}%` }} /></span>
+          </span>
+          <span className="vr-doc-pct">{pct}%</span>
+        </button>
+      ))}
+    </div>
   </div>;
 
   if (type === 'mindmap') return <div ref={artRef} onPointerEnter={() => { pausedRef.current = true; }} onPointerLeave={() => { pausedRef.current = false; }} className="vr-art vr-tool-art vr-mindmap-art">
