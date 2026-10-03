@@ -7,21 +7,23 @@
      858 − 2×56 = 746，卡片盒子的左右沿才与导航文字沿重合。 */
   .vr-home main .vr-hero-shell {width:min(100% - 64px,858px);min-height:calc(100svh - 32px);}
   /* hero 内边距与导航同宽（56），「Voyra」左沿才与「产品」左沿在同一竖线上；
-     人物列 218：图片本身比列盒宽约 18%（含 1deg 旋转外扩），
-     算进去后人物右沿正好落到与「交流」右沿一致的位置。 */
-  .vr-home .vr-hero-shell .vr-hero {grid-template-columns:minmax(0,520px) 218px;justify-content:space-between;column-gap:64px;padding:34px clamp(24px,4vw,56px) 24px;}
+     人物列 250（原 218，按需求向上放大）：图片本身比列盒宽约 18%（含 1deg 旋转外扩）。
+     列间距 64→40 给标题让位 —— "useful." 字形实宽 470，文字列 456 时悬挂 14px，
+     仍有 26px 净空，不会碰到人物。 */
+  .vr-home .vr-hero-shell .vr-hero {grid-template-columns:minmax(0,520px) 250px;justify-content:space-between;column-gap:40px;padding:34px clamp(24px,4vw,56px) 24px;}
   .vr-home .vr-hero-shell .vr-hero h1 {max-width:520px;}
   .vr-home .vr-hero-shell .vr-person-stage,
-  .vr-home .vr-hero-shell .vr-person-frame {width:218px;height:541px;}
-  /* 人物图带 1deg 倾斜，旋转会让图层包围盒向两侧各外扩约 6px（stage/frame 本身
-     已经正好落在基准线上，是这一层溢出去的）。把它整体左移 6px，
-     让「看得见的」人物右沿与「交流」右沿真正对齐。
+  .vr-home .vr-hero-shell .vr-person-frame {width:250px;height:620px;}
+  /* 人物图带 1deg 倾斜，旋转会让图层包围盒外扩（stage/frame 本身落在基准线上，
+     是这一层溢出去的）。把它整体左移，让「看得见的」人物右沿对齐容器右基准线。
      translateY/rotate 保持与 --vr-person-breathe 关键帧一致，避免破坏呼吸动画。 */
-  .vr-home .vr-hero-shell .vr-person-motion {transform:translateX(-6px) translateY(0) rotate(1deg);}
+  .vr-home .vr-hero-shell .vr-person-motion {transform:translateX(-7px) translateY(0) rotate(1deg);}
   .vr-home .vr-hero-shell .vr-person-frame.is-ready .vr-person-motion {animation-name:vr-person-breathe-aligned;}
-  @keyframes vr-person-breathe-aligned {0%,100%{transform:translateX(-6px) translateY(0) rotate(1deg);}50%{transform:translateX(-6px) translateY(-5px) rotate(.55deg);}}
+  @keyframes vr-person-breathe-aligned {0%,100%{transform:translateX(-7px) translateY(0) rotate(1deg);}50%{transform:translateX(-7px) translateY(-5px) rotate(.55deg);}}
   .vr-home header.vr-top {width:min(100% - 64px,858px);padding-inline:clamp(24px,4vw,56px);}
-  .vr-home .vr-tab-zone .vr-tabs {justify-content:space-between;gap:24px;padding:16px 56px 6px;align-items:center;}
+  /* 五个导航项收紧：不再 space-between 摊满整行，改为左对齐 + 固定 40px 间距
+     （参考站实测间距 ~38）。左沿仍在「产品」上，与卡片左沿对齐不受影响。 */
+  .vr-home .vr-tab-zone .vr-tabs {justify-content:flex-start;gap:40px;padding:16px 56px 6px;align-items:center;}
   .vr-home .vr-tab-zone .vr-tab {font-size:36px;line-height:1.25;letter-spacing:-.035em;}
   /* 卡片与导航文字同宽同沿：各断点的列表内缩在自己的 media 里给
      （桌面 56 / 平板 20 / 手机 16），桌面档同样 56，卡片左右沿才与
@@ -43,6 +45,19 @@
      这里用重复类名把特异性抬到 0-3-0，压过后面的 @media(max-width:960px) 块
      （它与本规则特异度相同、源码序更靠后，否则会覆盖这里）。 */
   .vr-home .vr-product-list.vr-product-list {padding-inline:0;}
+}
+/* ── Skills 卡与产品卡同位（需求：整体位置和产品里一样）─────────────────────
+   内联给 .vr-solo-skill 定了 max-width:756 且无内缩，导致它比产品卡更靠左更宽。
+   这里镜像产品列表在各断点的内缩，让 Skill 卡的左右沿与产品卡完全重合。
+   （0-3-0 压过内联的 0-2-0。） */
+@media(min-width:961px){
+  .vr-home .vr-panels .vr-solo-skill { max-width:none; margin-inline:56px; }
+}
+@media(min-width:721px) and (max-width:960px){
+  .vr-home .vr-panels .vr-solo-skill { max-width:none; margin-inline:20px; }
+}
+@media(max-width:720px){
+  .vr-home .vr-panels .vr-solo-skill { max-width:none; margin-inline:0; }
 }
 .vr-home .vr-stage.vr-tab-zone { width:min(100% - 64px,858px); }
 /* 导航底边与首卡上沿：截图实测这一段是 53 图像px（比例 1.5233）= 34.8 CSS px。

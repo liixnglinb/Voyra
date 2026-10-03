@@ -723,8 +723,7 @@ function ProductPanel() {
 
 function SkillsPanel() {
   return <section className="vr-skill-group vr-solo-skill vr-panel-stagger" data-roll>
-    <div className="vr-group-label"><span>我的 Skills</span><b>01</b></div>
-    {/* 左文右演示两栏：内容与结构桌面/手机完全一致，手机端只把演示面板移到文字下方（纯排版） */}
+    {/* 「我的 Skills」标签已按需求移除：Skill 卡直接展示，位置与产品卡同沿 */}
     <a className="vr-mathmodel-card vr-card" data-reveal href={MATHMODEL_SKILL.href} target="_blank" rel="noreferrer" onPointerMove={updateSpotlight}>
       <span className="vr-spotlight" aria-hidden="true" />
       <div className="vr-mathmodel-copy">
