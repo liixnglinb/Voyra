@@ -747,7 +747,9 @@ const DCK_CSS = `
 
 /* ── 顶栏（浅色） ── */
 .dck-head { padding: max(18px, env(safe-area-inset-top)) 18px 6px; }
-.dck-head-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* AuthGate 的登录浮钮固定在站点右上角，顶栏行右侧预留空间避免压住连胜胶囊 */
+.dck-head-top { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding-right: 76px; }
 .dck-brand { font-size: 17px; font-weight: 800; letter-spacing: .01em; color: var(--dck-ink); }
 .dck-head-sub { font-size: 12px; color: var(--dck-t2); margin-top: 2px; }
 .dck-head-right { display: flex; align-items: center; gap: 8px; }
