@@ -34,7 +34,7 @@ const APPS = [
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
   { to: '/token-monitor/', external: false, no: '05', name: 'Token Monitor', desc: '本机 AI 编程工具用量看板：Token、请求与缓存明细一目了然，套餐、未定价和已计价金额明确区分，来源与时间筛选可随时恢复。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'tokenmonitor' },
   { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把大学课程变成记得住的练习：四本词书 + 教材 PDF 导入，AI 生成知识卡片；学习卡四选一、答完看词根词缀辨析，FSRS 算法安排每次复习的最佳时机。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
-  { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机优先的 AI 工作观测台：自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, iconSrc: '/ai-chronicle/icon.png', art: 'aichronicle' },
+  { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机优先的 AI 工作观测台：自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, iconSrc: '/ai-chronicle/icon.png?v=2', art: 'aichronicle' },
 ];
 
 /* 手机端专用短文案：应用卡在 390 宽下描述会占 4 行（实测 73~90 字），
@@ -671,7 +671,7 @@ function FeatureArt({ type }) {
         .vr-home .vr-ac-art .vr-ac-foot b{color:#0F9D8A;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
         @media (prefers-reduced-motion:reduce){.vr-home .vr-ac-art *{transition:none!important}}
       `}</style>
-      <div className="vr-preview-top"><img className="vr-app-icon" src="/ai-chronicle/icon.png" alt="" width="18" height="18" /><span>AI 轨迹 &#183; 今日工作</span><b>v0.6.5</b></div>
+      <div className="vr-preview-top"><img className="vr-app-icon" src="/ai-chronicle/icon.png?v=2" alt="" width="18" height="18" /><span>AI 轨迹 &#183; 今日工作</span><b>v0.6.5</b></div>
       <div className="vr-ac-kpis">
         <div className={`vr-ac-kpi${active % 3 === 0 ? ' is-on' : ''}`}><span>有效会话</span><b>20</b></div>
         <div className={`vr-ac-kpi${active % 3 === 1 ? ' is-on' : ''}`}><span>今日任务</span><b>3 / 7</b></div>
