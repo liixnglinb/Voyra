@@ -671,7 +671,7 @@ function FeatureArt({ type }) {
         .vr-home .vr-ac-art .vr-ac-foot b{color:#0F9D8A;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
         @media (prefers-reduced-motion:reduce){.vr-home .vr-ac-art *{transition:none!important}}
       `}</style>
-      <div className="vr-preview-top"><img className="vr-app-icon" src="/ai-chronicle/icon.png" alt="" width="18" height="18" /><span>AI 轨迹 &#183; 今日工作</span><b>v0.6.1</b></div>
+      <div className="vr-preview-top"><img className="vr-app-icon" src="/ai-chronicle/icon.png" alt="" width="18" height="18" /><span>AI 轨迹 &#183; 今日工作</span><b>v0.6.5</b></div>
       <div className="vr-ac-kpis">
         <div className={`vr-ac-kpi${active % 3 === 0 ? ' is-on' : ''}`}><span>有效会话</span><b>20</b></div>
         <div className={`vr-ac-kpi${active % 3 === 1 ? ' is-on' : ''}`}><span>今日任务</span><b>3 / 7</b></div>
