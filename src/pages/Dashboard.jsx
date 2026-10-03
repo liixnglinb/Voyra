@@ -13,17 +13,17 @@ import useCardEffects from '../hooks/useCardEffects';
 import '../styles/dashboard-cards.css';
 
 const FEATURED = [
-  { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
-  { to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
-  { to: '/pelican-gallery', no: '03', name: 'AI 模型对比秀', desc: '同一题「鹈鹕骑自行车」交给 16 个 AI 模型分别生成，效果一页对比。', cta: '查看对比', Icon: Film, art: 'pelican' },
-  { to: '/prompts', no: '04', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
-  { to: '/uikit', no: '05', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
-  { to: '/skills', no: '06', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
-  { to: '/agents', no: '07', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
-  { to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
-  { to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
-  { to: '/draw', no: '10', name: '随机抽人', desc: '课堂点名、活动抽奖的随机抽取小工具：导入花名册自动识别姓名，或手动添加删除，设置人数一键抽取，抽中可自动排除，全程在本机完成。', cta: '开始抽取', Icon: Dices, art: 'draw' },
-  { to: '/diet-checkin', no: '11', name: '饮食打卡', desc: '体重、三餐执行、饮水/步数/力量训练与血压的每日打卡：7 日均线看趋势、连续全勤与 14 天热力图，登录后手机电脑多端同步。', cta: '今日打卡', Icon: ClipboardCheck, art: 'draw' },
+  { theme: 'theme-api', to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
+  { theme: 'theme-timetable', to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
+  { theme: 'theme-pelican', to: '/pelican-gallery', no: '03', name: 'AI 模型对比秀', desc: '同一题交给 16 个 AI 模型分别生成，效果一页对比。', cta: '查看对比', Icon: Film, art: 'pelican' },
+  { theme: 'theme-prompts', to: '/prompts', no: '04', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },
+  { theme: 'theme-uikit', to: '/uikit', no: '05', name: '组件图鉴', desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。', cta: '查看图鉴', Icon: Shapes, art: 'uikit' },
+  { theme: 'theme-skills', to: '/skills', no: '06', name: 'Skill 热榜', desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。', cta: '查看热榜', Icon: Sparkles, art: 'skills' },
+  { theme: 'theme-agents', to: '/agents', no: '07', name: 'AI Agent', desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。', cta: '查看资源', Icon: Bot, art: 'agents' },
+  { theme: 'theme-mindmap', to: '/mindmap', no: '08', name: '思维导图', desc: '将学习与创作中的线索展开为可继续补充的结构。', cta: '打开导图', Icon: Route, art: 'mindmap' },
+  { theme: 'theme-care', to: '/baby-care', no: '09', name: '宝宝护理', desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。', cta: '进入护理', Icon: Sparkles, art: 'care' },
+  { theme: 'theme-draw', to: '/draw', no: '10', name: '随机抽人', desc: '课堂点名、活动抽奖随机抽取，支持花名册识别。', cta: '开始抽取', Icon: Dices, art: 'draw' },
+  { theme: 'theme-diet', to: '/diet-checkin', no: '11', name: '饮食打卡', desc: '三餐执行、饮水与力量训练每日打卡，多端同步。', cta: '今日打卡', Icon: ClipboardCheck, art: 'diet' },
 ];
 
 
@@ -702,43 +702,64 @@ function FeatureArt({ type }) {
   </div>;
 }
 
-function ShowcaseCard({ item, index, application = false }) {
+/* 统一的两行截断样式：所有卡片描述强制不超过 2 行，超长部分省略，
+   完整文案保留在 title 属性中悬停可读 */
+const clampStyle = {
+  display: '-webkit-box',
+  WebkitBoxOrient: 'vertical',
+  WebkitLineClamp: 2,
+  overflow: 'hidden',
+};
+
+function ShowcaseCard({ item, index, application = false, themeClass = '' }) {
   const isMobile = useIsMobileHome();
   const Icon = item.Icon;
   const href = application ? item.to : item.external ? item.to : getToolUrl(item.to);
-  return <div className={`vr-roll-wrap vr-showcase-wrap${index === 0 ? ' is-lead' : ''}`} data-roll>
+  const mode = application
+    ? (item.to === '/billtrace/' ? 'ANDROID' : item.to === '/checkin/' ? 'WINDOWS / PWA' : 'WINDOWS')
+    : item.external ? 'EXTERNAL' : 'ONLINE';
+  return <div className={`vr-roll-wrap vr-unified-wrap ${themeClass}`} data-roll>
     <div className="vr-card-entry" data-reveal style={{ '--reveal-delay': `${Math.min(index * .04, .2)}s` }}>
-      <a className={`vr-feature vr-card vr-showcase${item.art === 'api' ? ' is-api' : ''}`} data-voyra-card href={href} target={isMobile ? undefined : '_blank'} rel="noopener noreferrer" aria-label={`${item.name}：${item.cta}${isMobile ? '' : '（新标签页）'}`}>
+      <a className="vr-feature vr-card vr-unified-card" data-voyra-card href={href} target={isMobile ? undefined : '_blank'} rel="noopener noreferrer" aria-label={`${item.name}：${item.cta}${isMobile ? '' : '（新标签页）'}`}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><div className="vr-card-eyebrow"><span>{application ? 'DESKTOP & MOBILE' : item.external ? 'CONNECTED SERVICE' : 'WEB APPLICATION'}</span><span>{String(index + 1).padStart(2, '0')}</span></div><div className="vr-feature-title">{item.iconSrc ? <img className="vr-app-icon vr-feature-icon" src={item.iconSrc} alt="" width="24" height="24" /> : <Icon size={22} strokeWidth={1.6} />}<h2>{item.name}</h2></div><p>{item.desc}</p><div className="vr-card-bottom"><span className="vr-arrow-link">{item.cta}<ArrowUpRight size={16} /></span><span className="vr-card-mode">{application ? item.to === '/billtrace/' ? 'ANDROID' : item.to === '/checkin/' ? 'WINDOWS / PWA' : 'WINDOWS' : item.external ? 'EXTERNAL' : 'ONLINE'}</span></div></div>
-        <div className="vr-showcase-visual" aria-hidden="true" inert=""><FeatureArt type={item.art} /></div>
+        <div className="vr-unified-content">
+          <div className="vr-card-eyebrow"><span>{application ? 'DESKTOP & MOBILE' : item.external ? 'CONNECTED SERVICE' : 'WEB APPLICATION'}</span><span>{String(index + 1).padStart(2, '0')}</span></div>
+          <div className="vr-feature-title">
+            <span className="vr-icon-box">{item.iconSrc ? <img src={item.iconSrc} alt="" width="24" height="24" /> : <Icon size={20} strokeWidth={2} />}</span>
+            <h2 style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h2>
+          </div>
+          <p style={clampStyle} title={item.desc}>{item.desc}</p>
+          <div className="vr-card-bottom"><span className="vr-arrow-link">{item.cta}<ArrowUpRight size={16} /></span><span className="vr-card-mode">{mode}</span></div>
+        </div>
+        <div className="vr-unified-visual" aria-hidden="true" inert=""><FeatureArt type={item.art} /></div>
       </a>
     </div>
   </div>;
 }
 
 function ProductPanel() {
-  return <div className="vr-product-list">{FEATURED.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} />)}</div>;
+  return <div className="vr-product-list">{FEATURED.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} themeClass={item.theme} />)}</div>;
 }
 
+/* 数学建模 Skill 转成统一卡片数据，复用 ShowcaseCard 渲染，融入栅格 */
+const MATHMODEL_ITEM = {
+  to: MATHMODEL_SKILL.href,
+  external: true,
+  name: MATHMODEL_SKILL.name,
+  desc: MATHMODEL_SKILL.tagline,
+  cta: MATHMODEL_SKILL.cta,
+  Icon: Star,
+  art: 'mathmodel',
+};
+
 function SkillsPanel() {
-  return <section className="vr-skill-group vr-solo-skill vr-panel-stagger" data-roll>
-    {/* 「我的 Skills」标签已按需求移除：Skill 卡直接展示，位置与产品卡同沿 */}
-    <a className="vr-mathmodel-card vr-card" data-reveal href={MATHMODEL_SKILL.href} target="_blank" rel="noreferrer" onPointerMove={updateSpotlight}>
-      <span className="vr-spotlight" aria-hidden="true" />
-      <div className="vr-mathmodel-copy">
-        <span className="vr-mathmodel-top"><span className="vr-mathmodel-kicker">CUMCM / REUSABLE WORKFLOW</span><span className="vr-mathmodel-meta"><Star size={16} fill="currentColor" /> GitHub</span><span className="vr-mathmodel-open"><ArrowUpRight size={17} /></span></span>
-        <span className="vr-mathmodel-heading"><strong>{MATHMODEL_SKILL.name}</strong><span>{MATHMODEL_SKILL.tagline}</span></span>
-        <span className="vr-model-caption"><b>{MATHMODEL_STEPS.length}</b> STEPS / FROM QUESTION TO PAPER</span>
-        <span className="vr-arrow-link">{MATHMODEL_SKILL.cta}<ArrowUpRight size={17} /></span>
-      </div>
-      <FeatureArt type="mathmodel" />
-    </a>
-  </section>;
+  return <div className="vr-product-list vr-panel-stagger" data-roll>
+    <ShowcaseCard item={MATHMODEL_ITEM} index={0} themeClass="theme-github" />
+  </div>;
 }
 
 function AppsPanel() {
-  return <div className="vr-product-list">{APPS.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} application />)}</div>;
+  return <div className="vr-product-list">{APPS.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} application themeClass="theme-app" />)}</div>;
 }
 
 function HomeTabs({ activeTab, onChange }) {

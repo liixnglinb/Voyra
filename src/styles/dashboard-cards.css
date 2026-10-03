@@ -216,3 +216,175 @@
   .vr-home .vr-showcase-visual,.vr-home .vr-mathmodel-card .vr-art{transform:none!important;}
 }
 @media(forced-colors:active){.vr-home .vr-card,.vr-home .vr-contact-row{border:1px solid CanvasText}.vr-home .vr-card-mode{border-color:CanvasText}}
+
+/* ════════════════════════════════════════════════════════════════
+   统一卡片系统（P0 统一栅格 + P1 主题变量 + P2 Skill/App 质感）
+   废弃左右交替布局：所有卡片上下结构（内容在上、演示区沉底）。
+   ════════════════════════════════════════════════════════════════ */
+
+/* P0 ── 统一栅格：桌面 2 列、间距 24；≤960 单列、间距 16 */
+.vr-home .vr-product-list {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:24px !important;
+  align-items:stretch;
+}
+@media(max-width:960px){
+  .vr-home .vr-product-list {
+    grid-template-columns:minmax(0,1fr) !important;
+    gap:16px !important;
+  }
+}
+
+/* P0 ── 统一卡片骨架：高度 100%、上下分布、内边距交给内部两层 */
+.vr-home .vr-unified-card {
+  display:flex !important;
+  flex-direction:column !important;
+  height:100% !important;
+  min-height:420px;
+  padding:0 !important;
+  border:1px solid var(--vr-line);
+  border-radius:var(--vr-radius-card);
+  background:linear-gradient(150deg,#fff 55%,#faf9f5);
+  color:var(--vr-ink);
+  text-decoration:none;
+  overflow:hidden;
+  transition:transform 240ms var(--vr-ease),box-shadow 240ms var(--vr-ease),border-color 200ms,background 240ms;
+}
+.vr-home .vr-unified-content {
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-width:0;
+  padding:24px 24px 0;
+}
+.vr-home .vr-unified-visual {
+  padding:24px;
+  margin-top:auto;
+  min-width:0;
+}
+/* 演示面板强制等高 190px，内容超出隐藏，防止撑破统一结构 */
+.vr-home .vr-unified-visual .vr-art {
+  height:190px !important;
+  min-height:190px !important;
+  max-height:190px !important;
+  margin:0 !important;
+  width:100%;
+  overflow:hidden;
+}
+
+/* P0 ── 统一内容排版（窄半列内的字号阶梯，标题用实色保证省略号可见） */
+.vr-home .vr-unified-content .vr-card-eyebrow {margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--vr-line);}
+.vr-home .vr-unified-content .vr-feature-title {gap:12px;align-items:center;width:100%;}
+.vr-home .vr-unified-content .vr-feature-title h2 {
+  position:relative;
+  margin:0;min-width:0;
+  font-size:clamp(21px,1.7vw,27px);
+  font-weight:800;line-height:1.15;letter-spacing:-.03em;
+  color:var(--vr-ink);
+  background:none;-webkit-background-clip:initial;background-clip:initial;-webkit-text-fill-color:currentColor;
+}
+.vr-home .vr-unified-content>p {max-width:none;margin:14px 0 16px;font-size:14px;line-height:1.7;color:var(--vr-body);}
+.vr-home .vr-unified-content .vr-card-bottom {margin-top:auto;padding-top:12px;}
+.vr-home .vr-unified-content .vr-arrow-link {display:inline-flex;align-items:center;gap:8px;color:var(--vr-ink);font-size:12px;min-height:32px;}
+.vr-home .vr-unified-content .vr-arrow-link svg {transition:transform 200ms var(--vr-ease);}
+.vr-home .vr-unified-card:is(:hover,:focus-visible) .vr-arrow-link svg {transform:translate(3px,-3px);}
+
+/* P0 ── 标题悬停动态下划线（颜色由主题变量注入） */
+.vr-home .vr-unified-card .vr-feature-title h2::after {
+  content:"";position:absolute;left:0;bottom:-6px;height:3px;width:100%;border-radius:2px;
+  background:var(--t-color);
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .45s var(--vr-ease);
+}
+.vr-home .vr-unified-card:is(:hover,:focus-visible) .vr-feature-title h2::after {transform:scaleX(1);}
+
+/* P1 ── 主题变量：默认金色 + 11 张产品卡专属配色 */
+.vr-unified-wrap {
+  --t-color:#a48830;
+  --t-bg:#fff;
+  --t-glow:rgba(164,136,48,0.2);
+}
+.theme-api       {--t-color:#2589ed;--t-bg:#f2f8fc;--t-glow:rgba(37,137,237,.25);}
+.theme-timetable {--t-color:#FF6B35;--t-bg:#fff5f0;--t-glow:rgba(255,107,53,.25);}
+.theme-pelican   {--t-color:#9a60c4;--t-bg:#f9f2fc;--t-glow:rgba(154,96,196,.25);}
+.theme-prompts   {--t-color:#F59E0B;--t-bg:#fffbf0;--t-glow:rgba(245,158,11,.25);}
+.theme-uikit     {--t-color:#0EA5E9;--t-bg:#f0f9ff;--t-glow:rgba(14,165,233,.25);}
+.theme-skills    {--t-color:#4F46E5;--t-bg:#f3f2ff;--t-glow:rgba(79,70,229,.25);}
+.theme-agents    {--t-color:#10B981;--t-bg:#effcf6;--t-glow:rgba(16,185,129,.25);}
+.theme-mindmap   {--t-color:#14B8A6;--t-bg:#f0fdfa;--t-glow:rgba(20,184,166,.25);}
+.theme-care      {--t-color:#F43F5E;--t-bg:#fff1f2;--t-glow:rgba(244,63,94,.25);}
+.theme-draw      {--t-color:#8B5CF6;--t-bg:#f5f3ff;--t-glow:rgba(139,92,246,.25);}
+.theme-diet      {--t-color:#84CC16;--t-bg:#f7fee7;--t-glow:rgba(132,204,22,.25);}
+
+/* P1 ── 图标装饰框：默认浅底主题色，悬停反转为实心主题色 */
+.vr-home .vr-unified-card .vr-icon-box {
+  display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;
+  padding:8px;border-radius:10px;
+  background:#f8f9fa;color:var(--t-color);
+  transition:all .3s ease;
+}
+.vr-home .vr-unified-card .vr-icon-box img {border-radius:4px;}
+
+/* P1 ── 悬停整体差异化：主题色描边、主题浅底、彩色投影、上浮 */
+.vr-home .vr-unified-card:is(:hover,:focus-visible) {
+  border-color:var(--t-color) !important;
+  background:var(--t-bg) !important;
+  box-shadow:0 20px 40px var(--t-glow) !important;
+  transform:translateY(-5px);
+}
+.vr-home .vr-unified-card:is(:hover,:focus-visible) .vr-icon-box {
+  background:var(--t-color);color:#fff;
+  transform:rotate(-5deg) scale(1.1);
+}
+/* P1 ── 跟随光斑改用主题色辉光 */
+.vr-home .vr-unified-card .vr-spotlight {
+  background:radial-gradient(400px circle at var(--spot-x,50%) var(--spot-y,50%),var(--t-glow),transparent 70%) !important;
+}
+
+/* P2 ── Skill 区：GitHub 风格（深墨 + 浅灰） */
+.theme-github {--t-color:#24292e;--t-bg:#f6f8fa;--t-glow:rgba(36,41,46,.15);}
+.theme-github .vr-unified-card:is(:hover,:focus-visible) {border-color:#d0d7de !important;}
+
+/* P2 ── App 区：毛玻璃 + 金属边框的 App Store 质感 */
+.theme-app {--t-color:#4b5563;--t-bg:rgba(255,255,255,.6);--t-glow:rgba(0,0,0,.08);}
+.theme-app .vr-unified-card {
+  background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(248,250,252,.5)) !important;
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(226,232,240,.8) !important;
+}
+.theme-app .vr-unified-card:is(:hover,:focus-visible) {
+  border-color:#94a3b8 !important;
+  background:linear-gradient(135deg,rgba(255,255,255,1),rgba(241,245,249,.8)) !important;
+}
+.theme-app .vr-card-mode {background:var(--t-color);color:#fff;border-color:transparent;}
+
+/* 统一演示区内的十阶段：收紧行高字号，10 步全部压进 190px 等高面板 */
+.vr-home .vr-unified-visual .vr-mathmodel-art {padding:8px 10px 10px !important;transform:none !important;}
+.vr-home .vr-unified-visual .vr-mathmodel-art .vr-preview-top {padding-bottom:7px;}
+.vr-home .vr-unified-visual .vr-mathmodel-art .vr-model-steps {margin-top:4px;}
+.vr-home .vr-unified-visual .vr-mathmodel-art .vr-model-step {
+  min-height:14px !important;
+  grid-template-columns:16px auto;gap:6px;
+  padding-left:16px;
+}
+.vr-home .vr-unified-visual .vr-mathmodel-art .vr-model-step::before {left:4px;width:5px;height:5px;margin-top:-2.5px;}
+.vr-home .vr-unified-visual .vr-mathmodel-art .vr-model-step::after {left:6px;}
+.vr-home .vr-unified-visual .vr-mathmodel-art .vr-model-step i {font-size:8px;}
+.vr-home .vr-unified-visual .vr-mathmodel-art .vr-model-step b {font-size:11px;}
+
+/* 统一演示区内的同题 SVG 场景：压进 190px，避免底部被裁 */
+.vr-home .vr-unified-visual .vr-pelican-art .vr-pelican-stage {aspect-ratio:auto;height:130px;}
+
+/* 触屏无悬停：撤掉上浮；减少动态效果：全部 transform/transition 退场 */
+@media(hover:none){
+  .vr-home .vr-unified-card:hover,
+  .vr-home .vr-unified-card:hover .vr-icon-box {transform:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  .vr-home .vr-unified-card,
+  .vr-home .vr-unified-card:hover,
+  .vr-home .vr-unified-card .vr-icon-box,
+  .vr-home .vr-unified-card:hover .vr-icon-box,
+  .vr-home .vr-unified-visual .vr-mathmodel-art {transform:none !important;}
+}
