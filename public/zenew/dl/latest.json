@@ -1,10 +1,10 @@
 {
-  "version": "0.14.3",
-  "notes": "Zenew v0.14.3",
-  "pub_date": "2026-09-22T06:00:15Z",
+  "version": "0.15.0",
+  "notes": "# Zenew v0.15.0 · 晴空界面改版\n\n这一版是界面与前端工程的整体重做，学习能力与数据结构完全兼容旧版（本地库自动沿用，无需迁移）。\n\n## 新界面（Sky v5）\n\n- **全新视觉**：亮蓝主色 + 天空渐变背景，白色大圆角卡片与毛玻璃层次\n- **深浅色主题**：跟随系统 / 手动切换，两套配色都经过对比度校验（正文 ≥7:1）\n- **字号四档 + 长辈版**：界面文字可放大，布局自动重排不破版\n\n## 学习流\n\n- **首页「知识云」**：学过的词按记忆状态漂浮展示，下面是今天的学习计划卡\n- **学习计划卡**：多本词书页签、进度、一键「新学 / 复习」（按组数直达），可拖动调整顺序\n- **单词卡重做**：媒体记忆卡 → 单词 + 音标 + 例句 → **四选一作答** → 答对即时反馈\n- **答完展开详情**：AI 形近词辨析（「和 xxx 搞混了？」）、词根词缀拆解、例句与变形派生\n- **斩词**：已经认识的词一键移出计划，不再重复出现\n- **调整计划**：每日组数 ↔ 完成天数 ↔ 预计完成时间 / 每日用时联动；有考试日期时不可行档位会标出\n\n## 复习与统计\n\n- **复习统计**：未来十天复习量预测（逾期标红）、五档掌握（初记 / 强化 / 巩固 / 熟识 / 已斩）、累计进展曲线\n- **每日任务**：三条任务由真实复习记录统计，集星开「坚持者」徽章\n\n## 工程与体验\n\n- 空态 / 错误态 / 骨架屏 / 断网提示全量补齐，页面级异常有兜底\n- 无障碍：键盘可达（学习页 1-4 作答、空格翻面、Esc 退出）、焦点环、aria 语义、状态不只靠颜色\n- 危险操作（删除课程 / 考试、退出登录）统一二次确认；邮箱等敏感信息脱敏显示\n- **移除全部付费内容**：会员、额度、充值、卡密入口与相关页面均已删除\n\n## 更新方式\n\n已安装旧版：打开软件后按提示一键更新（后台下载 → 静默替换 → 自动重启）。\n首次安装：https://lxlrwxs.top/zenew/",
+  "pub_date": "2026-10-03T04:42:21Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVI4SEVmSE1IcVg1dkExZXRub2FvUVdTeTB1cEdsZFdlNTlrMU44NE1JWmN6WHZGdk0rQVZqZjBGTmsxRlNDWkJPMU84ZXdPeDUzbWxMckhrcmZVQ2cwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkwMDU2Njk1CWZpbGU6WmVuZXdfMC4xNC4zX3g2NC1zZXR1cC5leGUKTk9ZelJPRkgwOHNmTVFCN2lSSXJWV0ZrcVJVVzRsaFZzZ1FTQkdWY2FrbnA0MFVNM1E3Qy9LRW5ZVDlKT2xxbVYrdmc5V3I2aEUzL2JuV052UFBtQnc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWI4SGJLNldaYitSd21xcTZHeXRyRlFaRktBOFZNTE80RmRUYmV0blZ3MWVUbjZqNzlPUG42eXpWNkUxb3RBNkt4N3B2OHJLWkZudWp1QVhsSlVJRVE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDAyNDMwCWZpbGU6WmVuZXdfMC4xNS4wX3g2NC1zZXR1cC5leGUKQTEzMnlzYktSaG9YUEFnRnFkWG9HNjRCUGk3aTg5amZYZHh2dGxWbCt6dEdLWXJVSGh0czU4T1Q2cVZuWHkwOW15V3FvbUJQME5LMTNudWFWTzBTQXc9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
