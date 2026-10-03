@@ -349,6 +349,12 @@ html body :is(.btn-danger, .btn.danger, .button-danger) {
   color: var(--on-danger);
 }
 
+/* 工具识别色来自数据里的品牌色（Claude 橙、Codex 绿…），是内联样式，
+   暗色档统一用 grayscale 去色成灰阶——明度差仍在，但整屏再无彩色残留。 */
+:root[data-theme='dark'] :is(.tool-dot, .tool-chip-dot, .contribution-track > span) {
+  filter: grayscale(1) brightness(1.45);
+}
+
 /* 开关：暗色档的开态轨道是银白，滑块必须反过来用深色，
    否则会出现「白滑块压在白轨道上」看不见的情况。 */
 :root[data-theme='dark'] .switch {
