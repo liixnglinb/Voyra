@@ -1,10 +1,10 @@
 {
-  "version": "0.18.0",
-  "notes": "# Zenew v0.18.0 · 单词列表、词条详情与五种训练模式\n\n这一版把「学一个词」扩展成一套完整的词汇工作台。\n\n## 单词列表（词书 → 单词列表）\n\n- 六个筛选：**全部 / 今日 / 未学习 / 学习中 / 已熟识 / 已斩**\n- `共 N 词` + 排序（按词书默认顺序 / 到期时间 / 字母序 / 掌握度）+ 搜索 + 只看逾期\n- 每行：单词 · 右侧 `下次复习 18 天后` 或 `已逾期 8 天` · 左侧五段记忆状态 · 词下细进度条；当前词高亮\n- 桌面两栏：左列表 + 右词条详情；宽窗口一屏既能翻词表又能看释义\n- 大词书按需增量渲染，翻 4500 词也不卡\n\n## 词条详情\n\n- 单词 + **美/英双音标**（分别朗读，`en-US` / `en-GB`）\n- 全部释义、例句（英文高亮该词 + 中文对照）、记忆图卡\n- ⭐ 收藏、**斩**（移出计划）、上一词 / 下一词\n\n## 五种训练模式\n\n| 模式 | 做什么 |\n|---|---|\n| **速听** | 按设定间隔连续朗读，可自动下一词，适合通勤/闭眼听 |\n| **速刷** | 单词快速过，认识 / 模糊 / 不认识 / 斩 一键判定 |\n| **单词选义** | 四选一（干扰项取自同词书），额外提供 **「我不认识」** |\n| **拼写** | 给中文释义与图卡，键入英文单词；逐字符判定对错，提示逐字揭露 |\n| **听写** | 听发音（或看释义）写单词，配 **听写设置** |\n\n**听写设置**：听发音·写单词/释义 或 听释义·写单词；美音 / 英音；播放次数 1 / 2 / 3 次；播放间隔 2 / 4 / 6 / 8 秒；自动播放下一词。\n\n所有训练的结果都按 FSRS 落库（认识 = Good、模糊 = Hard、不认识 = Again、斩 = Easy 并暂停该卡），与主复习队列共用同一套记忆曲线。\n\n## 其他\n\n- 训练页顶部显示 `当前 / 总数` 与上一词释义，底部工具条：设置 / 图片 / 斩 / 提示 / 朗读\n- 深浅色、桌面布局与既有设计系统一致；键盘可达\n\n验证：tsc 0 错误、vite build 通过、真机 CDP 浅/深色零未捕获异常。",
-  "pub_date": "2026-10-03T07:31:27Z",
+  "version": "0.19.0",
+  "notes": "# Zenew v0.19.0 · 美术风格优化\n\n这一版不动功能，只重做观感与信息密度。\n\n## 材质与形状\n\n- 左侧导航由通栏直角改为**浮动圆角面板**（22px 圆角、玻璃底、1px 发丝边、柔和外阴影）\n- 卡片圆角统一为三级（大卡 18px / 次级 14px / 内嵌 12px），按钮 13px；只有标签、分段与进度条保留胶囊形\n- **去塑料感**：主色降饱和为哑光蓝；卡片改极浅冷白渐变 + 顶部 1px 内高光；阴影改为「近距离硬 + 远距离柔」的分层阴影；大面积面板叠加不超过 3% 的极细颗粒，深色下更低\n- 按钮统一 4 类（主要 / 描边 / 幽灵 / 危险），尺寸 40·36·32·28，悬停抬升、按下回弹，禁用态降饱和\n\n## 首页\n\n- 移除「我的单词云」，改为克制的概览：三个指标（今日待复习 / 已学词 / 连续天数）+ 一排最近学习的词卡（点击进入对应词书的单词列表）\n- 词云相关的连线、图例、装饰文字一并删除\n\n## 文案\n\n- 只保留「做决定或看结果必需」的文字：删掉 kicker、面包屑、页面级说明句、操作提示与快捷键提示\n- 数据标签（如共 N 词）与按钮文字保留\n\n## 词书封面\n\n- 词库与首页的词书封面改为**程序生成的书封**：书脊高光 + 按词书固定的低饱和渐变 + 几何纹样 + 大小写缩写，哑光无高光反射\n\n## 其他\n\n- 深浅色两套主题同步更新；对比度仍满足 AA\n- 单词列表、词条详情、五种训练（速听 / 速刷 / 单词选义 / 拼写 / 听写）与听写设置面板功能不变\n\n验证：tsc 0 错误、vite build 通过、真机 CDP 浅/深色零未捕获异常。",
+  "pub_date": "2026-10-03T07:48:14Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWFiY3hWb3J3TFlXRG1hNDdzUUwxUjBwallDWUpWWHBqWU9nOWd2RTlJa0UrbmtXcXRIdkxHUzR3MGVjdGR1cm9nNGxvVXRhZjYzNVo1cVhFa1czOUE4PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDEyNjg3CWZpbGU6WmVuZXdfMC4xOC4wX3g2NC1zZXR1cC5leGUKak9mZ3JaQUNvWDI4SmpkczFBTDl6ZWdQbE1LRy9lTzhYeVFDcWJuYnFVZnlPcUhMNDNXYkVXSEdCcStoNVdhcWhXdUN5Q0ZrWFQwMUQxWFhzeHpaQmc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVpNc3k3RENOdFRCdi9EQnVReGk0MDdrM1JnKzI0cW9nRWRMM1VKVFFDdk82emd0UXB5WTRtUFhycUptVTVFRlVLZEExMEJERExpRm94ZXEyMWV6bFFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMDEzNjk0CWZpbGU6WmVuZXdfMC4xOS4wX3g2NC1zZXR1cC5leGUKa3Y5cVFpcURCNVk2Rm81S1h3TnhJU1pvcTdYTzhsODUrUElnZk1GY1NKaUhxNE5UcFYxeW1jZndTTk5GU25JWWZmd0IzWXhuN3dPd3k4SUxSNTl1QUE9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
