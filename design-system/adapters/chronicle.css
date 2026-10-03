@@ -264,33 +264,32 @@
   --vr-shadow-hover: inset 0 1px 0 var(--vr-hairline), 0 24px 50px -26px #000;
 }
 
-/* 3.1 窗口标题栏：与主进程 titleBarOverlay 同色，只加一道底部暗缝 */
+/* 3.1 窗口标题栏：与主进程 titleBarOverlay 同色；底部既不描边也不压暗线，
+   让标题栏和下方表面连成一片，避免「暗线＋亮线」叠成一道凹槽。 */
 :root[data-theme='dark'] .titlebar-strip {
-  border-bottom-color: #1c1f22;
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  border-bottom-color: transparent;
+  box-shadow: none;
 }
 
-/* 3.2 侧栏：顶部一层极淡的金属拉丝过渡 + 右侧暗缝 */
+/* 3.2 侧栏：从标题栏同色起手，向下渐隐到石墨黑；与内容只用明度差区分，不描边 */
 :root[data-theme='dark'] .sidebar {
-  border-right-color: #1c1f22;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.026) 0%, rgba(255, 255, 255, 0) 220px),
-    linear-gradient(180deg, #0e0f11 0%, #0a0b0c 100%);
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.5);
+  border-right-color: transparent;
+  background: linear-gradient(180deg, #121315 0%, #101012 200px, #0a0b0c 100%);
+  box-shadow: none;
 }
 
-/* 3.3 顶栏：半透明石墨底，保留毛玻璃 */
+/* 3.3 顶栏：与标题栏同色的半透明石墨 + 单根极淡发丝线（滚动时仍看得出边界） */
 :root[data-theme='dark'] .topbar {
-  border-bottom-color: #1c1f22;
-  background: rgba(10, 11, 12, 0.86);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
+  background: rgba(18, 19, 21, 0.86);
 }
 
-/* 3.4 内容底：偏右上的一束聚光，避免大面积纯黑发闷 */
+/* 3.4 内容底：顶部与标题栏同色，向下渐隐到画布色；聚光只负责质感 */
 :root[data-theme='dark'] .app-shell {
   background:
     radial-gradient(1100px 500px at 62% -12%, var(--vr-spotlight), transparent 60%),
     radial-gradient(820px 400px at 100% -6%, rgba(255, 255, 255, 0.028), transparent 58%),
-    linear-gradient(180deg, #0a0b0c 0%, var(--vr-canvas) 46%);
+    linear-gradient(180deg, #121315 0%, #0b0c0d 200px, var(--vr-canvas) 100%);
 }
 
 /* 卡片 / 面板：顶部发丝高光 + 收窄的外投影，做出「金属片」的厚度 */
