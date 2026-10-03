@@ -1,0 +1,7 @@
+# Voyra 站点路由规则
+# 2026-10-03：Zenew 取消付费。原购买页与订单确认台一并下线，老链接统一跳回下载页。
+
+/zenew/buy/     /zenew/    301
+/zenew/buy      /zenew/    301
+/zenew/admin/   /zenew/    301
+/zenew/admin    /zenew/    301
