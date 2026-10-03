@@ -14,7 +14,6 @@
     "test:ui": "node --test scripts/ui-design-system.test.mjs",
     "ui:spec": "node scripts/generate-ui-spec.mjs",
     "ui:spec:check": "node scripts/generate-ui-spec.mjs --check",
-    "ui:sync": "node scripts/sync-software-ui.mjs",
     "test:software-ui": "node scripts/software-ui-regression.mjs"
   },
   "dependencies": {
