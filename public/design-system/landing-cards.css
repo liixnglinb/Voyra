@@ -1,0 +1,26 @@
+@import './voyra-foundation.css';
+/* Shared landing-page card material; typography and product colours remain local. */
+body [data-voyra-landing-card] {
+  position:relative;border-radius:20px;border:1px solid var(--vr-line);
+  box-shadow:var(--vr-shadow);isolation:isolate;
+  transition:border-color 200ms,box-shadow 240ms,translate 240ms var(--vr-ease);
+  translate:0 var(--landing-lift,0px);
+}
+body [data-voyra-landing-card]::after {
+  content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:1;
+  background:radial-gradient(360px circle at var(--landing-x,50%) var(--landing-y,50%),#f3d38c28,transparent 72%);
+  opacity:0;transition:opacity 200ms;
+}
+body [data-voyra-landing-card][data-pointer-active] {border-color:#bcaa77;box-shadow:var(--vr-shadow-hover);}
+body [data-voyra-landing-card][data-pointer-active]::after {opacity:1;}
+body [data-voyra-landing-card]:focus-within {border-color:var(--vr-brand);}
+body :is(a,button,input,select,textarea):focus-visible {outline:2px solid var(--vr-ink);outline-offset:3px;}
+html[data-voyra-theme=dark] [data-voyra-landing-card][data-pointer-active] {border-color:#a18b50;}
+body [data-voyra-landing-card]:not([data-card-visible]) * {animation-play-state:paused!important;}
+@media(max-width:767px){body [data-voyra-landing-card]{border-radius:16px}}
+@media(prefers-reduced-motion:reduce){
+  body [data-voyra-landing-card],body [data-voyra-landing-card]::after{transition:none!important;translate:none!important;}
+  body *,body *::before,body *::after{animation:none!important;scroll-behavior:auto!important;}
+  body .reveal,body .rv{opacity:1!important;transform:none!important;}
+}
+@media(forced-colors:active){body [data-voyra-landing-card]{border:1px solid CanvasText}body :is(a,button):focus-visible{outline-color:Highlight}}

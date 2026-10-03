@@ -1,0 +1,53 @@
+@import './voyra-software-base.css';
+/* AI Chronicle · reading-first graphite / warm gold. */
+:root,:root[data-theme='dark'] {
+  --font-sans:var(--vr-font);--font-mono:var(--vr-mono);
+  --bg:var(--vr-canvas);--bg-soft:var(--vr-surface-soft);
+  --surface:var(--vr-surface);--surface-raised:var(--vr-surface);--surface-hover:var(--vr-surface-hover);--surface-strong:var(--vr-line);
+  --text:var(--vr-ink);--text-soft:var(--vr-body);--text-faint:var(--vr-muted);
+  --border:var(--vr-line);--border-subtle:var(--vr-line);
+  --primary:var(--vr-brand);--primary-strong:var(--vr-brand-hover);--primary-soft:var(--vr-brand-soft);
+  --green:var(--vr-success);--green-soft:var(--vr-success-soft);--amber:var(--vr-warning);--amber-soft:var(--vr-warning-soft);
+  --coral:var(--vr-danger);--coral-soft:var(--vr-danger-soft);--blue:var(--vr-info);--blue-soft:var(--vr-info-soft);
+  --chrome-bg:var(--vr-surface);--chrome-text:var(--vr-ink);--chrome-border:var(--vr-line);
+  --text-2xs:12px;--text-xs:12px;--text-sm:13px;--text-base:14px;
+  --radius-sm:8px;--radius-md:12px;--radius-lg:12px;--radius-xl:20px;
+  --control-sm:32px;--control-md:40px;--control-lg:44px;
+  --dur-fast:120ms;--dur:200ms;--dur-slow:360ms;--ease:var(--vr-ease);
+  --shadow-sm:var(--vr-shadow);--shadow-md:var(--vr-shadow-hover);
+  --state-selected:var(--vr-brand-soft);
+  --topbar-height:64px;
+}
+.nav-item-active {background:var(--vr-brand-soft);color:var(--vr-brand);}
+.summary-cell {background:var(--vr-surface);border:1px solid var(--vr-line);}
+.summary-copy small,.summary-copy span {color:var(--vr-muted);}
+.summary-cell-primary .summary-copy strong {color:var(--vr-ink);}
+.btn-primary {background:var(--vr-ink);color:var(--vr-surface);}
+.global-search {border-radius:8px;background:var(--vr-surface);}
+.project-card,.artifact-card,.source-card,.settings-section,.today-card {border-radius:12px;border-color:var(--vr-line);}
+.empty-state {background:var(--vr-surface);border:1px dashed var(--vr-line-strong);}
+.data-state-banner {display:flex;align-items:flex-start;gap:12px;padding:16px 20px;margin:0 0 20px;border:1px solid var(--vr-line);border-radius:12px;background:var(--vr-surface);color:var(--vr-body);}
+.data-state-banner strong {font-size:14px;color:var(--vr-ink);}
+.data-state-banner p {margin:5px 0;font-size:13px;line-height:1.7;overflow-wrap:anywhere;}
+.data-state-banner small {font-size:12px;color:var(--vr-muted);}
+.data-state-icon {padding-top:2px;flex:none;color:var(--vr-info);}
+.data-state-error {border-color:var(--vr-danger);background:var(--vr-danger-soft);}
+.data-state-error .data-state-icon {color:var(--vr-danger);}
+.data-state-partial {border-color:var(--vr-warning);background:var(--vr-warning-soft);}
+.data-state-actions {display:flex;gap:8px;flex-shrink:0;margin-left:auto;}
+.spinner-icon {animation:vr-collect-spin 1s linear infinite;}
+@keyframes vr-collect-spin {to{transform:rotate(360deg)}}
+.empty-state-actions {display:flex;justify-content:center;gap:12px;margin-top:16px;}
+.collection-toolbar .filter-chip-scroll {padding:4px;}
+.filter-chip[aria-pressed=true] {border-color:var(--vr-brand);}
+.session-title-text,.artifact-name,.project-name {overflow-wrap:anywhere;}
+.chart-data-details {margin-top:16px;border-top:1px solid var(--vr-line);padding-top:12px;}
+.chart-data-details summary {cursor:pointer;padding:8px 0;color:var(--vr-brand);font-size:13px;}
+.chart-data-details summary:focus-visible {outline:2px solid var(--vr-ink);outline-offset:3px;}
+.chart-data-table {overflow:auto;max-height:320px;border:1px solid var(--vr-line);border-radius:8px;margin-top:8px;}
+.chart-data-table table {border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums;}
+.chart-data-table caption {padding:10px 12px;color:var(--vr-muted);text-align:left;font-size:12px;}
+.chart-data-table th,.chart-data-table td {padding:12px;text-align:right;border-top:1px solid var(--vr-line);}
+.chart-data-table th:first-child {text-align:left;}
+.chart-data-table thead {background:var(--vr-surface-soft);}
+@media(max-width:959px){.data-state-banner{flex-wrap:wrap;padding:16px}.data-state-banner>div:not(.data-state-actions){flex:1;min-width:0}.data-state-actions{flex-basis:100%;margin-left:28px}}

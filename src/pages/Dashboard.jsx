@@ -1,6 +1,6 @@
-﻿import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, ClipboardCheck, Code2, Dices, Film, Github,
   Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Receipt, Shapes,
@@ -9,6 +9,8 @@ import {
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
 import { PELICAN_MODEL_COUNT } from './PelicanGallery';
+import useCardEffects from '../hooks/useCardEffects';
+import '../styles/dashboard-cards.css';
 
 const FEATURED = [
   { to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
@@ -31,7 +33,7 @@ const APPS = [
   { to: '/local-toolbox/', external: false, no: '03', name: '磁盘清理助手', desc: 'Windows 磁盘清理专用工具：智能分类、深度解析、目录百科，删除永远由你确认。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，三引擎全自动采集，数据本地加密，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
   { to: '/token-monitor/', external: false, no: '05', name: 'Token Monitor', desc: '本机 AI 编程工具用量看板：一条命令扫出 9 类 Agent 的 Token 消耗与成本，缓存命中率、模型单价、对话级明细全都看得见。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'tokenmonitor' },
-  { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把大学课程变成记得住的练习：选课程或导入讲义，AI 生成「先回忆再看答案」的知识卡片，FSRS 算法安排每次复习的最佳时机。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
+  { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把大学课程变成记得住的练习：四本词书 + 教材 PDF 导入，AI 生成知识卡片；学习卡四选一、答完看词根词缀辨析，FSRS 算法安排每次复习的最佳时机。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
   { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机优先的 AI 工作观测台：自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, iconSrc: '/ai-chronicle/icon.png', art: 'aichronicle' },
 ];
 
@@ -43,7 +45,7 @@ const APP_SHORT = {
   '/checkin/': '桌面端常驻后台，自动监听签到活动，支持普通 / 位置 / 二维码三种签到。',
   '/billtrace/': 'Android 自动记账：付款后 2 秒自动入库、智能分类，数据本地加密。',
   '/token-monitor/': '本机 AI 工具用量看板：一条命令扫出 9 类 Agent 的 Token 与成本。',
-  '/zenew/': '把课程变成记得住的练习：AI 生成问答卡片，FSRS 安排每次复习节奏。',
+  '/zenew/': '把课程变成记得住的练习：词书 + AI 卡片，四选一学习与 FSRS 复习调度。',
   '/ai-chronicle/': '本机 AI 工作观测台：12 个数据源的日报、历史与趋势看板。',
   '/draw': '随机抽人：导入花名册或手动添加姓名，设置人数一键抽取。',
 };
@@ -131,8 +133,11 @@ function useNativeSmoothScroll(rootRef) {
     const scroller = rootRef.current?.parentElement;
     if (!scroller) return undefined;
     const previous = scroller.style.scrollBehavior;
-    scroller.style.scrollBehavior = 'smooth';
-    return () => { scroller.style.scrollBehavior = previous; };
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => { scroller.style.scrollBehavior = motion.matches ? 'auto' : 'smooth'; };
+    update();
+    motion.addEventListener('change', update);
+    return () => { motion.removeEventListener('change', update); scroller.style.scrollBehavior = previous; };
   }, [rootRef]);
 }
 
@@ -343,8 +348,20 @@ function FeatureArt({ type }) {
   useEffect(() => {
     const n = ART_CYCLE[type];
     if (!n) return undefined;
-    const timer = setInterval(() => { if (!pausedRef.current) setActive((a) => (a + 1) % n); }, 2600);
-    return () => clearInterval(timer);
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let visible = false;
+    let timer;
+    const update = () => {
+      clearInterval(timer);
+      if (visible && !document.hidden && !motion.matches) {
+        timer = setInterval(() => { if (!pausedRef.current) setActive((a) => (a + 1) % n); }, 2600);
+      }
+    };
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; update(); });
+    if (artRef.current) observer.observe(artRef.current);
+    motion.addEventListener('change', update);
+    document.addEventListener('visibilitychange', update);
+    return () => { clearInterval(timer); observer.disconnect(); motion.removeEventListener('change', update); document.removeEventListener('visibilitychange', update); };
   }, [type]);
 
   if (type === 'api') {
@@ -685,22 +702,27 @@ function FeatureArt({ type }) {
   </div>;
 }
 
-function ProductPanel({ openProduct }) {
+function ShowcaseCard({ item, index, application = false }) {
   const isMobile = useIsMobileHome();
-  return <div className="vr-product-list">{FEATURED.map((feature, index) => {
-    const Icon = feature.Icon;
-    const openFeature = (event) => {
-      if (event.target.closest('button')) return;
-      openProduct(feature.to, feature.external);
-    };
-    return (
-      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={feature.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}${feature.art === 'api' ? ' is-api' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openFeature} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProduct(feature.to, feature.external); } }} role="link" tabIndex={0}>
+  const Icon = item.Icon;
+  const href = application ? item.to : item.external ? item.to : getToolUrl(item.to);
+  return <div className={`vr-roll-wrap vr-showcase-wrap${index === 0 ? ' is-lead' : ''}`} data-roll>
+    <div className="vr-card-entry" data-reveal style={{ '--reveal-delay': `${Math.min(index * .04, .2)}s` }}>
+      <a className={`vr-feature vr-card vr-showcase${item.art === 'api' ? ' is-api' : ''}`} data-voyra-card href={href} target={isMobile ? undefined : '_blank'} rel="noopener noreferrer" aria-label={`${item.name}：${item.cta}${isMobile ? '' : '（新标签页）'}`}>
         <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title">{feature.iconSrc ? <img className="vr-app-icon vr-feature-icon" src={feature.iconSrc} alt="" width="24" height="24" /> : <Icon size={24} strokeWidth={1.7} />}<h2>{feature.name}</h2></div><p>{isMobile && APP_SHORT[feature.to] ? APP_SHORT[feature.to] : feature.desc}</p><button className="vr-arrow-link" onClick={() => openProduct(feature.to, feature.external)}>{feature.cta}<ArrowUpRight size={17} /></button></div>
-        <FeatureArt type={feature.art} />
-      </article></div>
-    );
-  })}</div>;
+        <div className="vr-feature-copy"><div className="vr-card-eyebrow"><span>{application ? 'DESKTOP & MOBILE' : item.external ? 'CONNECTED SERVICE' : 'WEB APPLICATION'}</span><span>{String(index + 1).padStart(2, '0')}</span></div><div className="vr-feature-title">{item.iconSrc ? <img className="vr-app-icon vr-feature-icon" src={item.iconSrc} alt="" width="24" height="24" /> : <Icon size={22} strokeWidth={1.6} />}<h2>{item.name}</h2></div><p>{item.desc}</p><div className="vr-card-bottom"><span className="vr-arrow-link">{item.cta}<ArrowUpRight size={16} /></span><span className="vr-card-mode">{application ? item.to === '/billtrace/' ? 'ANDROID' : item.to === '/checkin/' ? 'WINDOWS / PWA' : 'WINDOWS' : item.external ? 'EXTERNAL' : 'ONLINE'}</span></div></div>
+        <div className="vr-showcase-visual" aria-hidden="true" inert=""><FeatureArt type={item.art} /></div>
+      </a>
+    </div>
+  </div>;
+}
+
+function DesignSystemEntry() {
+  return <Link className="vr-design-entry" to="/design-system"><span className="vr-design-mark"><Shapes size={22} strokeWidth={1.4} /></span><div><span>ONE LANGUAGE. FIVE TOOLS.</span><strong>软件 UI 规范</strong><p>通用基线、五款产品适配、组件状态与边界验收。</p></div><span className="vr-design-entry-cta">查看规范<ArrowUpRight size={18} /></span></Link>;
+}
+
+function ProductPanel() {
+  return <><DesignSystemEntry /><div className="vr-product-list">{FEATURED.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} />)}</div></>;
 }
 
 function SkillsPanel() {
@@ -720,26 +742,20 @@ function SkillsPanel() {
   </section>;
 }
 
-function AppsPanel({ openProduct }) {
-  const isMobile = useIsMobileHome();
-  return <div className="vr-product-list">{APPS.map((app, index) => {
-    const Icon = app.Icon;
-    const openApp = (event) => {
-      if (event.target.closest('button')) return;
-      const url = window.location.origin + app.to;
-      /* 同 openProduct：手机端就地跳转，首页留在历史里，返回键才回得了首页。
-         这里的目标是 public/<dir>/ 静态下载页（不是 hash 路由），所以不用 getToolUrl。 */
-      if (isMobile) { window.location.href = url; return; }
-      window.open(url, '_blank', 'noopener,noreferrer');
-    };
-    return (
-      <div className="vr-roll-wrap vr-panel-stagger" data-roll key={app.to}><article className={`vr-feature vr-card${index % 2 ? ' is-reverse' : ''}`} data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.28)}s` }} onPointerMove={updateSpotlight} onClick={openApp} onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openApp(event); } }} role="link" tabIndex={0}>
-        <span className="vr-spotlight" aria-hidden="true" />
-        <div className="vr-feature-copy"><span className="vr-feature-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-feature-title">{app.iconSrc ? <img className="vr-app-icon vr-feature-icon" src={app.iconSrc} alt="" width="24" height="24" /> : <Icon size={24} strokeWidth={1.7} />}<h2>{app.name}</h2></div><p>{isMobile && APP_SHORT[app.to] ? APP_SHORT[app.to] : app.desc}</p></div>
-        <FeatureArt type={app.art} />
-      </article></div>
-    );
-  })}</div>;
+function AppsPanel() {
+  return <><DesignSystemEntry /><div className="vr-product-list">{APPS.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} application />)}</div></>;
+}
+
+function HomeTabs({ activeTab, onChange }) {
+  const onKey = (event, index) => {
+    const keys = ['ArrowRight', 'ArrowLeft', 'Home', 'End'];
+    if (!keys.includes(event.key)) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? TABS.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length;
+    onChange(TABS[next][0]);
+    event.currentTarget.parentElement.querySelectorAll('[role="tab"]')[next].focus();
+  };
+  return <div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label], index) => <button type="button" id={`work-tab-${id}`} key={id} role="tab" tabIndex={activeTab === id ? 0 : -1} aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onKeyDown={(e) => onKey(e, index)} onClick={() => onChange(id)}>{label}</button>)}</div>;
 }
 
 function AboutPanel() {
@@ -759,9 +775,13 @@ function TabReel({ activeTab }) {
 
 function ContactPanel() {
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const copyTimer = useRef(null);
-  const copyEmail = async () => {
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
+  const copyEmail = async (event) => {
+    const trigger = event.currentTarget;
     const email = 'lixingli1024@qq.com';
+    let success = false;
     try { await navigator.clipboard.writeText(email); } catch {
       const ta = document.createElement('textarea');
       ta.value = email;
@@ -769,10 +789,17 @@ function ContactPanel() {
       ta.style.opacity = '0';
       document.body.appendChild(ta);
       ta.select();
-      try { document.execCommand('copy'); } catch { /* ignore */ }
+      try { success = document.execCommand('copy'); } catch { success = false; }
       document.body.removeChild(ta);
+      trigger.focus({ preventScroll: true });
+      setCopied(success);
+      setCopyFailed(!success);
+      clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => { setCopied(false); setCopyFailed(false); }, 4000);
+      return;
     }
     setCopied(true);
+    setCopyFailed(false);
     clearTimeout(copyTimer.current);
     copyTimer.current = setTimeout(() => setCopied(false), 2000);
   };
@@ -786,7 +813,7 @@ function ContactPanel() {
     ) : (
       <a href={contact.href} className="vr-contact-row" data-reveal style={reveal} target="_blank" rel="noreferrer" key={contact.label}>{inner}</a>
     );
-  })}</div></section>;
+  })}</div><p className="vr-contact-feedback" role="status" aria-live="polite">{copyFailed ? '无法访问剪贴板，请手动复制邮箱：lixingli1024@qq.com' : copied ? '邮箱已复制，可直接粘贴。' : ''}</p></section>;
 }
 
 export default function Dashboard() {
@@ -797,6 +824,7 @@ export default function Dashboard() {
   const [personReady, setPersonReady] = useState(false);
   const rootRef = useRef(null);
   const panelRefs = useRef({});
+  useCardEffects(rootRef, activeTab);
   useNativeSmoothScroll(rootRef);
   useScrollMemory(rootRef, activeTab);
   useReveal(rootRef, activeTab);
@@ -1386,7 +1414,7 @@ export default function Dashboard() {
     <div className="vr-rail-dashes" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
-    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><div className="vr-tabs" data-roll role="tablist" aria-label="内容分类">{TABS.map(([id, label]) => <button id={`work-tab-${id}`} key={id} role="tab" aria-controls={`panel-${id}`} aria-selected={activeTab === id} className={`vr-tab${activeTab === id ? ' is-active' : ''}`} onClick={() => changeTab(id)}>{label}</button>)}</div><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
+    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><HomeTabs activeTab={activeTab} onChange={changeTab} /><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
     <footer className="vr-footer" data-roll><span>© 2026 Voyra®</span><span style={{ marginLeft: 14, color: '#bbb' }}>Based on <a href="https://www.oiloil.org" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', textDecorationColor: '#ddd', textUnderlineOffset: 3 }} onMouseOver={(e) => { e.currentTarget.style.color = '#666'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'inherit'; }}>oiloil.org</a></span></footer>
   </div>;
 }

@@ -1,0 +1,44 @@
+/* Embedded after the existing stylesheet, keeping PWA and offline support. */
+:root {
+  --font:var(--vr-font);--canvas:var(--vr-canvas);--surface:var(--vr-surface);--surface-2:var(--vr-surface-soft);--surface-3:var(--vr-surface-hover);
+  --text:var(--vr-ink);--text-2:var(--vr-body);--text-3:var(--vr-muted);--border:var(--vr-line);--border-strong:var(--vr-line-strong);
+  --n-0:var(--vr-surface);--n-25:#faf9f6;--n-50:var(--vr-canvas);--n-100:var(--vr-surface-soft);--n-150:var(--vr-surface-hover);--n-200:var(--vr-line);--n-300:var(--vr-line-strong);--n-500:var(--vr-muted);--n-600:var(--vr-body);--n-800:var(--vr-ink);
+  --accent:#a95323;--accent-strong:#88431d;--accent-deep:#88431d;--accent-weak:#fbede3;
+  --a-500:#a95323;--a-600:#88431d;--a-100:#fbede3;
+  --fs-xs:12px;--fs-sm:12px;--fs-base:14px;--fs-md:15px;--fs-xl:18px;--fs-2xl:20px;
+  --radius-sm:8px;--radius:12px;--radius-lg:12px;--dur-fast:120ms;--dur:200ms;--ease:var(--vr-ease);
+  --shadow-sm:var(--vr-shadow);--shadow-md:var(--vr-shadow-hover);
+  --ok:var(--vr-success);--ok-weak:var(--vr-success-soft);
+  --warn:var(--vr-warning);--warn-weak:var(--vr-warning-soft);
+  --err:var(--vr-danger);--err-weak:var(--vr-danger-soft);
+}
+.side {background:var(--vr-canvas);backdrop-filter:none;border-color:var(--vr-line);}
+.stat-card,.panel,.section-card,.account-card {background:var(--vr-surface);border:1px solid var(--vr-line);border-radius:12px;box-shadow:var(--vr-shadow);}
+.stat-card:hover {transform:none;border-color:var(--vr-line-strong);}
+.btn-primary {background:var(--vr-ink);color:var(--vr-surface);box-shadow:none;}
+.btn-primary:hover {background:#3e4038;box-shadow:none;filter:none;}
+.btn-ghost {background:var(--vr-surface);color:var(--vr-body);box-shadow:none;}
+.nav-item.active {color:var(--accent);background:var(--accent-weak);}
+.field-input {border-radius:8px;min-height:40px;}
+.stat-num,.stat-value {font-variant-numeric:tabular-nums;}
+.service-notice {display:flex;align-items:center;gap:16px;padding:18px 20px;margin-bottom:20px;border:1px solid var(--vr-warning);border-radius:12px;background:var(--vr-warning-soft);}
+.service-notice[hidden] {display:none;}
+.service-notice>div {flex:1;min-width:0;}
+.service-notice strong {font-size:14px;color:var(--vr-ink);}
+.service-notice p {margin:5px 0 0;font-size:13px;line-height:1.7;overflow-wrap:anywhere;}
+.service-notice[data-kind=offline] {border-color:var(--vr-danger);background:var(--vr-danger-soft);}
+.service-notice :is(button,a){flex-shrink:0;}
+.modal,.detail-modal-box {max-height:80dvh;}
+.modal-body,.detail-modal-body {overflow:auto;min-height:0;}
+.modal-foot {flex:none;}
+.service-notice [hidden]{display:none!important;}
+@media(max-width:767px){.service-notice{flex-direction:column;align-items:stretch;padding:16px}.modal-mask{padding:12px}.modal{max-width:100%}}
+@media(max-width:767px){
+  /* The legacy nav inherited width:100%, hiding five mobile entries. */
+  body .side .nav-item {width:auto;flex:1 0 54px;min-width:54px;font-size:12px;}
+  body .side .nav {overflow-x:auto;}
+  /* QR stays available in the fixed header, without covering course states. */
+  body #fabQr {display:none;}
+  body .top-actions #btnQrModal {min-width:44px;min-height:44px;}
+}
+@media(max-width:767px){.btn,.field-input,.watch-toggle,.nav-item{min-height:44px}.stat-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.stat-card{padding:16px}}

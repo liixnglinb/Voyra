@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<link rel="stylesheet" href="/design-system/landing-cards.css?v=1">
+<script defer src="/design-system/landing-cards.js?v=1"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>知新 Zenew · 下载</title>
@@ -73,6 +76,80 @@ h1 em{font-style:normal;color:var(--gold)}
 .pv-foot{display:flex;gap:7px;padding:0 20px 18px}
 .pv-foot span{flex:1;text-align:center;font-size:11px;border-radius:9px;padding:6px 0;border:1px solid var(--line);color:var(--t3)}
 .pv-foot span.on{border-color:rgba(240,194,75,.5);color:var(--gold)}
+/* 学习卡预览（新版学习流） */
+.pv-media{position:relative;margin:16px 20px 0;height:104px;border-radius:12px;background:linear-gradient(150deg,#FFE9A8,#FFD166);display:grid;place-items:center;box-shadow:inset 0 0 0 2px rgba(255,255,255,.55)}
+.pv-media span{font-size:52px;font-weight:800;color:rgba(255,255,255,.92);letter-spacing:-3px;line-height:1}
+.pv-media em{position:absolute;top:9px;right:10px;font-style:normal;font-family:var(--mono);font-size:9.5px;color:#7A5B10;background:rgba(255,255,255,.78);border-radius:999px;padding:2px 8px;letter-spacing:.5px}
+.pv-media u{position:absolute;left:10px;bottom:8px;text-decoration:none;font-size:10px;color:rgba(0,0,0,.42)}
+.pv-word{margin-top:15px;text-align:center;font-size:25px;font-weight:800;letter-spacing:-.8px;color:var(--t1)}
+.pv-word i{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--t3);margin-left:8px;font-weight:400;letter-spacing:0}
+.pv-sent{margin-top:9px;text-align:center;font-size:12.5px;color:var(--t2);line-height:1.6}
+.pv-sent b{color:var(--gold);font-weight:600;border-bottom:1px solid rgba(240,194,75,.45)}
+.pv-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.pv-grid .pv-opt{margin:0;border-radius:10px;padding:9px 11px;font-size:12px;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.45;position:relative}
+.pv-grid .pv-opt .p{font-family:var(--mono);font-size:9.5px;color:var(--t3)}
+.pv-grid .pv-opt.ok{border-color:rgba(126,214,197,.5);background:rgba(126,214,197,.12)}
+.pv-grid .pv-opt.ok .p{color:#7ED6C5}
+.pv-grid .pv-opt .tick{position:absolute;right:7px;top:7px;width:17px;height:17px;border-radius:50%;background:#2AA391;color:#04241E;font-size:10px;display:grid;place-items:center;font-weight:700}
+.pv-ans .lnk{color:var(--gold);margin-left:6px;white-space:nowrap}
+.pv-bar{display:flex;align-items:center;gap:6px;margin:14px 20px 18px;padding:7px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03)}
+.pv-bar span{flex:1;text-align:center;font-size:10.5px;color:var(--t3)}
+.pv-bar span.on{color:var(--gold)}
+.pv-bar span.go{flex:0 0 auto;padding:4px 13px;border-radius:999px;background:var(--gold);color:#0B0C0E;font-weight:700}
+/* 界面一览（三张缩略卡） */
+.shots{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.shot{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.shot-top{display:flex;align-items:center;gap:7px;padding:10px 13px;border-bottom:1px solid var(--line)}
+.shot-top i{width:7px;height:7px;border-radius:50%;background:#2A2D33}
+.shot-top i:first-child{background:var(--gold)}
+.shot-top b{font-family:var(--mono);font-size:10px;color:var(--t3);font-weight:400;margin-left:4px}
+.shot figcaption{padding:12px 14px 14px;color:var(--t2);font-size:12.5px;line-height:1.6;border-top:1px solid var(--line);margin-top:auto}
+/* 知识云 + 计划卡 */
+.cloud{position:relative;height:148px;margin:12px 12px 0;border-radius:12px;overflow:hidden;background:radial-gradient(120% 90% at 78% -20%,rgba(255,255,255,.10),transparent 60%),linear-gradient(170deg,#16233B,#101A2C)}
+.cloud span{position:absolute;color:#8FB4FF;font-weight:700;white-space:nowrap}
+.cloud .w1{left:12%;top:18%;font-size:17px}
+.cloud .w2{left:58%;top:12%;font-size:13px}
+.cloud .w3{left:20%;top:44%;font-size:20px;color:#B6D2FF}
+.cloud .w4{left:66%;top:40%;font-size:14px}
+.cloud .w5{left:36%;top:66%;font-size:16px;color:#B6D2FF}
+.cloud .w6{left:10%;top:76%;font-size:12px}
+.cloud .w7{left:58%;top:74%;font-size:15px}
+.plan{margin:12px;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)}
+.plan-h{display:flex;align-items:baseline;gap:8px}
+.plan-h b{font-size:13px}
+.plan-h span{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--t3)}
+.plan-bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);margin:10px 0 11px;overflow:hidden}
+.plan-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--gold-hi))}
+.plan-b{display:flex;gap:8px}
+.plan-b span{flex:1;text-align:center;font-size:11px;padding:7px 0;border-radius:9px;background:rgba(240,194,75,.12);border:1px solid rgba(240,194,75,.3);color:var(--gold);font-weight:600}
+.plan-b .p2{background:rgba(255,255,255,.04);border-color:var(--line2);color:var(--t2)}
+/* 统计缩略 */
+.mrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 12px 0}
+.mrow div{border:1px solid var(--line);border-radius:10px;padding:8px 4px;text-align:center;background:rgba(255,255,255,.03)}
+.mrow b{display:block;font-family:var(--mono);font-size:15px;color:var(--t1);font-variant-numeric:tabular-nums}
+.mrow span{font-size:9.5px;color:var(--t3)}
+.bars{display:flex;align-items:flex-end;gap:5px;height:72px;margin:10px 12px 0;padding:8px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03)}
+.bars i{flex:1;border-radius:4px;background:linear-gradient(180deg,rgba(240,194,75,.75),rgba(240,194,75,.22))}
+.bars i.od{background:linear-gradient(180deg,#FF8F86,rgba(228,87,76,.35))}
+.srow{display:flex;align-items:flex-end;gap:8px;height:70px;margin:10px 12px 12px}
+.srow div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
+.srow span{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.srow i{width:100%;border-radius:6px 6px 3px 3px;min-height:4px;background:linear-gradient(180deg,#8FB4FF,#245EF0)}
+.srow small{font-size:9.5px;color:var(--t3)}
+.srow .k i{background:linear-gradient(180deg,#7FD6C5,#2AA391)}
+.srow .c i{background:linear-gradient(180deg,#FFD166,#E0A32B)}
+/* 详情缩略 */
+.dai{display:flex;align-items:center;gap:7px;margin:12px 12px 0;padding:9px 12px;border:1px solid rgba(240,194,75,.32);border-radius:10px;font-size:11.5px;color:var(--gold)}
+.dtabs{display:flex;margin:10px 12px 0;border-radius:10px 10px 0 0;overflow:hidden;background:#16233B}
+.dtabs span{flex:1;text-align:center;font-size:10.5px;padding:7px 3px;color:rgba(255,255,255,.6)}
+.dtabs span.on{background:rgba(255,255,255,.94);color:#16233B;font-weight:700}
+.dpanel{margin:0 12px 12px;padding:12px;border:1px solid var(--line);border-top:none;border-radius:0 0 12px 12px;background:rgba(255,255,255,.03)}
+.morph{display:flex;align-items:flex-end;gap:14px}
+.morph span{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.morph b{font-size:19px;color:var(--t1);border-bottom:3px solid var(--gold);padding-bottom:2px}
+.morph b.sfx{border-bottom-color:#7FD6C5}
+.morph small{font-size:9.5px;color:var(--t3)}
+.dnote{margin-top:10px;font-size:11.5px;color:var(--t2);line-height:1.6}
 /* 特性 */
 .section{padding:64px 0;border-top:1px solid var(--line)}
 .sec-head{margin-bottom:34px}
@@ -122,6 +199,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
   .hero{grid-template-columns:1fr;padding-top:120px;gap:40px}
   h1{font-size:38px}
   .bento,.steps{grid-template-columns:1fr}
+  .shots{grid-template-columns:1fr}
   .dl-row{flex-wrap:wrap;border-radius:20px;gap:10px}
   .dl-desc{min-width:100%}
   .top-nav{display:none}
@@ -168,7 +246,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
       <a href="https://github.com/liixnglinb/Zenew" target="_blank">源码</a>
     </nav>
     <div class="top-right">
-      <span class="ver num" id="ver">v0.1.0</span>
+      <span class="ver num" id="ver">v0.14.3</span>
       <a class="gh-link" href="https://github.com/liixnglinb/Zenew" target="_blank">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
         liixnglinb/Zenew
@@ -193,19 +271,24 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
         <span><i></i>无需管理员权限</span>
         <span><i></i>更新免安装 · 软件内自动完成</span>
         <span><i></i>需邀请码开通账号</span>
-        <span><i></i>安装包约 4 MB</span>
+        <span><i></i>安装包约 4.8 MB</span>
       </div>
     </div>
     <div class="preview fx d2" aria-hidden="true">
-      <div class="pv-top"><i></i><i></i><i></i><b>Zenew · 今日复习</b></div>
+      <div class="pv-top"><i></i><i></i><i></i><b>Zenew · 新学 04 / 12</b></div>
+      <div class="pv-media"><span>L</span><em>WORD</em><u>英语四级 · 第 8 组</u></div>
       <div class="pv-body">
-        <div class="pv-q"><small>RECALL · 高等数学（上）</small>极限 lim(x→0) sin x / x 的值是？</div>
-        <div class="pv-opt"><span class="k">1</span>不存在</div>
-        <div class="pv-opt ok"><span class="k">2</span>1 —— 两个重要极限之一</div>
-        <div class="pv-opt"><span class="k">3</span>∞</div>
+        <div class="pv-word">legal <i>/ˈliːɡl/</i></div>
+        <div class="pv-sent">In some areas of America, it's <b>legal</b> to carry a gun.</div>
+        <div class="pv-grid">
+          <div class="pv-opt"><span class="p">adj.</span>非法的</div>
+          <div class="pv-opt ok"><span class="p">adj.</span>法定的<span class="tick">✓</span></div>
+          <div class="pv-opt"><span class="p">n.</span>遗产；遗赠</div>
+          <div class="pv-opt"><span class="p">adj.</span>帝王的，豪华的</div>
+        </div>
       </div>
-      <div class="pv-ans"><b>WHY</b>由夹逼准则可证 sin x / x → 1，这是所有等价无穷小替换的基础。</div>
-      <div class="pv-foot"><span>忘了 · 1</span><span>想起 · 2</span><span class="on">记得 · 3</span><span>秒答 · 4</span></div>
+      <div class="pv-ans"><b>AI 辨析</b>和 illegal 搞混了？<span class="lnk">帮你辨析 →</span></div>
+      <div class="pv-bar"><span>✂ 斩</span><span class="on">✦ Ai</span><span>☀ 提示</span><span>🔊 朗读</span><span class="go">继续 →</span></div>
     </div>
   </section>
 
@@ -222,18 +305,105 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
       </div>
       <div class="cell">
         <b><i>02</i>AI 生成卡片</b>
-        <p>按课程名生成知识点大纲，逐点生成回忆卡、选择题与变式题，每张卡都先回忆再看答案。</p>
+        <p>按课程名生成知识点大纲，逐点生成回忆卡与选择题，服务端质检后再入库。</p>
       </div>
       <div class="cell">
-        <b><i>03</i>数据在本机</b>
-        <p>学习记录全部保存在本地 SQLite，导出自由；账号只用于生成服务计费。</p>
+        <b><i>03</i>教材 PDF 导入</b>
+        <p>本地解析讲义，扫描页自动跳过；按章节渐进提取知识点并建卡，不用等解析完就能开始学。</p>
       </div>
+      <div class="cell">
+        <b><i>04</i>词书学习流</b>
+        <p>媒体卡 + 单词 + 例句，四选一作答；答对有即时反馈，已经认识的词一键「斩」出计划。</p>
+      </div>
+      <div class="cell">
+        <b><i>05</i>词根词缀 · 形近词</b>
+        <p>内置离线词根词缀表拆词讲解，并从全量词库里找出拼写相近的词，防看错、记一串。</p>
+      </div>
+      <div class="cell">
+        <b><i>06</i>复习统计看板</b>
+        <p>初记 / 强化 / 巩固 / 熟识 / 已斩五档掌握情况，未来十天复习量预测与累计进展曲线。</p>
+      </div>
+      <div class="cell">
+        <b><i>07</i>全量查词</b>
+        <p>14,625 词离线词库，英文与中文释义都能搜；收藏的词进生词本，走同一套复习循环。</p>
+      </div>
+      <div class="cell">
+        <b><i>08</i>深浅色主题</b>
+        <p>跟随系统或手动切换深浅色；字号四档可调，另有长辈版排版，放大不破版。</p>
+      </div>
+      <div class="cell">
+        <b><i>09</i>数据在本机</b>
+        <p>学习记录全部保存在本机 SQLite，离线也能学、能复习、能看统计；不做任何行为画像。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="ui">
+    <div class="sec-head">
+      <div class="kicker">NEW UI / <b>2026 改版</b></div>
+      <h2>一屏只做一件事</h2>
+      <p class="sub" style="margin-top:12px">首页给方向、学习页给题目、统计页给反馈；配色与排版全部重做，深浅色都完整可用。</p>
+    </div>
+    <div class="shots">
+      <figure class="shot">
+        <div class="shot-top"><i></i><i></i><i></i><b>单词 · 知识云</b></div>
+        <div class="cloud" aria-hidden="true">
+          <span class="w1">reputation</span>
+          <span class="w2">effect</span>
+          <span class="w3">circumstance</span>
+          <span class="w4">crash</span>
+          <span class="w5">cultivate</span>
+          <span class="w6">enroll</span>
+          <span class="w7">deliver</span>
+        </div>
+        <div class="plan">
+          <div class="plan-h"><b>英语四级</b><span>每日 3 组</span></div>
+          <div class="plan-bar"><i style="width:27%"></i></div>
+          <div class="plan-b"><span>新学 0/3 组</span><span class="p2">复习 0/14 组</span></div>
+        </div>
+        <figcaption>知识云首页：学过的词按记忆状态漂浮，下面是今天的学习计划与一键「新学 / 复习」。</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="shot-top"><i></i><i></i><i></i><b>复习统计</b></div>
+        <div class="mrow">
+          <div><b>42</b><span>今日</span></div>
+          <div><b>86</b><span>熟识</span></div>
+          <div><b>350</b><span>待复习</span></div>
+          <div><b>254</b><span>累计</span></div>
+        </div>
+        <div class="bars" aria-hidden="true">
+          <i class="od" style="height:100%"></i><i style="height:18%"></i><i style="height:14%"></i><i style="height:10%"></i><i style="height:7%"></i><i style="height:5%"></i><i style="height:6%"></i><i style="height:4%"></i><i style="height:5%"></i><i style="height:3%"></i>
+        </div>
+        <div class="srow" aria-hidden="true">
+          <div><span>182</span><i style="height:92%"></i><small>初记</small></div>
+          <div><span>4</span><i style="height:6%"></i><small>强化</small></div>
+          <div><span>14</span><i style="height:12%"></i><small>巩固</small></div>
+          <div class="k"><span>86</span><i style="height:46%"></i><small>熟识</small></div>
+          <div class="c"><span>0</span><i style="height:4%"></i><small>已斩</small></div>
+        </div>
+        <figcaption>复习统计：未来十天复习量预测（逾期标红），加上五档掌握现状与累计进展曲线。</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <div class="shot-top"><i></i><i></i><i></i><b>单词详情 · 词根词缀</b></div>
+        <div class="dai"><span>✦ Ai</span>和 illegal 搞混了？帮你辨析 →</div>
+        <div class="dtabs"><span>释义</span><span>例句</span><span class="on">词根词缀</span><span>形近词</span></div>
+        <div class="dpanel">
+          <div class="morph">
+            <span><b>leg</b><small>词根 · 法律</small></span>
+            <span><b class="sfx">al</b><small>后缀 · 形容词后缀</small></span>
+          </div>
+          <p class="dnote">词根「leg」表示法律；后缀「al」是形容词后缀——拆开记，比死记省力。</p>
+        </div>
+        <figcaption>答完题就能展开详情：AI 易混词辨析、词根词缀拆解、形近词列表，离线也能看。</figcaption>
+      </figure>
     </div>
   </section>
 
   <section class="section" id="download">
     <div class="sec-head">
-      <div class="kicker">DOWNLOAD / <b id="ver2" style="color:var(--gold)">v0.1.0</b></div>
+      <div class="kicker">DOWNLOAD / <b id="ver2" style="color:var(--gold)">v0.14.3</b></div>
       <h2>选择安装方式</h2>
     </div>
     <div class="dl-rows">
@@ -243,11 +413,6 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
         <span class="dl-size num" id="size1">—</span>
         <a class="dl-btn" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe" id="dl1">下载</a>
         <a class="dl-btn ghost" href="https://gh-proxy.com/https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe" id="dl1p">镜像</a>
-      </div>
-      <div class="dl-row">
-        <div class="dl-name">额度包<small class="num">¥3.9 起 / 永久有效</small></div>
-        <div class="dl-desc">免费额度用完后按需购买：四档可选，最低 ¥3.9 / 60 万 tokens（约 7 门课程的全部知识点）。填邮箱自动到账，或领取兑换码在软件内兑换。</div>
-        <a class="dl-btn ghost" href="/zenew/buy/">购买额度</a>
       </div>
     </div>
     <div class="mirror">
@@ -265,7 +430,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
     <div class="steps">
       <div class="step"><b>STEP 01</b><p><strong>安装一次</strong><br>下载 Zenew-Setup.exe 双击安装，无需管理员权限。</p></div>
       <div class="step"><b>STEP 02</b><p><strong>凭邀请码开通</strong><br>注册时填入邀请码即可开通账号，一次一码。</p></div>
-      <div class="step"><b>STEP 03</b><p><strong>每天打开</strong><br>选课程生成卡片，跟着「今日」队列复习；新版本软件内一键免安装更新。</p></div>
+      <div class="step"><b>STEP 03</b><p><strong>每天打开</strong><br>挑一本词书或生成课程卡片，跟着「新学 / 复习」队列走；完成后在统计里看记忆增长。</p></div>
     </div>
   </section>
 </main>
@@ -285,7 +450,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
   <img src="/zenew/icon-32.png" alt="">
   <div class="mb-t">
     <div class="mt">知新® Zenew</div>
-    <div class="ms"><b id="mbar-ver">v0.1.0</b> · 安装包 <span id="mbar-size">约 4 MB</span> · Windows</div>
+    <div class="ms"><b id="mbar-ver">v0.14.3</b> · 安装包 <span id="mbar-size">约 4.8 MB</span> · Windows</div>
   </div>
   <a class="go" id="mbar-go" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe">下载</a>
 </div>

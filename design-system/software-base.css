@@ -1,0 +1,45 @@
+@import './voyra-foundation.css';
+/* Shared interaction contract. App-specific adapters keep layout and business logic. */
+html body {font-family:var(--font-ui,var(--font-sans,var(--font,var(--vr-font))));text-rendering:optimizeLegibility;}
+html body :is(button,a,input,textarea,select,[tabindex]):focus-visible {
+  outline:2px solid var(--vr-ink)!important;outline-offset:3px;
+}
+html body :is(button,input,select,textarea) {font-family:inherit;}
+html body .sr-only {position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;}
+html body :is(.btn,.button,.field-input,.form-input,.input-field) {
+  min-height:var(--vr-control);border-radius:var(--vr-radius-control);
+  transition:background var(--vr-duration-fast),border-color var(--vr-duration-fast),color var(--vr-duration-fast),transform var(--vr-duration-fast);
+}
+html body :is(.btn-sm,.btn.small,.btn-sm.btn-square) {min-height:var(--vr-control-sm);}
+/* Native title bars are a geometry exception; never overlap system window buttons. */
+html body .titlebar :is(.btn,select) {min-height:26px;}
+html body :is(.btn,.button):active:not(:disabled) {transform:translateY(1px);}
+html body :is(button,.btn)[disabled] {cursor:not-allowed;}
+html body :is(.btn,.button)[disabled] {opacity:.55;transform:none;}
+html body :is(.btn,.button)[aria-busy=true] {cursor:progress;}
+html body :is(.btn-primary,.btn.primary,.button-primary) {
+  background:var(--vr-ink);color:var(--vr-surface);border-color:var(--vr-ink);box-shadow:none;
+}
+html body :is(.btn-primary,.btn.primary,.button-primary):hover:not(:disabled) {
+  background:color-mix(in srgb,var(--vr-ink) 85%,var(--vr-surface));color:var(--vr-surface);box-shadow:none;
+}
+html body :is(.btn-danger,.btn.danger,.button-danger) {color:var(--vr-danger);border-color:var(--vr-danger);}
+html body :is(.btn-danger,.btn.danger,.button-danger):hover:not(:disabled) {color:var(--vr-danger);background:var(--vr-danger-soft);}
+html body :is(.summary-copy strong,.stat-num,.stat-value,.kpi .v,.metric-value,.st-strip b) {font-variant-numeric:tabular-nums;letter-spacing:-.03em;}
+html body :is(.panel,.summary-cell,.stat-card,.metric-card,.set-card,.sc-card) {
+  border-radius:var(--vr-radius-panel);border-color:var(--vr-line);box-shadow:var(--vr-shadow);
+}
+html body :is(.panel,.summary-cell,.stat-card,.metric-card,.set-card,.sc-card):hover {transform:none;}
+html body :is(.modal-box,.modal-panel,.dialog-panel,.modal-dialog) {border-radius:var(--vr-radius-panel);}
+html body :is(.empty-state,.empty) {line-height:1.7;color:var(--vr-muted);}
+html body :is(.file-path,.path,.mono,code,pre) {font-family:var(--vr-mono);}
+@media(pointer:coarse){html body :is(.btn,.button,.field-input,.form-input){min-height:var(--vr-control-touch);}}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after {animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
+  html body :is(.btn,.button,.panel,.summary-cell,.stat-card):hover,
+  html body :is(.btn,.button):active {transform:none!important;}
+}
+@media(forced-colors:active){
+  html body :is(.btn,.button,input,select,textarea,.panel,.stat-card,.sc-card) {border:1px solid ButtonText;}
+  html body :is(button,a,input,select,textarea):focus-visible {outline:2px solid Highlight!important;}
+}

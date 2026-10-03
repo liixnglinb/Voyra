@@ -1,0 +1,82 @@
+/* Voyra UI foundation v1 · offline-safe · website and five apps. */
+:root {
+  --vr-font: "Segoe UI Variable Text", "Inter", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  --vr-mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  --vr-canvas: #f6f5f1;
+  --vr-surface: #ffffff;
+  --vr-surface-soft: #efeee9;
+  --vr-surface-hover: #e9e7df;
+  --vr-ink: #20211f;
+  --vr-body: #454740;
+  --vr-muted: #696b62;
+  --vr-line: #dddcd4;
+  --vr-line-strong: #b5b6aa;
+  --vr-brand: #80651c;
+  --vr-brand-hover: #654e13;
+  --vr-highlight: #ffe08a;
+  --vr-brand-soft: #f9f0d4;
+  --vr-success: #167247;
+  --vr-success-soft: #e6f3e9;
+  --vr-warning: #8b5a0a;
+  --vr-warning-soft: #fff1d9;
+  --vr-danger: #b63836;
+  --vr-danger-soft: #fceae8;
+  --vr-info: #365da8;
+  --vr-info-soft: #eaf0fa;
+  --vr-radius-control: 8px;
+  --vr-radius-panel: 12px;
+  --vr-radius-card: 20px;
+  --vr-radius-pill: 999px;
+  --vr-space-1: 4px;
+  --vr-space-2: 8px;
+  --vr-space-3: 12px;
+  --vr-space-4: 16px;
+  --vr-space-5: 20px;
+  --vr-space-6: 24px;
+  --vr-space-8: 32px;
+  --vr-space-10: 40px;
+  --vr-control-sm: 32px;
+  --vr-control: 40px;
+  --vr-control-touch: 44px;
+  --vr-text-caption: 12px;
+  --vr-text-body: 14px;
+  --vr-text-title: 20px;
+  --vr-text-display: 32px;
+  --vr-shadow: 0 2px 4px #20211f04, 0 16px 40px -28px #20211f40;
+  --vr-shadow-hover: 0 4px 8px #20211f05, 0 24px 48px -24px #20211f30;
+  --vr-duration-fast: 120ms;
+  --vr-duration: 200ms;
+  --vr-duration-enter: 360ms;
+  --vr-ease: cubic-bezier(.2,.8,.2,1);
+  --vr-z-header: 20;
+  --vr-z-popover: 40;
+  --vr-z-dialog: 60;
+  --vr-z-toast: 80;
+}
+:root[data-theme="dark"], :root[data-voyra-theme="dark"] {
+  --vr-canvas: #191a18;
+  --vr-surface: #232420;
+  --vr-surface-soft: #2c2d28;
+  --vr-surface-hover: #34352e;
+  --vr-ink: #eeeee7;
+  --vr-body: #cbccc2;
+  --vr-muted: #a7a99e;
+  --vr-line: #3e4036;
+  --vr-line-strong: #7e8172;
+  --vr-brand: #e3c878;
+  --vr-brand-hover: #f6df9b;
+  --vr-brand-soft: #373021;
+  --vr-success: #81d6a3;
+  --vr-success-soft: #20392a;
+  --vr-warning: #efc574;
+  --vr-warning-soft: #3b301d;
+  --vr-danger: #f69993;
+  --vr-danger-soft: #432826;
+  --vr-info: #a4bcf4;
+  --vr-info-soft: #273449;
+  --vr-shadow: 0 12px 32px -22px #0009;
+  --vr-shadow-hover: 0 20px 40px -20px #0009;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --vr-duration-fast: 0ms; --vr-duration: 0ms; --vr-duration-enter: 0ms; }
+}
