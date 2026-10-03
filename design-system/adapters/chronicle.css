@@ -1,53 +1,366 @@
 @import './voyra-software-base.css';
-/* AI Chronicle · reading-first graphite / warm gold. */
-:root,:root[data-theme='dark'] {
-  --font-sans:var(--vr-font);--font-mono:var(--vr-mono);
-  --bg:var(--vr-canvas);--bg-soft:var(--vr-surface-soft);
-  --surface:var(--vr-surface);--surface-raised:var(--vr-surface);--surface-hover:var(--vr-surface-hover);--surface-strong:var(--vr-line);
-  --text:var(--vr-ink);--text-soft:var(--vr-body);--text-faint:var(--vr-muted);
-  --border:var(--vr-line);--border-subtle:var(--vr-line);
-  --primary:var(--vr-brand);--primary-strong:var(--vr-brand-hover);--primary-soft:var(--vr-brand-soft);
-  --green:var(--vr-success);--green-soft:var(--vr-success-soft);--amber:var(--vr-warning);--amber-soft:var(--vr-warning-soft);
-  --coral:var(--vr-danger);--coral-soft:var(--vr-danger-soft);--blue:var(--vr-info);--blue-soft:var(--vr-info-soft);
-  --chrome-bg:var(--vr-surface);--chrome-text:var(--vr-ink);--chrome-border:var(--vr-line);
-  --text-2xs:12px;--text-xs:12px;--text-sm:13px;--text-base:14px;
-  --radius-sm:8px;--radius-md:12px;--radius-lg:12px;--radius-xl:20px;
-  --control-sm:32px;--control-md:40px;--control-lg:44px;
-  --dur-fast:120ms;--dur:200ms;--dur-slow:360ms;--ease:var(--vr-ease);
-  --shadow-sm:var(--vr-shadow);--shadow-md:var(--vr-shadow-hover);
-  --state-selected:var(--vr-brand-soft);
-  --topbar-height:64px;
+/* AI Chronicle · 石墨 / 暖金适配层。
+   暗色档在 v0.6.4 起改为「黑曜石（Obsidian）」纯黑白灰质感：
+   品牌色由暖金换成银白，语义色改用明度而非色相区分，
+   再用顶部聚光 + 发丝高光 + 分层阴影做出金属质感。
+   浅色档不受影响，继续沿用 Voyra 通用基线。 */
+:root,
+:root[data-theme='dark'] {
+  --font-sans: var(--vr-font);
+  --font-mono: var(--vr-mono);
+  --bg: var(--vr-canvas);
+  --bg-soft: var(--vr-surface-soft);
+  --surface: var(--vr-surface);
+  --surface-raised: var(--vr-surface);
+  --surface-hover: var(--vr-surface-hover);
+  --surface-strong: var(--vr-line);
+  --text: var(--vr-ink);
+  --text-soft: var(--vr-body);
+  --text-faint: var(--vr-muted);
+  --border: var(--vr-line);
+  --border-subtle: var(--vr-line);
+  --primary: var(--vr-brand);
+  --primary-strong: var(--vr-brand-hover);
+  --primary-soft: var(--vr-brand-soft);
+  --green: var(--vr-success);
+  --green-soft: var(--vr-success-soft);
+  --amber: var(--vr-warning);
+  --amber-soft: var(--vr-warning-soft);
+  --coral: var(--vr-danger);
+  --coral-soft: var(--vr-danger-soft);
+  --blue: var(--vr-info);
+  --blue-soft: var(--vr-info-soft);
+  --chrome-bg: var(--vr-surface);
+  --chrome-text: var(--vr-ink);
+  --chrome-border: var(--vr-line);
+  --text-2xs: 12px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --control-sm: 32px;
+  --control-md: 40px;
+  --control-lg: 44px;
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --dur-slow: 360ms;
+  --ease: var(--vr-ease);
+  --shadow-sm: var(--vr-shadow);
+  --shadow-md: var(--vr-shadow-hover);
+  --state-selected: var(--vr-brand-soft);
+  --topbar-height: 64px;
 }
-.nav-item-active {background:var(--vr-brand-soft);color:var(--vr-brand);}
-.summary-cell {background:var(--vr-surface);border:1px solid var(--vr-line);}
-.summary-copy small,.summary-copy span {color:var(--vr-muted);}
-.summary-cell-primary .summary-copy strong {color:var(--vr-ink);}
-.btn-primary {background:var(--vr-ink);color:var(--vr-surface);}
-.global-search {border-radius:8px;background:var(--vr-surface);}
-.project-card,.artifact-card,.source-card,.settings-section,.today-card {border-radius:12px;border-color:var(--vr-line);}
-.empty-state {background:var(--vr-surface);border:1px dashed var(--vr-line-strong);}
-.data-state-banner {display:flex;align-items:flex-start;gap:12px;padding:16px 20px;margin:0 0 20px;border:1px solid var(--vr-line);border-radius:12px;background:var(--vr-surface);color:var(--vr-body);}
-.data-state-banner strong {font-size:14px;color:var(--vr-ink);}
-.data-state-banner p {margin:5px 0;font-size:13px;line-height:1.7;overflow-wrap:anywhere;}
-.data-state-banner small {font-size:12px;color:var(--vr-muted);}
-.data-state-icon {padding-top:2px;flex:none;color:var(--vr-info);}
-.data-state-error {border-color:var(--vr-danger);background:var(--vr-danger-soft);}
-.data-state-error .data-state-icon {color:var(--vr-danger);}
-.data-state-partial {border-color:var(--vr-warning);background:var(--vr-warning-soft);}
-.data-state-actions {display:flex;gap:8px;flex-shrink:0;margin-left:auto;}
-.spinner-icon {animation:vr-collect-spin 1s linear infinite;}
-@keyframes vr-collect-spin {to{transform:rotate(360deg)}}
-.empty-state-actions {display:flex;justify-content:center;gap:12px;margin-top:16px;}
-.collection-toolbar .filter-chip-scroll {padding:4px;}
-.filter-chip[aria-pressed=true] {border-color:var(--vr-brand);}
-.session-title-text,.artifact-name,.project-name {overflow-wrap:anywhere;}
-.chart-data-details {margin-top:16px;border-top:1px solid var(--vr-line);padding-top:12px;}
-.chart-data-details summary {cursor:pointer;padding:8px 0;color:var(--vr-brand);font-size:13px;}
-.chart-data-details summary:focus-visible {outline:2px solid var(--vr-ink);outline-offset:3px;}
-.chart-data-table {overflow:auto;max-height:320px;border:1px solid var(--vr-line);border-radius:8px;margin-top:8px;}
-.chart-data-table table {border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums;}
-.chart-data-table caption {padding:10px 12px;color:var(--vr-muted);text-align:left;font-size:12px;}
-.chart-data-table th,.chart-data-table td {padding:12px;text-align:right;border-top:1px solid var(--vr-line);}
-.chart-data-table th:first-child {text-align:left;}
-.chart-data-table thead {background:var(--vr-surface-soft);}
-@media(max-width:959px){.data-state-banner{flex-wrap:wrap;padding:16px}.data-state-banner>div:not(.data-state-actions){flex:1;min-width:0}.data-state-actions{flex-basis:100%;margin-left:28px}}
+.nav-item-active {
+  background: var(--vr-brand-soft);
+  color: var(--vr-brand);
+}
+.summary-cell {
+  background: var(--vr-surface);
+  border: 1px solid var(--vr-line);
+}
+.summary-copy small,
+.summary-copy span {
+  color: var(--vr-muted);
+}
+.summary-cell-primary .summary-copy strong {
+  color: var(--vr-ink);
+}
+.btn-primary {
+  background: var(--vr-ink);
+  color: var(--vr-surface);
+}
+.global-search {
+  border-radius: 8px;
+  background: var(--vr-surface);
+}
+.project-card,
+.artifact-card,
+.source-card,
+.settings-section,
+.today-card {
+  border-radius: 12px;
+  border-color: var(--vr-line);
+}
+.empty-state {
+  background: var(--vr-surface);
+  border: 1px dashed var(--vr-line-strong);
+}
+.data-state-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  margin: 0 0 20px;
+  border: 1px solid var(--vr-line);
+  border-radius: 12px;
+  background: var(--vr-surface);
+  color: var(--vr-body);
+}
+.data-state-banner strong {
+  font-size: 14px;
+  color: var(--vr-ink);
+}
+.data-state-banner p {
+  margin: 5px 0;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.data-state-banner small {
+  font-size: 12px;
+  color: var(--vr-muted);
+}
+.data-state-icon {
+  padding-top: 2px;
+  flex: none;
+  color: var(--vr-info);
+}
+.data-state-error {
+  border-color: var(--vr-danger);
+  background: var(--vr-danger-soft);
+}
+.data-state-error .data-state-icon {
+  color: var(--vr-danger);
+}
+.data-state-partial {
+  border-color: var(--vr-warning);
+  background: var(--vr-warning-soft);
+}
+.data-state-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.spinner-icon {
+  animation: vr-collect-spin 1s linear infinite;
+}
+@keyframes vr-collect-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.empty-state-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.collection-toolbar .filter-chip-scroll {
+  padding: 4px;
+}
+.filter-chip[aria-pressed='true'] {
+  border-color: var(--vr-brand);
+}
+.session-title-text,
+.artifact-name,
+.project-name {
+  overflow-wrap: anywhere;
+}
+.chart-data-details {
+  margin-top: 16px;
+  border-top: 1px solid var(--vr-line);
+  padding-top: 12px;
+}
+.chart-data-details summary {
+  cursor: pointer;
+  padding: 8px 0;
+  color: var(--vr-brand);
+  font-size: 13px;
+}
+.chart-data-details summary:focus-visible {
+  outline: 2px solid var(--vr-ink);
+  outline-offset: 3px;
+}
+.chart-data-table {
+  overflow: auto;
+  max-height: 320px;
+  border: 1px solid var(--vr-line);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+.chart-data-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.chart-data-table caption {
+  padding: 10px 12px;
+  color: var(--vr-muted);
+  text-align: left;
+  font-size: 12px;
+}
+.chart-data-table th,
+.chart-data-table td {
+  padding: 12px;
+  text-align: right;
+  border-top: 1px solid var(--vr-line);
+}
+.chart-data-table th:first-child {
+  text-align: left;
+}
+.chart-data-table thead {
+  background: var(--vr-surface-soft);
+}
+@media (max-width: 959px) {
+  .data-state-banner {
+    flex-wrap: wrap;
+    padding: 16px;
+  }
+  .data-state-banner > div:not(.data-state-actions) {
+    flex: 1;
+    min-width: 0;
+  }
+  .data-state-actions {
+    flex-basis: 100%;
+    margin-left: 28px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   暗色档 · 黑曜石（Obsidian）纯黑白灰
+   ---------------------------------------------------------------------------
+   只覆盖 [data-theme='dark']，浅色档保持通用基线不变。
+   表面分四级：页面底 < 侧栏 < 卡片 < 悬浮，靠明度差而不是描边区分层次。
+   ------------------------------------------------------------------------ */
+:root[data-theme='dark'] {
+  /* 表面阶梯 */
+  --vr-canvas: #08090a;
+  --vr-surface-soft: #0c0d0f;
+  --vr-surface: #121315;
+  --vr-surface-hover: #1b1d20;
+  --vr-line: #23262a;
+  --vr-line-strong: #4c5157;
+
+  /* 文字阶梯 */
+  --vr-ink: #f6f7f8;
+  --vr-body: #b6bbc0;
+  --vr-muted: #83898f;
+
+  /* 品牌：银白，去掉全部彩色 */
+  --vr-brand: #e7eaec;
+  --vr-brand-hover: #ffffff;
+  --vr-brand-soft: #1c1f22;
+
+  /* 语义：只用明度区分，形状/图标承担原有色相的辨识职责 */
+  --vr-success: #dfe3e6;
+  --vr-success-soft: #191c1f;
+  --vr-warning: #c6cbd0;
+  --vr-warning-soft: #1d2023;
+  --vr-danger: #ffffff;
+  --vr-danger-soft: #26292d;
+  --vr-info: #a9afb5;
+  --vr-info-soft: #17191c;
+
+  /* 质感令牌：发丝高光 / 顶部聚光 / 井底暗部 */
+  --vr-hairline: rgba(255, 255, 255, 0.06);
+  --vr-hairline-soft: rgba(255, 255, 255, 0.03);
+  --vr-spotlight: rgba(255, 255, 255, 0.05);
+  --vr-shadow: inset 0 1px 0 var(--vr-hairline-soft), 0 16px 36px -28px #000;
+  --vr-shadow-hover: inset 0 1px 0 var(--vr-hairline), 0 24px 50px -26px #000;
+}
+
+/* 3.1 窗口标题栏：与主进程 titleBarOverlay 同色，只加一道底部暗缝 */
+:root[data-theme='dark'] .titlebar-strip {
+  border-bottom-color: #1c1f22;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* 3.2 侧栏：顶部一层极淡的金属拉丝过渡 + 右侧暗缝 */
+:root[data-theme='dark'] .sidebar {
+  border-right-color: #1c1f22;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.026) 0%, rgba(255, 255, 255, 0) 220px),
+    linear-gradient(180deg, #0e0f11 0%, #0a0b0c 100%);
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.5);
+}
+
+/* 3.3 顶栏：半透明石墨底，保留毛玻璃 */
+:root[data-theme='dark'] .topbar {
+  border-bottom-color: #1c1f22;
+  background: rgba(10, 11, 12, 0.86);
+}
+
+/* 3.4 内容底：偏右上的一束聚光，避免大面积纯黑发闷 */
+:root[data-theme='dark'] .app-shell {
+  background:
+    radial-gradient(1100px 500px at 62% -12%, var(--vr-spotlight), transparent 60%),
+    radial-gradient(820px 400px at 100% -6%, rgba(255, 255, 255, 0.028), transparent 58%),
+    linear-gradient(180deg, #0a0b0c 0%, var(--vr-canvas) 46%);
+}
+
+/* 卡片 / 面板：顶部发丝高光 + 收窄的外投影，做出「金属片」的厚度 */
+:root[data-theme='dark']
+  :is(
+    .summary-cell,
+    .project-card,
+    .artifact-card,
+    .source-card,
+    .settings-section,
+    .today-card,
+    .privacy-card,
+    .empty-state,
+    .topbar-popover,
+    .profile-popover
+  ) {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.035) 0%,
+    rgba(255, 255, 255, 0) 96px
+  );
+  box-shadow:
+    inset 0 1px 0 var(--vr-hairline),
+    0 20px 44px -34px #000;
+}
+
+/* 选中态导航：与卡片同一套发丝高光 */
+:root[data-theme='dark'] .nav-item-active {
+  box-shadow:
+    inset 0 1px 0 var(--vr-hairline),
+    0 10px 22px -16px #000;
+}
+
+/* 输入类控件：内凹「井」感，聚焦时交回通用焦点环 */
+:root[data-theme='dark'] :is(.global-search, .input, .select):not(:focus):not(:focus-within) {
+  border-color: #24272b;
+  background: #0d0e10;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+/* 主按钮：白底黑字，用内高光 + 短投影做出实体按键的厚度 */
+:root[data-theme='dark'] :is(.btn-primary, .btn.primary, .button-primary) {
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 12px 26px -16px rgba(0, 0, 0, 0.9);
+}
+:root[data-theme='dark'] :is(.btn-primary, .btn.primary, .button-primary):hover:not(:disabled) {
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 16px 30px -14px rgba(0, 0, 0, 0.95);
+}
+
+/* 危险按钮：共用基础层把 color 设成了 --vr-danger，与底色相同会看不见文字，
+   这里显式交回 --on-danger（浅色档白字 / 暗色档黑字）。 */
+html body :is(.btn-danger, .btn.danger, .button-danger) {
+  color: var(--on-danger);
+}
+
+/* 开关：暗色档的开态轨道是银白，滑块必须反过来用深色，
+   否则会出现「白滑块压在白轨道上」看不见的情况。 */
+:root[data-theme='dark'] .switch {
+  background: #23262a;
+}
+:root[data-theme='dark'] .switch-thumb {
+  background: #868c92;
+}
+:root[data-theme='dark'] .switch-on,
+:root[data-theme='dark'] .switch-on:not(:disabled):hover {
+  background: var(--vr-brand);
+}
+:root[data-theme='dark'] .switch-on .switch-thumb {
+  background: #0b0c0d;
+}
