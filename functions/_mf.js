@@ -200,13 +200,24 @@ export async function ensure(db) {
   }
 }
 
+// 常量时间字符串比较（防时序侧信道）：长度不等直接 false，逐字节异或累加不早退。
+export function safeEqual(a, b) {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const ea = enc.encode(a);
+  const eb = enc.encode(b);
+  if (ea.length !== eb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ea.length; i++) diff |= ea[i] ^ eb[i];
+  return diff === 0;
+}
+
 // 管理密码：哈希存 meta.admin_pass_hash；返回是否通过
 export async function checkAdmin(env, pass) {
   await ensure(env.DB);
   const row = await env.DB.prepare("SELECT v FROM meta WHERE k='admin_pass_hash'").first();
   if (!row || !row.v) return { ok: false, reason: "not_setup" };
   const h = await sha256Hex(pass || "");
-  return { ok: h === row.v };
+  return { ok: safeEqual(h, row.v) };
 }
 export async function requireAdmin(request, env) {
   const pass = request.headers.get("X-Admin-Pass") || "";
