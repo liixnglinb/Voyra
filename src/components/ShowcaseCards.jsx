@@ -58,7 +58,7 @@ export function CardRelayApi() {
             </div>
             <div className="api-target target-active">
               <span className="target-dot d-claude"></span>
-              <span className="target-name">Claude-3.5-Sonnet</span>
+              <span className="target-name">Claude Sonnet</span>
               <span className="target-metric">200 OK</span>
             </div>
             <div className="api-target">
@@ -407,9 +407,23 @@ export function CardSkillHub() {
           <span className="sk-heat-lbl"><Flame size={11} /> WEEKLY HOT</span>
         </div>
 
+        {/* 热榜按星数降序：anthropics/skills 44.2k 排在 52.0k 之后，
+            仓库名用 SkillHub.jsx RANK_BASE 里的真实全名 */}
         <div className="sk-rank-list">
           <div className="sk-rank-row rank-first">
             <span className="sk-rank-no">01</span>
+            <div className="sk-repo-info">
+              <span className="sk-repo-name" title="x1xhlol/system-prompts-and-models-of-ai-tools">x1xhlol/system-prompts</span>
+              <span className="sk-repo-sub">主流 AI 工具系统提示词大合集</span>
+            </div>
+            <div className="sk-stars-pill">
+              <Star size={9} fill="currentColor" />
+              <span>52.0k</span>
+            </div>
+          </div>
+
+          <div className="sk-rank-row">
+            <span className="sk-rank-no">02</span>
             <div className="sk-repo-info">
               <span className="sk-repo-name">anthropics/skills</span>
               <span className="sk-repo-sub">官方技能库 · docx/pptx/xlsx 规范</span>
@@ -417,18 +431,6 @@ export function CardSkillHub() {
             <div className="sk-stars-pill">
               <Star size={9} fill="currentColor" />
               <span>44.2k</span>
-            </div>
-          </div>
-
-          <div className="sk-rank-row">
-            <span className="sk-rank-no">02</span>
-            <div className="sk-repo-info">
-              <span className="sk-repo-name">x1xhlol/system-prompts...</span>
-              <span className="sk-repo-sub">主流 AI 工具系统提示词逆向库</span>
-            </div>
-            <div className="sk-stars-pill">
-              <Star size={9} fill="currentColor" />
-              <span>52.0k</span>
             </div>
           </div>
 
@@ -478,7 +480,7 @@ export function CardAgentSkills() {
           <span className="ag-mode-tag">
             <Bot size={11} /> Multi-Agent DAG
           </span>
-          <span className="ag-state-pill">运行中 · 2/3</span>
+          <span className="ag-state-pill">运行中 · 2/4</span>
         </div>
 
         <div className="ag-dag-network">
@@ -556,7 +558,7 @@ export function CardMindMap() {
       <div className="sc-stage sc-stage-mindmap">
         <div className="mm-stage-top">
           <span className="mm-tag"><Route size={11} /> 结构化发散树</span>
-          <span className="mm-meta">8 节点 · 3 分支</span>
+          <span className="mm-meta">16 节点 · 3 分支</span>
         </div>
 
         <div className="mm-canvas">
@@ -1131,7 +1133,7 @@ export function CardBillTrace() {
         </div>
 
         <div className="bt-stat-strip">
-          <span className="bt-stat-lbl">近 7 天消费趋势</span>
+          <span className="bt-stat-lbl">近 7 天消费 · ¥806.20</span>
           <div className="bt-mini-bars">
             <i style={{ height: '40%' }}></i>
             <i style={{ height: '65%' }}></i>
@@ -1253,7 +1255,7 @@ export function CardZenew() {
             <span className="zw-phonetic">/ˈliːɡl/</span>
           </div>
           <div className="zw-example-sentence">
-            In some areas, it is <b>legal</b> to carry...
+            In some areas, it is <b>legal</b> to carry a gun.
           </div>
 
           <div className="zw-options-grid">
