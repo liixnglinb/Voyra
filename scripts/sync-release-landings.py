@@ -7,10 +7,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 UPDATES = {
-    "ai-chronicle": [("0.6.6", "0.6.7", 6)],
-    "local-toolbox": [("0.3.0", "0.4.0", 17)],
-    "checkin": [("3.8.0", "3.8.1", 6)],
-    "token-monitor": [("1.9.7", "1.9.12", 7)],
+    "ai-chronicle": [("0.6.7", "0.6.8", 6)],
+    "local-toolbox": [("0.4.0", "0.5.0", 17)],
+    "checkin": [("3.8.1", "3.9.0", 6)],
+    "token-monitor": [("1.9.12", "2.0.0", 6)],
 }
 
 def main():
