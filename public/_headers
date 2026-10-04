@@ -9,6 +9,18 @@
 # 关于 style-src：仍保留 'unsafe-inline'。CSS 注入的危害远低于脚本注入，且本页
 # 有内联启动动画样式与 <noscript> 内的兜底样式；React 运行期通过 CSSOM 写的行内
 # 样式不受 CSP 约束。待这两处内联样式外置后可一并去掉。
+#
+# ⚠ 本条 CSP 的生效范围是 /*，包含 public/ 下 7 个"单文件自包含"的产品下载页。
+#   这些页面原本把 reveal、版本号拉取、镜像测速全写在页内 <script> 里，
+#   script-src 去掉 'unsafe-inline' 后它们会被整段拦掉——页面字节没少，但屏幕上
+#   约 14,700px 的内容永远停在 opacity:0。已改为外置成 public/<产品>/app-N.js
+#   （原位、无 defer，保持解析期顺序）。**不要再往 script-src 加回 'unsafe-inline'。**
+#
+# connect-src 里除主站依赖外，还必须包含下载页运行时要抓的分发端点：
+#   github.com       —— 读 releases/latest 的资产名与大小（api.github.com 只管元数据接口）
+#   gh-proxy.com / ghfast.top / ghproxy.net —— 国内镜像测速与回退，页面逐个 HEAD 探测
+#   modelflow-…myqcloud.com —— 织流的 COS 清单 latest.json（版本与体积的唯一动态源）
+# 少一个，对应页面的版本徽章 / 体积 / 镜像延迟就会一直空着。
 
 /*
   Strict-Transport-Security: max-age=31536000; includeSubDomains
@@ -17,4 +29,4 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
-  Content-Security-Policy: default-src 'self' blob: data:; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.bmobcloud.com wss://wss.bmobcloud.com https://api.github.com https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self' blob: data:; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.bmobcloud.com wss://wss.bmobcloud.com https://api.github.com https://github.com https://gh-proxy.com https://ghfast.top https://ghproxy.net https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
