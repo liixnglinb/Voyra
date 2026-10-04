@@ -105,7 +105,7 @@ const EXPERIENCES = [
 
 const CONTACTS = [
   { no: '01', label: 'GitHub', value: '@liixnglinb', href: 'https://github.com/liixnglinb', Icon: Github },
-  { no: '02', label: 'Email', value: 'lixingli1024@qq.com', copy: true, Icon: Sparkles },
+  { no: '02', label: 'Email', value: 'hello@lxlrwxs.top', copy: true, Icon: Sparkles },
   { no: '03', label: '网站', value: 'lxlrwxs.top', href: 'https://lxlrwxs.top', Icon: Globe },
 ];
 
@@ -948,7 +948,7 @@ function ContactPanel() {
   useEffect(() => () => clearTimeout(copyTimer.current), []);
   const copyEmail = async (event) => {
     const trigger = event.currentTarget;
-    const email = 'lixingli1024@qq.com';
+    const email = 'hello@lxlrwxs.top';
     let success = false;
     try { await navigator.clipboard.writeText(email); } catch {
       const ta = document.createElement('textarea');
@@ -981,7 +981,7 @@ function ContactPanel() {
     ) : (
       <a href={contact.href} className="vr-contact-row" data-reveal style={reveal} target="_blank" rel="noreferrer" key={contact.label}>{inner}</a>
     );
-  })}</div><p className="vr-contact-feedback" role="status" aria-live="polite">{copyFailed ? '无法访问剪贴板，请手动复制邮箱：lixingli1024@qq.com' : copied ? '邮箱已复制，可直接粘贴。' : ''}</p></section>;
+  })}</div><p className="vr-contact-feedback" role="status" aria-live="polite">{copyFailed ? '无法访问剪贴板，请手动复制邮箱：hello@lxlrwxs.top' : copied ? '邮箱已复制，可直接粘贴。' : ''}</p></section>;
 }
 
 export default function Dashboard() {

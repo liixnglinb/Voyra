@@ -1,0 +1,20 @@
+# Cloudflare Pages 自定义响应头
+# 说明：本文件会被 Vite 原样复制到 dist/_headers，由 Cloudflare Pages 下发。
+# 站点原来只靠 index.html 的 <meta http-equiv="Content-Security-Policy"> 声明 CSP，
+# 该方式无法设置 frame-ancestors（meta 中该指令被忽略），也没有 HSTS，
+# 因此改为在此统一下发。index.html 中的 meta CSP 已同步移除，避免两处漂移。
+#
+# 关于 script-src：已移除 'unsafe-inline'，首屏 Hero 预加载的内联脚本外置为
+# public/hero-preload.js，因此无需再为内联脚本开绿灯。
+# 关于 style-src：仍保留 'unsafe-inline'。CSS 注入的危害远低于脚本注入，且本页
+# 有内联启动动画样式与 <noscript> 内的兜底样式；React 运行期通过 CSSOM 写的行内
+# 样式不受 CSP 约束。待这两处内联样式外置后可一并去掉。
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  Content-Security-Policy: default-src 'self' blob: data:; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://api.bmobcloud.com wss://wss.bmobcloud.com https://api.github.com https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'

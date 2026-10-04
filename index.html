@@ -3,26 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: blob:; connect-src 'self' https://api.bmobcloud.com wss://wss.bmobcloud.com https://api.github.com https://cloudflareinsights.com https://static.cloudflareinsights.com; frame-src 'self' http://127.0.0.1:* http://localhost:* http://lxlrwxs.top https://lxlrwxs.top http://www.lxlrwxs.top https://www.lxlrwxs.top; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;" />
+    <!-- CSP 与 HSTS 改由 public/_headers 下发（meta 方式无法设置 frame-ancestors） -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
     <link rel="alternate icon" type="image/png" href="/favicon.png?v=3" />
-    <script>
-      if (!location.hash || location.hash === '#/' || location.hash.startsWith('#/?')) {
-        [
-          ['/hero/voyra-person-skin-v3.webp', 'auto'],
-          ['/hero/voyra-person-body-v2.webp', 'high'],
-          ['/hero/voyra-person-hair-v2.webp', 'auto'],
-          ['/hero/voyra-person-collar-v2.webp', 'auto'],
-        ].forEach(([href, fetchPriority]) => {
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.as = 'image';
-          link.href = href;
-          link.fetchPriority = fetchPriority;
-          document.head.appendChild(link);
-        });
-      }
-    </script>
+    <script src="./hero-preload.js"></script>
     <title>Voyra · 个人工具中心</title>
     <style>
       /* 站点级启动加载动画：位于 #root 内，React 首次渲染时自动替换，

@@ -46,7 +46,7 @@ npm run build
 
 ## 📮 联系 / Contact
 
-- 📧 lixingli1024@qq.com
+- 📧 hello@lxlrwxs.top
 - 🧑‍💻 [GitHub 主页](https://github.com/liixnglinb)
 
 ---
