@@ -10,6 +10,12 @@ import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
 import { PELICAN_MODEL_COUNT } from './PelicanGallery';
 import useCardEffects from '../hooks/useCardEffects';
+import {
+  CardRelayApi, CardScheduleHub, CardPelicanGallery, CardPromptLibrary, CardUIKit,
+  CardSkillHub, CardAgentSkills, CardMindMap, CardBabyCare, CardDrawPicker,
+  CardDietCheckin, CardMathmodelSkill, CardModelflow, CardCheckin, CardLocalToolbox,
+  CardBillTrace, CardTokenMonitor, CardZenew, CardAIChronicle,
+} from '../components/ShowcaseCards';
 import '../styles/dashboard-cards.css';
 
 const FEATURED = [
@@ -43,6 +49,7 @@ const APPS = [
 const APP_SHORT = {
   '/modelflow/': '本地智能体流水线工作台：流程可编辑，交给本机 CLI 逐步执行。仅支持 Windows。',
   '/checkin/': '桌面端常驻后台，自动监听签到活动，支持普通 / 位置 / 二维码三种签到。',
+  '/local-toolbox/': 'Windows 磁盘清理工作台：扫描分类、目录百科，预览完整路径再确认清理。',
   '/billtrace/': 'Android 自动记账：付款后 2 秒自动入库、智能分类，数据本地加密。',
   '/token-monitor/': '本机 AI 工具用量看板：一条命令扫出 9 类 Agent 的 Token 与成本。',
   '/zenew/': '把课程变成记得住的练习：词书 + AI 卡片，四选一学习与 FSRS 复习调度。',
@@ -840,6 +847,9 @@ function ShowcaseCard({ item, index, application = false, themeClass = '', lead 
   const mode = application
     ? (item.to === '/billtrace/' ? 'ANDROID' : item.to === '/checkin/' ? 'WINDOWS / PWA' : 'WINDOWS')
     : item.external ? 'EXTERNAL' : 'ONLINE';
+  /* 手机端换两行以内的短文案（APP_SHORT），把竖向空间还给橱窗切片；
+     完整描述留在 title 里，悬停/读屏仍可读到 */
+  const desc = (isMobile && APP_SHORT[item.to]) ? APP_SHORT[item.to] : item.desc;
   return <div className={`vr-roll-wrap vr-unified-wrap ${themeClass}${lead ? ' is-lead' : ''}`} data-roll>
     <div className="vr-card-entry" data-reveal style={{ '--reveal-delay': `${Math.min(index * .04, .2)}s` }}>
       <a className="vr-feature vr-card vr-unified-card" data-voyra-card href={href} target={isMobile ? undefined : '_blank'} rel="noopener noreferrer" aria-label={`${item.name}：${item.cta}${isMobile ? '' : '（新标签页）'}`}>
@@ -848,9 +858,9 @@ function ShowcaseCard({ item, index, application = false, themeClass = '', lead 
           <div className="vr-card-eyebrow"><span>{application ? 'DESKTOP & MOBILE' : item.external ? 'CONNECTED SERVICE' : 'WEB APPLICATION'}</span><span>{String(index + 1).padStart(2, '0')}</span></div>
           <div className="vr-feature-title">
             <span className="vr-icon-box">{item.iconSrc ? <img src={item.iconSrc} alt="" width="24" height="24" /> : <Icon size={20} strokeWidth={2} />}</span>
-            <h2 style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</h2>
+            <h2 style={{ textWrap: 'balance' }}>{item.name}</h2>
           </div>
-          <p style={clampStyle} title={item.desc}>{item.desc}</p>
+          <p style={clampStyle} title={item.desc}>{desc}</p>
           <div className="vr-card-bottom"><span className="vr-arrow-link">{item.cta}<ArrowUpRight size={16} /></span><span className="vr-card-mode">{mode}</span></div>
         </div>
         <div className="vr-unified-visual" aria-hidden="true" inert=""><FeatureArt type={item.art} /></div>
@@ -859,10 +869,26 @@ function ShowcaseCard({ item, index, application = false, themeClass = '', lead 
   </div>;
 }
 
+/* 规格 19 张橱窗卡（.sc-card 体系）。仍套在首页现有的纸片滚动 / 渐入骨架里，
+   所以 data-roll 与 data-reveal 的层级保持不变，只把卡片本体换成规格实现。 */
+const SPEC_CARDS = {
+  products: [CardRelayApi, CardScheduleHub, CardPelicanGallery, CardPromptLibrary, CardUIKit, CardSkillHub, CardAgentSkills, CardMindMap, CardBabyCare, CardDrawPicker, CardDietCheckin],
+  skills: [CardMathmodelSkill],
+  apps: [CardModelflow, CardCheckin, CardLocalToolbox, CardBillTrace, CardTokenMonitor, CardZenew, CardAIChronicle],
+};
+
+function SpecCardSlot({ Comp, index }) {
+  return <div className="vr-roll-wrap sc-roll-wrap" data-roll>
+    <div className="vr-card-entry sc-card-entry" data-reveal style={{ '--reveal-delay': `${Math.min(index * .04, .2)}s` }}>
+      <Comp />
+    </div>
+  </div>;
+}
+
 function ProductPanel() {
   return <div className="vr-section-wrapper">
     <div className="vr-section-watermark" aria-hidden="true">FEATURED</div>
-    <div className="vr-product-list">{FEATURED.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} lead={index === 0} themeClass={item.theme} />)}</div>
+    <div className="vr-product-list">{SPEC_CARDS.products.map((Comp, index) => <SpecCardSlot key={index} Comp={Comp} index={index} />)}</div>
   </div>;
 }
 
@@ -879,12 +905,12 @@ const MATHMODEL_ITEM = {
 
 function SkillsPanel() {
   return <div className="vr-product-list vr-panel-stagger" data-roll>
-    <ShowcaseCard item={MATHMODEL_ITEM} index={0} lead themeClass="theme-skilldark" />
+    <SpecCardSlot Comp={SPEC_CARDS.skills[0]} index={0} />
   </div>;
 }
 
 function AppsPanel() {
-  return <div className="vr-product-list">{APPS.map((item, index) => <ShowcaseCard key={item.to} item={item} index={index} application themeClass="theme-app" />)}</div>;
+  return <div className="vr-product-list">{SPEC_CARDS.apps.map((Comp, index) => <SpecCardSlot key={index} Comp={Comp} index={index} />)}</div>;
 }
 
 function HomeTabs({ activeTab, onChange }) {
@@ -1563,7 +1589,7 @@ export default function Dashboard() {
     <div className="vr-rail-dashes" aria-hidden="true"><i/><i/><i/><i/><i/><i/><i/></div>
     <div className="vr-rail" aria-hidden="true"><div className="vr-rail-line" style={{ '--rail-y': `${Math.max(0, (progress / 100) * 86)}px` }} /><span>{String(progress).padStart(2, '0')}</span></div><span className="vr-progress-label">阅读进度 {progress}%</span>
     <header className="vr-top"><span className="vr-brand">VOYRA<sup>®</sup></span><a className="vr-github" href="https://github.com/liixnglinb" target="_blank" rel="noreferrer"><Github size={15} />github.com/liixnglinb</a></header>
-    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><span className="vr-hero-badge">2026 EDITION</span><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" fetchPriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><HomeTabs activeTab={activeTab} onChange={changeTab} /><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
+    <main><section className="vr-hero-shell"><div className="vr-hero" data-roll><div className="vr-hero-copy"><h1><span>Voyra</span><span>makes</span><span className="vr-hero-outline">ideas</span><span>useful.</span></h1><div className="vr-hero-meta"><span className="vr-hero-badge">2026 EDITION</span><strong>帅帅你阿历</strong><span>PERSONAL TOOLS / AI / OPEN-SOURCE</span></div><div className="vr-scroll-cue"><ChevronDown size={16} /> 向下探索</div></div><div className="vr-person-stage" aria-hidden="true"><div className={`vr-person-frame${personReady ? ' is-ready' : ''}`}><div className="vr-person-motion"><img className="vr-person-skin" src="/hero/voyra-person-skin-v3.webp" alt="" decoding="async" /><img className="vr-person-body" src="/hero/voyra-person-body-v2.webp" alt="" decoding="async" /* 必须小写：React 18 不识别 fetchPriority，会整个丢掉该属性（19 才支持） */ fetchpriority="high" /><img className="vr-person-hair" src="/hero/voyra-person-hair-v2.webp" alt="" decoding="async" /><img className="vr-person-collar" src="/hero/voyra-person-collar-v2.webp" alt="" decoding="async" /></div></div></div></div></section><section className="vr-stage vr-tab-zone" data-active-work={activeTab} aria-label="内容分类"><TabReel activeTab={activeTab} /><HomeTabs activeTab={activeTab} onChange={changeTab} /><div className="vr-panels">{TABS.map(([id, label]) => <div className="vr-panel" ref={(node) => { panelRefs.current[id] = node; }} id={`panel-${id}`} role="tabpanel" aria-labelledby={`work-tab-${id}`} aria-label={label} aria-hidden={activeTab !== id} hidden={activeTab !== id} key={id}>{panels[id]}</div>)}</div></section></main>
     <footer className="vr-footer" data-roll><span>© 2026 Voyra®</span><span style={{ marginLeft: 14, color: '#bbb' }}>Based on <a href="https://www.oiloil.org" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline', textDecorationColor: '#ddd', textUnderlineOffset: 3 }} onMouseOver={(e) => { e.currentTarget.style.color = '#666'; }} onMouseOut={(e) => { e.currentTarget.style.color = 'inherit'; }}>oiloil.org</a></span></footer>
   </div>;
 }
