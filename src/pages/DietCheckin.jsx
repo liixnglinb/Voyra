@@ -132,6 +132,13 @@ function useCountUp(target, dur = 450) {
 export default function DietCheckin() {
   const { guard, authed, username, openLogin } = useAuth();
   const [tab, setTab] = useState('today');
+  /* 历史页当前展开的日期（null = 全部收起）。放这里而非 HistoryPane 内部，
+     是为了让「载入此日」能直接 setTab('today') + setDate(k) 跳回打卡页。 */
+  const [openHist, setOpenHist] = useState(null);
+  /* 方案页编辑草稿。刻意与 profile 分离：直接改 profile 会让用户每敲一个数字
+     就触发一次 persistAll（落盘 + 可能的云同步），输入 "187" 中途的 "1" 也会被存。 */
+  const [kcalDraft, setKcalDraft] = useState('');
+  const [goalDraft, setGoalDraft] = useState('');
   const [days, setDays] = useState({});
   const [profile, setProfile] = useState({ ...PROFILE });
   const [loaded, setLoaded] = useState(false);
@@ -192,6 +199,27 @@ export default function DietCheckin() {
   const patchDay = (patch) => {
     const d = days[date] || emptyDay();
     persistAll({ ...days, [date]: { ...d, ...patch } }, profile);
+  };
+
+  /* v6：阶段目标与热量上限此前是写死的 PROFILE 常量，页面只读。
+     用户实际会变（换档、减脂平台期调整、医生改了目标），却无处可改。
+     这里开放 goal1 / kcal 两项就地编辑，走与 patchDay 相同的 persistAll 落盘链路
+     （本地 localStorage / electronAPI，登录后随 Bmob 同步）。 */
+  const patchProfile = (patch) => {
+    persistAll(days, { ...profile, ...patch });
+    showToast('方案已更新');
+  };
+
+  /* 方案保存：空值与越界都在这里挡掉，不让脏数据落盘。
+     下限 1900 是方案里写明的安全线；阶段目标必须高于起始体重，
+     否则趋势图的目标线会落到 y 轴可视区外、看起来像消失。 */
+  const savePlan = () => {
+    const kcal = parseInt(kcalDraft, 10);
+    const goal = parseFloat(goalDraft);
+    if (!Number.isFinite(kcal) || kcal < 1900) { showToast('热量不能低于 1900 kcal'); return; }
+    if (!Number.isFinite(goal) || goal <= profile.startWeight) { showToast('阶段目标需高于起始体重'); return; }
+    patchProfile({ kcal, goal1: Math.round(goal * 10) / 10 });
+    setKcalDraft(''); setGoalDraft('');
   };
 
   const cur = days[date] || emptyDay();
@@ -344,25 +372,31 @@ export default function DietCheckin() {
             </div>
           </div>
         </div>
+        {/* v6 首屏压缩：v5 是「大号体重(52px) + 两枚状态胶囊 + 独立寄语卡」纵向堆叠，
+            实测在 375×667 上占掉约 380px——晨起要打卡时，三餐与习惯整块被推到首屏之外。
+            改为一行式紧凑 Hero：体重与均线并排、寄语收进同一张卡的一行。
+            信息一条没删（体重 / 距目标 / 均线 / 寄语全在），只是从三行压到一~两行。 */}
         <div className="dck-hero">
-          <div className="dck-hero-w">
-            <span className="dck-hero-num">{heroW != null ? heroW : '—'}</span>
-            <span className="dck-hero-unit">kg</span>
+          <div className="dck-hero-top">
+            <div className="dck-hero-w">
+              <span className="dck-hero-num">{heroW != null ? heroW : '—'}</span>
+              <span className="dck-hero-unit">kg</span>
+            </div>
+            <div className="dck-hero-pills">
+              <span className="dck-pill-stat">
+                {goalGap != null
+                  ? (goalGap > 0 ? <>距目标 <b>{goalGap.toFixed(1)}</b> kg</> : <>已达标</>)
+                  : '记录解锁目标'}
+              </span>
+              <span className="dck-pill-stat alt">
+                {ma7 != null ? <>均线 <b>{ma7}</b> kg</> : '均线待数据'}
+              </span>
+            </div>
           </div>
-          <div className="dck-hero-pills">
-            <span className="dck-pill-stat">
-              {goalGap != null
-                ? (goalGap > 0 ? <>距目标还差 <b>{goalGap.toFixed(1)}</b> kg</> : <>已达成阶段目标</>)
-                : '记录体重解锁目标'}
-            </span>
-            <span className="dck-pill-stat alt">
-              {ma7 != null ? <>7 日均线 <b>{ma7}</b> kg</> : '7 日均线 待数据'}
-            </span>
+          <div className="dck-motto">
+            <span className="dck-motto-ico"><MessageSquareHeart size={13} /></span>
+            <span>{motto}</span>
           </div>
-        </div>
-        <div className="dck-motto">
-          <span className="dck-motto-ico"><MessageSquareHeart size={13} /></span>
-          <span>{motto}</span>
         </div>
       </header>
 
@@ -511,10 +545,16 @@ export default function DietCheckin() {
                 </div>
                 <span>今日 {doneCount}/5</span>
               </div>
-              <div className="dck-praise">
-                <span className="dck-motto-ico"><MessageSquareHeart size={13} /></span>
-                <span>{allDone ? pickFrom(ENC.full, seedOf('done' + date)) : doneCount >= 3 ? pickFrom(ENC.partial, seedOf('done' + date)) : '点满五格，今天就赢了。'}</span>
-              </div>
+              {/* v5 这里常驻一条「教练评语」，与顶栏「今日寄语」同屏堆叠——两条都是
+                  绿底+圆角+对白图标，手机上一屏里出现两个几乎一样的气泡，注意力被分散、
+                  且把三餐/习惯继续往下推。改为只在真达成 5/5 时出现：平时不占位，
+                  达成时又正好是最需要鼓励的时刻。 */}
+              {allDone && (
+                <div className="dck-praise">
+                  <span className="dck-motto-ico"><MessageSquareHeart size={13} /></span>
+                  <span>{pickFrom(ENC.full, seedOf('done' + date))}</span>
+                </div>
+              )}
             </section>
 
             <section className="dck-card">
@@ -620,37 +660,101 @@ export default function DietCheckin() {
               </div>
             </section>
 
-            <section className="dck-card">
-              <h3 className="dck-sec"><ClipboardCheck size={15} /> 打卡记录</h3>
-              {sortedDates.length === 0 ? <div className="dck-empty">还没有记录</div> : (
-                <div className="dck-rows">
-                  {[...sortedDates].reverse().slice(0, 20).map((k) => {
-                    const d = days[k];
-                    const sc = dayScore(d);
-                    return (
-                      <div key={k} className="dck-row">
+          </>
+        ) : tab === 'history' ? (
+          /* v6：历史记录从「成就」页独立出来。
+             查历史（哪天空了、哪天放纵了）和看成就（徽章、教练反馈）是两种心智，
+             v5 把两者塞进同一页，达成页里混着流水账，翻找成本高。 */
+          <section className="dck-card">
+            <h3 className="dck-sec"><ClipboardCheck size={15} /> 打卡记录
+              <span style={{ marginLeft: 'auto', fontWeight: 500, color: 'var(--dck-t3)', fontSize: 12 }}>
+                共 {sortedDates.length} 天
+              </span>
+            </h3>
+            {sortedDates.length === 0 ? <div className="dck-empty">还没有记录</div> : (
+              <div className="dck-rows">
+                {[...sortedDates].reverse().slice(0, 30).map((k) => {
+                  const d = days[k];
+                  const sc = dayScore(d);
+                  const open = openHist === k;
+                  return (
+                    <div
+                      key={k}
+                      className={`dck-row${open ? ' open' : ''}`}
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={open}
+                      onClick={() => setOpenHist(open ? null : k)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setOpenHist(open ? null : k); } }}
+                    >
+                      <div className="dck-row-main">
                         <span className="dck-row-date">{k.slice(5)}</span>
                         <span className="dck-row-w">{d.weight ? `${d.weight} kg` : '—'}</span>
                         {d.bpSys ? <span className="dck-row-bp">{d.bpSys}/{d.bpDia}</span> : <span className="dck-row-bp">—</span>}
                         <span className={`dck-row-score s-${sc >= 80 ? 'hi' : sc >= 50 ? 'mid' : 'low'}`}>{sc} 分</span>
-                        {d.note ? <span className="dck-row-note">{d.note}</span> : null}
+                        <span className={`dck-row-caret${open ? ' up' : ''}`} aria-hidden="true">
+                          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          </>
+                      {/* 展开：把当天被折叠的血压/饮水/步数/训练/放纵与备注一次性摊开，
+                          省得为了看一句备注还要跳回「今日」页逐项点。 */}
+                      {open && (
+                        <div className="dck-row-detail" onClick={(e) => e.stopPropagation()}>
+                          <div className="dck-row-grid">
+                            <span>饮水 <b className={d.water ? 'ok' : 'no'}>{d.water ? '达标' : '未达标'}</b></span>
+                            <span>步数 <b className={d.steps ? 'ok' : 'no'}>{d.steps ? '8000+' : '不足'}</b></span>
+                            <span>训练 <b className={d.training ? 'ok' : 'no'}>{d.training ? '已练' : '未练'}</b></span>
+                            <span>放纵 <b className={d.junk ? 'no' : 'ok'}>{d.junk ? '有' : '无'}</b></span>
+                          </div>
+                          {d.note ? <p className="dck-row-detail-note">{d.note}</p> : null}
+                          <button
+                            type="button"
+                            className="dck-row-load"
+                            onClick={() => { setDate(k); setTab('today'); setOpenHist(null); }}
+                          >
+                            载入此日继续编辑
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         ) : (
           <>
             <section className="dck-card">
               <h3 className="dck-sec"><Target size={15} /> 当前执行档：快速档（限时 8 周）</h3>
               <div className="dck-plan">
-                <div><b>2000</b><span>kcal/天（下限 1900）</span></div>
+                <div><b>{profile.kcal}</b><span>kcal/天（下限 1900）</span></div>
                 <div><b>≥120g</b><span>蛋白质/天</span></div>
                 <div><b>0.75-1.0</b><span>kg/周 速率</span></div>
-                <div><b>94→87→80</b><span>kg 阶段目标</span></div>
+                <div><b>{profile.startWeight}→{profile.goal1}→{profile.goal2}</b><span>kg 阶段目标</span></div>
               </div>
+              {/* v6：热量上限与第一阶段目标开放就地编辑（此前为写死常量）。
+                  体重起始值与第二阶段目标保持只读——它们是历史事实，改了会让
+                  「已减 kg」和阶段进度失去参照。 */}
+              <div className="dck-plan-edit">
+                <div className="dck-plan-field">
+                  <label htmlFor="dckEditKcal">热量上限 kcal/天</label>
+                  <input
+                    id="dckEditKcal" type="number" inputMode="numeric" inputPattern="[0-9]*"
+                    placeholder={String(profile.kcal)} value={kcalDraft}
+                    onChange={(e) => setKcalDraft(e.target.value)}
+                  />
+                </div>
+                <div className="dck-plan-field">
+                  <label htmlFor="dckEditGoal">阶段目标 kg</label>
+                  <input
+                    id="dckEditGoal" type="number" step="0.5" inputMode="decimal" inputPattern="[0-9]*"
+                    placeholder={String(profile.goal1)} value={goalDraft}
+                    onChange={(e) => setGoalDraft(e.target.value)}
+                  />
+                </div>
+                <button type="button" className="dck-plan-save" onClick={savePlan}>保存方案</button>
+              </div>
+              <p className="dck-plan-hint">热量不低于 1900 kcal；目标体重需高于当前体重，否则趋势图目标线会消失。</p>
             </section>
             <section className="dck-card">
               <h3 className="dck-sec"><Check size={15} /> 每日清单</h3>
@@ -683,6 +787,7 @@ export default function DietCheckin() {
         {[
           { key: 'today', label: '今日', Icon: ClipboardCheck },
           { key: 'trend', label: '趋势', Icon: TrendingUp },
+          { key: 'history', label: '历程', Icon: CalendarDays },
           { key: 'badges', label: '成就', Icon: Trophy },
           { key: 'plan', label: '方案', Icon: Info },
         ].map(({ key, label, Icon }) => (
@@ -743,8 +848,54 @@ function TrendChart({ weights, goal1 }) {
   const last = data[data.length - 1];
   const lastX = x(data.length - 1);
   const lastY = y(last.v);
+
+  /* v6 触控探针：375px 下 30 个点平均间距不足 10px，肉眼无法定位某一天。
+     手指在图上滑动时吸附到最近的数据点，上方探针条实时显示
+     「当天日期 / 实际体重 / 7 日均线 / 距目标」，松手回落到最新一次。
+     用 Pointer Events 统一处理触摸与鼠标（桌面调试不必另写一套 mouse 监听）。 */
+  const [probe, setProbe] = useState(null);
+  const svgRef = useRef(null);
+  const pick = (clientX) => {
+    const el = svgRef.current;
+    if (!el || data.length === 0) return;
+    const r = el.getBoundingClientRect();
+    /* 客户端坐标 → viewBox 坐标：SVG 宽度是 620 但实际渲染宽约 330，必须按比例换算 */
+    const vbX = ((clientX - r.left) / r.width) * W;
+    let best = 0, bestD = Infinity;
+    for (let i = 0; i < data.length; i++) {
+      const dd = Math.abs(x(i) - vbX);
+      if (dd < bestD) { bestD = dd; best = i; }
+    }
+    setProbe(best);
+  };
+  const pi = probe != null ? probe : data.length - 1;
+  const pd = data[pi];
+  const pMa = ma[pi];
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="dck-svg" role="img" aria-label="体重趋势">
+    <div className="dck-probe">
+      {/* 探针条：滑动时显示被探查点，静止时显示最新一次 */}
+      <div className="dck-probe-bar">
+        <div className="dck-probe-l">
+          <span className="dck-probe-date">{pd ? pd.date : '—'}</span>
+          <span className="dck-probe-w">
+            <b>{pd ? pd.v.toFixed(1) : '—'}</b>
+            <i>kg</i>
+          </span>
+        </div>
+        <div className="dck-probe-r">
+          <span>7 日均线 <b>{pMa != null ? pMa.toFixed(1) : '—'}</b></span>
+          <span>距目标 <b>{pd ? Math.max(0, Math.round((pd.v - goal1) * 10) / 10).toFixed(1) : '—'}</b> kg</span>
+        </div>
+      </div>
+      <div
+        className="dck-probe-zone"
+        onPointerDown={(e) => { e.currentTarget.setPointerCapture?.(e.pointerId); pick(e.clientX); }}
+        onPointerMove={(e) => { if (e.buttons > 0 || e.pressure > 0 || e.pointerType === 'touch') pick(e.clientX); }}
+        onPointerUp={() => setProbe(null)}
+        onPointerLeave={() => setProbe(null)}
+      >
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="dck-svg" role="img" aria-label="体重趋势，可滑动查看任意一天">
       <defs>
         <linearGradient id="dckAreaGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#0D8253" stopOpacity="0.18" />
@@ -765,16 +916,32 @@ function TrendChart({ weights, goal1 }) {
       )}
       {areaD && <path d={areaD} fill="url(#dckAreaGrad)" stroke="none" />}
       <path d={smooth(maPts)} fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" />
-      {data.map((d, i) => <circle key={d.date} cx={x(i)} cy={y(d.v)} r="2.8" fill={C.dot} />)}
-      {/* 末点：实心点 + 呼吸脉冲光环 */}
-      <circle className="dck-ping" cx={lastX} cy={lastY} r="6" fill={C.green} />
-      <circle cx={lastX} cy={lastY} r="4" fill={C.green} stroke="#fff" strokeWidth="1.6" />
+      {/* 探查准星：竖虚线 + 放大的探查点 */}
+      {probe != null && (
+        <>
+          <line x1={x(probe)} x2={x(probe)} y1={PT} y2={H - PB} stroke={C.green} strokeWidth="1" strokeDasharray="3 3" opacity=".6" />
+          <circle cx={x(probe)} cy={y(pd.v)} r="5.5" fill={C.green} stroke="#fff" strokeWidth="1.8" />
+        </>
+      )}
+      {data.map((d, i) => (
+        <circle key={d.date} cx={x(i)} cy={y(d.v)} r={i === pi && probe != null ? 0 : 2.8} fill={C.dot} />
+      ))}
+      {/* 末点：实心点 + 呼吸脉冲光环（探查中隐藏，避免与探查点重叠） */}
+      {probe == null && (
+        <>
+          <circle className="dck-ping" cx={lastX} cy={lastY} r="6" fill={C.green} />
+          <circle cx={lastX} cy={lastY} r="4" fill={C.green} stroke="#fff" strokeWidth="1.6" />
+        </>
+      )}
       {data.map((d, i) => (
         (i === data.length - 1 || i % Math.ceil(data.length / 6) === 0)
           ? <text key={`t${d.date}`} x={x(i)} y={H - 8} textAnchor="middle" fontSize="10" fill={C.text4}>{d.date.slice(5)}</text>
           : null
       ))}
-    </svg>
+      </svg>
+      </div>
+      <div className="dck-probe-hint">{probe != null ? '松手回到最新' : '按住图表左右滑动，可查任意一天'}</div>
+    </div>
   );
 }
 
@@ -842,22 +1009,27 @@ const DCK_CSS = `
   padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.82);
   border: 1px solid var(--dck-line); color: var(--dck-t2); }
 .dck-streak.on { background: var(--dck-gold-soft); border-color: rgba(184,134,11,.3); color: var(--dck-gold); }
-.dck-hero { margin-top: 14px; }
-.dck-hero-w { display: flex; align-items: baseline; gap: 6px; }
-.dck-hero-num { font-size: 52px; font-weight: 800; letter-spacing: -0.03em; line-height: 1;
+/* v6 紧凑 Hero：体重与均线并排一行、寄语收进下方细条。
+   v5 是三段纵向堆叠（大字 52px 一行 + 胶囊一行 + 独立寄语卡一行），
+   375×667 实测顶栏独占约 380px，把三餐打卡整块推出首屏。
+   字号 52 → 34，胶囊文案收短（「距目标还差」→「距目标」、「7 日均线」→「均线」），
+   寄语卡 padding 10/12 → 7/10，四项信息全保留但高度砍掉约一半。 */
+.dck-hero { margin-top: 10px; }
+.dck-hero-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.dck-hero-w { display: flex; align-items: baseline; gap: 5px; flex-shrink: 0; }
+.dck-hero-num { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1;
   color: var(--dck-ink); font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
-.dck-hero-unit { font-size: 15px; color: var(--dck-t4); font-weight: 600; }
-.dck-hero-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.dck-pill-stat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--dck-t2);
-  background: rgba(255,255,255,.85); border: 1px solid var(--dck-line); border-radius: 999px; padding: 6px 12px; }
+.dck-hero-unit { font-size: 13px; color: var(--dck-t4); font-weight: 600; }
+.dck-hero-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.dck-pill-stat { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--dck-t2);
+  background: rgba(255,255,255,.85); border: 1px solid var(--dck-line); border-radius: 999px; padding: 5px 10px; }
 .dck-pill-stat b { font-weight: 800; color: var(--dck-deep); font-variant-numeric: tabular-nums; }
 .dck-pill-stat.alt b { color: var(--dck-brand); }
-.dck-motto { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px; font-size: 12.5px;
-  line-height: 1.6; color: var(--dck-ink); background: rgba(255,255,255,.86);
-  border: 1px solid var(--dck-line); border-radius: 12px; padding: 10px 12px;
-  box-shadow: var(--dck-shadow); }
-.dck-motto-ico { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px;
-  border-radius: 8px; background: var(--dck-soft); color: var(--dck-brand); }
+.dck-motto { display: flex; align-items: flex-start; gap: 7px; margin-top: 8px; font-size: 12px;
+  line-height: 1.5; color: var(--dck-t2); background: rgba(255,255,255,.7);
+  border: 1px solid var(--dck-line); border-radius: 10px; padding: 7px 10px; }
+.dck-motto-ico { display: grid; place-items: center; flex-shrink: 0; width: 20px; height: 20px;
+  border-radius: 7px; background: var(--dck-soft); color: var(--dck-brand); }
 .dck-motto svg { margin-top: 0; }
 
 /* ── 主内容 ── */
@@ -881,8 +1053,11 @@ const DCK_CSS = `
 /* 注意：主站 index.css 有全局表单重置 input[type=...]（特异度 0-1-1），
    单类名选择器（0-1-0）会被它压掉字号/边框/圆角/内距。
    所以本页所有输入框规则都加 .dck-app 前缀抬到 0-2-0 以上。 */
-.dck-app .dck-date-box input { border: 1px solid var(--dck-line); border-radius: 10px; padding: 8px 10px;
-  font-size: 13.5px; color: var(--dck-ink); background: #fff; max-width: 150px; }
+/* v6 iOS 缩放修正：iOS Safari 在聚焦时若 input 字号 < 16px 会自动放大整个视口，
+   打完字版心偏移、还要手动缩回去。日期框 13.5px、血压框 15px 都在阈值以下，
+   统一提到 16px；同时把日期框高度从 ~35px 抬到 44px 触控下限。 */
+.dck-app .dck-date-box input { border: 1px solid var(--dck-line); border-radius: 10px; padding: 0 10px;
+  height: var(--dck-tap); font-size: 16px; color: var(--dck-ink); background: #fff; max-width: 158px; }
 .dck-app .dck-date-box input:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
 .dck-weight-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .dck-weight-field { display: flex; align-items: center; gap: 7px; }
@@ -902,7 +1077,7 @@ const DCK_CSS = `
         ② 高度 42 → 44 达触控下限；③ 单位文本允许换行并独占剩余空间，不再硬撑。 */
 .dck-app .dck-bp-row input { flex: 1 1 88px; min-width: 76px; max-width: 110px; height: var(--dck-tap);
   border: 1px solid var(--dck-line); border-radius: 10px;
-  padding: 0 10px; font-size: 15px; color: var(--dck-ink); background: #fff;
+  padding: 0 10px; font-size: 16px; color: var(--dck-ink); background: #fff; /* 16px 防 iOS 聚焦缩放 */
   font-variant-numeric: tabular-nums; }
 .dck-app .dck-bp-row input:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
 .dck-bp-slash { color: var(--dck-t4); font-weight: 600; }
@@ -1007,7 +1182,7 @@ const DCK_CSS = `
 .dck-praise svg { flex-shrink: 0; }
 
 .dck-app .dck-note { width: 100%; border: 1px solid var(--dck-line); border-radius: 12px; padding: 10px 12px;
-  font-size: 14px; color: var(--dck-ink); resize: none; font-family: inherit; background: #fff; }
+  font-size: 16px; color: var(--dck-ink); resize: none; font-family: inherit; background: #fff; }
 .dck-app .dck-note:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
 .dck-foot { text-align: center; font-size: 11px; color: var(--dck-t4); padding: 6px 0 10px; }
 
@@ -1091,8 +1266,28 @@ const DCK_CSS = `
 .dck-heat-cell span { font-size: 9.5px; color: var(--dck-t4); font-variant-numeric: tabular-nums; }
 
 .dck-rows { display: flex; flex-direction: column; }
-.dck-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; padding: 9px 2px;
-  border-bottom: 1px solid var(--dck-line); flex-wrap: wrap; }
+/* v6 历史行改为可展开卡片：整行是一个 button 语义（role=button + tabIndex + aria-expanded），
+   触控靶区给到 44px；行内不再 flex-wrap 散开，摘要固定一行，详情另起一块展开。 */
+.dck-row { font-size: 13.5px; padding: 0; border-bottom: 1px solid var(--dck-line); }
+.dck-row:last-child { border-bottom: none; }
+.dck-row-main { display: flex; align-items: center; gap: 10px; min-height: var(--dck-tap);
+  padding: 0 2px; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.dck-row:active .dck-row-main { background: rgba(13,130,83,.05); }
+.dck-row-caret { display: grid; place-items: center; flex-shrink: 0; margin-left: auto;
+  color: var(--dck-t4); transition: transform .2s cubic-bezier(.16,1,.3,1); }
+.dck-row-caret.up { transform: rotate(180deg); }
+.dck-row-detail { padding: 4px 2px 12px; border-top: 1px dashed var(--dck-line); margin-top: 2px; }
+.dck-row-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+.dck-row-grid span { font-size: 11.5px; color: var(--dck-t3); }
+.dck-row-grid b { display: block; font-size: 13px; margin-top: 1px; font-weight: 700; }
+.dck-row-grid b.ok { color: var(--dck-brand); }
+.dck-row-grid b.no { color: var(--dck-t4); }
+.dck-row-detail-note { margin: 10px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--dck-t2);
+  padding: 8px 10px; background: var(--dck-sub); border-radius: 10px; }
+.dck-row-load { width: 100%; min-height: var(--dck-tap); margin-top: 10px; border-radius: 10px;
+  border: 1px solid var(--dck-line); background: var(--dck-soft); color: var(--dck-deep);
+  font-size: 13px; font-weight: 700; cursor: pointer; touch-action: manipulation; }
+.dck-row-load:active { transform: scale(.98); }
 .dck-row:last-child { border-bottom: none; }
 .dck-row-date { color: var(--dck-t2); font-variant-numeric: tabular-nums; min-width: 44px; }
 .dck-row-w { font-weight: 700; }
@@ -1105,6 +1300,21 @@ const DCK_CSS = `
 
 .dck-plan { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 .dck-plan > div { border: 1px solid var(--dck-line); border-radius: 14px; padding: 12px 14px; }
+/* v6 方案就地编辑：两字段 + 保存键一行排布，窄屏 wrap 成两行 */
+.dck-plan-edit { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap;
+  margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--dck-line); }
+.dck-plan-field { display: flex; flex-direction: column; gap: 4px; flex: 1 1 118px; min-width: 0; }
+.dck-plan-field label { font-size: 11px; font-weight: 600; color: var(--dck-t3); }
+.dck-plan-field input { height: var(--dck-tap); border: 1px solid var(--dck-line); border-radius: 10px;
+  padding: 0 10px; font-size: 16px; color: var(--dck-ink); background: #fff; width: 100%;
+  font-variant-numeric: tabular-nums; } /* 16px 防 iOS 聚焦缩放 */
+.dck-plan-field input:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
+.dck-plan-save { height: var(--dck-tap); padding: 0 18px; border: 1px solid var(--dck-brand);
+  background: var(--dck-soft); color: var(--dck-deep); border-radius: 10px; font-size: 13.5px;
+  font-weight: 700; cursor: pointer; flex-shrink: 0;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.dck-plan-save:active { transform: scale(.97); }
+.dck-plan-hint { margin: 9px 0 0; font-size: 11.5px; line-height: 1.6; color: var(--dck-t4); }
 .dck-plan b { display: block; font-size: 19px; font-weight: 800; color: var(--dck-deep); }
 .dck-plan span { font-size: 11.5px; color: var(--dck-t2); }
 .dck-ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 2; color: var(--dck-ink); }
@@ -1112,6 +1322,23 @@ const DCK_CSS = `
 .dck-card.warn .dck-sec svg { color: var(--dck-bad); }
 
 .dck-svg { width: 100%; height: auto; display: block; }
+/* 触控探针：吸顶指标条 + 滑动区 + 提示。
+   touch-action:none 是关键——不写的话移动端浏览器会把手势判成页面滚动，
+   手指按在图上拖动时页面会跟着一起滑，探针只会被拖出视口。 */
+.dck-probe { margin: 0 -2px; }
+.dck-probe-bar { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  margin-bottom: 6px; padding-bottom: 7px; border-bottom: 1px solid var(--dck-line); }
+.dck-probe-l { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.dck-probe-date { font-size: 11.5px; color: var(--dck-t3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dck-probe-w { display: flex; align-items: baseline; gap: 3px; }
+.dck-probe-w b { font-size: 19px; font-weight: 800; color: var(--dck-ink);
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.dck-probe-w i { font-style: normal; font-size: 11px; color: var(--dck-t3); font-weight: 600; }
+.dck-probe-r { display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+  font-size: 11px; color: var(--dck-t3); white-space: nowrap; }
+.dck-probe-r b { color: var(--dck-deep); font-weight: 700; font-variant-numeric: tabular-nums; }
+.dck-probe-zone { touch-action: none; -webkit-user-select: none; user-select: none; cursor: ew-resize; }
+.dck-probe-hint { margin-top: 5px; text-align: center; font-size: 10.5px; color: var(--dck-t4); }
 .dck-ping { transform-box: fill-box; transform-origin: center;
   animation: dckPing 2.2s cubic-bezier(0, 0, .2, 1) infinite; }
 @keyframes dckPing { 0% { transform: scale(.4); opacity: .5; } 80%, 100% { transform: scale(2.6); opacity: 0; } }
@@ -1121,9 +1348,13 @@ const DCK_CSS = `
   display: flex; justify-content: center; background: rgba(255,255,255,.92);
   backdrop-filter: blur(12px); border-top: 1px solid var(--dck-line);
   padding-bottom: env(safe-area-inset-bottom); }
+/* v6 底栏由 4 项增至 5 项（新增「历程」）：宽屏悬浮胶囊 380 → 440，
+   否则 5 个 max-width:160 的按钮在 380 内会被挤到 76px 宽、标签换行。
+   375px 下每项约 75px，10.5px 标签仍放得下「今日/趋势/历程/成就/方案」两字。 */
 .dck-tabbtn { flex: 1; max-width: 160px; display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 9px 0 7px; background: none; border: none; color: var(--dck-t4);
   font-size: 10.5px; font-weight: 600; cursor: pointer; min-height: var(--dck-tap);
+  white-space: nowrap;
   touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   transition: color .16s ease, transform .18s cubic-bezier(.34,1.56,.64,1); }
 .dck-tabbtn:active { transform: scale(.92); }
@@ -1140,7 +1371,7 @@ const DCK_CSS = `
   to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
 @media (min-width: 640px) {
-  .dck-tabbar { left: 50%; right: auto; transform: translateX(-50%); width: 380px;
+  .dck-tabbar { left: 50%; right: auto; transform: translateX(-50%); width: 440px;
     bottom: 20px; border: 1px solid var(--dck-line); border-radius: 999px; padding: 4px;
     box-shadow: 0 8px 30px rgba(20,32,26,.14); padding-bottom: 4px; }
   .dck-tabbtn { border-radius: 999px; }
