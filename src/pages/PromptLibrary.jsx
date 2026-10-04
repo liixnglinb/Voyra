@@ -18,15 +18,37 @@ const LEGACY_KEYS = {
 };
 
 /* ============ 管理员解锁（访客只读） ============
-   密码不明文入库：只存 djb2 哈希。改密码请告诉我新密码重新生成，
-   或自己在 Node 里算：var s='新密码',h=5381;for(var i=0;i<s.length;i++){h=((h*33)+s.charCodeAt(i))|0}console.log(h) */
-const ADMIN_PASSWORD_HASH = -1461714399;
-const ADMIN_SESSION_KEY = 'voyra.prompt-library.admin';
+   管理员口令不存放在前端。
 
-function djb2(str) {
-  let h = 5381;
-  for (let i = 0; i < str.length; i++) h = ((h * 33) + str.charCodeAt(i)) | 0;
-  return h;
+   历史问题：这里曾硬编码 djb2 哈希（32 位非密码学校验和，无 salt、无迭代）。
+   本仓库是公开仓库，该哈希等同于把口令公开——任何人都能在数秒内碰撞出等价
+   口令并解锁管理功能。
+
+   现改为服务端校验：口令只保存在 Cloudflare Pages 环境变量 PROMPT_ADMIN_PASS
+   （Production + Preview 都要配），由主仓库的 functions/prompt-admin/verify.js
+   做恒定时间比对 + 按 IP 限流。未配置该环境变量时接口返回 503，管理功能默认
+   不可用（安全默认值，fail closed）。
+
+   剩余边界：解锁状态仍落在 sessionStorage，属于"客户端可信"范畴。真正的写入
+   权限最终要由数据层（Bmob 表 ACL）来兜底，本改动解决的是"口令可被离线秒破"。 */
+const ADMIN_SESSION_KEY = 'voyra.prompt-library.admin';
+const ADMIN_VERIFY_URL = '/prompt-admin/verify';
+// 解锁有效期 4 小时：到期自动要求重新验证，避免一次解锁长期有效
+const ADMIN_TTL_MS = 4 * 60 * 60 * 1000;
+
+function readAdminSession() {
+  try {
+    const raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed.exp !== 'number' || parsed.exp < Date.now()) {
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 const EMPTY_STATE = { custom: [], favorites: [], categories: [] };
@@ -371,9 +393,7 @@ export default function PromptLibrary() {
   const [draft, setDraft] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
   const [toast, setToast] = useState('');
-  const [admin, setAdmin] = useState(() => {
-    try { return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1'; } catch { return false; }
-  });
+  const [admin, setAdmin] = useState(() => readAdminSession());
   const [pwDialog, setPwDialog] = useState(false);
   const [pwInput, setPwInput] = useState('');
   const [showTop, setShowTop] = useState(false);
@@ -512,16 +532,31 @@ export default function PromptLibrary() {
     setUserState(next);
   };
 
-  const unlockAdmin = () => {
-    if (djb2(pwInput) === ADMIN_PASSWORD_HASH) {
-      try { sessionStorage.setItem(ADMIN_SESSION_KEY, '1'); } catch { /* ignore */ }
-      setAdmin(true);
-      setPwDialog(false);
-      setPwInput('');
-      setToast('已解锁管理功能');
-    } else {
-      setPwInput('');
-      setToast('密码错误');
+  const unlockAdmin = async () => {
+    const submitted = pwInput;
+    setPwInput('');
+    try {
+      const res = await fetch(ADMIN_VERIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pass: submitted }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data && data.ok === true) {
+        try {
+          sessionStorage.setItem(
+            ADMIN_SESSION_KEY,
+            JSON.stringify({ v: 1, exp: Date.now() + ADMIN_TTL_MS })
+          );
+        } catch { /* ignore */ }
+        setAdmin(true);
+        setPwDialog(false);
+        setToast('已解锁管理功能');
+        return;
+      }
+      setToast(data && data.msg === 'not_configured' ? '管理功能未启用（服务端未配置口令）' : '密码错误');
+    } catch {
+      setToast('校验失败，请检查网络后重试');
     }
   };
 
@@ -1212,7 +1247,7 @@ export default function PromptLibrary() {
     {dialog === 'delete' && draft && <DeleteDialog prompt={draft} onClose={() => setDialog(null)} onConfirm={deletePrompt} />}
     {pwDialog && (
       <div className="pl-scrim" role="presentation" onMouseDown={() => setPwDialog(false)}>
-        <form className="pl-dialog pl-dialog-slim" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); unlockAdmin(); }}>
+        <form className="pl-dialog pl-dialog-slim" onMouseDown={(event) => event.stopPropagation()} onSubmit={(event) => { event.preventDefault(); void unlockAdmin(); }}>
           <header><div><span>ADMIN</span><h2>管理员解锁</h2></div><IconButton label="关闭" onClick={() => { setPwDialog(false); setPwInput(''); }}><X size={18} /></IconButton></header>
           <label>管理密码<input autoFocus type="password" value={pwInput} onChange={(event) => setPwInput(event.target.value)} placeholder="输入管理密码" /></label>
           <footer>
