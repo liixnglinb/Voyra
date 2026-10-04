@@ -1032,15 +1032,21 @@ body{
    四套模板只负责 stage 内部。
    ========================================================================== */
 
-/* ── 配色族：6 族替代原先 17 个互不相关的 --p-accent ──────────────────
-   同族产品自然形成家族感，对比度测试的成本也从 17 份降到 6 份。
-   每族给出：主色 / 浅底 / 描边 / 光晕。 */
-.st-core  { --p-accent:#2A60E4; --p-soft:#EDF3FE; --p-line:rgba(42,96,228,.22);  --p-glow:rgba(42,96,228,.10); }
-.st-ai    { --p-accent:#7C4DEE; --p-soft:#F2EEFE; --p-line:rgba(124,77,238,.22);  --p-glow:rgba(124,77,238,.10); }
-.st-life  { --p-accent:#12A15E; --p-soft:#E8F8F0; --p-line:rgba(18,161,94,.22);   --p-glow:rgba(18,161,94,.10); }
-.st-tool  { --p-accent:#E06A1F; --p-soft:#FFF0E4; --p-line:rgba(224,106,31,.22);  --p-glow:rgba(224,106,31,.10); }
-.st-learn { --p-accent:#B08407; --p-soft:#FBF5E0; --p-line:rgba(176,132,7,.24);   --p-glow:rgba(176,132,7,.10); }
-.st-mute  { --p-accent:#2A2A2A; --p-soft:#F0F0F0; --p-line:rgba(42,42,42,.20);    --p-glow:rgba(42,42,42,.08); }
+/* ── 配色：黑蓝双主色 ──────────────────────────────────────────────────
+   上一版是 6 族彩色（core 蓝 / ai 紫 / life 绿 / tool 橙 / learn 金 / mute 墨），
+   每族一个色相。19 张卡并排时颜色互相打架，观感仍偏杂。
+
+   现在收到「黑 + 蓝」两个色相：
+     墨黑  负责文字、描边、编号这类结构件 —— 整页的骨架
+     蓝    唯一强调色，用于编号 / 图标 / 大数字 / CTA / 描边高亮
+   其余四族不再是独立色相，而是蓝的 4 档明度差（--p-accent 由浅到深），
+   保留「同类产品成组」的暗示，但整页只出现蓝与黑两种色相。 */
+.st-core  { --p-accent:#1F5FE0; --p-soft:#EDF3FE; --p-line:rgba(31,95,224,.24);  --p-glow:rgba(31,95,224,.12); }  /* 主蓝 */
+.st-ai    { --p-accent:#3B82F6; --p-soft:#F0F6FE; --p-line:rgba(59,130,246,.22);  --p-glow:rgba(59,130,246,.10); }  /* 亮蓝 */
+.st-life  { --p-accent:#0B3FA8; --p-soft:#EAF0FB; --p-line:rgba(11,63,168,.26);   --p-glow:rgba(11,63,168,.12); }  /* 深蓝 */
+.st-tool  { --p-accent:#2A6BE0; --p-soft:#EBF2FD; --p-line:rgba(42,107,224,.24);  --p-glow:rgba(42,107,224,.11); }  /* 标准蓝 */
+.st-learn { --p-accent:#14509C; --p-soft:#E9EFF8; --p-line:rgba(20,80,156,.26);   --p-glow:rgba(20,80,156,.12); }  /* 靛蓝 */
+.st-mute  { --p-accent:#111827; --p-soft:#F1F3F7; --p-line:rgba(17,24,39,.22);    --p-glow:rgba(17,24,39,.10); }  /* 墨黑 */
 
 /* stage 内部统一底色 —— 原来 19 套各写一遍 */
 .sc-stage {
@@ -1125,6 +1131,143 @@ body{
 .st-metric-list b { font-size:12px;font-weight:700;color:var(--sc-text-main);
   font-variant-numeric:tabular-nums;text-align:right;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+
+/* ==========================================================================
+   动效
+   --------------------------------------------------------------------------
+   原则：动效服务于「让这张卡在讲什么」，不做纯装饰。
+     ① 入场分级   四套模板的元素按顺序浮现，视线自然从上读到下
+     ② 悬停光扫   鼠标划过时一道蓝光沿卡片斜扫，标示「这张可点」
+     ③ 状态呼吸   metric 的大数字与 flow 的节点做慢速呼吸，表示「实时在跑」
+     ④ 节点行进   flow 的连线由左向右绘出，表示流程在推进
+   全部动效在 prefers-reduced-motion 下停用（见本文件末尾的既有降级块）。
+   ========================================================================== */
+
+/* ① 入场分级：同一张卡内元素按 DOM 顺序错峰浮现。
+   每套模板的元素数量不同，用 :nth-child 最多给到第 5 个，
+   再多就接回统一起始值，避免长列表末尾迟迟不出现。 */
+@keyframes stRiseIn {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.st-flow-title,
+.st-tile-icon,
+.st-tile-list li,
+.st-badges-top,
+.st-badges li,
+.st-metric-top,
+.st-metric-hero,
+.st-metric-list li {
+  animation: stRiseIn .5s var(--sc-ease) both;
+}
+.st-flow-title                       { animation-delay: .04s; }
+.st-tile-icon                        { animation-delay: .04s; }
+.st-tile-list li:nth-child(1)        { animation-delay: .12s; }
+.st-tile-list li:nth-child(2)        { animation-delay: .18s; }
+.st-tile-list li:nth-child(3)        { animation-delay: .24s; }
+.st-tile-list li:nth-child(n+4)      { animation-delay: .30s; }
+.st-badges-top                       { animation-delay: .04s; }
+.st-badges li:nth-child(1)           { animation-delay: .12s; }
+.st-badges li:nth-child(2)           { animation-delay: .18s; }
+.st-badges li:nth-child(3)           { animation-delay: .24s; }
+.st-badges li:nth-child(n+4)         { animation-delay: .30s; }
+.st-metric-top                       { animation-delay: .04s; }
+.st-metric-hero                      { animation-delay: .12s; }
+.st-metric-list li:nth-child(1)      { animation-delay: .20s; }
+.st-metric-list li:nth-child(2)      { animation-delay: .26s; }
+.st-metric-list li:nth-child(3)      { animation-delay: .32s; }
+.st-metric-list li:nth-child(n+4)    { animation-delay: .38s; }
+
+/* ② 悬停光扫：一道 110° 的蓝沿卡片斜向扫过。
+   用 ::after 覆盖层 + transform 位移，不触发重排（不碰 width/left）。 */
+@keyframes stSheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to   { transform: translateX(320%)  skewX(-18deg); }
+}
+.sc-card::after {
+  content: '';
+  position: absolute;
+  top: -20%; left: 0;
+  width: 42%; height: 140%;
+  pointer-events: none;
+  z-index: 3;
+  background: linear-gradient(90deg,
+    transparent, rgba(255,255,255,0) 12%,
+    rgba(31,95,224,.10) 50%,
+    rgba(255,255,255,0) 88%, transparent);
+  transform: translateX(-120%) skewX(-18deg);
+  opacity: 0;
+}
+/* 只在真正能 hover 的设备上扫，触屏上会粘住不放 */
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover::after {
+    opacity: 1;
+    animation: stSheen .82s cubic-bezier(.22,1,.36,1) both;
+  }
+}
+
+/* ③ 状态呼吸：metric 的大数字与 flow 的节点慢速明暗交替。
+   4.6s 一个周期 —— 慢到不抢视线，快到能看出「活着」。 */
+@keyframes stBreathe {
+  0%, 100% { opacity: 1;   transform: scale(1); }
+  50%      { opacity: .72; transform: scale(.965); }
+}
+.st-metric-dot {
+  animation: stBreathe 2.8s ease-in-out infinite;
+}
+.st-metric-val {
+  animation: stBreathe 4.6s ease-in-out infinite;
+}
+.st-flow-dot {
+  animation: stBreathe 3.4s ease-in-out infinite;
+}
+/* 节点按序错峰，形成「接力」而非齐闪 */
+.st-flow-node:nth-child(2) .st-flow-dot { animation-delay: .38s; }
+.st-flow-node:nth-child(3) .st-flow-dot { animation-delay: .76s; }
+.st-flow-node:nth-child(4) .st-flow-dot { animation-delay: 1.14s; }
+
+/* ④ 节点行进：flow 的连线由左向右绘出。 */
+@keyframes stDrawLine {
+  from { stroke-dashoffset: 300; }
+  to   { stroke-dashoffset: 0; }
+}
+.st-flow-track line {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both;
+}
+
+/* ⑤ 悬停时 stage 内的元素轻微前推，制造「内容在动」的层次。 */
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .st-metric-hero,
+  .sc-card:hover .st-tile-icon { transform: translateX(3px); }
+  .sc-card:hover .st-badges-badge { transform: scale(1.05); }
+  .st-metric-hero, .st-tile-icon, .st-badges-badge {
+    transition: transform .34s var(--sc-ease);
+  }
+}
+
+/* 动效降级：系统开启「减弱动态效果」时全部静止。
+   本文件末尾已有一个全局 reduced-motion 块（animation-duration:.001ms），
+   这里的显式声明是为了让呼吸类无限循环动画真正停下来而不是被极速快放。 */
+@media (prefers-reduced-motion: reduce) {
+  .st-metric-dot,
+  .st-metric-val,
+  .st-flow-dot,
+  .st-flow-node .st-flow-dot,
+  .st-flow-track line,
+  .sc-card::after {
+    animation: none !important;
+  }
+  .st-flow-track line { stroke-dashoffset: 0; }
+  .st-flow-title, .st-tile-icon, .st-tile-list li,
+  .st-badges-top, .st-badges li,
+  .st-metric-top, .st-metric-hero, .st-metric-list li {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
 
 /* 移动端：stage 内容降一档字号，避免 390px 下换行挤压 */
 @media (max-width: 768px) {
