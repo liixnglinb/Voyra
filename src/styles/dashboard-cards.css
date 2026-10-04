@@ -108,9 +108,10 @@ body{
 .vr-home .vr-product-list {
   grid-template-columns:minmax(0,1fr);
   /* 固定行高：19 张卡拿完全相同的空间，视觉上是一排整齐的名片。
-     380px 是四套模板里最「重」的 metric-panel（大数字 + 3 行细分项）所需的高度，
-     badge-cluster 与 flow-nodes 内部靠 justify-content 居中留白，不会显得空。 */
-  grid-auto-rows: 380px;
+     380 → 430px：改成「文字 + 视觉区」纵向堆叠后，stage 需要 150px 才不扁，
+     加标题 27px + 描述 3 行 66px + CTA 30px + 内外边距 64px ≈ 430px。
+     够宽的容器（≥560px）会走横排，此时 430px 反而更宽松，视觉区能拿到更多高度。 */
+  grid-auto-rows: 430px;
   gap:16px;
   align-items:stretch;
 }
@@ -772,10 +773,10 @@ body{
 
 :root {
   --card-width: 100%;
-  /* 卡片高度改由 .vr-product-list 的 grid-auto-rows 统一决定（当前 380px），
-     原来的 --card-height:440px 固定值已随之删除。380px 是四套模板里最「重」的
-     metric-panel（大数字 + 3 行细分项）所需高度，其余模板内部居中留白。 */
-  --card-min-height: 380px;
+  /* 卡片高度改由 .vr-product-list 的 grid-auto-rows 统一决定（当前 430px），
+     原来的 --card-height:440px 固定值已随之删除。430px 对应「文字 + 视觉区」
+     纵向堆叠：标题 27 + 描述 66 + CTA 30 + 视觉区 150 + 内外边距 64 ≈ 430。 */
+  --card-min-height: 430px;
   --card-radius: 18px;
   --card-padding: 22px;
   --card-border-width: 1px;
@@ -899,74 +900,112 @@ body{
   color: inherit;
   transition: transform var(--sc-transition), border-color var(--sc-transition), box-shadow var(--sc-transition);
   animation: cardFadeIn 0.5s var(--sc-ease) both;
+  /* 内部改横排：左文（编号/标题/描述/CTA）右图（stage）。
+     padding 收窄到 0，外层靠 .sc-body 控内边距 —— 描边序号要贴到卡片左下角，
+     由内边距撑着会被推离边缘。 */
+  padding: 0;
 }
+
+/* 描边序号水印：参考图最关键的一笔。巨大、极浅的空心数字，
+   压在卡片左下角，给纯白卡片一个视觉落点。color:transparent + text-stroke
+   是唯一能做出「空心数字」的办法（background-clip:text 会填心）。 */
+.sc-seq {
+  position: absolute;
+  left: 20px; bottom: 4px;
+  z-index: 0;
+  font-size: 76px;
+  font-weight: 800;
+  line-height: .8;
+  letter-spacing: -.04em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(17, 24, 39, .10);
+  pointer-events: none;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 横排容器：左文右图。
+   写法上踩过一次坑：原本是 minmax(0,300px) minmax(0,1fr)，但本站卡片是
+   单列窄卡（1080 视口下净宽仅 361px），第二列被压成 0px、stage 只剩 2px 宽，
+   整块视觉全空。改成给 stage 一个 minmax 下限后文字列又只剩 77px。
+   结论：这个宽度横排放不下。改用容器查询 —— 卡片够宽（≥560px，含内边距
+   净宽约 500px）才横排，否则纵向堆叠，视觉区放在文字下方。 */
+.sc-card { container-type: inline-size; container-name: showcase-card; }
+.sc-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  align-content: center;
+  height: 100%;
+  padding: 30px 30px 34px 26px;
+}
+.sc-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
 
 @keyframes cardFadeIn {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* 够宽才横排：文字列 300px + 视觉列至少 220px + 间距 26px ≈ 550px。
+   窄于这个宽度就保持纵向堆叠（上面 .sc-body 的默认状态）。 */
+@container showcase-card (min-width: 560px) {
+  .sc-body {
+    grid-template-columns: minmax(0, 300px) minmax(220px, 1fr);
+    gap: 26px;
+    align-items: center;
+  }
+}
+
+/* 悬停：最小反馈。上移 4 → 2px，阴影换成一档更轻的。
+   19 张卡纵向排成一列，指针横扫时位移越小越不晃。 */
 .sc-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   border-color: var(--p-line, var(--sc-border-hover));
-  box-shadow: var(--sc-shadow-hover);
+  box-shadow: 0 4px 14px -6px rgba(17,24,39,.10);
 }
 
-.sc-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
-  flex: 0 0 auto;
-}
-
-.sc-head-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
+/* 已移除 .sc-card-head / .sc-head-left：横排改造后卡内改用 .sc-body > .sc-copy，
+   这两个只服务于旧的头部容器。 */
 
 .sc-no {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--p-accent, var(--sc-text-dim));
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  color: var(--sc-text-dim);
+  margin-bottom: 12px;
 }
 
+/* 标题：参考图用大号重体（28px / 800），是整张卡的第一视觉。
+   之前是 17px，在横排布局里显得太小、撑不住左列。 */
 .sc-title {
   margin: 0;
-  font-size: 17px;
+  font-size: 27px;
   font-weight: 800;
   color: var(--sc-text-main);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
+/* 描述：参考图是窄栏 3 行、字号偏小、行高宽松。放宽到 3 行让文案念得完。 */
 .sc-desc {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 1.75;
   color: var(--sc-text-sub);
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   overflow: hidden;
 }
 
 .sc-stage {
   position: relative;
-  flex: 1 1 auto;
-  /* 原来写 min-height:0，stage 会被压到内容高度以下，四套模板（尤其 badge-cluster
-     的三行、metric-panel 的大数字）因此忽高忽低，19 张卡连成锯齿。
-     改成 150px 下限：内容少的模板由内部 justify-content 居中留白，
-     内容多的模板自然把卡片撑高，视觉上不再忽大忽小。 */
+  /* 横排后 stage 是右列的 grid 子项，不再需要 flex 伸展与上下外边距。
+     min-height 保留 150px 下限：内容少的模板（flow 只有一行）不至于太扁。 */
   min-height: 150px;
-  margin: 10px 0 14px;
   background: var(--sc-surface-alt);
   border: 1px solid rgba(27, 27, 27, 0.06);
   border-radius: 12px;
@@ -980,38 +1019,25 @@ body{
   border-color: var(--p-line);
 }
 
-.sc-card-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid rgba(27, 27, 27, 0.05);
-  flex: 0 0 auto;
-  /* 卡片改为自适应高度后，footer 必须靠 auto 外边距吸到卡片底部，
-     否则 stage 短的那张卡，标签与 CTA 会紧贴内容、下面空出一块。 */
-  margin-top: auto;
-}
-
-.sc-foot-tag {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--sc-text-dim);
-}
-
+/* CTA 移到左列底部，参考图是「进入游戏 →」这种克制的小字链接，
+   不做成实心按钮 —— 实心按钮会把整张卡的重量锚在左下角，破坏留白。 */
 .sc-cta {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--p-accent, var(--sc-text-main));
-  transition: gap 0.2s ease;
+  gap: 5px;
+  margin-top: 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--sc-text-sub);
+  transition: color .22s ease;
 }
+.sc-cta svg { transition: transform .22s cubic-bezier(.22,1,.36,1); }
+/* 悬停只做两件事：文字转深、箭头右移 2px。参考图的悬停就是这个量级。 */
+.sc-card:hover .sc-cta { color: var(--sc-text-main); }
+.sc-card:hover .sc-cta svg { transform: translateX(2px); }
 
-.sc-card:hover .sc-cta {
-  gap: 7px;
-}
+/* 已移除 .sc-card-foot / .sc-foot-tag：footer（含 foot 平台标签）在横排改造中
+   去掉了，标签信息并入 .sc-no（如「APP 01 / LOCAL AGENT PIPELINE」）。 */
 
 
 
@@ -1135,12 +1161,14 @@ body{
 /* ==========================================================================
    动效
    --------------------------------------------------------------------------
-   原则：动效服务于「让这张卡在讲什么」，不做纯装饰。
-     ① 入场分级   四套模板的元素按顺序浮现，视线自然从上读到下
-     ② 悬停光扫   鼠标划过时一道蓝光沿卡片斜扫，标示「这张可点」
-     ③ 状态呼吸   metric 的大数字与 flow 的节点做慢速呼吸，表示「实时在跑」
-     ④ 节点行进   flow 的连线由左向右绘出，表示流程在推进
-   全部动效在 prefers-reduced-motion 下停用（见本文件末尾的既有降级块）。
+   原则：动效放在**入场**，不放在悬停。
+   参考质感的卡（白底、极淡边框、大留白）本身已经很安静，
+   悬停再叠强视觉会把它变成广告位；而且指针扫过一列 19 张卡时，
+   每次掠过都触发一次动画 = 连环闪，反而看不清内容。
+     ① 入场分级  四套模板元素按顺序浮现（.04s~.38s），视线自然从上往下
+     ② 连线绘出  flow 模板的虚线由左向右画出，一次性
+   悬停只保留最小反馈：整卡上移 2px + 描边转深 + CTA 箭头右移 2px。
+   全部动效在 prefers-reduced-motion 下停用（见本节末尾的降级块）。
    ========================================================================== */
 
 /* ① 入场分级：同一张卡内元素按 DOM 顺序错峰浮现。
@@ -1178,55 +1206,8 @@ body{
 .st-metric-list li:nth-child(3)      { animation-delay: .32s; }
 .st-metric-list li:nth-child(n+4)    { animation-delay: .38s; }
 
-/* ② 悬停光扫：一道 110° 的蓝沿卡片斜向扫过。
-   用 ::after 覆盖层 + transform 位移，不触发重排（不碰 width/left）。 */
-@keyframes stSheen {
-  from { transform: translateX(-120%) skewX(-18deg); }
-  to   { transform: translateX(320%)  skewX(-18deg); }
-}
-.sc-card::after {
-  content: '';
-  position: absolute;
-  top: -20%; left: 0;
-  width: 42%; height: 140%;
-  pointer-events: none;
-  z-index: 3;
-  background: linear-gradient(90deg,
-    transparent, rgba(255,255,255,0) 12%,
-    rgba(31,95,224,.10) 50%,
-    rgba(255,255,255,0) 88%, transparent);
-  transform: translateX(-120%) skewX(-18deg);
-  opacity: 0;
-}
-/* 只在真正能 hover 的设备上扫，触屏上会粘住不放 */
-@media (hover: hover) and (pointer: fine) {
-  .sc-card:hover::after {
-    opacity: 1;
-    animation: stSheen .82s cubic-bezier(.22,1,.36,1) both;
-  }
-}
-
-/* ③ 状态呼吸：metric 的大数字与 flow 的节点慢速明暗交替。
-   4.6s 一个周期 —— 慢到不抢视线，快到能看出「活着」。 */
-@keyframes stBreathe {
-  0%, 100% { opacity: 1;   transform: scale(1); }
-  50%      { opacity: .72; transform: scale(.965); }
-}
-.st-metric-dot {
-  animation: stBreathe 2.8s ease-in-out infinite;
-}
-.st-metric-val {
-  animation: stBreathe 4.6s ease-in-out infinite;
-}
-.st-flow-dot {
-  animation: stBreathe 3.4s ease-in-out infinite;
-}
-/* 节点按序错峰，形成「接力」而非齐闪 */
-.st-flow-node:nth-child(2) .st-flow-dot { animation-delay: .38s; }
-.st-flow-node:nth-child(3) .st-flow-dot { animation-delay: .76s; }
-.st-flow-node:nth-child(4) .st-flow-dot { animation-delay: 1.14s; }
-
-/* ④ 节点行进：flow 的连线由左向右绘出。 */
+/* ② 连线绘出：flow 模板的虚线由左向右画出，一次性，播完即止。
+   这是入场动效，不是悬停动效 —— 视线进到卡片时先看到线、再看到节点。 */
 @keyframes stDrawLine {
   from { stroke-dashoffset: 300; }
   to   { stroke-dashoffset: 0; }
@@ -1237,29 +1218,18 @@ body{
   animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both;
 }
 
-/* ⑤ 悬停时 stage 内的元素轻微前推，制造「内容在动」的层次。 */
-@media (hover: hover) and (pointer: fine) {
-  .sc-card:hover .st-metric-hero,
-  .sc-card:hover .st-tile-icon { transform: translateX(3px); }
-  .sc-card:hover .st-badges-badge { transform: scale(1.05); }
-  .st-metric-hero, .st-tile-icon, .st-badges-badge {
-    transition: transform .34s var(--sc-ease);
-  }
-}
+/* ── 已移除的两组动效（2026-10-04，参考质感图后删） ──────────────────
+   stSheen   悬停光扫：一道蓝沿卡片斜扫。用户反馈「悬停不要太花哨」——
+             鼠标只是路过，却触发一次 0.82s 的强视觉，19 张卡排在一起时
+             指针扫过一列就是连环闪。
+   stBreathe 大数字/节点无限呼吸：2.8~4.6s 永不停止。页面静止时它还在动，
+             属于「背景动画」，与参考图那种安静的纸质感冲突。
+   现在悬停只保留两处：整卡上移 2px + 描边转深（见 .sc-card:hover），
+   以及 CTA 文字转深、箭头右移 2px。 */
 
-/* 动效降级：系统开启「减弱动态效果」时全部静止。
-   本文件末尾已有一个全局 reduced-motion 块（animation-duration:.001ms），
-   这里的显式声明是为了让呼吸类无限循环动画真正停下来而不是被极速快放。 */
+/* 动效降级：系统开启「减弱动态效果」时全部静止。 */
 @media (prefers-reduced-motion: reduce) {
-  .st-metric-dot,
-  .st-metric-val,
-  .st-flow-dot,
-  .st-flow-node .st-flow-dot,
-  .st-flow-track line,
-  .sc-card::after {
-    animation: none !important;
-  }
-  .st-flow-track line { stroke-dashoffset: 0; }
+  .st-flow-track line { animation: none !important; stroke-dashoffset: 0; }
   .st-flow-title, .st-tile-icon, .st-tile-list li,
   .st-badges-top, .st-badges li,
   .st-metric-top, .st-metric-hero, .st-metric-list li {

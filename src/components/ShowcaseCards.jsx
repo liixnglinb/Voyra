@@ -156,6 +156,9 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
   const Stage = STAGE_TEMPLATES[card.stage.kind];
   const linkProps = card.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
   const desc = (isMobile && shortDesc) || card.desc;
+  /* 描边序号：参考图的质感关键 —— 巨大、极浅的空心数字压在卡片左下角，
+     像纸张上的编号水印，给纯白卡片一个视觉落点，又不抢内容。 */
+  const seq = card.no.split('/')[0].trim();
 
   return (
     <a
@@ -164,8 +167,10 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
       className={`sc-card st-${card.family}`}
       aria-label={`${card.name}：${card.cta}${card.external ? '（新标签页）' : ''}`}
     >
-      <header className="sc-card-head">
-        <div className="sc-head-left">
+      <span className="sc-seq" aria-hidden="true">{seq}</span>
+
+      <div className="sc-body">
+        <div className="sc-copy">
           <span className="sc-no">{card.no}</span>
           <div className="sc-title-row">
             <span className="sc-brand" aria-hidden="true">
@@ -176,19 +181,15 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
             <h3 className="sc-title">{card.name}</h3>
           </div>
           <p className="sc-desc" title={card.desc}>{desc}</p>
+          <span className="sc-cta">
+            {card.cta} <ArrowUpRight size={14} />
+          </span>
         </div>
-      </header>
 
-      <div className="sc-stage">
-        <Stage stage={card.stage} Icon={Icon} />
+        <div className="sc-stage">
+          <Stage stage={card.stage} Icon={Icon} />
+        </div>
       </div>
-
-      <footer className="sc-card-foot">
-        <span className="sc-foot-tag">{card.foot}</span>
-        <span className="sc-cta">
-          {card.cta} <ArrowUpRight size={14} />
-        </span>
-      </footer>
     </a>
   );
 }
