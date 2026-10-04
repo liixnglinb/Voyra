@@ -140,6 +140,22 @@ export default function DietCheckin() {
   const toastRef = useRef(null);
   const dataRef = useRef({ version: 1, profile: { ...PROFILE }, days: {} });
 
+  /* 软键盘避让：体重 / 血压 / 备注三类输入在 375px 下都位于页面下半部，
+     键盘弹起后会被遮住、看不到自己刚敲的值。聚焦时把该控件滚到可视区中部。
+     用捕获阶段的 focusin 统一处理，避免给每个 input 挂 onFocus。 */
+  useEffect(() => {
+    const onFocusIn = (e) => {
+      const el = e.target;
+      if (!el || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+      /* 延后一帧：等浏览器完成键盘动画与视口收缩再算位置，否则滚不到位 */
+      requestAnimationFrame(() => {
+        try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (err) { /* 老浏览器忽略 */ }
+      });
+    };
+    document.addEventListener('focusin', onFocusIn, true);
+    return () => document.removeEventListener('focusin', onFocusIn, true);
+  }, []);
+
   const showToast = useCallback((msg) => {
     setToast(msg);
     clearTimeout(toastRef.current);
@@ -299,6 +315,11 @@ export default function DietCheckin() {
   const doneCount = ['breakfast', 'lunch', 'dinner'].filter((k) => cur[k] === 'ok').length
     + (cur.water ? 1 : 0) + (cur.steps ? 1 : 0);
   const allDone = doneCount >= 5;
+  /* 今日得分（0-100）：直接复用 dayScore(cur) 而非另立一套算法。
+     v5 之前这里曾写成「三餐各 20 分」的独立口径，会与历史列表、热力图显示的
+     dayScore 打架（比如三餐全 ok 但放纵餐时两处分数不同）。统一到 dayScore 后，
+     环形仪表 / 进度条 / 热力图 / 打卡记录四处读数恒等。 */
+  const todayScore = dayScore(cur);
 
   const heroW = useCountUp(latestW);
   /* 距目标还差多少：正值 = 还差这么多（当前体重大于目标），≤0 = 已达成 */
@@ -413,7 +434,30 @@ export default function DietCheckin() {
             <section className="dck-card">
               <div className="dck-daily-head">
                 <h3 className="dck-sec"><Wheat size={15} /> 今日执行</h3>
-                <span className={`dck-donechip${allDone ? ' full' : ''}`}>{doneCount}/5</span>
+                {/* 环形得分仪：把 v4 右上角那个纯文字的 {doneCount}/5 换成 Apple Health 式量表。
+                    得分与进度条同源（都是 dayScore(cur)），完成一个即见一段弧线增长，
+                    补上 v4 缺的「闭合一个」的完成触感。 */}
+                <div
+                  className={`dck-gauge${allDone ? ' is-full' : ''}`}
+                  role="progressbar"
+                  aria-valuenow={todayScore}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`今日得分 ${todayScore} 分，已完成 ${doneCount} 项（共 5 项）`}
+                >
+                  <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">
+                    <circle cx="23" cy="23" r="19" fill="none" stroke="#E6EDE8" strokeWidth="4.5" />
+                    <circle
+                      cx="23" cy="23" r="19" fill="none"
+                      stroke="var(--dck-brand)" strokeWidth="4.5" strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 19}
+                      strokeDashoffset={2 * Math.PI * 19 * (1 - todayScore / 100)}
+                      transform="rotate(-90 23 23)"
+                      style={{ transition: 'stroke-dashoffset .5s cubic-bezier(.16,1,.3,1)' }}
+                    />
+                  </svg>
+                  <span className="dck-gauge-num">{todayScore}</span>
+                </div>
               </div>
               {MEALS.map(({ key, label, Icon }) => (
                 <div key={key} className="dck-meal">
@@ -502,35 +546,6 @@ export default function DietCheckin() {
               <div><b>{totalDays}</b><span>累计打卡 天</span></div>
             </div>
 
-            {/* 里程碑徽章墙：香槟金微渐变 */}
-            <section className="dck-card">
-              <h3 className="dck-sec"><Trophy size={15} /> 坚持里程碑</h3>
-              <div className="dck-badges">
-                {MILESTONES.map((m) => {
-                  const got = streak >= m || (profile.maxStreak || 0) >= m;
-                  return (
-                    <div key={m} className={`dck-badge${got ? ' got' : ''}`}>
-                      <b>{m}</b><span>{got ? '已达成' : '天'}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="dck-badges-note">最高连续纪录 {profile.maxStreak || 0} 天 · 已累计打卡 {totalDays} 天</div>
-            </section>
-
-            {/* 本周反馈：节奏 / 注意 / 趋势 三联结构 */}
-            <section className="dck-card">
-              <h3 className="dck-sec"><MessageSquareHeart size={15} /> 本周反馈</h3>
-              <div className="dck-fb">
-                {weeklyFeedback.map(({ k, text }, i) => (
-                  <div key={i} className={`dck-fb-item is-${k}`}>
-                    <span className="dck-fb-tag">{k === 'pace' ? '节奏' : k === 'watch' ? '注意' : '趋势'}</span>
-                    <span className="dck-fb-text">{text}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
-
             <section className="dck-card">
               <h3 className="dck-sec"><TrendingUp size={15} /> 体重趋势（近 30 次）</h3>
               {weights.length >= 2 ? (
@@ -570,9 +585,43 @@ export default function DietCheckin() {
                 })()}
               </div>
             </section>
+          </>
+        ) : tab === 'badges' ? (
+          /* 「成就」独立成页：v4 把徽章墙、教练三联反馈、20 条打卡流水全塞在趋势页，
+             一个 Tab 承载 6 类异质信息、密度失控。这里把「回看过去」的三块归到一处，
+             与趋势页的「看指标」职责分开。 */
+          <>
+            {/* 里程碑徽章墙：香槟金微渐变 */}
+            <section className="dck-card">
+              <h3 className="dck-sec"><Trophy size={15} /> 坚持里程碑</h3>
+              <div className="dck-badges">
+                {MILESTONES.map((m) => {
+                  const got = streak >= m || (profile.maxStreak || 0) >= m;
+                  return (
+                    <div key={m} className={`dck-badge${got ? ' got' : ''}`}>
+                      <b>{m}</b><span>{got ? '已达成' : '天'}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="dck-badges-note">最高连续纪录 {profile.maxStreak || 0} 天 · 已累计打卡 {totalDays} 天</div>
+            </section>
+
+            {/* 本周反馈：节奏 / 注意 / 趋势 三联结构 */}
+            <section className="dck-card">
+              <h3 className="dck-sec"><MessageSquareHeart size={15} /> 本周反馈</h3>
+              <div className="dck-fb">
+                {weeklyFeedback.map(({ k, text }, i) => (
+                  <div key={i} className={`dck-fb-item is-${k}`}>
+                    <span className="dck-fb-tag">{k === 'pace' ? '节奏' : k === 'watch' ? '注意' : '趋势'}</span>
+                    <span className="dck-fb-text">{text}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
 
             <section className="dck-card">
-              <h3 className="dck-sec"><ClipboardCheck size={15} /> 记录</h3>
+              <h3 className="dck-sec"><ClipboardCheck size={15} /> 打卡记录</h3>
               {sortedDates.length === 0 ? <div className="dck-empty">还没有记录</div> : (
                 <div className="dck-rows">
                   {[...sortedDates].reverse().slice(0, 20).map((k) => {
@@ -630,13 +679,21 @@ export default function DietCheckin() {
         )}
       </main>
 
-      <nav className="dck-tabbar">
+      <nav className="dck-tabbar" role="tablist" aria-label="主导航">
         {[
           { key: 'today', label: '今日', Icon: ClipboardCheck },
           { key: 'trend', label: '趋势', Icon: TrendingUp },
+          { key: 'badges', label: '成就', Icon: Trophy },
           { key: 'plan', label: '方案', Icon: Info },
         ].map(({ key, label, Icon }) => (
-          <button key={key} type="button" className={`dck-tabbtn${tab === key ? ' on' : ''}`} onClick={() => setTab(key)}>
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            className={`dck-tabbtn${tab === key ? ' on' : ''}`}
+            onClick={() => setTab(key)}
+          >
             <Icon size={19} strokeWidth={tab === key ? 2.4 : 2} />
             <span>{label}</span>
           </button>
@@ -721,15 +778,27 @@ function TrendChart({ weights, goal1 }) {
   );
 }
 
-/* ---------------- 样式：鼠尾草矿物翡翠 ---------------- */
+/* ---------------- 样式：鼠尾草矿物翡翠 2.0 ----------------
+   2.0 相对 v4 的变化（全部为新增或加强，不改任何已达标项的取值方向）：
+   ① 补齐 --dck-t3（v4 只有 t2/t4，中间档缺失导致标签只能二选一）
+   ② 补齐触控阶梯 --dck-tap-min:44 / --dck-tap-lg:52，把散落各处的魔法数字收归变量
+   ③ 描边与卡片阴影分出 line / line-strong 两级，供 375px 密集排版取用
+   ④ 新增 --dck-gold-bg 渐变与 --dck-emerald-glow，供徽章与得分环使用 */
 const DCK_CSS = `
 .dck-app {
-  --dck-page: #F5F8F6; --dck-card: #FFFFFF;
-  --dck-line: rgba(16,78,48,.10);
-  --dck-ink: #132219; --dck-t2: #546B5F; --dck-t4: #8FA498;
+  --dck-page: #F4F7F5; --dck-card: #FFFFFF; --dck-sub: #F9FBFA;
+  --dck-line: rgba(16,78,48,.08);
+  --dck-line-strong: rgba(16,78,48,.16);
+  --dck-ink: #122017; --dck-t2: #4D6357; --dck-t3: #758D80; --dck-t4: #9FB2A7;
   --dck-brand: #0D8253; --dck-deep: #08613C; --dck-soft: #E8F6EE;
-  --dck-gold: #B8860B; --dck-gold-soft: #FEF9EC;
+  --dck-brand-glow: rgba(13,130,83,.15);
+  --dck-gold: #966F09; --dck-gold-soft: #FEF9EC;
+  --dck-gold-bg: linear-gradient(135deg, #FFF8E7 0%, #F8E7BE 100%);
+  --dck-gold-border: rgba(184,134,11,.35);
   --dck-warn: #C27803; --dck-warn-soft: #FFFBEB; --dck-warn-line: rgba(194,120,3,.22);
+  /* 触控与圆角阶梯：44 为 iOS HIG / WCAG 2.2 AA 下限，52 用于主操作 */
+  --dck-tap: 44px; --dck-tap-lg: 52px;
+  --dck-r-sm: 10px; --dck-r-md: 14px; --dck-r-lg: 18px;
   --dck-bad: #D94841; --dck-bad-soft: #FEF2F2; --dck-bad-line: rgba(217,72,65,.22);
   --dck-shadow: 0 1px 3px rgba(18,38,27,.03), 0 8px 24px -4px rgba(18,38,27,.06);
   --dck-inner: inset 0 1px 0 rgba(255,255,255,.9);
@@ -747,9 +816,20 @@ const DCK_CSS = `
 
 /* ── 顶栏（浅色） ── */
 .dck-head { padding: max(18px, env(safe-area-inset-top)) 18px 6px; }
-/* AuthGate 的登录浮钮固定在站点右上角，顶栏行右侧预留空间避免压住连胜胶囊 */
+/* AuthGate 的登录浮钮固定在站点右上角，顶栏行右侧预留空间避免压住连胜胶囊。
+   v4 用的是写死的 76px：它按「无登录态」的最短情况设计，一旦登录后
+   .dck-sync 插入（用户名越长越长），左侧标题与右侧胶囊会在 375px 下互相挤压折行。
+   改为「左侧 min-width:0 + 省略号、右侧 flex-shrink:0」：右胶囊组永不压缩，
+   左侧标题/副标题先省略，把空间让给真正需要完整的连胜与同步状态。 */
 .dck-head-top { display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding-right: 76px; }
+.dck-head-top > div:first-child { min-width: 0; flex: 1; }
+.dck-head-sub { font-size: 12px; color: var(--dck-t2); margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dck-head-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* 同步胶囊承载用户名，窄屏优先压缩它自己而不是把整行撑破 */
+.dck-sync { min-width: 0; max-width: 34vw; }
+.dck-sync { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dck-brand { font-size: 17px; font-weight: 800; letter-spacing: .01em; color: var(--dck-ink); }
 .dck-head-sub { font-size: 12px; color: var(--dck-t2); margin-top: 2px; }
 .dck-head-right { display: flex; align-items: center; gap: 8px; }
@@ -817,15 +897,28 @@ const DCK_CSS = `
 .dck-delta.good { color: var(--dck-deep); background: var(--dck-soft); }
 .dck-delta.warn { color: var(--dck-warn); background: var(--dck-warn-soft); }
 .dck-bp-row { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
-.dck-app .dck-bp-row input { width: 96px; height: 42px; border: 1px solid var(--dck-line); border-radius: 10px;
+/* 375px 下 96+96+斜杠+盾牌+单位逼近 320px，会把「mmHg · 选填」挤到第三行割裂版面。
+   措施：① 输入框窄屏改 flex:1 自适应（不再写死 96px），窄屏自然并排、宽屏仍各占一格；
+        ② 高度 42 → 44 达触控下限；③ 单位文本允许换行并独占剩余空间，不再硬撑。 */
+.dck-app .dck-bp-row input { flex: 1 1 88px; min-width: 76px; max-width: 110px; height: var(--dck-tap);
+  border: 1px solid var(--dck-line); border-radius: 10px;
   padding: 0 10px; font-size: 15px; color: var(--dck-ink); background: #fff;
   font-variant-numeric: tabular-nums; }
 .dck-app .dck-bp-row input:focus { outline: none; border-color: var(--dck-brand); box-shadow: var(--dck-ring); }
 .dck-bp-slash { color: var(--dck-t4); font-weight: 600; }
-.dck-bp-unit { font-size: 11.5px; color: var(--dck-t4); }
+.dck-bp-unit { font-size: 11.5px; color: var(--dck-t4); flex: 1 1 100%; line-height: 1.4; }
 
 /* 今日执行看板 */
 .dck-daily-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+/* 今日得分环（Apple Health 式）：46px 不抢版面，但弧线随每次打卡增长。
+   数字用 tabular-nums，宽度固定，弧线动画不会把「今日执行」标题推来推去。 */
+.dck-gauge { position: relative; width: 46px; height: 46px; flex-shrink: 0;
+  display: grid; place-items: center; }
+.dck-gauge svg { position: absolute; inset: 0; }
+.dck-gauge-num { position: relative; font-size: 15px; font-weight: 800; color: var(--dck-deep);
+  font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.dck-gauge.is-full .dck-gauge-num { color: var(--dck-brand); }
+.dck-gauge.is-full { animation: dckPop .4s cubic-bezier(.34,1.56,.64,1); }
 .dck-donechip { font-size: 12px; font-weight: 800; color: var(--dck-deep); background: var(--dck-soft);
   border: 1px solid rgba(13,130,83,.25); border-radius: 999px; padding: 4px 11px;
   font-variant-numeric: tabular-nums; transition: all .25s cubic-bezier(.16,1,.3,1); }
@@ -837,35 +930,49 @@ const DCK_CSS = `
   color: var(--dck-t2); margin-bottom: 7px; }
 /* 三餐：柔和分段药丸（中性轨道 + 白底激活 + 语义色文字，杜绝红绿灯实色） */
 .dck-seg { display: flex; gap: 4px; background: #F0F4F1; border-radius: 12px; padding: 4px; }
-.dck-pill-btn { flex: 1; min-height: 38px; border: none; border-radius: 9px; background: transparent;
+/* min-height 38 → 44（--dck-tap）：v4 的 38px 低于 iOS HIG 44pt 与 WCAG 2.2 AA 标桩，
+   晨起单手操作时相邻两餐的「按方案/小偏差/放纵餐」极易误触。
+   touch-action:manipulation 去掉 300ms 双击缩放等待。 */
+.dck-pill-btn { flex: 1; min-height: var(--dck-tap); border: none; border-radius: 10px; background: transparent;
   color: var(--dck-t2); font-size: 13px; font-weight: 500; display: inline-flex;
   align-items: center; justify-content: center; gap: 5px; cursor: pointer;
-  transition: all .2s cubic-bezier(.16,1,.3,1); }
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform .16s cubic-bezier(.16,1,.3,1), color .2s, background .2s, box-shadow .2s; }
 .dck-pill-btn:hover { color: var(--dck-ink); }
+.dck-pill-btn:active { transform: scale(.97); }
 .dck-pill-btn.is-active { background: #fff; font-weight: 700;
-  box-shadow: 0 1px 3px rgba(18,38,27,.08); }
+  box-shadow: 0 2px 6px rgba(18,38,27,.08); }
 .dck-pill-ok.is-active { color: var(--dck-brand); outline: 1px solid rgba(13,130,83,.28); }
 .dck-pill-off.is-active { color: var(--dck-warn); outline: 1px solid var(--dck-warn-line); }
 .dck-pill-bad.is-active { color: var(--dck-bad); outline: 1px solid var(--dck-bad-line); }
 
-/* 习惯四件套：触感卡 + 弹性对勾 */
+/* 习惯四件套：触感卡 + 弹性对勾
+   375px 排版修正：列宽仅约 150px，v4 的「34px 图标 + gap9 + 双行文字 + 22px 勾选框」
+   在中文字体下会把「无放纵餐 / 零饮料零食」这类长副标挤成三行、并被右侧对勾压住。
+   措施：① 图标缩到 30px；② 副标单行省略（nowrap + ellipsis），标题保持可换行；
+        ③ 对勾移到卡内右上角绝对定位，不再参与横向挤压；④ 纵向留足 padding。 */
 .dck-habits { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-.dck-habit { display: flex; align-items: center; gap: 9px; min-height: 60px;
-  border: 1px solid var(--dck-line); background: #fff; border-radius: 14px; padding: 11px 12px;
+.dck-habit { position: relative; display: flex; align-items: center; gap: 8px; min-height: 66px;
+  border: 1px solid var(--dck-line); background: #fff; border-radius: var(--dck-r-md); padding: 10px 10px 10px 11px;
   color: var(--dck-t2); cursor: pointer; text-align: left;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
   box-shadow: var(--dck-inner); transition: transform .1s, border-color .2s, background .2s; }
-.dck-habit:active { transform: scale(.98); }
+.dck-habit:active { transform: scale(.97); }
 .dck-habit.on { border-color: rgba(13,130,83,.4); background: var(--dck-soft); }
-.dck-habit-ico { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 34px;
-  border-radius: 10px; background: #F2F6F3; color: var(--dck-t2);
+.dck-habit-ico { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px;
+  border-radius: 9px; background: #F2F6F3; color: var(--dck-t2);
   transition: background .2s, color .2s; }
 .dck-habit.on .dck-habit-ico { background: #fff; color: var(--dck-brand); }
-.dck-habit-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.dck-habit-txt b { font-size: 13.5px; color: var(--dck-ink); line-height: 1.25; }
-.dck-habit.on .dck-habit-txt b { color: var(--dck-deep); }
-.dck-habit-txt > span { font-size: 11px; color: var(--dck-t4); }
-.dck-habit-check { display: grid; place-items: center; flex-shrink: 0; width: 22px; height: 22px;
-  border-radius: 50%; border: 1.5px solid var(--dck-line); color: transparent; background: #fff; }
+.dck-habit-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1;
+  padding-right: 20px; /* 给右上角对勾留位，文字不再被压住 */ }
+.dck-habit-txt b { font-size: 13px; color: var(--dck-ink); line-height: 1.3;
+  overflow-wrap: anywhere; }
+/* 副标是补充说明，375px 下宁可截断也不允许它把卡撑成三行 */
+.dck-habit-txt > span { font-size: 10.5px; color: var(--dck-t4); line-height: 1.35;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dck-habit-check { position: absolute; top: 9px; right: 9px;
+  display: grid; place-items: center; width: 20px; height: 20px;
+  border-radius: 50%; border: 1.5px solid var(--dck-line-strong); color: transparent; background: #fff; }
 .dck-habit.on .dck-habit-check { background: var(--dck-brand); border-color: var(--dck-brand); color: #fff;
   animation: dckPop .32s cubic-bezier(.34,1.56,.64,1); }
 @keyframes dckPop { 0% { transform: scale(.5); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
@@ -1016,13 +1123,20 @@ const DCK_CSS = `
   padding-bottom: env(safe-area-inset-bottom); }
 .dck-tabbtn { flex: 1; max-width: 160px; display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 9px 0 7px; background: none; border: none; color: var(--dck-t4);
-  font-size: 10.5px; font-weight: 600; cursor: pointer; min-height: 44px; }
+  font-size: 10.5px; font-weight: 600; cursor: pointer; min-height: var(--dck-tap);
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: color .16s ease, transform .18s cubic-bezier(.34,1.56,.64,1); }
+.dck-tabbtn:active { transform: scale(.92); }
 .dck-tabbtn.on { color: var(--dck-deep); }
-.dck-toast { position: fixed; bottom: calc(78px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+/* Toast 移到顶部：v4 固定在 bottom:78px（底栏上方），而备注/血压输入时软键盘弹起
+   会把底部整块盖住，「已保存」提示正好落在键盘面板下面——用户改完体重看不到确认。
+   顶部在键盘弹起时始终可见，且不与底部主操作区争位置。
+   宽屏（≥640px）底栏是悬浮胶囊、两侧留白，Toast 仍居中即可。 */
+.dck-toast { position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
   display: flex; align-items: center; gap: 6px; background: var(--dck-ink); color: #fff; font-size: 12.5px;
   padding: 9px 16px; border-radius: 999px; box-shadow: 0 6px 24px rgba(0,0,0,.18); z-index: 60; max-width: 88vw;
   animation: dckToastIn .28s cubic-bezier(.16,1,.3,1) both; }
-@keyframes dckToastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+@keyframes dckToastIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
 @media (min-width: 640px) {
