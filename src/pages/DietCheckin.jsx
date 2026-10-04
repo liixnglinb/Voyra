@@ -379,10 +379,17 @@ export default function DietCheckin() {
         <div className="dck-hero">
           <div className="dck-hero-top">
             <div className="dck-hero-w">
-              <span className="dck-hero-num">{heroW != null ? heroW : '—'}</span>
-              <span className="dck-hero-unit">kg</span>
-            </div>
-            <div className="dck-hero-pills">
+              {/* 还没有任何体重记录时不要显示「— kg」：破折号配单位读起来像"0 公斤"。
+                  改成一句明确的引导，指向下方晨间启动卡。 */}
+              {heroW != null ? (
+                <>
+                  <span className="dck-hero-num">{heroW}</span>
+                  <span className="dck-hero-unit">kg</span>
+                </>
+              ) : (
+                <span className="dck-hero-none">记录首次体重</span>
+              )}
+            </div>            <div className="dck-hero-pills">
               <span className="dck-pill-stat">
                 {goalGap != null
                   ? (goalGap > 0 ? <>距目标 <b>{goalGap.toFixed(1)}</b> kg</> : <>已达标</>)
@@ -970,7 +977,13 @@ const DCK_CSS = `
   --dck-shadow: 0 1px 3px rgba(18,38,27,.03), 0 8px 24px -4px rgba(18,38,27,.06);
   --dck-inner: inset 0 1px 0 rgba(255,255,255,.9);
   --dck-ring: 0 0 0 3px rgba(13,130,83,.15);
-  min-height: 100vh; min-height: 100dvh;
+  /* 高度：主站 Layout 把 /diet-checkin 列为全屏路由，外层 .vr-fullscreen-scroll
+     是 height:100% + overflow:auto 负责滚动。这里若写 min-height:100dvh，
+     .dck-app 的盒高会被锁在视口内，而实际内容更高 —— 超出部分既撑不开外层滚动条，
+     也不会被裁掉（外层本来就能滚），实测桌面端表现为「内容到视口底部后直接消失、
+     底栏浮在内容上面」。改为 min-height:100%（配合外层 100% 视口高度），
+     内容高于视口时盒子自然长高，外层滚动容器即可正常滚到底。 */
+  min-height: 100%;
   color: var(--dck-ink);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -1020,6 +1033,8 @@ const DCK_CSS = `
 .dck-hero-num { font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1;
   color: var(--dck-ink); font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
 .dck-hero-unit { font-size: 13px; color: var(--dck-t4); font-weight: 600; }
+/* 无体重记录时的占位：与数字同高但用辅助色，一眼看出是待填而非数值 */
+.dck-hero-none { font-size: 15px; font-weight: 700; color: var(--dck-t3); letter-spacing: .01em; }
 .dck-hero-pills { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .dck-pill-stat { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--dck-t2);
   background: rgba(255,255,255,.85); border: 1px solid var(--dck-line); border-radius: 999px; padding: 5px 10px; }
@@ -1371,12 +1386,42 @@ const DCK_CSS = `
   to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
 @media (min-width: 640px) {
+  /* v7 桌面端布局修复。
+     问题：.dck-main 有 max-width:560px + margin:auto，但 .dck-head（顶栏）与
+     .dck-toast 都没有宽度约束 —— 顶栏因此被拉成 1080px 全宽，标题甩到最左、
+     同步与连胜胶囊甩到最右，中间横跨一整个屏幕的空白；而下方卡片却挤在中间
+     560px 里。两者不在同一条栅格上，视觉上直接散架。
+     修法：把顶栏也收进与 .dck-main 相同的 560px 居中栏，三者左边缘对齐。
+     （v6 为 375px 压缩首屏时把顶栏改成了紧凑 Hero，窄屏没问题；
+      宽屏失去容器约束才暴露出来 —— 属 v6 的回归。） */
+  .dck-head { max-width: 560px; margin: 0 auto; width: 100%; }
+  /* 桌面端首屏不再需要为拇指让位，Hero 回到宽松排布：
+     体重独占一行左对齐，两枚状态胶囊移到下方一行（窄屏时它们与体重同行，
+     在 560px 以上会显得挤在标题右侧、像贴在字边）。 */
+  .dck-hero { margin-top: 16px; }
+  .dck-hero-top { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .dck-hero-num { font-size: 44px; }
+  .dck-hero-pills { gap: 8px; justify-content: flex-start; }
+  .dck-hero-none { font-size: 18px; }
+  .dck-motto { font-size: 12.5px; padding: 9px 12px; margin-top: 12px; }
+
   .dck-tabbar { left: 50%; right: auto; transform: translateX(-50%); width: 440px;
     bottom: 20px; border: 1px solid var(--dck-line); border-radius: 999px; padding: 4px;
     box-shadow: 0 8px 30px rgba(20,32,26,.14); padding-bottom: 4px; }
   .dck-tabbtn { border-radius: 999px; }
   .dck-tabbtn.on { background: var(--dck-soft); }
-  .dck-main { padding-top: 20px; padding-bottom: 140px; }
+  /* 悬浮胶囊离底 20px + 自身约 56px = 76px，再留呼吸余量。
+     原 140px 是给移动端满宽底栏留的，桌面悬浮后这个值让最后一张卡下方空出过大空白。 */
+  .dck-main { padding-top: 20px; padding-bottom: 112px; }
+  /* 触控热区在桌面端收窄：三餐分段与底栏按钮不再需要 44px 拇指高度 */
+  .dck-pill-btn { min-height: 38px; }
+  .dck-tabbtn { min-height: 46px; }
+}
+
+/* 超宽屏（≥1100px）：560px 的窄栏在大屏上会显得局促，
+   放宽到 640px 提升可读性，但不再继续放大——再宽单手操作距离过长。 */
+@media (min-width: 1100px) {
+  .dck-head, .dck-main { max-width: 640px; }
 }
 
 /* 动效降级：prefers-reduced-motion 下全部动效静止 */
