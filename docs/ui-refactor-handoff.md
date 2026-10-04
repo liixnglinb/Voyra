@@ -1,5 +1,7 @@
 # Voyra UI 重构交付说明
 
+> **⚠ 历史记录（2026-10-03 停用）**：本文描述的「软件共用视觉基础层」机制已于 2026-10-03 起整体停用——五款软件各自独立维护 UI，不再有共享层；`design-system/`（software-base.css、legacy-dialogs.js、adapters/*）与 `scripts/sync-software-ui.mjs` 已删除，`npm run ui:sync` 已移除。Token Monitor 更早在 v1.9.13 就自带了 `tokens.css` 单一源。本文仅作历史记录，**不要按本文去操作已删除的文件**；现行规则见维护文档 §2.7。
+
 基线版本：1.0 · 2026-10-02。
 
 后续更新：2026-10-03 已完成第二轮主要页面与异常路径细化。最终 20 项浏览器回归通过；新增复测入口为 npm run test:software-ui。详情及已验证/未验证边界见 ui-refactor-phase2.md。下文「本轮」指第一轮基础层交付，不覆盖后续第二轮记录。

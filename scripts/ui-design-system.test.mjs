@@ -56,7 +56,7 @@ test('All seven landing pages use shared assets exactly once',async()=>{
   }
 });
 test('Shared motion obeys reduced-motion and forced-colors settings',async()=>{
-  for(const name of ['../public/design-system/voyra-foundation.css','../public/design-system/landing-cards.css','../design-system/software-base.css','../src/styles/dashboard-cards.css','../src/styles/design-system.css']){
+  for(const name of ['../public/design-system/voyra-foundation.css','../public/design-system/landing-cards.css','../src/styles/dashboard-cards.css','../src/styles/design-system.css']){
     const text=await readFile(new URL(name,import.meta.url),'utf8');
     assert.ok(text.includes('prefers-reduced-motion'));
     if(!name.includes('foundation'))assert.ok(text.includes('forced-colors'));
