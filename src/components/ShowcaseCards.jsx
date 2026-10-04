@@ -4,7 +4,8 @@ import {
   Sliders, KeyRound, Flame, Star, Terminal, Bot, GitFork, Cpu,
   ShieldCheck, Route, GitCommit, Milk, Moon, Thermometer,
   CheckCircle2, Droplets, Dumbbell, Code2, LineChart, Check,
-  HardDrive, FileCode, Bell, Zap, Layers, BrainCircuit
+  HardDrive, FileCode, Bell, Zap, Layers, BrainCircuit,
+  Globe, CalendarRange, Film, Lightbulb, Shapes, Dices, ClipboardCheck
 } from 'lucide-react';
 
 /* ==========================================================================
@@ -23,7 +24,7 @@ export function CardRelayApi() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">01 / API GATEWAY</span>
-          <h3 className="sc-title">Voyra Relay API</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Globe size={18} strokeWidth={1.9} /></span><h3 className="sc-title">Voyra Relay API</h3></div>
           <p className="sc-desc">统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。</p>
         </div>
       </header>
@@ -101,7 +102,7 @@ export function CardScheduleHub() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">02 / WORKSPACE</span>
-          <h3 className="sc-title">日程中心</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><CalendarRange size={18} strokeWidth={1.9} /></span><h3 className="sc-title">日程中心</h3></div>
           <p className="sc-desc">课程表与日历日程二合一，每周课程与每日安排一站管理。</p>
         </div>
       </header>
@@ -183,7 +184,7 @@ export function CardPelicanGallery() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">03 / BENCHMARK SHOW</span>
-          <h3 className="sc-title">AI 模型对比秀</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Film size={18} strokeWidth={1.9} /></span><h3 className="sc-title">AI 模型对比秀</h3></div>
           <p className="sc-desc">同一题交给 16 个 AI 模型分别生成，效果一页对比。</p>
         </div>
       </header>
@@ -270,7 +271,7 @@ export function CardPromptLibrary() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">04 / PROMPT HUB</span>
-          <h3 className="sc-title">提示词库</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Lightbulb size={18} strokeWidth={1.9} /></span><h3 className="sc-title">提示词库</h3></div>
           <p className="sc-desc">把常用指令、模板和使用场景放在一个随时可检索的位置。</p>
         </div>
       </header>
@@ -325,7 +326,7 @@ export function CardUIKit() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">05 / DESIGN SYSTEM</span>
-          <h3 className="sc-title">组件图鉴</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Shapes size={18} strokeWidth={1.9} /></span><h3 className="sc-title">组件图鉴</h3></div>
           <p className="sc-desc">网页与后台常见界面组件：名称、外观、场景与原理一页讲清。</p>
         </div>
       </header>
@@ -394,7 +395,7 @@ export function CardSkillHub() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">06 / GITHUB HUB</span>
-          <h3 className="sc-title">Skill 热榜</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Sparkles size={18} strokeWidth={1.9} /></span><h3 className="sc-title">Skill 热榜</h3></div>
           <p className="sc-desc">GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。</p>
         </div>
       </header>
@@ -470,7 +471,7 @@ export function CardAgentSkills() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">07 / AUTONOMOUS WORKFLOW</span>
-          <h3 className="sc-title">AI Agent</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Bot size={18} strokeWidth={1.9} /></span><h3 className="sc-title">AI Agent</h3></div>
           <p className="sc-desc">汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。</p>
         </div>
       </header>
@@ -550,7 +551,7 @@ export function CardMindMap() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">08 / THOUGHT TREE</span>
-          <h3 className="sc-title">思维导图</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Route size={18} strokeWidth={1.9} /></span><h3 className="sc-title">思维导图</h3></div>
           <p className="sc-desc">将学习与创作中的线索展开为可继续补充的结构。</p>
         </div>
       </header>
@@ -615,7 +616,7 @@ export function CardBabyCare() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">09 / FAMILY CARE</span>
-          <h3 className="sc-title">宝宝护理</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Milk size={18} strokeWidth={1.9} /></span><h3 className="sc-title">宝宝护理</h3></div>
           <p className="sc-desc">记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。</p>
         </div>
       </header>
@@ -704,7 +705,7 @@ export function CardDrawPicker() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">10 / LUCKY DRAW</span>
-          <h3 className="sc-title">随机抽人</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Dices size={18} strokeWidth={1.9} /></span><h3 className="sc-title">随机抽人</h3></div>
           <p className="sc-desc">课堂点名、活动抽奖随机抽取，支持花名册识别。</p>
         </div>
       </header>
@@ -760,7 +761,7 @@ export function CardDietCheckin() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">11 / HEALTH & NUTRITION</span>
-          <h3 className="sc-title">饮食打卡</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><ClipboardCheck size={18} strokeWidth={1.9} /></span><h3 className="sc-title">饮食打卡</h3></div>
           <p className="sc-desc">三餐执行、饮水与力量训练每日打卡，多端同步。</p>
         </div>
       </header>
@@ -845,7 +846,7 @@ export function CardMathmodelSkill() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">SKILL / CUMCM WORKFLOW</span>
-          <h3 className="sc-title">数学建模 Skill</h3>
+          <div className="sc-title-row"><span className="sc-brand sc-brand--glyph" aria-hidden="true"><Star size={18} strokeWidth={1.9} /></span><h3 className="sc-title">数学建模 Skill</h3></div>
           <p className="sc-desc">国赛（CUMCM）数学建模十阶段工作流，结构化工程推进。</p>
         </div>
       </header>
@@ -908,7 +909,7 @@ export function CardModelflow() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">APP 01 / LOCAL AGENT PIPELINE</span>
-          <h3 className="sc-title">织流 Jacquard</h3>
+          <div className="sc-title-row"><span className="sc-brand" aria-hidden="true"><img src="/modelflow/logo-256.png" alt="" width="34" height="34" loading="lazy" decoding="async"/></span><h3 className="sc-title">织流 Jacquard</h3></div>
           <p className="sc-desc">本地智能体流水线工作台：流程可编辑，交给本机 CLI 逐步执行，产物实时落盘。</p>
         </div>
       </header>
@@ -967,7 +968,7 @@ export function CardCheckin() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">APP 02 / ATTENDANCE AUTOMATION</span>
-          <h3 className="sc-title">学习通自动签到助手</h3>
+          <div className="sc-title-row"><span className="sc-brand" aria-hidden="true"><img src="/checkin/favicon.png" alt="" width="34" height="34" loading="lazy" decoding="async"/></span><h3 className="sc-title">学习通自动签到助手</h3></div>
           <p className="sc-desc">桌面端常驻后台，自动监听课程签到活动，支持普通、位置、二维码三种签到。</p>
         </div>
       </header>
@@ -1026,7 +1027,7 @@ export function CardLocalToolbox() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">APP 03 / DISK CLEANUP</span>
-          <h3 className="sc-title">磁盘清理助手</h3>
+          <div className="sc-title-row"><span className="sc-brand" aria-hidden="true"><img src="/local-toolbox/favicon.png" alt="" width="34" height="34" loading="lazy" decoding="async"/></span><h3 className="sc-title">磁盘清理助手</h3></div>
           <p className="sc-desc">Windows 磁盘清理工作台：扫描、分类与目录分析一站完成，路径预览后再确认清理。</p>
         </div>
       </header>
@@ -1090,7 +1091,7 @@ export function CardBillTrace() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">APP 04 / AUTO EXPENSE TRACKER</span>
-          <h3 className="sc-title">账迹 BillTrace</h3>
+          <div className="sc-title-row"><span className="sc-brand" aria-hidden="true"><img src="/billtrace/icon-512.png" alt="" width="34" height="34" loading="lazy" decoding="async"/></span><h3 className="sc-title">账迹 BillTrace</h3></div>
           <p className="sc-desc">Android 自动记账：付款后 2 秒自动入库、智能分类，数据本地加密，全程零打扰。</p>
         </div>
       </header>
@@ -1162,7 +1163,7 @@ export function CardTokenMonitor() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">APP 05 / USAGE OBSERVATORY</span>
-          <h3 className="sc-title">Token Monitor</h3>
+          <div className="sc-title-row"><span className="sc-brand" aria-hidden="true"><img src="/token-monitor/favicon.png" alt="" width="34" height="34" loading="lazy" decoding="async"/></span><h3 className="sc-title">Token Monitor</h3></div>
           <p className="sc-desc">本机 AI 编程工具用量看板：Token、请求与缓存明细一目了然，套餐与未定价明确区分。</p>
         </div>
       </header>
@@ -1236,7 +1237,7 @@ export function CardZenew() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">APP 06 / FSRS SCHEDULING</span>
-          <h3 className="sc-title">知新 Zenew</h3>
+          <div className="sc-title-row"><span className="sc-brand" aria-hidden="true"><img src="/zenew/icon.png" alt="" width="34" height="34" loading="lazy" decoding="async"/></span><h3 className="sc-title">知新 Zenew</h3></div>
           <p className="sc-desc">把大学课程变成记得住的练习：词书 + AI 知识卡片，四选一学习与 FSRS 复习调度。</p>
         </div>
       </header>
@@ -1291,7 +1292,7 @@ export function CardAIChronicle() {
       <header className="sc-card-head">
         <div className="sc-head-left">
           <span className="sc-no">APP 07 / AI OBSERVATORY</span>
-          <h3 className="sc-title">AI 轨迹</h3>
+          <div className="sc-title-row"><span className="sc-brand" aria-hidden="true"><img src="/ai-chronicle/icon.png" alt="" width="34" height="34" loading="lazy" decoding="async"/></span><h3 className="sc-title">AI 轨迹</h3></div>
           <p className="sc-desc">本机优先的 AI 工作观测台：自动解析 12 个数据源，整理成每日日报、历史档案与趋势看板。</p>
         </div>
       </header>

@@ -2517,3 +2517,74 @@ body{
     padding: 24px 16px 64px;
   }
 }
+
+/* ════════════════════════════════════════════════════════════
+   应用卡真实软件图标（.sc-brand）
+   借鉴 oiloil 的 .ptitle(.pbrand img + h3) 同行结构，材质口径沿用站内
+   .vr-icon-box：1px 描边 + 柔和投影 + 圆角，避免"裸贴一张图"。
+   源图全部 ≥160px，显示 34px（2x 需 68px），不会糊。
+   ════════════════════════════════════════════════════════════ */
+.sc-card .sc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.sc-card .sc-brand {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(27, 27, 27, 0.10);
+  border-radius: 9px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 20, 20, 0.05), 0 6px 14px -10px rgba(20, 20, 20, 0.28);
+  overflow: hidden;
+  transition: transform 0.32s var(--sc-ease), box-shadow 0.32s var(--sc-ease), border-color 0.2s ease;
+}
+
+.sc-card .sc-brand img {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+/* 只有真鼠标设备才做抬升，触控端不粘连（与模块三同一判据） */
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .sc-brand {
+    transform: translateY(-2px) scale(1.04);
+    border-color: var(--p-line, var(--sc-border-hover));
+    box-shadow: 0 2px 4px rgba(20, 20, 20, 0.07), 0 12px 22px -12px rgba(20, 20, 20, 0.34);
+  }
+}
+
+/* 图标与标题同行后，窄屏把图标收到 30px，保住舞台高度 */
+@media (max-width: 768px) {
+  .sc-card .sc-brand { width: 30px; height: 30px; border-radius: 8px; }
+  .sc-card .sc-brand img { width: 30px; height: 30px; }
+  .sc-card .sc-title-row { gap: 9px; }
+}
+
+/* 减少动态效果时不位移 */
+@media (prefers-reduced-motion: reduce) {
+  .sc-card .sc-brand { transition: none; }
+  .sc-card:hover .sc-brand { transform: none; }
+}
+
+/* 图标与标题同行后窄屏头部变高，收回 .sc-card-head 的下外边距（12→6px）
+   还回被占用的竖向空间，保住规格要求的"舞台至少 220px 真实绘制空间" */
+@media (max-width: 768px) {
+  .sc-card .sc-card-head { margin-bottom: 6px; }
+}
+
+/* 产品/Skill 卡的图形瓦片：直接吃规格 CSS 里每张卡自己的主题令牌
+   （.theme-* 上的 --p-accent / --p-soft / --p-line），让 19 张卡各有语义色。
+   注意：语义色只用于图标描边与色块底，不承载任何小字（小字仍是 --sc-text-main/sub）。 */
+.sc-card .sc-brand--glyph {
+  color: var(--p-accent, var(--sc-text-main));
+  background: var(--p-soft, #fff);
+  border-color: var(--p-line, rgba(27, 27, 27, 0.10));
+}
