@@ -10,12 +10,7 @@ import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
 import { PELICAN_MODEL_COUNT } from './PelicanGallery';
 import useCardEffects from '../hooks/useCardEffects';
-import {
-  CardRelayApi, CardScheduleHub, CardPelicanGallery, CardPromptLibrary, CardUIKit,
-  CardSkillHub, CardAgentSkills, CardMindMap, CardBabyCare, CardDrawPicker,
-  CardDietCheckin, CardMathmodelSkill, CardModelflow, CardCheckin, CardLocalToolbox,
-  CardBillTrace, CardTokenMonitor, CardZenew, CardAIChronicle,
-} from '../components/ShowcaseCards';
+import { ProductCard, SHOWCASE_GROUPS, CARD_BY_ID } from '../components/ShowcaseCards';
 import '../styles/dashboard-cards.css';
 
 const FEATURED = [
@@ -870,17 +865,18 @@ function ShowcaseCard({ item, index, application = false, themeClass = '', lead 
 }
 
 /* 规格 19 张橱窗卡（.sc-card 体系）。仍套在首页现有的纸片滚动 / 渐入骨架里，
-   所以 data-roll 与 data-reveal 的层级保持不变，只把卡片本体换成规格实现。 */
-const SPEC_CARDS = {
-  products: [CardRelayApi, CardScheduleHub, CardPelicanGallery, CardPromptLibrary, CardUIKit, CardSkillHub, CardAgentSkills, CardMindMap, CardBabyCare, CardDrawPicker, CardDietCheckin],
-  skills: [CardMathmodelSkill],
-  apps: [CardModelflow, CardCheckin, CardLocalToolbox, CardBillTrace, CardTokenMonitor, CardZenew, CardAIChronicle],
-};
-
-function SpecCardSlot({ Comp, index }) {
+   所以 data-roll 与 data-reveal 的层级保持不变，只把卡片本体换成规格实现。
+   方案 A 改造后：这里存的是卡片 id 字符串，实际内容在 src/data/showcase-cards.js，
+   由 ShowcaseCards 里的 ProductCard 统一渲染。 */
+function SpecCardSlot({ id, index }) {
+  /* 手机端换两行以内的短文案（APP_SHORT），把竖向空间还给卡片内容；
+     完整描述留在 title 里，悬停/读屏仍可读到。
+     hook 必须在这里调用 —— SpecCardSlot 是模块级函数，自己就是组件。 */
+  const isMobile = useIsMobileHome();
+  const card = CARD_BY_ID[id];
   return <div className="vr-roll-wrap sc-roll-wrap" data-roll>
     <div className="vr-card-entry sc-card-entry" data-reveal style={{ '--reveal-delay': `${Math.min(index * .04, .2)}s` }}>
-      <Comp />
+      {card ? <ProductCard card={card} isMobile={isMobile} shortDesc={APP_SHORT[card.href]} /> : null}
     </div>
   </div>;
 }
@@ -888,29 +884,18 @@ function SpecCardSlot({ Comp, index }) {
 function ProductPanel() {
   return <div className="vr-section-wrapper">
     <div className="vr-section-watermark" aria-hidden="true">FEATURED</div>
-    <div className="vr-product-list">{SPEC_CARDS.products.map((Comp, index) => <SpecCardSlot key={index} Comp={Comp} index={index} />)}</div>
+    <div className="vr-product-list">{SHOWCASE_GROUPS.products.map((id, index) => <SpecCardSlot key={id} id={id} index={index} />)}</div>
   </div>;
 }
 
-/* 数学建模 Skill 转成统一卡片数据，复用 ShowcaseCard 渲染，融入栅格 */
-const MATHMODEL_ITEM = {
-  to: MATHMODEL_SKILL.href,
-  external: true,
-  name: MATHMODEL_SKILL.name,
-  desc: MATHMODEL_SKILL.tagline,
-  cta: MATHMODEL_SKILL.cta,
-  Icon: Star,
-  art: 'mathmodel',
-};
-
 function SkillsPanel() {
   return <div className="vr-product-list vr-panel-stagger" data-roll>
-    <SpecCardSlot Comp={SPEC_CARDS.skills[0]} index={0} />
+    {SHOWCASE_GROUPS.skills.map((id, index) => <SpecCardSlot key={id} id={id} index={index} />)}
   </div>;
 }
 
 function AppsPanel() {
-  return <div className="vr-product-list">{SPEC_CARDS.apps.map((Comp, index) => <SpecCardSlot key={index} Comp={Comp} index={index} />)}</div>;
+  return <div className="vr-product-list">{SHOWCASE_GROUPS.apps.map((id, index) => <SpecCardSlot key={id} id={id} index={index} />)}</div>;
 }
 
 function HomeTabs({ activeTab, onChange }) {
