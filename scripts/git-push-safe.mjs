@@ -108,6 +108,15 @@ const patched = JSON.parse(gh(['api', `${API}/git/refs/heads/${BRANCH}`, '--meth
   { sha: commit.sha, force: false }));
 say(`✓ ref ${BRANCH} → ${patched.object.sha.slice(0, 8)}`);
 
+/* API 推送不会更新本地的远端跟踪引用，不刷新的话 git status 会一直显示一个
+   幻影"未推 1"（远端其实已经有了）。这里把 origin/<branch> 指到刚推上去的提交。 */
+try {
+  git(['update-ref', `refs/remotes/origin/${BRANCH}`, commit.sha]);
+  say(`✓ 本地跟踪引用 origin/${BRANCH} 已同步（避免幻影"未推"）`);
+} catch (e) {
+  say(`  （本地跟踪引用刷新失败，可手动 git fetch 修正：${String(e).slice(0, 60)}）`);
+}
+
 if (same) {
   say('✓ 本地与远端 SHA 一致，无需对齐');
 } else {
