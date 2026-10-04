@@ -95,6 +95,14 @@ h1 em{font-style:normal;background:linear-gradient(100deg,#0BA360 10%,#17D38C 55
 .src-note .swap{font-size:12.5px;font-weight:700;color:var(--brand);text-decoration:underline;text-underline-offset:3px;background:none;border:none;padding:0;cursor:pointer}
 .dl-hint{margin-top:10px;font-size:12.5px;color:var(--muted);line-height:1.7}
 .dl-hint a{color:var(--brand);font-weight:700}
+/* 微信内置浏览器引导：APK 在微信内无法安装，这条提示是唯一能救转化的地方 */
+.wx-tip{margin-top:12px;padding:13px 15px;border:1px solid rgba(5,150,105,.24);border-left:3px solid var(--brand);
+  border-radius:10px;background:rgba(5,150,105,.06);text-align:left}
+.wx-tip b{display:block;font-size:13.5px;color:var(--fg);margin-bottom:5px}
+.wx-tip span{font-size:12.5px;color:var(--muted);line-height:1.7}
+.wx-tip kbd{display:inline-block;padding:1px 7px;margin:0 2px;border:1px solid rgba(0,0,0,.16);
+  border-bottom-width:2px;border-radius:5px;background:#fff;font:600 12px/1.6 var(--mono);color:var(--fg)}
+.wx-tip span b{color:var(--brand)}
 
 /* ---------- 手机（实时记账模拟） ---------- */
 .phone-wrap{position:relative;display:flex;justify-content:center}
@@ -314,6 +322,12 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
       </div>
       <div class="src-note" id="srcNote"><span class="dot"></span>当前线路：<b>国内镜像</b></div>
       <div class="dl-hint" id="dlHint">APK 约 0.5 MB · 装完按首页两步提示开启权限</div>
+      <!-- 微信内置浏览器无法安装 APK：点下载只会静默失败或提示「请在浏览器打开」。
+           只在微信 / QQ 内置浏览器里插入这段引导，其余环境不占位、不干扰。 -->
+      <div class="wx-tip" id="wxTip" hidden>
+        <b>在微信里点下载装不上？</b>
+        <span>点右上角 <kbd>···</kbd> →<b>「在浏览器打开」</b>，再点下载即可安装。</span>
+      </div>
       <div class="hero-meta">
         <span class="meta-chip"><b>Android 8.0+</b></span>
         <span class="meta-chip">真机可用</span>
@@ -514,6 +528,15 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     try{localStorage.setItem(KEY,pick);localStorage.setItem(KEYAT,String(Date.now()));}catch(e){}
     if(pick!==cur)apply(pick,'已自动选最快的');
   });
+})();
+
+/* ---------- 微信 / QQ 内置浏览器：APK 装不上，先给出路 ---------- */
+(function(){
+  var tip=document.getElementById('wxTip');
+  if(!tip)return;
+  var ua=navigator.userAgent||'';
+  /* MicroMessenger=微信，QQ/ TIM=QQ 系内置浏览器。QQ 同样拦截 APK 安装。 */
+  if(/MicroMessenger|\bQQ\//i.test(ua)) tip.hidden=false;
 })();
 
 /* ---------- 下载没反应时的备用线路 ---------- */

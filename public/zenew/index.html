@@ -183,6 +183,15 @@ h1 em{font-style:normal;color:var(--gold)}
 .step b{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:500;letter-spacing:1.5px;display:block;margin-bottom:8px}
 .step p{font-size:13.5px;color:var(--t2)}
 .step p strong{color:var(--t1)}
+/* 邀请码获取通道：内测唯一的准入门槛，不能只写「需邀请码」而不给出路 */
+.inv-link{display:inline-block;margin-top:8px;color:var(--gold);font-size:13px;font-weight:600;
+  text-decoration:none;border-bottom:1px solid rgba(212,175,110,.4);padding-bottom:1px;transition:opacity .2s}
+.inv-link:hover{opacity:.75}
+.inv-note{margin-top:28px;padding:20px 22px;border:1px solid var(--line);border-left:2px solid var(--gold);
+  border-radius:12px;background:rgba(212,175,110,.05)}
+.inv-note b{display:block;font-size:13.5px;color:var(--t1);margin-bottom:6px}
+.inv-note p{font-size:13px;line-height:1.75;color:var(--t2)}
+.inv-note p b{color:var(--gold);font-weight:600}
 /* 页脚 */
 footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font-size:12.5px}
 .foot-in{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
@@ -429,8 +438,15 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
     </div>
     <div class="steps">
       <div class="step"><b>STEP 01</b><p><strong>安装一次</strong><br>下载 Zenew-Setup.exe 双击安装，无需管理员权限。</p></div>
-      <div class="step"><b>STEP 02</b><p><strong>凭邀请码开通</strong><br>注册时填入邀请码即可开通账号，一次一码。</p></div>
+      <div class="step"><b>STEP 02</b><p><strong>凭邀请码开通</strong><br>注册时填入邀请码即可开通账号，一次一码。<br><a class="inv-link" href="mailto:lixingli1024@qq.com?subject=Zenew%20%E9%82%80%E8%AF%B7%E7%A0%81%E7%94%B3%E8%AF%B7">没有邀请码？点此向作者申请 →</a></p></div>
       <div class="step"><b>STEP 03</b><p><strong>每天打开</strong><br>挑一本词书或生成课程卡片，跟着「新学 / 复习」队列走；完成后在统计里看记忆增长。</p></div>
+    </div>
+    <!-- 邀请码是本页唯一的付费/准入门槛，前置到 Hero 下方：原先只在「三步开始」的
+         STEP 02 里出现「需邀请码开通账号」，但没说去哪儿弄，下载后直接断链。 -->
+    <div class="inv-note">
+      <b>关于邀请码</b>
+      <p>Zenew 目前是<b>邀请制内测</b>：邀请码用于控制服务端 AI 生成额度，不收费、不影响本地功能。
+         没码就直接发邮件说明用途（课程 / 背单词 / 考纲名），作者会回一个。</p>
     </div>
   </section>
 </main>

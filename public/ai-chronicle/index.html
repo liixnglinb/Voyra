@@ -237,6 +237,10 @@
       .source-chip{padding:12px 13px}
       .section{padding:56px 0}
       .dl-card{padding:22px 18px}
+      /* 触控靶区：顶栏 logo 原本只有图标高度（约 40px），窄屏是拇指唯一能稳定够到的
+         导航入口，给到 44。导航锚点链接在 960 断点已整组隐藏，不受此影响。 */
+      .brand{min-height:44px}
+      .faq summary{min-height:44px}
     }
     @media (prefers-reduced-motion:reduce){
       *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}

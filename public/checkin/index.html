@@ -6,8 +6,8 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>学习通自动签到助手 · 让签到，成为习惯</title>
-<meta name="description" content="学习通自动签到助手：桌面端常驻后台，自动监听课程签到活动。一句话，自动签到。">
+<title>学习通自动签到助手 · 三种签到全覆盖，从此不再漏签</title>
+<meta name="description" content="学习通自动签到助手：桌面端常驻后台，普通签到、位置签到、二维码签到三种类型自动识别并完成。Windows 10/11，免费开源。">
 <link rel="icon" type="image/png" sizes="256x256" href="favicon.png?v=13">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon.png?v=13">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,10 +54,10 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 /* 键盘焦点可见（对齐软件内的暖橙焦点环） */
 :focus-visible{outline:none;box-shadow:0 0 0 3px rgba(242,123,52,.28);border-radius:8px}
 
-/* 尊重系统的「减弱动态效果」：关掉视频与入场动画，别让动画成为负担 */
+/* 尊重系统的「减弱动态效果」：关掉入场动画与背景漂移，别让动画成为负担
+   （原 .hero-video 规则随视频一同移除；新背景是静态渐变，reduce 下本就无动画） */
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
-  .hero-video{display:none}
   .reveal{opacity:1;transform:none;transition:none}
   .hero-deco,.scroll-hint,.pill::before{animation:none;transition:none}
 }
@@ -147,9 +147,25 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 .nav-dl:active{transform:scale(.98)}
 .nav.scrolled .nav-dl{height:34px;padding:0 18px;font-size:13px}
 
-/* ============ Hero（视频背景） ============ */
+/* ============ Hero（纯 CSS 背景，无视频） ============ */
 .hero{position:relative;width:100%;height:100vh;min-height:640px;max-height:900px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;filter:sepia(.42) saturate(1.35) hue-rotate(-26deg) brightness(1.03)}
+/* 用多层渐变 + 网格纹理还原原视频的暖绿田园调，零字节、零解码、零主线程开销。
+   基调保持浅（与下方 .download-info 的浅色区块无缝衔接），文字仍为深色 --ink。
+   顶部略深以托住吸顶导航，中段透出绿意，底部交给 overlay 渐白。 */
+.hero-bg{position:absolute;inset:0;z-index:0;background:
+  radial-gradient(110% 70% at 20% 6%,rgba(122,168,120,.42),transparent 60%),
+  radial-gradient(85% 65% at 86% 18%,rgba(242,123,52,.20),transparent 58%),
+  radial-gradient(95% 80% at 50% 100%,rgba(200,220,196,.55),transparent 64%),
+  linear-gradient(168deg,#E8F0E2 0%,#DCE9D6 34%,#EFF2E4 62%,#F6F1E7 100%);
+  background-size:cover,cover,cover,100% 100%;}
+.hero-bg::after{content:'';position:absolute;inset:0;opacity:.55;
+  background-image:repeating-linear-gradient(0deg,rgba(44,51,59,.022) 0 1px,transparent 1px 48px),
+                   repeating-linear-gradient(90deg,rgba(44,51,59,.022) 0 1px,transparent 1px 48px);}
+@media (prefers-reduced-motion:no-preference){
+  .hero-bg{animation:bgDrift 26s ease-in-out infinite alternate}
+  @keyframes bgDrift{from{background-position:0% 50%,0% 50%,0% 50%,0% 0}
+    to{background-position:0% 50%,0% 50%,0% 50%,0% 100%}}
+}
 .hero-overlay{position:absolute;inset:0;z-index:1;
   background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,rgba(255,255,255,.05) 40%,rgba(255,255,255,.3) 70%,rgba(255,255,255,1) 100%)}
 .hero-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 32px;max-width:800px;margin-top:-40px}
@@ -158,7 +174,10 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
   margin-bottom:28px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 2px 12px rgba(0,0,0,.06);
   animation:fadeInUp .8s cubic-bezier(.22,1,.36,1) .2s both}
 .hero-kicker i{width:8px;height:8px;border-radius:50%;background:var(--brand);font-style:normal;animation:pulse 1.5s ease-in-out infinite}
-.hero h1{font-size:88px;font-weight:900;line-height:1.08;letter-spacing:-.03em;color:var(--ink);margin-bottom:24px;
+/* H1 改为两行短句（「三种签到全覆盖，/ 从此不再漏签」）后，最长一行 8 个汉字。
+   88px × 8 ≈ 704px，在 800px 的 .hero-content 内虽能放下但两侧余量太窄，
+   窄一点的桌面（1100–1280）就会顶到 padding；收到 76px 留出安全余量。 */
+.hero h1{font-size:76px;font-weight:900;line-height:1.1;letter-spacing:-.03em;color:var(--ink);margin-bottom:24px;
   animation:fadeInUp .8s cubic-bezier(.22,1,.36,1) .35s both}
 .hero h1 .brand-text{background:linear-gradient(135deg,var(--brand),var(--brand-deep));-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero-sub{font-size:19px;line-height:1.7;color:var(--muted-2);margin-bottom:44px;max-width:560px;font-weight:500;
@@ -254,6 +273,14 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
 .req-item-icon svg{width:20px;height:20px;color:var(--brand)}
 .req-item b{display:block;font-size:15px;font-weight:700;margin-bottom:6px;color:var(--ink)}
 .req-item span{font-size:12px;color:var(--muted);line-height:1.6}
+/* 三类型解析卡里的能力小标签：与 .section-tag 同源但更轻，横向成组折行 */
+.req-item .req-chip{display:inline-block;margin:12px 6px 0 0;padding:5px 11px;border-radius:999px;
+  font-size:12px;font-weight:600;line-height:1.4;color:var(--brand-ink);
+  background:rgba(242,123,52,.09);border:1px solid rgba(242,123,52,.18)}
+@media(max-width:767px){
+  /* 触控靶区：卡片内的锚点/标签在窄屏按可点元素给到 44 高 */
+  .req-item .req-chip{display:inline-flex;align-items:center;min-height:44px;padding:0 14px}
+}
 
 /* ============ 免责声明 ============ */
 .disclaimer{padding:50px 0;background:transparent}
@@ -341,6 +368,7 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
       <b>签到助手</b>
     </div>
     <div class="nav-links">
+      <a href="#types">签到模式</a>
       <a href="#download">下载</a>
       <a href="#requirements">系统要求</a>
       <a href="https://github.com/liixnglinb/Superstar-checkin" target="_blank" rel="noreferrer">GitHub</a>
@@ -352,16 +380,14 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
   </div>
 </nav>
 
-<!-- Hero（视频背景） -->
+<!-- Hero（纯 CSS 背景：原 301KB bg-green.mp4 已移除，弱网/移动端不再白屏） -->
 <section class="hero">
-  <video class="hero-video" autoplay loop muted playsinline poster="">
-    <source src="bg-green.mp4" type="video/mp4">
-  </video>
+  <div class="hero-bg" aria-hidden="true"></div>
   <div class="hero-overlay"></div>
   <div class="hero-deco hero-deco-1"></div><div class="hero-deco hero-deco-2"></div><div class="hero-content">
     <div class="hero-kicker"><i></i>桌面端常驻后台 · 自动监听签到</div>
-    <h1>让签到，<span class="brand-text">成为习惯</span></h1>
-    <p class="hero-sub">学习通自动签到助手，安装后常驻系统托盘，后台静默运行。普通签到、位置签到、二维码签到，三种类型全覆盖，从此不再错过。</p>
+    <h1>三种签到全覆盖，<br><span class="brand-text">从此不再漏签</span></h1>
+    <p class="hero-sub">安装后常驻系统托盘，后台静默运行。普通签到、位置签到、二维码签到——三种类型自动识别、自动响应，不用你守着手机点确认。</p>
     <div class="hero-buttons">
       <a href="https://github.com/liixnglinb/Superstar-checkin/releases/latest/download/SuperstarCheckin-Setup.exe" class="pill">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -378,6 +404,57 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
   <div class="scroll-hint">
     <span>SCROLL</span>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
+
+<!-- 三种签到类型解析：原先只在 intro.html，主页是纯说明空壳、转化断崖。
+     复用本页 .req-* 视觉体系（暖橙 + 圆角卡 + gloss），文案与 intro.html 保持同源。
+     每张卡给一个可自查的「怎么做到的」要点，末尾统一指回 intro.html 看完整演示。 -->
+<section class="requirements reveal" id="types">
+  <div class="req-inner" style="text-align:center">
+    <div class="section-tag reveal reveal-delay-1">HOW IT WORKS</div>
+    <h2 class="reveal reveal-delay-1" style="font-size:32px;letter-spacing:-.02em;margin-bottom:10px">三种签到，分别是怎么自动完成的</h2>
+    <p class="reveal reveal-delay-1" style="max-width:620px;margin:0 auto 24px;font-size:15px;color:var(--muted-2);line-height:1.75">
+      签到分三种完全不同的形式，软件对每一种都有对应的自动处理路径——不需要你按类型手动切换，也不需要你守着。
+    </p>
+    <div class="req-grid" style="margin-top:24px;text-align:left">
+      <div class="req-item reveal reveal-delay-1" style="text-align:left;padding:26px 22px">
+        <div class="req-item-icon" style="margin:0 0 14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <b style="font-size:16px">普通签到</b>
+        <span style="display:block;font-size:13.5px;color:var(--muted-2);line-height:1.75;margin-top:8px">
+          检测到签到活动后自动提交，零手动操作。老师一发签到，软件在后台静默完成，你甚至不用打开学习通 App。
+        </span>
+        <span class="req-chip">IM 实时通道 + 轮询兜底</span>
+        <span class="req-chip">结果实时推送通知</span>
+      </div>
+      <div class="req-item reveal reveal-delay-2" style="text-align:left;padding:26px 22px">
+        <div class="req-item-icon" style="margin:0 0 14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <b style="font-size:16px">位置签到</b>
+        <span style="display:block;font-size:13.5px;color:var(--muted-2);line-height:1.75;margin-top:8px">
+          自动读取老师发布的坐标，以老师位置为中心 10 米半径内生成签到点，模拟真实位置提交——你在宿舍也能完成教室的位置签到。
+        </span>
+        <span class="req-chip">10 米精度内生成签到点</span>
+        <span class="req-chip">常用位置一键收藏</span>
+      </div>
+      <div class="req-item reveal reveal-delay-3" style="text-align:left;padding:26px 22px">
+        <div class="req-item-icon" style="margin:0 0 14px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14h1M14 20h1M18 20h3M20 17v3"/></svg>
+        </div>
+        <b style="font-size:16px">二维码签到</b>
+        <span style="display:block;font-size:13.5px;color:var(--muted-2);line-height:1.75;margin-top:8px">
+          把任意签到二维码图片直接拖进软件窗口，自动识别 enc 参数并完成签到。二维码会随时间更新，更新后拖入新码即可。
+        </span>
+        <span class="req-chip">拖拽图片即签，免手输</span>
+        <span class="req-chip">自动识别 enc 加密参数</span>
+      </div>
+    </div>
+    <p class="reveal reveal-delay-3" style="margin-top:22px;font-size:13.5px">
+      <a href="intro.html" style="color:var(--brand);font-weight:600;text-decoration:none;border-bottom:1px solid rgba(242,123,52,.35);padding-bottom:1px">想看每种签到的完整界面演示 → 软件介绍</a>
+    </p>
   </div>
 </section>
 
@@ -509,9 +586,14 @@ body{font-feature-settings:"tnum" 1,"cv11" 1;font-variant-numeric:tabular-nums}
   function onScroll(){
     const scrollY = window.scrollY || window.pageYOffset;
     
-    // 公告横幅渐隐：0-80px 内从 1 渐隐到 0，同时上移
+    /* 公告横幅渐隐 + 上移。
+       渐隐终点必须与导航的收缩阈值（scrollY > 60 → .scrolled → nav 顶到 top:16px）
+       对齐：公告条是 fixed top:0、高 40px，导航 scrolled 后占据 16–66px，两者重叠。
+       公告 z-index(101) 高于导航(100)，若渐隐没走完，深色半透明带会压在胶囊导航上沿。
+       原先 0–80px 渐隐，而导航 60px 就已上移 → 60–80px 这段窗口正好压上。收到 0–60px，
+       让公告在导航开始移动的同一帧就已完全退场。 */
     if(announce){
-      const opacity = Math.max(0, 1 - scrollY / 80);
+      const opacity = Math.max(0, 1 - scrollY / 60);
       announce.style.opacity = opacity;
       announce.style.transform = 'translateY(' + (-scrollY * 0.5) + 'px)';
       announce.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
