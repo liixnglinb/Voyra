@@ -46,10 +46,17 @@
         var portable = (assets || []).find(function (a) { return /Portable\.exe$/i.test(a.name || ''); });
         if (setup) {
           var s = fmtSize(setup.size);
-          document.getElementById('setup-size').textContent = s;
-          document.getElementById('hero-size').textContent = s + ' MB';
+          /* 代理取不到 GitHub API 时走 redirect 模式，assets[].size 恒为 0，
+             这时必须留着 HTML 里的静态兜底，否则页面上会印出「null MB」 */
+          if (s) {
+            document.getElementById('setup-size').textContent = s;
+            document.getElementById('hero-size').textContent = s + ' MB';
+          }
         }
-        if (portable) document.getElementById('portable-size').textContent = fmtSize(portable.size);
+        if (portable) {
+          var ps = fmtSize(portable.size);
+          if (ps) document.getElementById('portable-size').textContent = ps;
+        }
         if (setup && setup.url) setLinks('Setup');
         if (portable && portable.url) setLinks('Portable');
       }
