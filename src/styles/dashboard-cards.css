@@ -1307,6 +1307,20 @@ animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
+/* ④ 视口门控（复盘 oiloil 源码后的补课）：oiloil 用 IntersectionObserver
+   驱动 data-demo-active，离开视口即 paused —— 演示只在眼前播放，所以
+   「活但不乱」。本站 useCardEffects 本就维护 data-card-visible 标记，
+   现在把它接到舞台动画上：离屏全暂停（含入场动画，滚到眼前才首次播放），
+   页面切后台同步暂停。 */
+.vr-card-entry:not([data-card-visible]) .sc-stage,
+.vr-card-entry:not([data-card-visible]) .sc-stage *,
+.vr-card-entry:not([data-card-visible]) .sc-stage *::after,
+.vr-card-entry:not([data-card-visible]) .sc-stage *::before { animation-play-state: paused !important; }
+
+.vr-home[data-page-hidden] .sc-stage,
+.vr-home[data-page-hidden] .sc-stage *,
+.vr-home[data-page-hidden] .sc-stage *::after,
+.vr-home[data-page-hidden] .sc-stage *::before { animation-play-state: paused !important; }
 /* ── 决策记录（2026-10-05 二轮） ─────────────────────────────────
    卡片冗余文字（英文类目眉 / 舞台小标题 / 徽章 / 步数 / 状态行）已删，
    舞台只剩内容本身；周期家族与相位系统保证「每个卡都动、整页不乱」。

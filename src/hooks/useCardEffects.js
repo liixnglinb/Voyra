@@ -7,7 +7,7 @@ export default function useCardEffects(rootRef, dependency) {
     if (!root) return undefined;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const pointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const cards = [...root.querySelectorAll('[data-voyra-card], .vr-mathmodel-card, .vr-contact-row, .vr-experience-card')];
+    const cards = [...root.querySelectorAll('[data-voyra-card], .vr-card-entry, .vr-mathmodel-card, .vr-contact-row, .vr-experience-card')];
     const rects = new WeakMap();
     let revision = 0;
     let frame = 0;
