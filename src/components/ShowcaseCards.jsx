@@ -4,6 +4,7 @@ import {
   Sparkles, Bot, Route, Milk, Dices, ClipboardCheck, Star, Workflow,
 } from 'lucide-react';
 import { SHOWCASE_CARDS, SHOWCASE_GROUPS, CARD_BY_ID } from '../data/showcase-cards';
+import { STAGES } from './stages';
 
 /* ==========================================================================
    首页 19 张产品卡 · 统一产品名片（方案 A）
@@ -11,7 +12,7 @@ import { SHOWCASE_CARDS, SHOWCASE_GROUPS, CARD_BY_ID } from '../data/showcase-ca
    改造前：19 个独立组件 + 19 段专属 stage 样式，共约 2962 行。
            每张卡都是「微缩软件界面」的复刻，因此 19 张卡长成 19 种样子，
            放在一起像拼贴；stage 内容还与对应下载页重复，且不可交互。
-   改造后：1 个 ProductCard + 4 套 stage 模板。
+   改造后：1 个 ProductCard + 19 个独立舞台。
            骨架（编号 / 图标 / 标题 / 描述 / 标签 / CTA）完全共用，
            卡片之间只允许在「配色族」和「stage 视觉元素」两个维度有差异。
 
@@ -34,126 +35,6 @@ function resolveIcon(name, family) {
   return ICONS[name] || ICONS[family] || Sparkles;
 }
 
-/* ── 模板一：icon-tile ──────────────────────────────────────────────
-   大图标落在主题色光晕上，四周环绕三条能力说明。
-   用于日程中心、织流 —— 它们本身就是「一个产品」，不需要演示流程。 */
-function StageIconTile({ stage, Icon }) {
-  const Glyph = stage.glyph ? ICONS[stage.glyph] : null;
-  return (
-    <div className="st-tile">
-      <div className="st-tile-main">
-        <span className="st-tile-icon" aria-hidden="true">
-          {Glyph ? <Glyph size={28} strokeWidth={1.5} /> : <Icon size={28} strokeWidth={1.5} />}
-        </span>
-        <ul className="st-tile-list">
-          {stage.items.map(([k, v]) => (
-            <li key={k}>
-              <b>{k}</b>
-              <span>{v}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/* ── 模板二：flow-nodes ─────────────────────────────────────────────
-   3-4 个圆点由一条连线串起，每个节点两行：名称 + 注解。
-   顶栏与 badge 模板同构（左标题 / 右计数），四套模板的视觉语言才对得上。
-   之前顶栏标题写的是「提问 → 审查 → 执行」，而下面三个节点标签就是
-   「提问 / 审查 / 执行」—— 同一句话在 150px 高的小盒子里写了两遍。 */
-function StageFlowNodes({ stage }) {
-  const nodes = stage.nodes;
-  return (
-    <div className="st-flow">
-      <div className="st-flow-track">
-        {/* 连线只画到首尾两个圆心。节点是 flex:1 等分，圆心在第 i 格的中点，
-          即 (i+0.5)/n —— 原来写死 left:8%/right:8%，3 个节点时线会戳出两端
-          各约 9%，4 个节点时又缩进去，两种都不对。 */}
-        <svg
-          viewBox="0 0 100 8"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-          style={{ left: `${100 / nodes.length / 2}%`, right: `${100 / nodes.length / 2}%`, width: `${100 - 100 / nodes.length}%` }}
-        >
-          <line
-            x1="0" y1="4" x2="100" y2="4"
-            stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3"
-            vectorEffect="non-scaling-stroke"
-          />
-        </svg>
-        <span className="st-flow-packet" aria-hidden="true" style={{ left: `${100 / nodes.length / 2}%`, right: `${100 / nodes.length / 2}%` }} />
-        <ul>
-          {nodes.map((n, i) => (
-            <li key={n} className="st-flow-node">
-              <span className="st-flow-dot" aria-hidden="true" />
-              <span className="st-flow-label">{n}</span>
-              {stage.subs?.[i] ? <span className="st-flow-sub">{stage.subs[i]}</span> : null}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-/* ── 模板三：badge-cluster ──────────────────────────────────────────
-   顶部一行标题 + 徽章，下方键值对堆叠。
-   用于模型对比秀、组件图鉴、Skill 热榜、学习通签到、账迹。 */
-function StageBadgeCluster({ stage }) {
-  return (
-    <div className="st-badges">
-      <ul>
-        {stage.items.map(([k, v]) => (
-          <li key={k}>
-            <span className="st-badges-k">{k}</span>
-            <span className="st-badges-v">{v}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-/* ── 模板四：metric-panel ──────────────────────────────────────────
-   顶部状态条 + 左侧一个大数字 + 右侧细分项列表。
-   用于 API 网关、宝宝护理、磁盘清理、Token Monitor、AI 轨迹 ——
-   它们的共同点是「有一个当前值值得被看见」。 */
-function StageMetricPanel({ stage }) {
-  return (
-    <div className="st-metric">
-      <div className="st-metric-body">
-        <div className="st-metric-hero">
-          {/* 数字和单位分开：之前 '42ms' / '128.4k' 整串塞进 34px 的重体里，
-              单位被迫和数字一样大，大数字就压不住场。 */}
-          <b className="st-metric-val">
-            {stage.metric}
-            {stage.metricUnit ? <i className="st-metric-unit">{stage.metricUnit}</i> : null}
-          </b>
-          <span className="st-metric-label">{stage.metricLabel}</span>
-          <span className="st-metric-bar" aria-hidden="true" />
-        </div>
-        <ul className="st-metric-list">
-          {stage.items.map(([k, v]) => (
-            <li key={k}>
-              <span>{k}</span>
-              <b>{v}</b>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-const STAGE_TEMPLATES = {
-  'icon-tile': StageIconTile,
-  'flow-nodes': StageFlowNodes,
-  'badge-cluster': StageBadgeCluster,
-  'metric-panel': StageMetricPanel,
-};
-
 /**
  * 单张产品卡。
  * @param {object} card      showcase-cards.js 里的一条数据
@@ -162,7 +43,7 @@ const STAGE_TEMPLATES = {
  */
 export function ProductCard({ card, isMobile = false, shortDesc }) {
   const Icon = resolveIcon(card.Icon, card.family);
-  const Stage = STAGE_TEMPLATES[card.stage.kind];
+  const Stage = STAGES[card.stage?.kind];
   const linkProps = card.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
   const desc = (isMobile && shortDesc) || card.desc;
   /* 描边序号只收纯数字。之前是从 no 字段切 '/' 前段推导，结果
@@ -192,7 +73,7 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
         </div>
 
         <div className="sc-stage">
-          <Stage stage={card.stage} Icon={Icon} />
+          <Stage />
         </div>
 
         <div className="sc-foot">
