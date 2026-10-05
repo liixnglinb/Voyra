@@ -1196,54 +1196,108 @@ body{
 .st-flow-track line {
   stroke-dasharray: 300;
   stroke-dashoffset: 300;
-  animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both;
+animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s linear 1.4s infinite;
+}
 
-/* ③ 常驻微动效：借鉴 oiloil 的 pulse（50% 处 opacity 减半）与 float 慢速呼吸。
-   只动「状态指示物」，不动内容本身 —— 让卡片安静，但让人觉得它活着。
-   三处：metric 状态点的脉冲环、flow 节点的顺序脉冲、tile 图标光晕的呼吸。 */
+/* ③ 舞台常驻动画（卡片内部自循环，不依赖鼠标）—— oiloil 方法论：
+   舞台区自己会「演」：流程在流动、榜单在被逐条翻阅、实时数字是活的、
+   产品图标轻轻浮着。每套模板只给一个主角动画，周期 2.4~4.5s，
+   幅度克制；只动 transform / box-shadow / 背景位，不引起布局回流。
+   （2026-10-05 用户明确要求卡片内部要有常驻动效，推翻此前
+   「动效只放入场、不做无限呼吸」的决定；stSheen 悬停光扫维持移除。） */
+
+/* flow · 数据流：连线画入后切成虚线行进，高亮波沿节点从左到右巡回。 */
+@keyframes stFlowMarch {
+  from { stroke-dasharray: 5 5; stroke-dashoffset: 0; }
+  to   { stroke-dasharray: 5 5; stroke-dashoffset: -10; }
+}
+@keyframes stNodeWave {
+  0%       { transform: scale(1);   box-shadow: 0 0 0 3px var(--p-glow); }
+  22%      { transform: scale(1.3); box-shadow: 0 0 0 6px var(--p-glow); }
+  45%,100% { transform: scale(1);   box-shadow: 0 0 0 3px var(--p-glow); }
+}
+.st-flow-dot { animation: stNodeWave 2.4s ease-in-out infinite; }
+.st-flow-node:nth-child(1) .st-flow-dot  { animation-delay: 0s; }
+.st-flow-node:nth-child(2) .st-flow-dot  { animation-delay: .8s; }
+.st-flow-node:nth-child(3) .st-flow-dot  { animation-delay: 1.6s; }
+.st-flow-node:nth-child(n+4) .st-flow-dot { animation-delay: 2.4s; }
+
+/* badges · 翻阅感：柔光按行错峰扫过，像有人在逐条浏览榜单。 */
+.st-badges li { position: relative; }
+.st-badges li::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(100deg, transparent 30%, rgba(31,95,224,.16) 50%, transparent 70%);
+  background-size: 250% 100%; background-position: 140% 0;
+  opacity: 0; pointer-events: none;
+  animation: stRowSheen 3.6s ease-in-out infinite;
+}
+@keyframes stRowSheen {
+  0%   { background-position: 140% 0; opacity: 0; }
+  6%   { opacity: 1; }
+  20%  { background-position: -60% 0; opacity: 0; }
+  100% { background-position: -60% 0; opacity: 0; }
+}
+.st-badges li:nth-child(1)::after   { animation-delay: 1s; }
+.st-badges li:nth-child(2)::after   { animation-delay: 2.2s; }
+.st-badges li:nth-child(3)::after   { animation-delay: 3.4s; }
+.st-badges li:nth-child(n+4)::after { animation-delay: 4.6s; }
+@keyframes stBadgeBreathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(31,95,224,0); }
+  50%      { box-shadow: 0 0 0 3px var(--p-glow); }
+}
+.st-badges-badge { animation: stBadgeBreathe 3.6s ease-in-out infinite; }
+
+/* metric · 实时感：状态点脉冲环 + 大数字辉光呼吸。 */
 @keyframes stPulseRing {
   0%   { box-shadow: 0 0 0 0 var(--p-glow); }
   70%  { box-shadow: 0 0 0 6px transparent; }
   100% { box-shadow: 0 0 0 0 transparent; }
 }
 .st-metric-dot { animation: stPulseRing 2.6s ease-out infinite; }
-.st-flow-dot   { animation: stPulseRing 2.6s ease-out infinite; }
-.st-flow-node:nth-child(1) .st-flow-dot { animation-delay: 0s; }
-.st-flow-node:nth-child(2) .st-flow-dot { animation-delay: .45s; }
-.st-flow-node:nth-child(3) .st-flow-dot { animation-delay: .9s; }
-.st-flow-node:nth-child(n+4) .st-flow-dot { animation-delay: 1.35s; }
+@keyframes stValueGlow {
+  0%, 100% { text-shadow: 0 0 0 rgba(31,95,224,0); }
+  50%      { text-shadow: 0 0 16px rgba(31,95,224,.30); }
+}
+.st-metric-val { animation: stValueGlow 3.6s ease-in-out infinite; }
 
+/* icon-tile · 产品活着：光晕呼吸 + 图标缓慢悬浮（入场完成后才接管）。 */
 @keyframes stGlowBreathe {
   0%, 100% { opacity: .7; transform: translateY(-50%) scale(1); }
   50%      { opacity: 1;  transform: translateY(-50%) scale(1.06); }
 }
 .st-tile-glow { animation: stGlowBreathe 4.2s ease-in-out infinite; }
+@keyframes stIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.st-tile-icon {
+  animation: stRiseIn .5s var(--sc-ease) both, stIconFloat 4.5s ease-in-out infinite;
+  animation-delay: .12s, 1s;
 }
 
-/* ── 已移除的两组动效（2026-10-04，参考质感图后删） ──────────────────
-   stSheen   悬停光扫：一道蓝沿卡片斜扫。用户反馈「悬停不要太花哨」——
-             鼠标只是路过，却触发一次 0.82s 的强视觉，19 张卡排在一起时
-             指针扫过一列就是连环闪。
-   stBreathe 大数字/节点无限呼吸：2.8~4.6s 永不停止。页面静止时它还在动，
-             属于「背景动画」，与参考图那种安静的纸质感冲突。
-   现在悬停只保留两处：整卡上移 2px + 描边转深（见 .sc-card:hover），
-   以及 CTA 文字转深、箭头右移 2px。 */
+/* ── 决策记录（2026-10-05 更新） ─────────────────────────────────
+   stSheen 悬停光扫维持移除：指针扫过一列时每次掠过都触发强视觉，连环闪。
+   此前移除的无限呼吸按用户要求以克制形式恢复（stNodeWave / stValueGlow），
+   幅度只落在状态指示物层面，不回到旧版满卡呼吸。悬停反馈不变：
+   整卡上移 2px + 描边转深，CTA 文字转深、箭头斜向移动。 */
 
 /* 动效降级：系统开启「减弱动态效果」时全部静止。
    名单要和上面 stRiseIn 的选择器逐条对齐 —— 漏一个，那个元素就仍然带着
    `both` 填充的入场动画，起点是 opacity:0。这里之前漏了 .st-flow-node 和
    .st-tile-top，还留着已改名的 .st-flow-title。 */
 @media (prefers-reduced-motion: reduce) {
-  .st-flow-track line { animation: none !important; stroke-dashoffset: 0; }
-  .st-flow-top, .st-flow-node,
+  .st-flow-track line { animation: none !important; stroke-dashoffset: 0; stroke-dasharray: 300; }
+  .st-flow-top, .st-flow-node, .st-flow-dot,
   .st-tile-top, .st-tile-icon, .st-tile-list li,
-  .st-badges-top, .st-badges li,
-  .st-metric-dot, .st-flow-dot, .st-tile-glow,
-  .st-metric-top, .st-metric-hero, .st-metric-list li {
+  .st-badges-top, .st-badges li, .st-badges li::after, .st-badges-badge,
+  .st-metric-top, .st-metric-hero, .st-metric-list li,
+  .st-metric-dot, .st-metric-val {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
+  /* .st-tile-glow 靠 translateY(-50%) 居中，不能套 transform:none */
+  .st-tile-glow { animation: none !important; }
 }
 
 /* 移动端：stage 内容降一档字号，避免 390px 下换行挤压 */
