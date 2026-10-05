@@ -829,7 +829,7 @@ body{
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: transform var(--sc-transition), border-color var(--sc-transition), box-shadow var(--sc-transition);
+  transition: transform .45s var(--sc-ease), border-color .7s var(--sc-ease), box-shadow .7s var(--sc-ease);
   animation: cardFadeIn 0.5s var(--sc-ease) both;
   /* 内部改横排：左文（编号/标题/描述/CTA）右图（stage）。
      padding 收窄到 0，外层靠 .sc-body 控内边距 —— 描边序号要贴到卡片左下角，
@@ -891,7 +891,7 @@ body{
 .sc-card:hover {
   transform: translateY(-2px);
   border-color: var(--p-line, var(--sc-border-hover));
-  box-shadow: 0 4px 14px -6px rgba(17,24,39,.10);
+  box-shadow: 0 3px 6px rgba(0,0,0,.04), 0 26px 48px -18px rgba(0,0,0,.18);
 }
 
 /* 已移除 .sc-card-head / .sc-head-left：横排改造后卡内改用 .sc-body > .sc-copy，
@@ -971,7 +971,7 @@ body{
 .sc-cta svg { transition: transform .22s cubic-bezier(.22,1,.36,1); }
 /* 悬停只做两件事：文字转深、箭头右移 2px。参考图的悬停就是这个量级。 */
 .sc-card:hover .sc-cta { color: #143C8C; }
-.sc-card:hover .sc-cta svg { transform: translateX(2px); }
+.sc-card:hover .sc-cta svg { transform: translate(2px, -2px); }
 
 /* 已移除 .sc-card-foot / .sc-foot-tag：footer（含 foot 平台标签）在横排改造中
    去掉了，标签信息并入 .sc-no（如「APP 01 / LOCAL AGENT PIPELINE」）。 */
@@ -1197,6 +1197,27 @@ body{
   stroke-dasharray: 300;
   stroke-dashoffset: 300;
   animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both;
+
+/* ③ 常驻微动效：借鉴 oiloil 的 pulse（50% 处 opacity 减半）与 float 慢速呼吸。
+   只动「状态指示物」，不动内容本身 —— 让卡片安静，但让人觉得它活着。
+   三处：metric 状态点的脉冲环、flow 节点的顺序脉冲、tile 图标光晕的呼吸。 */
+@keyframes stPulseRing {
+  0%   { box-shadow: 0 0 0 0 var(--p-glow); }
+  70%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.st-metric-dot { animation: stPulseRing 2.6s ease-out infinite; }
+.st-flow-dot   { animation: stPulseRing 2.6s ease-out infinite; }
+.st-flow-node:nth-child(1) .st-flow-dot { animation-delay: 0s; }
+.st-flow-node:nth-child(2) .st-flow-dot { animation-delay: .45s; }
+.st-flow-node:nth-child(3) .st-flow-dot { animation-delay: .9s; }
+.st-flow-node:nth-child(n+4) .st-flow-dot { animation-delay: 1.35s; }
+
+@keyframes stGlowBreathe {
+  0%, 100% { opacity: .7; transform: translateY(-50%) scale(1); }
+  50%      { opacity: 1;  transform: translateY(-50%) scale(1.06); }
+}
+.st-tile-glow { animation: stGlowBreathe 4.2s ease-in-out infinite; }
 }
 
 /* ── 已移除的两组动效（2026-10-04，参考质感图后删） ──────────────────
@@ -1217,6 +1238,7 @@ body{
   .st-flow-top, .st-flow-node,
   .st-tile-top, .st-tile-icon, .st-tile-list li,
   .st-badges-top, .st-badges li,
+  .st-metric-dot, .st-flow-dot, .st-tile-glow,
   .st-metric-top, .st-metric-hero, .st-metric-list li {
     animation: none !important;
     opacity: 1 !important;
@@ -1279,7 +1301,7 @@ body{
   .sc-card:hover {
     transform: translateY(-2px);
     border-color: var(--p-line);
-    box-shadow: 0 4px 14px -6px rgba(17, 24, 39, .10);
+    box-shadow: 0 3px 6px rgba(0,0,0,.04), 0 26px 48px -18px rgba(0,0,0,.18);
   }
 
   .sc-card:hover .sc-stage {
