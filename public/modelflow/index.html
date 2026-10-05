@@ -213,20 +213,26 @@ img{display:block;max-width:100%}
   transform:translateX(-50%);pointer-events:none;z-index:-1;filter:blur(70px);border-radius:var(--r-2xl);
   background:radial-gradient(38% 50% at 18% 50%,rgba(13,13,13,.16),transparent 70%),
              radial-gradient(38% 50% at 82% 50%,rgba(13,13,13,.10),transparent 70%)}
-/* 逐值取自软件 html[data-theme="dark"]。侧栏 #2b2b2b 和卡片/浮层同色，
-   页面 #161616 最深——两栏靠色差分开，不靠一条竖线（软件同一条规则）。 */
-.mock{--d-page:#161616;--d-shell:#2b2b2b;--d-panel:#202020;
-  --d-hover:rgba(255,255,255,.05);--d-active:rgba(255,255,255,.10);--d-composer:#2b2b2b;
-  --d-strip:rgba(13,13,13,.19);
-  --d-ink:#d4d4d4;--d-ink-2:color-mix(in oklab, var(--d-ink) 78%, transparent);
-  --d-ink-3:color-mix(in oklab, var(--d-ink) 60%, transparent);
-  --d-ink-4:color-mix(in oklab, var(--d-ink) 42%, transparent);
-  --d-line:rgba(255,255,255,.1);--d-line-soft:rgba(255,255,255,.065);
-  --d-accent:#ffffff;--d-accent-soft:#001d3d;--d-accent-deep:#e6e6e6;
-  --d-on-accent:#161616;--d-on-solid:#0e1512;--d-bad:#e8695f;
+/* 逐值取自软件 static/style.css 的 html[data-theme="dark"]（2026-10-05 那一版）。
+   旧注释那两句都作废了：侧栏与卡片现在差一档（#2a2a2a / #222222，浮层再抬到 #333333，
+   "卡里嵌的东西比卡亮"这条才对得上），而两栏之间确实有一条 1px 的缝 —— 那是逐像素
+   重量参考图之后软件自己改过来的，理由在软件 .sidebar 的注释里。
+   三档分隔线是实心 hex 不是半透明白：参考图那条缝在侧栏边和卡片边上是同一个值。
+   ΔL* 判据：#1a1a1a 对 #2a2a2a = 7.1（本项目下限 6.0）。
+   --d-accent-soft 从淡蓝 #001d3d 改成暖金 #2b2517：软件那一条跟着品牌走，
+   而它现在唯一的彩色口音是金。 */
+.mock{--d-page:#1a1a1a;--d-shell:#2a2a2a;--d-panel:#222222;
+  --d-hover:#343434;--d-active:#3d3d3d;--d-composer:#222222;
+  --d-strip:#2a2a2a;
+  --d-ink:#f2f2f2;--d-ink-2:#c6c6c6;--d-ink-3:#8c8c8c;--d-ink-4:#6e6e6e;
+  --d-line:#3c3c3c;--d-line-soft:#2f2f2f;
+  --d-accent:#f2f2f2;--d-accent-soft:#2b2517;--d-accent-deep:#cfcfcf;
+  /* 金：软件这一版新立的 --brand，全站唯一的彩色口音 */
+  --d-brand:#e3c878;
+  --d-on-accent:#222222;--d-on-solid:#0e1512;--d-bad:#e8695f;
   --d-good-soft:rgba(78,183,124,.13);--d-warn-soft:rgba(217,164,65,.13);
-  --d-good:#4eb77c;--d-warn:#d9a441;--d-ctl:#2b2b2b;
-  --d-float:#2b2b2b;--d-line-strong:rgba(255,255,255,.15);
+  --d-good:#4eb77c;--d-warn:#d9a441;--d-ctl:#222222;
+  --d-float:#333333;--d-line-strong:#585858;
   position:relative;border-radius:var(--r-5);overflow:hidden;text-align:left;
   background:rgba(255,255,255,.66);border:1px solid rgba(255,255,255,.58);
   backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);
@@ -268,8 +274,9 @@ img{display:block;max-width:100%}
 .m-i.on{background:var(--d-active);color:var(--d-ink);font-weight:600}
 .m-g{margin-top:14px;padding:0 9px 4px;font-size:11px;font-weight:600;color:var(--d-ink-4);
   letter-spacing:.02em;display:flex;align-items:center}
-.m-g em{margin-left:auto;font-style:normal;font-family:var(--en);font-size:9.5px;color:var(--d-accent);
+.m-g em{margin-left:auto;font-style:normal;font-family:var(--en);font-size:10.5px;color:var(--d-brand);
   background:var(--d-accent-soft);border-radius:var(--r-pill);padding:1px 6px}
+.m-i.on svg{color:var(--d-brand)}
 .m-r{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:var(--r-2);color:var(--d-ink-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .18s var(--e-std)}
 .m-r:hover{background:var(--d-hover)}
@@ -278,7 +285,7 @@ img{display:block;max-width:100%}
   letter-spacing:.015em;flex-shrink:0}
 /* 最近运行嵌在自己那条流程下面：一条左边框轨道，不是再堆一层 padding（软件同做法） */
 .m-sub{display:flex;align-items:center;gap:6px;margin-left:12px;padding:3px 8px 3px 7px;
-  border-left:1px solid var(--d-line);color:var(--d-ink-3);font-size:11px;
+  color:var(--d-ink-3);font-size:11px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m-sub span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis}
 .m-sub i{margin-left:auto;font-style:normal;font-family:var(--en);font-size:9.5px;
@@ -291,7 +298,7 @@ img{display:block;max-width:100%}
 .m-av{width:18px;height:18px;border-radius:50%;background:var(--d-composer);flex-shrink:0;
   border:1px solid var(--d-line)}
 .m-up{margin-top:6px;display:flex;align-items:center;gap:7px;padding:6px 9px;border-radius:var(--r-2);
-  background:var(--d-accent-soft);color:var(--d-accent-deep);font-size:11.5px;font-weight:600}
+  background:var(--d-accent);color:var(--d-on-accent);font-size:11.5px;font-weight:600}
 .m-main{position:relative;min-width:0;padding:0;display:flex;flex-direction:column}
 /* 页头不铺底、不画下边线：它就是内容列顶部的一段空白，和下面同属一个表面。
    没有标题的页面（比如首页）这一行整个不收 —— 软件里它是 hidden 掉的。 */
@@ -839,7 +846,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     </div>
     <div class="nav-right">
       <a class="back" href="https://lxlrwxs.top">个人工具中心</a>
-      <a class="pill nav-dl" href="#dl" id="navDl">下载<span class="sep"></span><span class="ver" id="navVer">1.2.9</span></a>
+      <a class="pill nav-dl" href="#dl" id="navDl">下载<span class="sep"></span><span class="ver" id="navVer">1.3.0</span></a>
     </div>
   </div>
 </nav>
@@ -855,10 +862,10 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <p class="hero-sub"><span class="stp-row"><span class="stp">需求解析</span> <span class="stp-ar">→</span> <span class="stp">方案拆解</span> <span class="stp-ar">→</span> <span class="stp">信息收集</span> <span class="stp-ar">→</span> <span class="stp">逐项执行</span> <span class="stp-ar">→</span> <span class="stp">自检复核</span> <span class="stp-ar">→</span> <span class="stp">修订打磨</span> <span class="stp-ar">→</span> <span class="stp">交付整合。</span></span><br><span class="stp-tail">每一步做什么、产出什么文件，都是你能改的。</span></p>
     </div>
     <div class="hero-cta">
-      <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.2.9</span></a>
+      <a class="pill" href="#dl">下载 Windows 版<span class="sep"></span><span class="ver" id="heroVer">1.3.0</span></a>
       <a class="pill pill-ghost" href="#run">看它怎么跑</a>
     </div>
-    <p class="hero-note">Windows 10 / 11 x64 · 约 <b id="heroSize">36.2 MB</b> · 全本地运行，无账号无遥测</p>
+    <p class="hero-note">Windows 10 / 11 x64 · 约 <b id="heroSize">36.4 MB</b> · 全本地运行，无账号无遥测</p>
   </div>
 
   <!-- 不能包在 .wrap 里：.wrap 是 transform-style:flat，会把 .hero 的 perspective 拍平，
@@ -894,7 +901,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
             <div class="m-sub"><span class="m-live"></span><span>支架拓扑优化第二轮</span><i>刚刚</i></div>
             <div class="m-foot">
               <div class="m-me"><span class="m-av"></span><span>claude</span></div>
-              <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.2.9</div>
+              <div class="m-up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M12 19V5M5 12l7-7 7 7"/></svg>更新至 1.3.0</div>
             </div>
           </aside>
 
@@ -1076,7 +1083,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
     </div>
   <div class="steps">
       <div class="step" data-rise><span class="n">01</span><div><h4>装好一个智能体 CLI 并登录</h4><p>Claude Code（<code>claude</code>）或 Codex CLI（<code>codex</code>）任一即可。Jacquard 在设置页自动探测本机可用的引擎，两个都装了就每步都能选。</p></div></div>
-      <div class="step" data-rise><span class="n">02</span><div><h4>装 Jacquard，打开就是工作台</h4><p>安装包约 36.2 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
+      <div class="step" data-rise><span class="n">02</span><div><h4>装 Jacquard，打开就是工作台</h4><p>安装包约 36.4 MB，装在你自己的用户目录下，不需要管理员权限。双击启动后开一个独立窗口（打不开原生窗口时会自动退回默认浏览器）。</p></div></div>
       <div class="step" data-rise><span class="n">03</span><div><h4>编一条你自己的流程</h4><p>从零加步骤，或者导入别人分享的流程 JSON 改。每步绑定哪个技能、产出什么文件、要不要停下来等你确认，都是明摆着可编辑的 —— 软件不预设该怎么干活。</p></div></div>
       <div class="step" data-rise><span class="n">04</span><div><h4>下任务，看它跑</h4><p>写清任务说明就能开跑。转录区实时输出，进程卡显示走到第几步，工作区面板列出正在写的文件；跑完对着任意一步提修改要求即可。</p></div></div>
     </div>
@@ -1164,10 +1171,10 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
       <h2>把流程握在自己手里</h2>
       <p class="lead">装在你自己的用户目录里，跑你自己登录的 CLI，产物落在你自己的磁盘上。</p>
       <div class="dl-row">
-        <a class="pill" id="dlBtn" title="腾讯云 COS · 国内直连" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.2.9-setup.exe">下载 Jacquard for Windows<span class="sep"></span><span class="ver" id="btnVer">1.2.9</span></a>
+        <a class="pill" id="dlBtn" title="腾讯云 COS · 国内直连" href="https://modelflow-1447874637.cos.ap-guangzhou.myqcloud.com/Loom-1.3.0-setup.exe">下载 Jacquard for Windows<span class="sep"></span><span class="ver" id="btnVer">1.3.0</span></a>
         <a class="pill pill-ghost" id="dlGithub" hidden title="GitHub Releases · 与左边同一个安装包" href="#">GitHub Release</a>
       </div>
-      <p class="hero-note">约 <b id="btnSize">36.2 MB</b> · Windows 10/11 x64 · 用户级安装，无需管理员</p>
+      <p class="hero-note">约 <b id="btnSize">36.4 MB</b> · Windows 10/11 x64 · 用户级安装，无需管理员</p>
       <p class="hero-note src-note" id="dlSrcNote" hidden>两个链接是<b>同一个包、同一份 SHA-256</b>：国内走 COS 更快，海外或 COS 不通时走 GitHub。</p>
       <p class="sha" id="btnSha" title="点击复制完整校验和"></p>
     </div>
@@ -1178,7 +1185,7 @@ footer{padding:44px 0 60px;border-top:1px solid var(--line);margin-top:96px}
   <div class="wrap foot">
     <a class="brand" href="./"><img src="./logo-64.png" alt="" style="width:26px;height:26px;border-radius:var(--r-3)"></a>
     <span>织流 Jacquard</span><span class="sep"></span>
-    <span>版本 <span class="en" id="ftVer">1.2.9</span></span><span class="sep"></span>
+    <span>版本 <span class="en" id="ftVer">1.3.0</span></span><span class="sep"></span>
     <a class="back" href="https://lxlrwxs.top">返回个人工具中心</a>
     <span style="margin-left:auto">本地运行 · 无遥测</span>
   </div>
