@@ -1,10 +1,10 @@
 {
   "version": "0.22.0",
-  "notes": "# Zenew v0.22.0 · 完全离线 + Windows 11 原生质感\n\n这一版做两件事：去掉账号，换掉整套界面材质。\n\n## 不再需要注册\n- 移除注册 / 登录 / 邀请码 / 服务地址设置，打开即用\n- 学习数据本来就全在本机，现在连「登录仅用于云端生成」这层也不需要了\n\n## 完全离线\n- 四级 / 六级 / 高频 / 基础四本词书与 14,625 词全量查词索引直接装进安装包\n- 断网也能查词、导入词书、看形近词与词根词缀\n- 安装包由 4.6 MB 增至 6.7 MB\n\n## 界面重做（Windows 11 原生质感）\n- 系统字体 Segoe UI Variable，不再是网页字体\n- 卡片改为纯色表面 + 1px 描边，去掉渐变、噪点、内高光与彩色光晕\n- 圆角收敛到 Win11 规范：控件 4px、卡片 8px\n- 按钮悬停不再「浮起来」，改为填充变化\n- 输入框点击只变描边色，之前那圈蓝色光晕去掉了\n- 标题栏按 Win11 规格重画：40px 高、46×40 命中区、关闭键悬停变红\n- 深色主题由蓝调改为 Win11 中性灰阶\n\n## 修\n- 窗口标题在任务管理器 / Alt+Tab 里显示乱码\n- 安装位置防呆：不再允许装进桌面目录\n- 首页生词本书封显示英文占位「BOOK」",
-  "pub_date": "2026-10-05T07:36:16Z",
+  "notes": "Zenew v0.22.0",
+  "pub_date": "2026-10-05T13:31:59Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVVwVjZrelIrYUtkc3BXM2QvbG85a1luaWRtemFraU04OStQU3B4YTV2c0hMR0s3dmhRQ2lpbFAvOEFSU0VCQ0hCU2x5ZTR2dE1XR1c3WlVPTnRiMWd3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMTg1MzU1CWZpbGU6WmVuZXdfMC4yMi4wX3g2NC1zZXR1cC5leGUKRU1rdmV2bnN6ZjlyRFluaTk0VDQwcXNEV3RGZ1grKzZ4NWVPOTA3dGlPVWIrc2J1cW8rNzhteWJkS1pmV05INW9vbVU0emhCejVEZktaUzBwMCtxQXc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVhtbTI3enVHS1drRk5aZXpUaDAwMjFDQU5KaEJ3NjFuMjFURkNQR2FkdHRjS2gyVm92aCtuSExoMHA2TUt4Qkg0dHAxcEl2S3h3U2s4YWdqb3ZBR1FNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMjA3MDk5CWZpbGU6WmVuZXdfMC4yMi4wX3g2NC1zZXR1cC5leGUKZC9ScWNaVStPeXlzd0RjK2s1TGhROUlmNTRRR3ZnK3BPSTE4d2NDeHp5aXk5K3FYbGkzUXJjQkR5RzdMQ1hJRzJzNlZBL0NmVlRxSkNoQU5ZTjljQVE9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
