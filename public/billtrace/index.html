@@ -310,18 +310,18 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
       <h1>付完款，<br>账就<em>自动记好</em>了。</h1>
       <p class="tagline">账迹 BillTrace 监听支付通知与银行短信，2 秒内自动入库并智能归类——全程零手动、零截图、零打扰，数据只存在你手机里。</p>
       <div class="dl-row">
-        <a class="btn btn-primary" id="dlMain" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
+        <a class="btn btn-primary" id="dlMain" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          下载 APK <span class="ver-inline" id="ver">v0.4.0</span>
+          下载 APK <span class="ver-inline" id="ver">v0.4.1</span>
           <em class="src-tag" id="srcTag">国内镜像</em>
         </a>
-        <a class="btn btn-ghost" id="dlAlt" data-dl="secondary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">
+        <a class="btn btn-ghost" id="dlAlt" data-dl="secondary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
           <span id="altLabel">GitHub 直连</span>
         </a>
       </div>
       <div class="src-note" id="srcNote"><span class="dot"></span>当前线路：<b>国内镜像</b></div>
-      <div class="dl-hint" id="dlHint">APK 约 0.5 MB · 装完按首页两步提示开启权限</div>
+      <div class="dl-hint" id="dlHint">APK 约 119 KB · 装完按首页两步提示开启权限</div>
       <!-- 微信内置浏览器无法安装 APK：点下载只会静默失败或提示「请在浏览器打开」。
            只在微信 / QQ 内置浏览器里插入这段引导，其余环境不占位、不干扰。 -->
       <div class="wx-tip" id="wxTip" hidden>
@@ -333,7 +333,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
         <span class="meta-chip">真机可用</span>
         <span class="meta-chip">免费 · 无广告</span>
         <span class="meta-chip">数据只存本机</span>
-        <span class="meta-chip">安装包 <b id="chipSize">0.5 MB</b></span>
+        <span class="meta-chip">安装包 <b id="chipSize">119 KB</b></span>
       </div>
     </div>
     <div class="phone-wrap">
@@ -423,7 +423,15 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="sec-kicker rv">CHANGELOG</div>
     <div class="sec-title rv">更新日志</div>
     <div class="log rv">
-      <h4><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.4.0 · 真机可用</span><span style="display:inline-flex;align-items:center;gap:12px"><span id="logDate" style="color:rgba(0,0,0,.4);font-weight:600">最近构建</span><span id="log-ver">当前最新</span></span></h4>
+      <h4><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.4.1 · 权限修复</span><span style="display:inline-flex;align-items:center;gap:12px"><span id="logDate" style="color:rgba(0,0,0,.4);font-weight:600">最近构建</span><span id="log-ver">当前最新</span></span></h4>
+      <ul>
+        <li>修「权限开不上」：通知使用权入口逐级兜底，国产 ROM 上不再出现点了没反应</li>
+        <li>短信权限被系统记住「不再询问」后，改为引导到设置页手动开启，并给出找不到入口时的路径</li>
+        <li>改用固定正式签名：覆盖安装不再因签名不一致被迫卸载重装（卸载会把已开的权限清掉）</li>
+        <li>商户图标重编码为 WebP，安装包从约 0.5 MB 降到 119 KB</li>
+        <li>从 v0.4.0 升级需先卸载旧版再装（换签名的最后一次），此后覆盖安装保留权限</li>
+      </ul>
+      <h4 style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)"><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.4.0 · 真机可用</span></h4>
       <ul>
         <li>真机采集上线：通知监听 + 银行短信双引擎，付款后自动入库</li>
         <li>历史短信回填：授权后把过去几个月的银行账目一次补进账本</li>
@@ -439,11 +447,11 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="dl-panel">
       <div>
         <h2><img src="/billtrace/icon-512.png" alt="账迹图标">现在安装，下一笔消费自动入账</h2>
-        <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.4.0</span> · 安装包约 0.5 MB</p>
+        <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.4.1</span> · 安装包约 119 KB</p>
       </div>
       <div class="btns">
-        <a class="btn btn-primary" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">下载 APK</a>
-        <a class="btn btn-ghost" data-dl="secondary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">GitHub 直连</a>
+        <a class="btn btn-primary" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">下载 APK</a>
+        <a class="btn btn-ghost" data-dl="secondary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">GitHub 直连</a>
       </div>
     </div>
   </section>
@@ -459,8 +467,8 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
 
 <div class="mbar" id="mbar">
   <img src="/billtrace/icon-192.png" alt="账迹图标">
-  <div><div class="mt">账迹 BillTrace</div><div class="ms">自动记账 · 安装包 <b id="mbarSize">0.5 MB</b></div></div>
-  <a class="go" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk">下载 APK</a>
+  <div><div class="mt">账迹 BillTrace</div><div class="ms">自动记账 · 安装包 <b id="mbarSize">119 KB</b></div></div>
+  <a class="go" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">下载 APK</a>
 </div>
 
 <script src="./app-1.js"></script>

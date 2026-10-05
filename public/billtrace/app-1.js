@@ -1,6 +1,6 @@
 /* ---------- 下载线路：默认国内镜像，后台自动测速 ---------- */
 (function(){
-  var GH='https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk';
+  var GH='https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk';
   var MIRROR='https://gh-proxy.com/'+GH;
   var URLS={github:GH,mirror:MIRROR};
   var NAME={github:'GitHub 直连',mirror:'国内镜像'};
@@ -75,7 +75,7 @@
 
 /* ---------- 下载没反应时的备用线路 ---------- */
 (function(){
-  var GH='https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace-debug.apk';
+  var GH='https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk';
   var MIRROR='https://gh-proxy.com/'+GH;
   var NAME={github:'GitHub 直连',mirror:'国内镜像'};
   var main=document.getElementById('dlMain'),hint=document.getElementById('dlHint');
@@ -105,14 +105,17 @@
       }
       var verEl=document.getElementById('ver2');
       var ver=verEl?verEl.textContent:'';
+      /* 发布走固定 tag latest + --clobber，Release 的 published_at 永远停在第一次
+         创建那天，只有资产会变；所以「最近构建」必须取资产的 updated_at。 */
+      var a=(d.assets||[]).filter(function(a){return a.name==='BillTrace.apk';})[0];
+      var builtAt=(a&&a.updated_at)||d.published_at;
       var dt=document.getElementById('logDate');
-      if(dt&&d.published_at){
-        var t=new Date(d.published_at);
+      if(dt&&builtAt){
+        var t=new Date(builtAt);
         dt.textContent='最近构建 '+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
       }
-      var a=(d.assets||[]).filter(function(a){return a.name==='BillTrace-debug.apk';})[0];
       var p=document.querySelector('.dl-panel p');
-      if(a){var mb=(a.size/1048576).toFixed(1)+' MB';if(p)p.innerHTML='Android 8.0+ · <span class="ver-inline">'+ver+'</span> · 安装包约 '+mb;['chipSize','mbarSize'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=mb;});}
+      if(a){var mb=a.size<1048576?Math.round(a.size/1024)+' KB':(a.size/1048576).toFixed(1)+' MB';if(p)p.innerHTML='Android 8.0+ · <span class="ver-inline">'+ver+'</span> · 安装包约 '+mb;['chipSize','mbarSize'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=mb;});}
     }catch(e){}
   };
   x.send();
