@@ -1222,8 +1222,9 @@ animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s
 
 /* metric · 实时感：大数字放大 1.05 + 辉光呼吸，一眼可见。 */
 @keyframes stValueGlow {
-  0%, 100% { text-shadow: 0 0 0 rgba(31,95,224,0); transform: scale(1); }
-  50%      { text-shadow: 0 0 22px rgba(31,95,224,.45); transform: scale(1.05); }
+  0%, 96%  { text-shadow: 0 0 0 rgba(31,95,224,0); transform: scale(1); }
+  85%      { text-shadow: 0 0 22px rgba(31,95,224,.45); transform: scale(1.05); }
+  100%     { text-shadow: 0 0 0 rgba(31,95,224,0); transform: scale(1); }
 }
 .st-metric-val { animation: stValueGlow 3.6s ease-in-out infinite; animation-delay: var(--st-phase, 0s); }
 
@@ -1242,6 +1243,70 @@ animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s
   animation-delay: calc(var(--st-phase, 0s) + .12s), calc(var(--st-phase, 0s) + 1s);
 }
 
+/* ③+ 演示层（学习 oiloil 的 stage demo 方法）：
+   舞台不只是"元素在动"，而是演一个小故事 —— 数据包沿流程飞到站、
+   扫描光标逐行检阅榜单、指标条填满后刷新、图标沿虚线轨道巡航。
+   四者与各自模板的主角动画共用周期与相位，不同步就会乱。 */
+
+/* flow · 数据包：沿连线从左飞到右，2.4s 一圈；到站时刻与
+   stNodeWave 的节点点亮（0 / .8 / 1.6s 延迟）严格对齐。 */
+.st-flow-packet { position: absolute; top: 6px; height: 0; z-index: 1; pointer-events: none; }
+.st-flow-packet::after {
+  content: ""; position: absolute; top: -3.5px; left: 0; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--p-accent);
+  box-shadow: 0 0 10px 2px rgba(31,95,224,.35);
+  transform: translateX(-50%);
+  animation: stPacketRun 2.4s linear infinite;
+  animation-delay: var(--st-phase, 0s);
+}
+@keyframes stPacketRun {
+  from { left: 0; }
+  to   { left: 100%; }
+}
+
+/* badges · 扫描光标：行左缘的竖条与行闪光同帧亮起（同延迟、同周期）。 */
+.st-badges li::before {
+  content: ""; position: absolute; left: 0; top: 22%; bottom: 22%; width: 3px;
+  border-radius: 2px; background: var(--p-accent); opacity: 0; pointer-events: none;
+  animation: stRowCursor 3.6s ease-in-out infinite;
+}
+@keyframes stRowCursor {
+  0%, 100% { opacity: 0; }
+  10%      { opacity: 1; }
+  26%      { opacity: 0; }
+}
+.st-badges li:nth-child(1)::before   { animation-delay: calc(var(--st-phase, 0s) + 1s); }
+.st-badges li:nth-child(2)::before   { animation-delay: calc(var(--st-phase, 0s) + 2.2s); }
+.st-badges li:nth-child(3)::before   { animation-delay: calc(var(--st-phase, 0s) + 3.4s); }
+.st-badges li:nth-child(n+4)::before { animation-delay: calc(var(--st-phase, 0s) + 4.6s); }
+
+/* metric · 刷新条：细条从 0 填满再归零（3.6s 一轮），数字辉光在将满时
+   达到峰值 —— "正在采集 → 完成一次刷新"。 */
+.st-metric-bar {
+  position: relative; width: 100%; height: 3px; border-radius: 2px;
+  background: var(--p-glow); overflow: hidden;
+}
+.st-metric-bar::after {
+  content: ""; position: absolute; inset: 0; background: var(--p-accent);
+  transform-origin: left; transform: scaleX(0);
+  animation: stMetricFill 3.6s linear infinite;
+  animation-delay: var(--st-phase, 0s);
+}
+@keyframes stMetricFill {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* icon-tile · 轨道环：借 SelectorDemo 虚线框的语言，绕图标缓慢巡航。 */
+.st-tile-icon::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 20px;
+  border: 1.5px dashed rgba(31,95,224,.35); pointer-events: none;
+  animation: stOrbit 8s linear infinite;
+}
+@keyframes stOrbit {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 /* ── 决策记录（2026-10-05 二轮） ─────────────────────────────────
    卡片冗余文字（英文类目眉 / 舞台小标题 / 徽章 / 步数 / 状态行）已删，
    舞台只剩内容本身；周期家族与相位系统保证「每个卡都动、整页不乱」。
@@ -1262,6 +1327,7 @@ animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s
     opacity: 1 !important;
     transform: none !important;
   }
+  .st-flow-packet, .st-metric-bar, .st-tile-icon::after, .st-badges li::before { display: none !important; }
   /* .st-tile-glow 靠 translateY(-50%) 居中，不能套 transform:none */
   .st-tile-glow { animation: none !important; }
 }

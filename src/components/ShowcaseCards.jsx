@@ -84,6 +84,7 @@ function StageFlowNodes({ stage }) {
             vectorEffect="non-scaling-stroke"
           />
         </svg>
+        <span className="st-flow-packet" aria-hidden="true" style={{ left: `${100 / nodes.length / 2}%`, right: `${100 / nodes.length / 2}%` }} />
         <ul>
           {nodes.map((n, i) => (
             <li key={n} className="st-flow-node">
@@ -132,6 +133,7 @@ function StageMetricPanel({ stage }) {
             {stage.metricUnit ? <i className="st-metric-unit">{stage.metricUnit}</i> : null}
           </b>
           <span className="st-metric-label">{stage.metricLabel}</span>
+          <span className="st-metric-bar" aria-hidden="true" />
         </div>
         <ul className="st-metric-list">
           {stage.items.map(([k, v]) => (
