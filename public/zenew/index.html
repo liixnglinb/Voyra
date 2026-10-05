@@ -7,7 +7,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>知新 Zenew · 下载</title>
-<meta name="description" content="知新 Zenew — 把大学课程变成科学调度的练习系统。选课程、导入讲义，AI 生成知识卡片，FSRS 间隔重复安排复习。Windows 客户端，邀请码开通。">
+<meta name="description" content="知新 Zenew — 把英语单词变成科学调度的练习系统。四级 / 六级 / 高频 / 基础四本词书内置在安装包里，FSRS 间隔重复安排复习，断网可用。Windows 客户端，无需注册。">
 <link rel="icon" type="image/png" href="/zenew/icon.png" sizes="any">
   <link rel="apple-touch-icon" href="/zenew/icon.png">
 <style>
@@ -183,7 +183,7 @@ h1 em{font-style:normal;color:var(--gold)}
 .step b{font-family:var(--mono);font-size:11px;color:var(--gold);font-weight:500;letter-spacing:1.5px;display:block;margin-bottom:8px}
 .step p{font-size:13.5px;color:var(--t2)}
 .step p strong{color:var(--t1)}
-/* 邀请码获取通道：内测唯一的准入门槛，不能只写「需邀请码」而不给出路 */
+/* .inv-note：v0.22.0 起用于「关于离线」说明（原先是邀请码获取通道，闸门已随云端生成移除） */
 .inv-link{display:inline-block;margin-top:8px;color:var(--gold);font-size:13px;font-weight:600;
   text-decoration:none;border-bottom:1px solid rgba(212,175,110,.4);padding-bottom:1px;transition:opacity .2s}
 .inv-link:hover{opacity:.75}
@@ -255,7 +255,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
       <a href="https://github.com/liixnglinb/Zenew" target="_blank">源码</a>
     </nav>
     <div class="top-right">
-      <span class="ver num" id="ver">v0.21.0</span>
+      <span class="ver num" id="ver">v0.22.0</span>
       <a class="gh-link" href="https://github.com/liixnglinb/Zenew" target="_blank">
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
         liixnglinb/Zenew
@@ -268,9 +268,9 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
 <main class="wrap">
   <section class="hero">
     <div>
-      <div class="kicker fx">ZENEW / <b>WINDOWS</b> / 邀请制</div>
-      <h1 class="fx d1">把课程变成<em>记得住</em>的练习</h1>
-      <p class="sub fx d2">选择课程或导入讲义，AI 生成「先回忆再看答案」的知识卡片，FSRS 算法安排每次复习的最佳时机。</p>
+      <div class="kicker fx">ZENEW / <b>WINDOWS</b> / 完全离线</div>
+      <h1 class="fx d1">把单词变成<em>记得住</em>的练习</h1>
+      <p class="sub fx d2">挑一本词书，FSRS 算法按你的记忆状态安排每天的「新学 / 复习」；先回忆再作答，答完看词根词缀与易混词辨析。词库内置在安装包里，断网可用。</p>
       <div class="cta-row fx d3">
         <a class="btn btn-gold" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe" id="dl-main">↓ 下载 Zenew</a>
         <a class="btn btn-ghost" href="https://github.com/liixnglinb/Zenew" target="_blank">GitHub 源码</a>
@@ -279,8 +279,8 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
         <span><i></i>Windows 10 / 11</span>
         <span><i></i>无需管理员权限</span>
         <span><i></i>更新免安装 · 软件内自动完成</span>
-        <span><i></i>需邀请码开通账号</span>
-        <span><i></i>安装包约 4.8 MB</span>
+        <span><i></i>无需注册 · 打开即用</span>
+        <span><i></i>安装包约 6.7 MB</span>
       </div>
     </div>
     <div class="preview fx d2" aria-hidden="true">
@@ -296,8 +296,8 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
           <div class="pv-opt"><span class="p">adj.</span>帝王的，豪华的</div>
         </div>
       </div>
-      <div class="pv-ans"><b>AI 辨析</b>和 illegal 搞混了？<span class="lnk">帮你辨析 →</span></div>
-      <div class="pv-bar"><span>✂ 斩</span><span class="on">✦ Ai</span><span>☀ 提示</span><span>🔊 朗读</span><span class="go">继续 →</span></div>
+      <div class="pv-ans"><b>易混辨析</b>和 illegal 搞混了？<span class="lnk">帮你辨析 →</span></div>
+      <div class="pv-bar"><span>✂ 斩</span><span class="on">✦ 辨析</span><span>☀ 提示</span><span>🔊 朗读</span><span class="go">继续 →</span></div>
     </div>
   </section>
 
@@ -313,12 +313,12 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
         <p>现代间隔重复算法，按你的记忆表现预测遗忘点，在最该复习的时刻把卡片递给你。</p>
       </div>
       <div class="cell">
-        <b><i>02</i>AI 生成卡片</b>
-        <p>按课程名生成知识点大纲，逐点生成回忆卡与选择题，服务端质检后再入库。</p>
+        <b><i>02</i>五种训练模式</b>
+        <p>速听 / 速刷 / 单词选义 / 拼写 / 听写；听写可切美音英音、控制播放次数与间隔。评分与主复习共用同一套 FSRS 落库。</p>
       </div>
       <div class="cell">
-        <b><i>03</i>教材 PDF 导入</b>
-        <p>本地解析讲义，扫描页自动跳过；按章节渐进提取知识点并建卡，不用等解析完就能开始学。</p>
+        <b><i>03</i>说清为什么现在复习</b>
+        <p>每个词附「距上次学习 · 记忆强度 · 预计遗忘概率」，一句话说明白它为什么今天出现在你面前。</p>
       </div>
       <div class="cell">
         <b><i>04</i>词书学习流</b>
@@ -334,7 +334,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
       </div>
       <div class="cell">
         <b><i>07</i>全量查词</b>
-        <p>14,625 词离线词库，英文与中文释义都能搜；收藏的词进生词本，走同一套复习循环。</p>
+        <p>14,625 词全量索引随安装包内置，英文与中文释义都能搜；收藏的词进生词本，走同一套复习循环。</p>
       </div>
       <div class="cell">
         <b><i>08</i>深浅色主题</b>
@@ -396,7 +396,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
 
       <figure class="shot">
         <div class="shot-top"><i></i><i></i><i></i><b>单词详情 · 词根词缀</b></div>
-        <div class="dai"><span>✦ Ai</span>和 illegal 搞混了？帮你辨析 →</div>
+        <div class="dai"><span>✦ 辨析</span>和 illegal 搞混了？帮你辨析 →</div>
         <div class="dtabs"><span>释义</span><span>例句</span><span class="on">词根词缀</span><span>形近词</span></div>
         <div class="dpanel">
           <div class="morph">
@@ -405,14 +405,14 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
           </div>
           <p class="dnote">词根「leg」表示法律；后缀「al」是形容词后缀——拆开记，比死记省力。</p>
         </div>
-        <figcaption>答完题就能展开详情：AI 易混词辨析、词根词缀拆解、形近词列表，离线也能看。</figcaption>
+        <figcaption>答完题就能展开详情：易混词辨析、词根词缀拆解、形近词列表，全程离线。</figcaption>
       </figure>
     </div>
   </section>
 
   <section class="section" id="download">
     <div class="sec-head">
-      <div class="kicker">DOWNLOAD / <b id="ver2" style="color:var(--gold)">v0.21.0</b></div>
+      <div class="kicker">DOWNLOAD / <b id="ver2" style="color:var(--gold)">v0.22.0</b></div>
       <h2>选择安装方式</h2>
     </div>
     <div class="dl-rows">
@@ -438,15 +438,14 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
     </div>
     <div class="steps">
       <div class="step"><b>STEP 01</b><p><strong>安装一次</strong><br>下载 Zenew-Setup.exe 双击安装，无需管理员权限。</p></div>
-      <div class="step"><b>STEP 02</b><p><strong>凭邀请码开通</strong><br>注册时填入邀请码即可开通账号，一次一码。<br><a class="inv-link" href="mailto:hello@lxlrwxs.top?subject=Zenew%20%E9%82%80%E8%AF%B7%E7%A0%81%E7%94%B3%E8%AF%B7">没有邀请码？点此向作者申请 →</a></p></div>
-      <div class="step"><b>STEP 03</b><p><strong>每天打开</strong><br>挑一本词书或生成课程卡片，跟着「新学 / 复习」队列走；完成后在统计里看记忆增长。</p></div>
+      <div class="step"><b>STEP 02</b><p><strong>挑一本词书</strong><br>四级 / 六级 / 高频 / 基础任选，也可以只往「生词本」里塞自己遇到的词，导入即进入复习循环。</p></div>
+      <div class="step"><b>STEP 03</b><p><strong>每天打开</strong><br>跟着「新学 / 复习」两个队列走，学完在统计里看记忆增长与未来十天的复习量。</p></div>
     </div>
-    <!-- 邀请码是本页唯一的付费/准入门槛，前置到 Hero 下方：原先只在「三步开始」的
-         STEP 02 里出现「需邀请码开通账号」，但没说去哪儿弄，下载后直接断链。 -->
+    <!-- v0.22.0 起无账号、无邀请码：这块原先是「关于邀请码」的准入说明，
+         闸门已随云端 AI 生成一并移除，改成说明离线边界。 -->
     <div class="inv-note">
-      <b>关于邀请码</b>
-      <p>Zenew 目前是<b>邀请制内测</b>：邀请码用于控制服务端 AI 生成额度，不收费、不影响本地功能。
-         没码就直接发邮件说明用途（课程 / 背单词 / 考纲名），作者会回一个。</p>
+      <b>关于离线</b>
+      <p>四本词书与 14,625 词查词索引<b>都装在安装包里</b>，装完不需要网络。学习记录只写本机 SQLite，不上传、不做行为画像。</p>
     </div>
   </section>
 </main>
@@ -466,7 +465,7 @@ footer{border-top:1px solid var(--line);padding:34px 0 44px;color:var(--t3);font
   <img src="/zenew/icon-32.png" alt="">
   <div class="mb-t">
     <div class="mt">知新® Zenew</div>
-    <div class="ms"><b id="mbar-ver">v0.21.0</b> · 安装包 <span id="mbar-size">约 4.8 MB</span> · Windows</div>
+    <div class="ms"><b id="mbar-ver">v0.22.0</b> · 安装包 <span id="mbar-size">约 6.7 MB</span> · Windows</div>
   </div>
   <a class="go" id="mbar-go" href="https://github.com/liixnglinb/Zenew/releases/latest/download/Zenew-Setup.exe">下载</a>
 </div>

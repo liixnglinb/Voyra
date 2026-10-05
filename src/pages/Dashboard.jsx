@@ -34,7 +34,7 @@ const APPS = [
   { to: '/local-toolbox/', external: false, no: '03', name: '磁盘清理助手', desc: 'Windows 磁盘清理工作台：扫描、分类与目录分析一站完成，完整路径预览后再确认清理，实际释放容量与失败明细清楚可见。', cta: '下载软件', Icon: HardDrive, art: 'toolbox' },
   { to: '/billtrace/', external: false, no: '04', name: '账迹 BillTrace', desc: 'Android 自动记账 App：付款后 2 秒自动入库、智能分类，通知监听 + 银行短信双引擎全自动采集，数据只存本机不上传，全程零打扰。', cta: '下载 APK', Icon: Receipt, art: 'billtrace' },
   { to: '/token-monitor/', external: false, no: '05', name: 'Token Monitor', desc: '本机 AI 编程工具用量看板：Token、请求与缓存明细一目了然，套餐、未定价和已计价金额明确区分，来源与时间筛选可随时恢复。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, art: 'tokenmonitor' },
-  { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把大学课程变成记得住的练习：四本词书 + 教材 PDF 导入，AI 生成知识卡片；学习卡四选一、答完看词根词缀辨析，FSRS 算法安排每次复习的最佳时机。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
+  { to: '/zenew/', external: false, no: '06', name: '知新 Zenew', desc: '把英语单词变成记得住的练习：四级 / 六级 / 高频 / 基础四本词书内置在安装包里，断网可用；四选一作答、答完看词根词缀与易混词辨析，FSRS 算法安排每次复习。无需注册。仅支持 Windows 10/11。', cta: '下载软件', Icon: BookOpen, art: 'zenew' },
   { to: '/ai-chronicle/', external: false, no: '07', name: 'AI 轨迹', desc: '本机优先的 AI 工作观测台：自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板，数据默认留在本机。仅支持 Windows 10/11。', cta: '下载软件', Icon: Activity, iconSrc: '/ai-chronicle/icon.png?v=2', art: 'aichronicle' },
 ];
 
@@ -47,7 +47,7 @@ const APP_SHORT = {
   '/local-toolbox/': 'Windows 磁盘清理工作台：扫描分类、目录百科，预览完整路径再确认清理。',
   '/billtrace/': 'Android 自动记账：付款后 2 秒自动入库、智能分类，数据只存本机不上传。',
   '/token-monitor/': '本机 AI 工具用量看板：一条命令扫出 9 类 Agent 的 Token 与成本。',
-  '/zenew/': '把课程变成记得住的练习：词书 + AI 卡片，四选一学习与 FSRS 复习调度。',
+  '/zenew/': '把单词变成记得住的练习：内置词书 + FSRS 复习调度，完全离线、无需注册。',
   '/ai-chronicle/': '本机 AI 工作观测台：12 个数据源的日报、历史与趋势看板。',
   '/draw': '随机抽人：导入花名册或手动添加姓名，设置人数一键抽取。',
 };
