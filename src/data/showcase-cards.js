@@ -51,7 +51,7 @@ export const SHOWCASE_CARDS = [
     /* 原来 status / metricLabel / 首行值三处是英文大写（RELAY CLUSTER ACTIVE、
        AVG LATENCY、Smart Failover），和其余 18 张卡的中文口吻不一致。
        单位也从数字里拆出来：'42ms' 整串塞进 34px 重体，单位被迫和数字一样大。 */
-    stage: { kind: 'metric-panel', status: '网关集群运行中', metric: '42', metricUnit: 'ms', metricLabel: '平均延迟', items: [['请求路由', '智能故障切换'], ['可用性', '99.98%'], ['异常切换', '自动']] },
+    stage: { kind: 'metric-panel', status: '网关集群运行中', metric: '87', metricUnit: 'ms', metricLabel: '平均延迟', items: [['请求路由', '智能故障切换'], ['近 30 天可用', '99.62%'], ['异常切换', '自动']] },
   },
   {
     id: 'timetable',
@@ -82,7 +82,7 @@ export const SHOWCASE_CARDS = [
     /* 原来 4 行：实测末行超出 stage 底边 2.3px，被 overflow:hidden 切掉下边框。
        而且 182 / 124 / 98 这些数没写单位，读者不知道是分数还是秒 ——
        标题改成「同题得分对比」把量纲说清，没有引入新数字。 */
-    stage: { kind: 'badge-cluster', title: '同题得分对比', badge: '16 模型', items: [['DeepSeek-V4 Pro', '182'], ['GPT-5.6 sol', '165'], ['GLM-5.3 Flash', '124']] },
+    stage: { kind: 'badge-cluster', title: '同题得分对比', badge: '16 模型', items: [['DeepSeek-V4 Pro', '182'], ['GPT-5.6', '165'], ['GLM-5.3 Flash', '124']] },
   },
   {
     id: 'prompts',
@@ -160,7 +160,7 @@ export const SHOWCASE_CARDS = [
     href: '/baby-care',
     family: 'life',
     Icon: 'Milk',
-    stage: { kind: 'metric-panel', status: '今日已记录', metric: '6', metricUnit: '小时', metricLabel: '睡眠时长', items: [['喂养', '5 次 / 620ml'], ['体温', '36.5℃ 正常'], ['成长', '月龄 +1']] },
+    stage: { kind: 'metric-panel', status: '今日已记录', metric: '6', metricUnit: '小时', metricLabel: '睡眠时长', items: [['喂养', '5 次 / 620ml'], ['体温', '36.5℃ 正常'], ['成长', '身高 71cm']] },
   },
 
   /* ══════════════ 产品 · 实用工具 ══════════════ */
@@ -258,7 +258,7 @@ export const SHOWCASE_CARDS = [
     seq: '04',
     no: 'APP 04 / AUTO EXPENSE TRACKER',
     name: '账迹 BillTrace',
-    desc: '付款后 2 秒自动入库，三引擎采集，数据本地加密。',
+    desc: '付款后 2 秒自动入库，双引擎采集，数据只存本机不上传。',
     cta: '下载 APK',
     href: '/billtrace/',
     logo: '/billtrace/icon-512.png',

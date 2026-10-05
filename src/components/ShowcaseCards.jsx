@@ -42,7 +42,6 @@ function StageIconTile({ stage, Icon }) {
   return (
     <div className="st-tile">
       <div className="st-tile-main">
-        <span className="st-tile-glow" aria-hidden="true" />
         <span className="st-tile-icon" aria-hidden="true">
           {Glyph ? <Glyph size={28} strokeWidth={1.5} /> : <Icon size={28} strokeWidth={1.5} />}
         </span>
