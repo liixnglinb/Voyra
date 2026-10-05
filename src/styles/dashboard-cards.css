@@ -897,15 +897,6 @@ body{
 /* 已移除 .sc-card-head / .sc-head-left：横排改造后卡内改用 .sc-body > .sc-copy，
    这两个只服务于旧的头部容器。 */
 
-.sc-no {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: 0.10em;
-  color: var(--sc-text-dim);
-  margin-bottom: 12px;
-}
-
 /* 标题：参考图用大号重体（28px / 800），是整张卡的第一视觉。
    之前是 17px，在横排布局里显得太小、撑不住左列。 */
 .sc-title {
@@ -1009,7 +1000,7 @@ body{
   --p-accent: #1F5FE0;
   --p-soft:   #EEF3FD;
   --p-line:   rgba(31, 95, 224, 0.20);
-  --p-glow:   rgba(31, 95, 224, 0.10);
+  --p-glow:   rgba(31, 95, 224, 0.16);
 }
 
 /* stage 内部统一底色 —— 原来 19 套各写一遍 */
@@ -1025,13 +1016,6 @@ body{
    列表行是「左标签右值」两端对齐（原来名称和值挤在一起，右边空一大片）。 */
 .st-tile { position:relative;display:flex;flex-direction:column;gap:14px;
   padding:18px 20px;height:100%;justify-content:center; }
-.st-tile-top { display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding-bottom:12px;border-bottom:1px solid var(--p-line); }
-.st-tile-title { font-size:12.5px;font-weight:800;color:var(--sc-text-main);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.st-tile-badge { font-size:10.5px;font-weight:700;color:var(--p-accent);
-  background:#fff;border:1px solid var(--p-line);border-radius:999px;
-  padding:3px 9px;white-space:nowrap;flex-shrink:0; }
 .st-tile-main { position:relative;display:flex;align-items:center;gap:16px; }
 .st-tile-glow {
   position:absolute;left:-6px;top:50%;width:120px;height:120px;transform:translateY(-50%);
@@ -1057,14 +1041,7 @@ body{
    看不见 —— 提到 .38 并加粗到 2px。 */
 .st-flow { padding:18px 20px;display:flex;flex-direction:column;justify-content:center;
   gap:16px;height:100%; }
-.st-flow-top { display:flex;align-items:center;justify-content:space-between;gap:10px; }
-.st-flow-title { font-size:12.5px;font-weight:800;color:var(--sc-text-main);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.st-flow-count { font-size:10.5px;font-weight:700;color:var(--p-accent);
-  background:#fff;border:1px solid var(--p-line);border-radius:999px;
-  padding:3px 9px;white-space:nowrap;flex-shrink:0; }
-
-.st-flow-track { position:relative;color:rgba(31,95,224,.38); }
+.st-flow-track { position:relative;color:rgba(31,95,224,.5); }
 .st-flow-track svg { position:absolute;top:5px;height:8px; }
 .st-flow-track ul { position:relative;display:flex;
   list-style:none;margin:0;padding:0;gap:6px; }
@@ -1083,13 +1060,6 @@ body{
    改成固定 gap + 居中，并把行高从 34 收到 32；数据侧统一最多 3 行。 */
 .st-badges { padding:18px 20px;display:flex;flex-direction:column;gap:12px;height:100%;
   justify-content:center; }
-.st-badges-top { display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding-bottom:10px;border-bottom:1px solid var(--p-line); }
-.st-badges-title { font-size:12.5px;font-weight:800;color:var(--sc-text-main);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.st-badges-badge { font-size:10.5px;font-weight:700;color:var(--p-accent);
-  background:#fff;border:1px solid var(--p-line);
-  border-radius:999px;padding:3px 9px;white-space:nowrap;flex-shrink:0; }
 .st-badges ul { list-style:none;margin:0;padding:0;
   display:flex;flex-direction:column;gap:8px; }
 .st-badges li { display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -1106,12 +1076,6 @@ body{
    才真的是唯一的主角。 */
 .st-metric { padding:18px 20px;display:flex;flex-direction:column;gap:14px;height:100%;
   justify-content:center; }
-.st-metric-top { display:flex;align-items:center;gap:7px;
-  padding-bottom:10px;border-bottom:1px solid var(--p-line); }
-.st-metric-dot { width:6px;height:6px;border-radius:50%;background:var(--p-accent);
-  box-shadow:0 0 0 3px var(--p-glow);flex-shrink:0; }
-.st-metric-status { font-size:12.5px;font-weight:800;
-  color:var(--sc-text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .st-metric-body { display:flex;align-items:center;gap:18px;min-width:0; }
 .st-metric-hero { display:flex;flex-direction:column;gap:4px;flex-shrink:0; }
 .st-metric-val { font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em;
@@ -1150,22 +1114,14 @@ body{
   from { opacity: 0; transform: translateY(9px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.st-flow-top,
-.st-tile-top,
 .st-tile-icon,
 .st-tile-list li,
-.st-badges-top,
 .st-badges li,
-.st-metric-top,
 .st-metric-hero,
 .st-metric-list li,
 .st-flow-node {
   animation: stRiseIn .5s var(--sc-ease) both;
 }
-.st-flow-top,
-.st-tile-top,
-.st-badges-top,
-.st-metric-top               { animation-delay: .04s; }
 /* 节点在连线画到一半时才冒出来（线 .18s 起、1.05s 播完），
    顺序才是「先有线、再有点」，而不是线和点同时出现。 */
 .st-flow-node:nth-child(1)           { animation-delay: .30s; }
@@ -1200,33 +1156,55 @@ animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s
 }
 
 /* ③ 舞台常驻动画（卡片内部自循环，不依赖鼠标）—— oiloil 方法论：
-   舞台区自己会「演」：流程在流动、榜单在被逐条翻阅、实时数字是活的、
-   产品图标轻轻浮着。每套模板只给一个主角动画，周期 2.4~4.5s，
-   幅度克制；只动 transform / box-shadow / 背景位，不引起布局回流。
-   （2026-10-05 用户明确要求卡片内部要有常驻动效，推翻此前
-   「动效只放入场、不做无限呼吸」的决定；stSheen 悬停光扫维持移除。） */
+   舞台区自己会「演」。2026-10-05 二轮：幅度按用户要求加强，
+   但节奏统一 —— 全部动画共用 2.4 / 3.6 / 4.2 / 4.5s 的周期家族，
+   且每张卡相位错开 0.3s（--st-phase），整页像波浪一样依次呼吸，
+   不会同时乱闪。 */
 
-/* flow · 数据流：连线画入后切成虚线行进，高亮波沿节点从左到右巡回。 */
+/* 相位系统：grid 子项（.vr-roll-wrap）按序错开；单列布局下就是
+   从上到下的波浪，不同 Tab 列表共用同一套偏移。 */
+.vr-product-list > *:nth-child(1)  { --st-phase: 0s; }
+.vr-product-list > *:nth-child(2)  { --st-phase: .3s; }
+.vr-product-list > *:nth-child(3)  { --st-phase: .6s; }
+.vr-product-list > *:nth-child(4)  { --st-phase: .9s; }
+.vr-product-list > *:nth-child(5)  { --st-phase: 1.2s; }
+.vr-product-list > *:nth-child(6)  { --st-phase: 1.5s; }
+.vr-product-list > *:nth-child(7)  { --st-phase: 1.8s; }
+.vr-product-list > *:nth-child(8)  { --st-phase: 2.1s; }
+.vr-product-list > *:nth-child(9)  { --st-phase: 2.4s; }
+.vr-product-list > *:nth-child(10) { --st-phase: 2.7s; }
+.vr-product-list > *:nth-child(11) { --st-phase: 3s; }
+.vr-product-list > *:nth-child(12) { --st-phase: 3.3s; }
+
+/* flow · 数据流：连线持续行进；高亮波经过时圆点填充实心蓝并放大 1.55 倍。 */
 @keyframes stFlowMarch {
   from { stroke-dasharray: 5 5; stroke-dashoffset: 0; }
   to   { stroke-dasharray: 5 5; stroke-dashoffset: -10; }
 }
 @keyframes stNodeWave {
-  0%       { transform: scale(1);   box-shadow: 0 0 0 3px var(--p-glow); }
-  22%      { transform: scale(1.3); box-shadow: 0 0 0 6px var(--p-glow); }
-  45%,100% { transform: scale(1);   box-shadow: 0 0 0 3px var(--p-glow); }
+  0%       { background: #fff; transform: scale(1);     box-shadow: 0 0 0 3px var(--p-glow); }
+  22%      { background: var(--p-accent); transform: scale(1.55); box-shadow: 0 0 0 8px var(--p-glow); }
+  45%,100% { background: #fff; transform: scale(1);     box-shadow: 0 0 0 3px var(--p-glow); }
 }
 .st-flow-dot { animation: stNodeWave 2.4s ease-in-out infinite; }
-.st-flow-node:nth-child(1) .st-flow-dot  { animation-delay: 0s; }
-.st-flow-node:nth-child(2) .st-flow-dot  { animation-delay: .8s; }
-.st-flow-node:nth-child(3) .st-flow-dot  { animation-delay: 1.6s; }
-.st-flow-node:nth-child(n+4) .st-flow-dot { animation-delay: 2.4s; }
+.st-flow-node:nth-child(1) .st-flow-dot  { animation-delay: var(--st-phase, 0s); }
+.st-flow-node:nth-child(2) .st-flow-dot  { animation-delay: calc(var(--st-phase, 0s) + .8s); }
+.st-flow-node:nth-child(3) .st-flow-dot  { animation-delay: calc(var(--st-phase, 0s) + 1.6s); }
+.st-flow-node:nth-child(n+4) .st-flow-dot { animation-delay: calc(var(--st-phase, 0s) + 2.4s); }
 
-/* badges · 翻阅感：柔光按行错峰扫过，像有人在逐条浏览榜单。 */
-.st-badges li { position: relative; }
+/* badges · 翻阅感：行内蓝闪光（inset 铺色 + 光影）与柔光扫过同步逐行巡回。 */
+.st-badges li { position: relative; animation: stRiseIn .5s var(--sc-ease) both, stRowFlash 3.6s ease-in-out infinite; }
+@keyframes stRowFlash {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(31,95,224,0); }
+  10%      { box-shadow: inset 0 0 0 60px rgba(31,95,224,.09), 0 4px 14px -6px rgba(31,95,224,.30); }
+}
+.st-badges li:nth-child(1)   { animation-delay: .12s, calc(var(--st-phase, 0s) + 1s); }
+.st-badges li:nth-child(2)   { animation-delay: .18s, calc(var(--st-phase, 0s) + 2.2s); }
+.st-badges li:nth-child(3)   { animation-delay: .24s, calc(var(--st-phase, 0s) + 3.4s); }
+.st-badges li:nth-child(n+4) { animation-delay: .30s, calc(var(--st-phase, 0s) + 4.6s); }
 .st-badges li::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit;
-  background: linear-gradient(100deg, transparent 30%, rgba(31,95,224,.16) 50%, transparent 70%);
+  background: linear-gradient(100deg, transparent 30%, rgba(31,95,224,.22) 50%, transparent 70%);
   background-size: 250% 100%; background-position: 140% 0;
   opacity: 0; pointer-events: none;
   animation: stRowSheen 3.6s ease-in-out infinite;
@@ -1237,49 +1215,37 @@ animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s
   20%  { background-position: -60% 0; opacity: 0; }
   100% { background-position: -60% 0; opacity: 0; }
 }
-.st-badges li:nth-child(1)::after   { animation-delay: 1s; }
-.st-badges li:nth-child(2)::after   { animation-delay: 2.2s; }
-.st-badges li:nth-child(3)::after   { animation-delay: 3.4s; }
-.st-badges li:nth-child(n+4)::after { animation-delay: 4.6s; }
-@keyframes stBadgeBreathe {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(31,95,224,0); }
-  50%      { box-shadow: 0 0 0 3px var(--p-glow); }
-}
-.st-badges-badge { animation: stBadgeBreathe 3.6s ease-in-out infinite; }
+.st-badges li:nth-child(1)::after   { animation-delay: calc(var(--st-phase, 0s) + 1s); }
+.st-badges li:nth-child(2)::after   { animation-delay: calc(var(--st-phase, 0s) + 2.2s); }
+.st-badges li:nth-child(3)::after   { animation-delay: calc(var(--st-phase, 0s) + 3.4s); }
+.st-badges li:nth-child(n+4)::after { animation-delay: calc(var(--st-phase, 0s) + 4.6s); }
 
-/* metric · 实时感：状态点脉冲环 + 大数字辉光呼吸。 */
-@keyframes stPulseRing {
-  0%   { box-shadow: 0 0 0 0 var(--p-glow); }
-  70%  { box-shadow: 0 0 0 6px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
-}
-.st-metric-dot { animation: stPulseRing 2.6s ease-out infinite; }
+/* metric · 实时感：大数字放大 1.05 + 辉光呼吸，一眼可见。 */
 @keyframes stValueGlow {
-  0%, 100% { text-shadow: 0 0 0 rgba(31,95,224,0); }
-  50%      { text-shadow: 0 0 16px rgba(31,95,224,.30); }
+  0%, 100% { text-shadow: 0 0 0 rgba(31,95,224,0); transform: scale(1); }
+  50%      { text-shadow: 0 0 22px rgba(31,95,224,.45); transform: scale(1.05); }
 }
-.st-metric-val { animation: stValueGlow 3.6s ease-in-out infinite; }
+.st-metric-val { animation: stValueGlow 3.6s ease-in-out infinite; animation-delay: var(--st-phase, 0s); }
 
-/* icon-tile · 产品活着：光晕呼吸 + 图标缓慢悬浮（入场完成后才接管）。 */
+/* icon-tile · 产品活着：图标明显悬浮（-5px）+ 光晕大幅呼吸。 */
 @keyframes stGlowBreathe {
-  0%, 100% { opacity: .7; transform: translateY(-50%) scale(1); }
-  50%      { opacity: 1;  transform: translateY(-50%) scale(1.06); }
+  0%, 100% { opacity: .6; transform: translateY(-50%) scale(1); }
+  50%      { opacity: 1;  transform: translateY(-50%) scale(1.16); }
 }
-.st-tile-glow { animation: stGlowBreathe 4.2s ease-in-out infinite; }
+.st-tile-glow { animation: stGlowBreathe 4.2s ease-in-out infinite; animation-delay: var(--st-phase, 0s); }
 @keyframes stIconFloat {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
+  50%      { transform: translateY(-5px); }
 }
 .st-tile-icon {
   animation: stRiseIn .5s var(--sc-ease) both, stIconFloat 4.5s ease-in-out infinite;
-  animation-delay: .12s, 1s;
+  animation-delay: calc(var(--st-phase, 0s) + .12s), calc(var(--st-phase, 0s) + 1s);
 }
 
-/* ── 决策记录（2026-10-05 更新） ─────────────────────────────────
-   stSheen 悬停光扫维持移除：指针扫过一列时每次掠过都触发强视觉，连环闪。
-   此前移除的无限呼吸按用户要求以克制形式恢复（stNodeWave / stValueGlow），
-   幅度只落在状态指示物层面，不回到旧版满卡呼吸。悬停反馈不变：
-   整卡上移 2px + 描边转深，CTA 文字转深、箭头斜向移动。 */
+/* ── 决策记录（2026-10-05 二轮） ─────────────────────────────────
+   卡片冗余文字（英文类目眉 / 舞台小标题 / 徽章 / 步数 / 状态行）已删，
+   舞台只剩内容本身；周期家族与相位系统保证「每个卡都动、整页不乱」。
+   stSheen 悬停光扫维持移除。 */
 
 /* 动效降级：系统开启「减弱动态效果」时全部静止。
    名单要和上面 stRiseIn 的选择器逐条对齐 —— 漏一个，那个元素就仍然带着
@@ -1287,11 +1253,11 @@ animation: stDrawLine 1.05s cubic-bezier(.16,1,.3,1) .18s both, stFlowMarch 1.1s
    .st-tile-top，还留着已改名的 .st-flow-title。 */
 @media (prefers-reduced-motion: reduce) {
   .st-flow-track line { animation: none !important; stroke-dashoffset: 0; stroke-dasharray: 300; }
-  .st-flow-top, .st-flow-node, .st-flow-dot,
-  .st-tile-top, .st-tile-icon, .st-tile-list li,
-  .st-badges-top, .st-badges li, .st-badges li::after, .st-badges-badge,
-  .st-metric-top, .st-metric-hero, .st-metric-list li,
-  .st-metric-dot, .st-metric-val {
+  .st-flow-dot,
+  .st-tile-icon, .st-tile-list li,
+  .st-badges li, .st-badges li::after,
+  .st-metric-hero, .st-metric-list li,
+  .st-metric-val {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

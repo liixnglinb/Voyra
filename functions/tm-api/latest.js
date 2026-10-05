@@ -53,9 +53,9 @@ async function fromRedirect() {
       version: v,
       source: "redirect",
       published: null,
+      // 只列真实存在的资产：便携版 zip 已于 v1.9.x 下线，按命名模板拼出来会给出 404 链接
       assets: [
         asset(`TokenMonitor-setup-v${v}.exe`),
-        asset(`TokenMonitor-portable-v${v}.zip`),
         asset("TokenMonitor.exe"),
       ],
     };

@@ -41,10 +41,6 @@ function StageIconTile({ stage, Icon }) {
   const Glyph = stage.glyph ? ICONS[stage.glyph] : null;
   return (
     <div className="st-tile">
-      <div className="st-tile-top">
-        <span className="st-tile-title">{stage.title}</span>
-        <span className="st-tile-badge">{stage.badge}</span>
-      </div>
       <div className="st-tile-main">
         <span className="st-tile-glow" aria-hidden="true" />
         <span className="st-tile-icon" aria-hidden="true">
@@ -72,10 +68,6 @@ function StageFlowNodes({ stage }) {
   const nodes = stage.nodes;
   return (
     <div className="st-flow">
-      <div className="st-flow-top">
-        <span className="st-flow-title">{stage.title}</span>
-        <span className="st-flow-count">{nodes.length} 步</span>
-      </div>
       <div className="st-flow-track">
         {/* 连线只画到首尾两个圆心。节点是 flex:1 等分，圆心在第 i 格的中点，
           即 (i+0.5)/n —— 原来写死 left:8%/right:8%，3 个节点时线会戳出两端
@@ -112,10 +104,6 @@ function StageFlowNodes({ stage }) {
 function StageBadgeCluster({ stage }) {
   return (
     <div className="st-badges">
-      <div className="st-badges-top">
-        <span className="st-badges-title">{stage.title}</span>
-        <span className="st-badges-badge">{stage.badge}</span>
-      </div>
       <ul>
         {stage.items.map(([k, v]) => (
           <li key={k}>
@@ -135,10 +123,6 @@ function StageBadgeCluster({ stage }) {
 function StageMetricPanel({ stage }) {
   return (
     <div className="st-metric">
-      <div className="st-metric-top">
-        <span className="st-metric-dot" aria-hidden="true" />
-        <span className="st-metric-status">{stage.status}</span>
-      </div>
       <div className="st-metric-body">
         <div className="st-metric-hero">
           {/* 数字和单位分开：之前 '42ms' / '128.4k' 整串塞进 34px 的重体里，
@@ -195,7 +179,6 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
     >
       <div className="sc-body">
         <div className="sc-copy">
-          <span className="sc-no">{card.no}</span>
           <div className="sc-title-row">
             <span className="sc-brand" aria-hidden="true">
               {card.logo

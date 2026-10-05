@@ -152,7 +152,7 @@ function loadAsset(){
       setTxt('chipSize', mb);
       setTxt('dlVer', 'v' + ver);
       setTxt('dlMeta', mb + ' · v' + ver);
-      setTxt('footVer', 'v' + ver + ' · 81 条注册路径');
+      setTxt('footVer', 'v' + ver + ' · 81 个已知数据源');
       setTxt('shaVal', d.sha256 ? d.sha256 : '随安装包同名发布（' + setup.name + '.sha256）');
       if (d.sha256){ var b = $('copySha'); if (b) b.hidden = false; }
       document.title = 'Token Monitor v' + ver + ' —— 本机 AI 用量看板 · Voyra';
