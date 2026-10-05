@@ -1,7 +1,7 @@
 import React from 'react';
 import {
-  ArrowUpRight, HardDrive, Globe, CalendarRange, Film, Lightbulb, Shapes,
-  Sparkles, Bot, Route, Milk, Dices, ClipboardCheck, Star,
+  ArrowUpRight, Globe, CalendarRange, Film, Lightbulb, Shapes,
+  Sparkles, Bot, Route, Milk, Dices, ClipboardCheck, Star, Workflow,
 } from 'lucide-react';
 import { SHOWCASE_CARDS, SHOWCASE_GROUPS, CARD_BY_ID } from '../data/showcase-cards';
 
@@ -26,7 +26,7 @@ import { SHOWCASE_CARDS, SHOWCASE_GROUPS, CARD_BY_ID } from '../data/showcase-ca
    将来那份数据若要迁到 worker / 静态生成，不用改。 */
 const ICONS = {
   Globe, CalendarRange, Film, Lightbulb, Shapes, Sparkles, Bot,
-  Route, Milk, Dices, ClipboardCheck, Star, HardDrive,
+  Route, Milk, Dices, ClipboardCheck, Star, Workflow,
 };
 
 /** 数据里的 Icon 字段（字符串）→ lucide 组件；缺图标时回落到卡片族默认图形。 */
@@ -41,44 +41,63 @@ function StageIconTile({ stage, Icon }) {
   const Glyph = stage.glyph ? ICONS[stage.glyph] : null;
   return (
     <div className="st-tile">
-      <span className="st-tile-glow" aria-hidden="true" />
-      <span className="st-tile-icon" aria-hidden="true">
-        {Glyph ? <Glyph size={30} strokeWidth={1.5} /> : <Icon size={30} strokeWidth={1.5} />}
-      </span>
-      <ul className="st-tile-list">
-        {stage.items.map(([k, v]) => (
-          <li key={k}>
-            <b>{k}</b>
-            <span>{v}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="st-tile-top">
+        <span className="st-tile-title">{stage.title}</span>
+        <span className="st-tile-badge">{stage.badge}</span>
+      </div>
+      <div className="st-tile-main">
+        <span className="st-tile-glow" aria-hidden="true" />
+        <span className="st-tile-icon" aria-hidden="true">
+          {Glyph ? <Glyph size={28} strokeWidth={1.5} /> : <Icon size={28} strokeWidth={1.5} />}
+        </span>
+        <ul className="st-tile-list">
+          {stage.items.map(([k, v]) => (
+            <li key={k}>
+              <b>{k}</b>
+              <span>{v}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
 
 /* ── 模板二：flow-nodes ─────────────────────────────────────────────
-   3-4 个圆点由一条 SVG 虚线连接，节点下方标注名称。
-   用于提示词库、AI Agent、思维导图、饮食打卡、随机抽人、数模、知新 ——
-   它们的共同点是「一件事分几步走」。 */
+   3-4 个圆点由一条连线串起，每个节点两行：名称 + 注解。
+   顶栏与 badge 模板同构（左标题 / 右计数），四套模板的视觉语言才对得上。
+   之前顶栏标题写的是「提问 → 审查 → 执行」，而下面三个节点标签就是
+   「提问 / 审查 / 执行」—— 同一句话在 150px 高的小盒子里写了两遍。 */
 function StageFlowNodes({ stage }) {
   const nodes = stage.nodes;
   return (
     <div className="st-flow">
-      <span className="st-flow-title">{stage.title}</span>
+      <div className="st-flow-top">
+        <span className="st-flow-title">{stage.title}</span>
+        <span className="st-flow-count">{nodes.length} 步</span>
+      </div>
       <div className="st-flow-track">
-        <svg viewBox="0 0 100 8" preserveAspectRatio="none" aria-hidden="true">
+        {/* 连线只画到首尾两个圆心。节点是 flex:1 等分，圆心在第 i 格的中点，
+          即 (i+0.5)/n —— 原来写死 left:8%/right:8%，3 个节点时线会戳出两端
+          各约 9%，4 个节点时又缩进去，两种都不对。 */}
+        <svg
+          viewBox="0 0 100 8"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+          style={{ left: `${100 / nodes.length / 2}%`, right: `${100 / nodes.length / 2}%`, width: `${100 - 100 / nodes.length}%` }}
+        >
           <line
-            x1="4" y1="4" x2="96" y2="4"
+            x1="0" y1="4" x2="100" y2="4"
             stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3"
             vectorEffect="non-scaling-stroke"
           />
         </svg>
         <ul>
-          {nodes.map((n) => (
+          {nodes.map((n, i) => (
             <li key={n} className="st-flow-node">
               <span className="st-flow-dot" aria-hidden="true" />
               <span className="st-flow-label">{n}</span>
+              {stage.subs?.[i] ? <span className="st-flow-sub">{stage.subs[i]}</span> : null}
             </li>
           ))}
         </ul>
@@ -122,7 +141,12 @@ function StageMetricPanel({ stage }) {
       </div>
       <div className="st-metric-body">
         <div className="st-metric-hero">
-          <b className="st-metric-val">{stage.metric}</b>
+          {/* 数字和单位分开：之前 '42ms' / '128.4k' 整串塞进 34px 的重体里，
+              单位被迫和数字一样大，大数字就压不住场。 */}
+          <b className="st-metric-val">
+            {stage.metric}
+            {stage.metricUnit ? <i className="st-metric-unit">{stage.metricUnit}</i> : null}
+          </b>
           <span className="st-metric-label">{stage.metricLabel}</span>
         </div>
         <ul className="st-metric-list">
@@ -156,9 +180,11 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
   const Stage = STAGE_TEMPLATES[card.stage.kind];
   const linkProps = card.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
   const desc = (isMobile && shortDesc) || card.desc;
-  /* 描边序号：参考图的质感关键 —— 巨大、极浅的空心数字压在卡片左下角，
-     像纸张上的编号水印，给纯白卡片一个视觉落点，又不抢内容。 */
-  const seq = card.no.split('/')[0].trim();
+  /* 描边序号只收纯数字。之前是从 no 字段切 '/' 前段推导，结果
+     'SKILL / CUMCM WORKFLOW' 渲染出 192px 宽的空心单词、
+     'APP 01 / …' 渲染出 255px 宽的「APP 01」，在 361px 的卡上被右缘裁断。
+     现在由数据显式给 seq，取不到数字就不渲染。 */
+  const seq = /^\d{1,2}$/.test(card.seq ?? '') ? card.seq : null;
 
   return (
     <a
@@ -167,27 +193,29 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
       className={`sc-card st-${card.family}`}
       aria-label={`${card.name}：${card.cta}${card.external ? '（新标签页）' : ''}`}
     >
-      <span className="sc-seq" aria-hidden="true">{seq}</span>
-
       <div className="sc-body">
         <div className="sc-copy">
           <span className="sc-no">{card.no}</span>
           <div className="sc-title-row">
             <span className="sc-brand" aria-hidden="true">
               {card.logo
-                ? <img src={card.logo} alt="" width="26" height="26" loading="lazy" decoding="async" />
+                ? <img src={card.logo} alt="" width="34" height="34" loading="lazy" decoding="async" />
                 : <Icon size={19} strokeWidth={1.9} />}
             </span>
             <h3 className="sc-title">{card.name}</h3>
           </div>
           <p className="sc-desc" title={card.desc}>{desc}</p>
-          <span className="sc-cta">
-            {card.cta} <ArrowUpRight size={14} />
-          </span>
         </div>
 
         <div className="sc-stage">
           <Stage stage={card.stage} Icon={Icon} />
+        </div>
+
+        <div className="sc-foot">
+          {seq ? <span className="sc-seq" aria-hidden="true">{seq}</span> : <span />}
+          <span className="sc-cta">
+            {card.cta} <ArrowUpRight size={14} />
+          </span>
         </div>
       </div>
     </a>

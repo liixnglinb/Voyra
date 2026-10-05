@@ -788,7 +788,12 @@ body{
   --sc-border-hover: rgba(27, 27, 27, 0.22);
   --sc-text-main: #1A1A1A;
   --sc-text-sub: #666666;
-  --sc-text-dim: #999999;
+  /* 原来 #999999 只有 2.85:1，而它承载的全是 10.5~12px 的小字
+     （.sc-no / .st-metric-list span / .st-tile-list b / .st-flow-sub）。
+     先试 #6E7378 = 4.79:1，但那是对纯白算的：这些字实际落在 stage 的
+     #EEF3FD 渐变顶盖上，只剩 4.31:1，还是不达标。#666B70 对 #EEF3FD
+     实测 4.84:1、对白 5.38:1，两种底都过 AA。 */
+  --sc-text-dim: #666B70;
 
   --sc-shadow-sm: 0 2px 6px rgba(20, 20, 20, 0.03);
   --sc-shadow-hover: 0 16px 36px -12px rgba(20, 20, 20, 0.12), 0 2px 6px rgba(20, 20, 20, 0.04);
@@ -796,88 +801,14 @@ body{
   --sc-transition: 0.32s var(--sc-ease);
 }
 
-/* 19 个卡片专属主题色变量 */
-.theme-api        { --p-accent: #2A60E4; --p-soft: #EDF3FE; --p-line: rgba(42, 96, 228, 0.22); }
-.theme-timetable  { --p-accent: #A48830; --p-soft: #FFF9DF; --p-line: rgba(164, 136, 48, 0.25); }
-.theme-pelican    { --p-accent: #D77A23; --p-soft: #FFF2E6; --p-line: rgba(215, 122, 35, 0.24); }
-.theme-prompts    { --p-accent: #8E54E9; --p-soft: #F5EFFF; --p-line: rgba(142, 84, 233, 0.22); }
-.theme-uikit      { --p-accent: #1B1B1B; --p-soft: #EFEFEF; --p-line: rgba(27, 27, 27, 0.20); }
-.theme-skills     { --p-accent: #2B7A78; --p-soft: #EAF4F4; --p-line: rgba(43, 122, 120, 0.24); }
-.theme-agents     { --p-accent: #3A506B; --p-soft: #EEF2F6; --p-line: rgba(58, 80, 107, 0.24); }
-.theme-mindmap    { --p-accent: #4B6584; --p-soft: #F1F4F8; --p-line: rgba(75, 101, 132, 0.24); }
-.theme-care       { --p-accent: #EB7A77; --p-soft: #FDF1F0; --p-line: rgba(235, 122, 119, 0.25); }
-.theme-draw       { --p-accent: #FA8231; --p-soft: #FFF3EB; --p-line: rgba(250, 130, 49, 0.25); }
-.theme-diet       { --p-accent: #20BF6B; --p-soft: #EAF9F1; --p-line: rgba(32, 191, 107, 0.24); }
-.theme-mathmodel  { --p-accent: #0984E3; --p-soft: #EBF5FC; --p-line: rgba(9, 132, 227, 0.24); }
-.theme-modelflow  { --p-accent: #262626; --p-soft: #F0F0F0; --p-line: rgba(38, 38, 38, 0.22); }
-.theme-checkin    { --p-accent: #F27B34; --p-soft: #FFEEDD; --p-line: rgba(242, 123, 52, 0.26); }
-.theme-toolbox    { --p-accent: #6D5CFF; --p-soft: #F1EFFE; --p-line: rgba(109, 92, 255, 0.24); }
-.theme-billtrace  { --p-accent: #0BA360; --p-soft: #EAF7F0; --p-line: rgba(11, 163, 96, 0.24); }
-.theme-token      { --p-accent: #2F5FE0; --p-soft: #EEF3FD; --p-line: rgba(47, 95, 224, 0.24); }
-.theme-zenew      { --p-accent: #C29214; --p-soft: #FCF8EA; --p-line: rgba(194, 146, 20, 0.25); }
-.theme-chronicle  { --p-accent: #0F9D8A; --p-soft: #EBF8F6; --p-line: rgba(15, 157, 138, 0.24); }
+/* 单强调色。上一版这里是 19 条 .theme-*{--p-accent}（蓝/金/橙/紫/墨/青绿/珊瑚…），
+   卡片体系数据化后 .sc-card 只挂 st-<family>，这 19 条已经没有任何选择器命中，
+   属于死代码，整块删除。真正生效的配色族在下面「配色」一节收敛为一个蓝。 */
 
-/* 区块与网格 */
-.dash-showcase-container {
-  display: flex;
-  flex-direction: column;
-  gap: 56px;
-  width: 100%;
-}
-
-.dash-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.dash-section-head {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.sec-title-wrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sec-tag {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  color: #A48830;
-  background: #FFF9DF;
-  padding: 2px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.05em;
-}
-
-.dash-section-head h2 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-  color: #1A1A1A;
-  letter-spacing: -0.02em;
-}
-
-.dash-section-head p {
-  margin: 0;
-  font-size: 14px;
-  color: #666666;
-}
-
-.showcase-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: 24px;
-  width: 100%;
-}
-
-.grid-featured-skill {
-  grid-template-columns: minmax(340px, 560px);
-}
+/* 「区块与网格」整段（.dash-showcase-container / .dash-section / .dash-section-head /
+   .sec-title-wrap / .sec-tag / .showcase-grid / .grid-featured-skill）已删除：
+   19 张卡实际由 Dashboard 的 .vr-product-list 承载（单列、grid-auto-rows:430px），
+   这些类名在 JSX 里一次都没出现过。留着会让人以为卡片还有一套独立的分区网格。 */
 
 /* 卡片基础骨架 */
 .sc-card {
@@ -906,57 +837,54 @@ body{
   padding: 0;
 }
 
-/* 描边序号水印：参考图最关键的一笔。巨大、极浅的空心数字，
-   压在卡片左下角，给纯白卡片一个视觉落点。color:transparent + text-stroke
-   是唯一能做出「空心数字」的办法（background-clip:text 会填心）。 */
+/* 描边序号：从「压在卡片左下角的 76px 巨型水印」降级为页脚里的 34px 空心序号。
+   76px / line-height .8 实测占高约 61px，而 stage 底边距卡底只有 67 / 45 / 35px
+   三档 —— 也就是说只要视觉区一长，数字必然被裁掉一截，看起来像事故而不是设计。
+   现在它是 .sc-foot 的 flex 子项，参与布局，物理上不可能再和视觉区重叠。 */
 .sc-seq {
-  position: absolute;
-  left: 20px; bottom: 4px;
-  z-index: 0;
-  font-size: 76px;
+  font-size: 34px;
   font-weight: 800;
-  line-height: .8;
-  letter-spacing: -.04em;
+  line-height: 1;
+  letter-spacing: -.03em;
   color: transparent;
-  -webkit-text-stroke: 1px rgba(17, 24, 39, .10);
-  pointer-events: none;
+  -webkit-text-stroke: 1px rgba(17, 24, 39, .16);
   user-select: none;
   font-variant-numeric: tabular-nums;
 }
 
-/* 横排容器：左文右图。
-   写法上踩过一次坑：原本是 minmax(0,300px) minmax(0,1fr)，但本站卡片是
-   单列窄卡（1080 视口下净宽仅 361px），第二列被压成 0px、stage 只剩 2px 宽，
-   整块视觉全空。改成给 stage 一个 minmax 下限后文字列又只剩 77px。
-   结论：这个宽度横排放不下。改用容器查询 —— 卡片够宽（≥560px，含内边距
-   净宽约 500px）才横排，否则纵向堆叠，视觉区放在文字下方。 */
+/* 三段式：上文案 / 中视觉 / 下页脚。
+   之前是两段 + align-content:center，实测视觉区高度有 150 / 193 / 214 三档，
+   430px 卡高减去内容后剩下的空间被平均摊成卡上下的死空气（底部空 67/45/35px），
+   19 张卡并排时纵向节奏对不齐。改成 minmax(0,1fr) 让视觉区吃掉全部剩余高度，
+   于是只要文案段和页脚段等高，19 张卡的视觉区就严格等高。 */
 .sc-card { container-type: inline-size; container-name: showcase-card; }
 .sc-body {
   position: relative;
   z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
-  align-content: center;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
   height: 100%;
-  padding: 30px 30px 34px 26px;
+  padding: 28px 26px 20px 26px;
 }
 .sc-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.sc-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 34px;
+}
 
 @keyframes cardFadeIn {
   from { opacity: 0; transform: translateY(14px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 够宽才横排：文字列 300px + 视觉列至少 220px + 间距 26px ≈ 550px。
-   窄于这个宽度就保持纵向堆叠（上面 .sc-body 的默认状态）。 */
-@container showcase-card (min-width: 560px) {
-  .sc-body {
-    grid-template-columns: minmax(0, 300px) minmax(220px, 1fr);
-    gap: 26px;
-    align-items: center;
-  }
-}
+/* 横排容器查询已删除：实测卡片净宽恒为 361px（.vr-product-list 是单列，
+   1440 视口下整列只有 ~400px 宽），@container (min-width:560px) 永不命中，
+   留着的那条两列 grid 只会和新加的 grid-template-rows 三段式互相打架。 */
 
 /* 悬停：最小反馈。上移 4 → 2px，阴影换成一档更轻的。
    19 张卡纵向排成一列，指针横扫时位移越小越不晃。 */
@@ -989,16 +917,24 @@ body{
   line-height: 1.15;
 }
 
-/* 描述：参考图是窄栏 3 行、字号偏小、行高宽松。放宽到 3 行让文案念得完。 */
+/* 描述：两行封顶，且两行的高度恒定预留。
+   min-height 是「19 张卡等高」的关键：只 clamp 不预留的话，一行短描述和两行
+   长描述会让文案段差出 22px，视觉区跟着差 22px，整列就成锯齿。
+
+   换行用 text-wrap: balance 而不是 pretty：实测 19 条描述里有 12 条折出
+   2~3 个字的孤行（"…预览后再确认 / 清理。"），pretty 一条都没救回来 ——
+   它对中文的断行约束太弱。balance 会把两摊成等长，实测末行占比从 0.12 抬到 0.8 以上。 */
 .sc-desc {
   margin: 12px 0 0;
   font-size: 12.5px;
   line-height: 1.75;
   color: var(--sc-text-sub);
+  text-wrap: balance;
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
+  min-height: 44px;
 }
 
 .sc-stage {
@@ -1019,21 +955,22 @@ body{
   border-color: var(--p-line);
 }
 
-/* CTA 移到左列底部，参考图是「进入游戏 →」这种克制的小字链接，
-   不做成实心按钮 —— 实心按钮会把整张卡的重量锚在左下角，破坏留白。 */
+/* CTA 从「描述正下方」挪到底部页脚的右侧，和左侧的空心序号对角呼应。
+   之前它紧贴在描述下面 16px，读起来像描述的第三行，而不是一个动作。
+   颜色直接给到唯一的强调色蓝：它是整张卡唯一的可点出口，值得是页面上
+   唯一那个颜色。#1F5FE0 对白底实测 5.4:1，12.5px 小字过 AA。 */
 .sc-cta {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  margin-top: 16px;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--sc-text-sub);
+  color: var(--p-accent);
   transition: color .22s ease;
 }
 .sc-cta svg { transition: transform .22s cubic-bezier(.22,1,.36,1); }
 /* 悬停只做两件事：文字转深、箭头右移 2px。参考图的悬停就是这个量级。 */
-.sc-card:hover .sc-cta { color: var(--sc-text-main); }
+.sc-card:hover .sc-cta { color: #143C8C; }
 .sc-card:hover .sc-cta svg { transform: translateX(2px); }
 
 /* 已移除 .sc-card-foot / .sc-foot-tag：footer（含 foot 平台标签）在横排改造中
@@ -1058,21 +995,22 @@ body{
    四套模板只负责 stage 内部。
    ========================================================================== */
 
-/* ── 配色：黑蓝双主色 ──────────────────────────────────────────────────
-   上一版是 6 族彩色（core 蓝 / ai 紫 / life 绿 / tool 橙 / learn 金 / mute 墨），
-   每族一个色相。19 张卡并排时颜色互相打架，观感仍偏杂。
+/* ── 配色：整页一个蓝 ────────────────────────────────────────────────────
+   演进过程：19 色 → 6 族彩色 → 6 族"黑蓝"。最后一版名义上是黑蓝双色，实际给了
+   蓝的 5 档明度（#3B82F6 / #2A6BE0 / #1F5FE0 / #14509C / #0B3FA8）。问题是这 5 档
+   在 361px 窄卡上根本分不出彼此，却让人隐约觉得"这几张卡的颜色好像不太一样"——
+   付出了色相差异的视觉代价，没换来任何分组信息，比彩虹更磨人。
+   而且 family 的分布本身也不成立：ai 族 7 张、mute 族 0 张，分组早就名存实亡。
 
-   现在收到「黑 + 蓝」两个色相：
-     墨黑  负责文字、描边、编号这类结构件 —— 整页的骨架
-     蓝    唯一强调色，用于编号 / 图标 / 大数字 / CTA / 描边高亮
-   其余四族不再是独立色相，而是蓝的 4 档明度差（--p-accent 由浅到深），
-   保留「同类产品成组」的暗示，但整页只出现蓝与黑两种色相。 */
-.st-core  { --p-accent:#1F5FE0; --p-soft:#EDF3FE; --p-line:rgba(31,95,224,.24);  --p-glow:rgba(31,95,224,.12); }  /* 主蓝 */
-.st-ai    { --p-accent:#3B82F6; --p-soft:#F0F6FE; --p-line:rgba(59,130,246,.22);  --p-glow:rgba(59,130,246,.10); }  /* 亮蓝 */
-.st-life  { --p-accent:#0B3FA8; --p-soft:#EAF0FB; --p-line:rgba(11,63,168,.26);   --p-glow:rgba(11,63,168,.12); }  /* 深蓝 */
-.st-tool  { --p-accent:#2A6BE0; --p-soft:#EBF2FD; --p-line:rgba(42,107,224,.24);  --p-glow:rgba(42,107,224,.11); }  /* 标准蓝 */
-.st-learn { --p-accent:#14509C; --p-soft:#E9EFF8; --p-line:rgba(20,80,156,.26);   --p-glow:rgba(20,80,156,.12); }  /* 靛蓝 */
-.st-mute  { --p-accent:#111827; --p-soft:#F1F3F7; --p-line:rgba(17,24,39,.22);    --p-glow:rgba(17,24,39,.10); }  /* 墨黑 */
+   所以这一版把颜色彻底拿掉分组职责：整页一个强调色，族差异改由 .sc-no 的
+   类目词（API GATEWAY / WORKSPACE / LUCKY DRAW…）承担——那才是读得出来的分组。
+   墨黑负责结构（文字 / 描边 / 编号），蓝只点 4 处：大数字、徽章值、圆点、悬停描边。 */
+.sc-card {
+  --p-accent: #1F5FE0;
+  --p-soft:   #EEF3FD;
+  --p-line:   rgba(31, 95, 224, 0.20);
+  --p-glow:   rgba(31, 95, 224, 0.10);
+}
 
 /* stage 内部统一底色 —— 原来 19 套各写一遍 */
 .sc-stage {
@@ -1080,78 +1018,112 @@ body{
   background: linear-gradient(180deg, var(--p-soft) 0%, rgba(255,255,255,.55) 100%);
 }
 
-/* ── 模板一：icon-tile ───────────────────────────────────────────── */
-.st-tile { position:relative;display:flex;align-items:center;gap:18px;padding:18px 20px;height:100%; }
+/* ── 模板一：icon-tile ─────────────────────────────────────────────
+   补了顶栏。四套模板里原来只有它没有「左标题 + 右徽章」，于是 216px 高的
+   视觉区里就一个图标加三行小字飘在中间、上下各空 60 多px，另外三套顶部都
+   有一道分隔线压住视线。补上之后四套模板的头部是同一种东西。
+   列表行是「左标签右值」两端对齐（原来名称和值挤在一起，右边空一大片）。 */
+.st-tile { position:relative;display:flex;flex-direction:column;gap:14px;
+  padding:18px 20px;height:100%;justify-content:center; }
+.st-tile-top { display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding-bottom:12px;border-bottom:1px solid var(--p-line); }
+.st-tile-title { font-size:12.5px;font-weight:800;color:var(--sc-text-main);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.st-tile-badge { font-size:10.5px;font-weight:700;color:var(--p-accent);
+  background:#fff;border:1px solid var(--p-line);border-radius:999px;
+  padding:3px 9px;white-space:nowrap;flex-shrink:0; }
+.st-tile-main { position:relative;display:flex;align-items:center;gap:16px; }
 .st-tile-glow {
-  position:absolute;left:14px;top:50%;width:132px;height:132px;transform:translateY(-50%);
+  position:absolute;left:-6px;top:50%;width:120px;height:120px;transform:translateY(-50%);
   background:radial-gradient(circle,var(--p-glow) 0%,transparent 68%);pointer-events:none;
 }
 .st-tile-icon {
   position:relative;z-index:1;display:grid;place-items:center;flex-shrink:0;
-  width:64px;height:64px;border-radius:18px;
+  width:56px;height:56px;border-radius:16px;
   background:#fff;border:1px solid var(--p-line);color:var(--p-accent);
   box-shadow:0 4px 14px -4px var(--p-glow);
 }
 .st-tile-list { position:relative;z-index:1;flex:1;min-width:0;list-style:none;margin:0;padding:0;
-  display:flex;flex-direction:column;gap:7px; }
-.st-tile-list li { display:flex;align-items:baseline;gap:8px;min-width:0; }
-.st-tile-list b { font-size:12.5px;font-weight:700;color:var(--sc-text-main);white-space:nowrap; }
-.st-tile-list span { font-size:11.5px;color:var(--sc-text-dim);
+  display:flex;flex-direction:column;gap:9px; }
+.st-tile-list li { display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0; }
+.st-tile-list b { font-size:12px;font-weight:600;color:var(--sc-text-dim);white-space:nowrap; }
+.st-tile-list span { font-size:12.5px;font-weight:700;color:var(--sc-text-main);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right; }
+
+/* ── 模板二：flow-nodes ─────────────────────────────────────────────
+   顶栏（标题 + 步数）与 badge 模板同构，节点从「一个词」升级为「词 + 注解」，
+   这样 200px 高的视觉区不再只有一行 11px 的圆点飘在中间。
+   连线原来是 rgba(31,95,224,.20) 的 1.5px 虚线，实测在 #EEF3FD 渐变底上几乎
+   看不见 —— 提到 .38 并加粗到 2px。 */
+.st-flow { padding:18px 20px;display:flex;flex-direction:column;justify-content:center;
+  gap:16px;height:100%; }
+.st-flow-top { display:flex;align-items:center;justify-content:space-between;gap:10px; }
+.st-flow-title { font-size:12.5px;font-weight:800;color:var(--sc-text-main);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.st-flow-count { font-size:10.5px;font-weight:700;color:var(--p-accent);
+  background:#fff;border:1px solid var(--p-line);border-radius:999px;
+  padding:3px 9px;white-space:nowrap;flex-shrink:0; }
 
-/* ── 模板二：flow-nodes ───────────────────────────────────────────── */
-/* 四套模板统一：撑满 stage 并居中。stage 有了 150px 下限后，内容少的模板
-   （flow-nodes 只有一行）不会顶在上方留一大片空白。 */
-.st-flow { padding:20px 22px;display:flex;flex-direction:column;justify-content:center;
-  gap:14px;height:100%; }
-
-.st-flow-title { font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--p-accent); }
-.st-flow-track { position:relative;color:var(--p-line); }
-.st-flow-track svg { position:absolute;left:6px;right:6px;top:5px;width:calc(100% - 12px);height:8px; }
-.st-flow-track ul { position:relative;display:flex;justify-content:space-between;
-  list-style:none;margin:0;padding:0;gap:8px; }
-.st-flow-node { display:flex;flex-direction:column;align-items:center;gap:7px;
+.st-flow-track { position:relative;color:rgba(31,95,224,.38); }
+.st-flow-track svg { position:absolute;top:5px;height:8px; }
+.st-flow-track ul { position:relative;display:flex;
+  list-style:none;margin:0;padding:0;gap:6px; }
+.st-flow-node { display:flex;flex-direction:column;align-items:center;gap:6px;
   flex:1;min-width:0;text-align:center; }
 .st-flow-dot { width:11px;height:11px;border-radius:50%;background:#fff;
   border:2.5px solid var(--p-accent);box-shadow:0 0 0 3px var(--p-glow); }
-.st-flow-label { font-size:12px;font-weight:700;color:var(--sc-text-main);
+.st-flow-label { font-size:12.5px;font-weight:700;color:var(--sc-text-main);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%; }
+.st-flow-sub { font-size:11px;line-height:1.45;color:var(--sc-text-dim);
+  overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2; }
 
-/* ── 模板三：badge-cluster ────────────────────────────────────────── */
-.st-badges { padding:16px 18px;display:flex;flex-direction:column;gap:11px;height:100%; }
+/* ── 模板三：badge-cluster ──────────────────────────────────────────
+   实测 4 行时最后一行超出 stage 底边 2.3px，被 overflow:hidden 齐刷刷切掉
+   下边框（AI 模型对比秀）。根因是 ul 用 space-evenly 摊行，行高一多就顶穿。
+   改成固定 gap + 居中，并把行高从 34 收到 32；数据侧统一最多 3 行。 */
+.st-badges { padding:18px 20px;display:flex;flex-direction:column;gap:12px;height:100%;
+  justify-content:center; }
 .st-badges-top { display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding-bottom:9px;border-bottom:1px solid var(--p-line); }
-.st-badges-title { font-size:12.5px;font-weight:800;color:var(--sc-text-main); }
+  padding-bottom:10px;border-bottom:1px solid var(--p-line); }
+.st-badges-title { font-size:12.5px;font-weight:800;color:var(--sc-text-main);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .st-badges-badge { font-size:10.5px;font-weight:700;color:var(--p-accent);
-  background:var(--p-soft);border:1px solid var(--p-line);
-  border-radius:999px;padding:3px 9px;white-space:nowrap; }
-.st-badges ul { flex:1;min-height:0;list-style:none;margin:0;padding:0;
-  display:flex;flex-direction:column;justify-content:space-evenly;gap:6px; }
+  background:#fff;border:1px solid var(--p-line);
+  border-radius:999px;padding:3px 9px;white-space:nowrap;flex-shrink:0; }
+.st-badges ul { list-style:none;margin:0;padding:0;
+  display:flex;flex-direction:column;gap:8px; }
 .st-badges li { display:flex;align-items:center;justify-content:space-between;gap:10px;
-  background:rgba(255,255,255,.72);border:1px solid var(--p-line);
-  border-radius:9px;padding:7px 11px; }
+  background:rgba(255,255,255,.78);border:1px solid var(--p-line);
+  border-radius:9px;padding:8px 12px;min-height:32px; }
 .st-badges-k { font-size:12px;font-weight:600;color:var(--sc-text-main);
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .st-badges-v { font-size:11.5px;font-weight:700;color:var(--p-accent);
   font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0; }
 
-/* ── 模板四：metric-panel ─────────────────────────────────────────── */
-.st-metric { padding:16px 18px;display:flex;flex-direction:column;gap:12px;height:100%; }
-.st-metric-top { display:flex;align-items:center;gap:7px; }
+/* ── 模板四：metric-panel ───────────────────────────────────────────
+   顶栏改成和 badge / flow 一样的「左标题 + 底部分隔线」，三套模板的头部
+   从此是同一种东西。数字与单位拆开：单位 15px、透明度更低，34px 的数字
+   才真的是唯一的主角。 */
+.st-metric { padding:18px 20px;display:flex;flex-direction:column;gap:14px;height:100%;
+  justify-content:center; }
+.st-metric-top { display:flex;align-items:center;gap:7px;
+  padding-bottom:10px;border-bottom:1px solid var(--p-line); }
 .st-metric-dot { width:6px;height:6px;border-radius:50%;background:var(--p-accent);
   box-shadow:0 0 0 3px var(--p-glow);flex-shrink:0; }
-.st-metric-status { font-size:10.5px;font-weight:700;letter-spacing:.05em;
-  color:var(--sc-text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
-.st-metric-body { flex:1;min-height:0;display:flex;align-items:center;gap:18px; }
-.st-metric-hero { display:flex;flex-direction:column;gap:2px;flex-shrink:0; }
+.st-metric-status { font-size:12.5px;font-weight:800;
+  color:var(--sc-text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.st-metric-body { display:flex;align-items:center;gap:18px;min-width:0; }
+.st-metric-hero { display:flex;flex-direction:column;gap:4px;flex-shrink:0; }
 .st-metric-val { font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em;
   color:var(--p-accent);font-variant-numeric:tabular-nums; }
-.st-metric-label { font-size:10.5px;font-weight:600;color:var(--sc-text-dim);
-  letter-spacing:.04em;white-space:nowrap; }
+.st-metric-unit { font-style:normal;font-size:15px;font-weight:700;
+  letter-spacing:0;margin-left:2px;color:var(--sc-text-dim); }
+.st-metric-label { font-size:11px;font-weight:600;color:var(--sc-text-dim);
+  letter-spacing:.02em;white-space:nowrap; }
 .st-metric-list { flex:1;min-width:0;list-style:none;margin:0;padding:0;
-  display:flex;flex-direction:column;gap:7px; }
+  display:flex;flex-direction:column;gap:9px; }
 .st-metric-list li { display:flex;align-items:baseline;justify-content:space-between;gap:10px;
-  padding-bottom:6px;border-bottom:1px dashed var(--p-line); }
+  padding-bottom:7px;border-bottom:1px dashed var(--p-line); }
 .st-metric-list li:last-child { border-bottom:0;padding-bottom:0; }
 .st-metric-list span { font-size:11.5px;color:var(--sc-text-dim);white-space:nowrap; }
 .st-metric-list b { font-size:12px;font-weight:700;color:var(--sc-text-main);
@@ -1178,28 +1150,37 @@ body{
   from { opacity: 0; transform: translateY(9px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.st-flow-title,
+.st-flow-top,
+.st-tile-top,
 .st-tile-icon,
 .st-tile-list li,
 .st-badges-top,
 .st-badges li,
 .st-metric-top,
 .st-metric-hero,
-.st-metric-list li {
+.st-metric-list li,
+.st-flow-node {
   animation: stRiseIn .5s var(--sc-ease) both;
 }
-.st-flow-title                       { animation-delay: .04s; }
-.st-tile-icon                        { animation-delay: .04s; }
-.st-tile-list li:nth-child(1)        { animation-delay: .12s; }
-.st-tile-list li:nth-child(2)        { animation-delay: .18s; }
-.st-tile-list li:nth-child(3)        { animation-delay: .24s; }
-.st-tile-list li:nth-child(n+4)      { animation-delay: .30s; }
-.st-badges-top                       { animation-delay: .04s; }
+.st-flow-top,
+.st-tile-top,
+.st-badges-top,
+.st-metric-top               { animation-delay: .04s; }
+/* 节点在连线画到一半时才冒出来（线 .18s 起、1.05s 播完），
+   顺序才是「先有线、再有点」，而不是线和点同时出现。 */
+.st-flow-node:nth-child(1)           { animation-delay: .30s; }
+.st-flow-node:nth-child(2)           { animation-delay: .38s; }
+.st-flow-node:nth-child(3)           { animation-delay: .46s; }
+.st-flow-node:nth-child(n+4)         { animation-delay: .54s; }
+.st-tile-icon                        { animation-delay: .12s; }
+.st-tile-list li:nth-child(1)        { animation-delay: .18s; }
+.st-tile-list li:nth-child(2)        { animation-delay: .24s; }
+.st-tile-list li:nth-child(3)        { animation-delay: .30s; }
+.st-tile-list li:nth-child(n+4)      { animation-delay: .36s; }
 .st-badges li:nth-child(1)           { animation-delay: .12s; }
 .st-badges li:nth-child(2)           { animation-delay: .18s; }
 .st-badges li:nth-child(3)           { animation-delay: .24s; }
 .st-badges li:nth-child(n+4)         { animation-delay: .30s; }
-.st-metric-top                       { animation-delay: .04s; }
 .st-metric-hero                      { animation-delay: .12s; }
 .st-metric-list li:nth-child(1)      { animation-delay: .20s; }
 .st-metric-list li:nth-child(2)      { animation-delay: .26s; }
@@ -1227,10 +1208,14 @@ body{
    现在悬停只保留两处：整卡上移 2px + 描边转深（见 .sc-card:hover），
    以及 CTA 文字转深、箭头右移 2px。 */
 
-/* 动效降级：系统开启「减弱动态效果」时全部静止。 */
+/* 动效降级：系统开启「减弱动态效果」时全部静止。
+   名单要和上面 stRiseIn 的选择器逐条对齐 —— 漏一个，那个元素就仍然带着
+   `both` 填充的入场动画，起点是 opacity:0。这里之前漏了 .st-flow-node 和
+   .st-tile-top，还留着已改名的 .st-flow-title。 */
 @media (prefers-reduced-motion: reduce) {
   .st-flow-track line { animation: none !important; stroke-dashoffset: 0; }
-  .st-flow-title, .st-tile-icon, .st-tile-list li,
+  .st-flow-top, .st-flow-node,
+  .st-tile-top, .st-tile-icon, .st-tile-list li,
   .st-badges-top, .st-badges li,
   .st-metric-top, .st-metric-hero, .st-metric-list li {
     animation: none !important;
@@ -1250,43 +1235,21 @@ body{
 }
 
 /* ==========================================================================
-   APP_SHORT 响应式穿透支持与多行防截断引擎
+   描述行数的唯一真源
+   --------------------------------------------------------------------------
+   这里原来有一份完整的 .sc-card .sc-desc 规则（margin / font-size / line-height /
+   clamp / min-height），把上面 .sc-desc 的定义整条盖掉了 —— 于是"描述到底几行、
+   什么字号"同时存在两个答案，而 .sc-desc 上刚加的 text-wrap: pretty 被无声压死。
+   现在只保留窄屏那一档的行距收紧，其余全部回到上面的 .sc-desc 一处定义。
+   另外删掉了 .theme-modelflow / .theme-checkin / … 七条 word-break 补丁：
+   .sc-card 上早就没有 .theme-* 了，那七条选择器打不到任何元素。
    ========================================================================== */
 
-/* 桌面端：完整描述允许展开至 2 行 */
-.sc-card .sc-desc {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--sc-text-sub);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 36px;
-}
-
-/* 窄屏设备：收紧描述行距与字符高度，保障舞台区域拥有至少 220px 真实绘制空间 */
 @media (max-width: 768px) {
   .sc-card .sc-desc {
-    font-size: 11px;
-    line-height: 1.45;
-    -webkit-line-clamp: 2;
-    min-height: 33px;
+    font-size: 11.5px;
+    line-height: 1.6;
     letter-spacing: -0.01em;
-  }
-
-  /* 应用区卡片在手机端强制采用紧凑字符排版 */
-  .theme-modelflow .sc-desc,
-  .theme-checkin .sc-desc,
-  .theme-toolbox .sc-desc,
-  .theme-billtrace .sc-desc,
-  .theme-token .sc-desc,
-  .theme-zenew .sc-desc,
-  .theme-chronicle .sc-desc {
-    word-break: break-all;
-    text-wrap: pretty;
   }
 }
 
@@ -1299,22 +1262,24 @@ body{
    TOUCH DEVICE & PERFORMANCE OPTIMIZATION PATCH
    ========================================================================== */
 
-/* 1. 视口外跳过渲染 —— 这次改造把它关掉了。
+/* 1. 视口外跳过渲染 —— 这次改造把它关掉了，并且不再写回一条
+      `content-visibility: visible`：那正好是初始值，写了等于没写，只会让人以为
+      这里还有什么开关。结论留在注释里就够了。
       content-visibility:auto 会让视口外的卡片改用 contain-intrinsic-size 的固有尺寸
       占位。实测（1080 宽视口，19 张卡）：行高被正确设成 380px，但视口内卡片量到
       322px、视口外量到 373px，同一列出现两种高度 —— 正是它破坏了「19 张等高」。
       19 张卡的内容量都很轻（每张一个 stage + 十几行 DOM），跳过渲染省下的开销有限，
       换取严格等高更值。 */
-.sc-card {
-  content-visibility: visible;
-}
 
-/* 2. 仅在支持鼠标悬浮的设备上启用深度 Hover 抬升，触控屏不粘连 */
+/* 2. 触控屏不粘连：真鼠标设备才有位移反馈。
+   这里原本写的是 translateY(-4px) + var(--sc-shadow-hover)，把上面 .sc-card:hover
+   那条"只抬 2px、换一档轻阴影"的决定整个盖掉了 —— 两条规则隔着 300 行打架，
+   后面这条赢，所以线上一直是重的那版。现在统一到轻的那版。 */
 @media (hover: hover) and (pointer: fine) {
   .sc-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--p-line, var(--sc-border-hover));
-    box-shadow: var(--sc-shadow-hover);
+    transform: translateY(-2px);
+    border-color: var(--p-line);
+    box-shadow: 0 4px 14px -6px rgba(17, 24, 39, .10);
   }
 
   .sc-card:hover .sc-stage {
@@ -1326,7 +1291,9 @@ body{
   }
 }
 
-/* 3. 触控设备专属触摸反馈 (替代 hover) */
+/* 3. 触控设备专属触摸反馈（替代 hover）。
+   原来这里还有一条 .sc-card::before { display:none }，是给已删除的悬停光扫
+   stSheen 收尾用的 —— 卡片现在根本没有 ::before，删。 */
 @media (hover: none) or (pointer: coarse) {
   .sc-card:active {
     transform: scale(0.985);
@@ -1336,268 +1303,13 @@ body{
   .sc-card {
     -webkit-tap-highlight-color: transparent;
   }
-
-  /* 触控设备关闭无限持续的密集背景光斑计算 */
-  .sc-card::before {
-    display: none !important;
-  }
 }
 
-/* 4. 仪表盘整体页面结构流式规范 */
-.dash-page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 64px;
-  width: 100%;
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 40px 24px 80px;
-}
-
-.dash-hero-section {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  align-items: center;
-  gap: 40px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--sc-border);
-}
-
-.dash-hero-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #A48830;
-  background: #FFF9DF;
-  border: 1px solid rgba(164, 136, 48, 0.3);
-  padding: 4px 12px;
-  border-radius: 99px;
-  margin-bottom: 18px;
-}
-
-.hero-kicker-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #A48830;
-}
-
-.dash-hero-title {
-  margin: 0 0 16px;
-  font-size: clamp(34px, 4.6vw, 54px);
-  font-weight: 800;
-  line-height: 1.12;
-  letter-spacing: -0.03em;
-  color: var(--sc-text-main);
-}
-
-.dash-hero-title em {
-  font-style: normal;
-  color: #A48830;
-}
-
-.dash-hero-desc {
-  margin: 0 0 28px;
-  font-size: 15px;
-  line-height: 1.7;
-  color: var(--sc-text-sub);
-  max-width: 540px;
-}
-
-.dash-hero-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.dash-btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 22px;
-  border-radius: 10px;
-  background: #1B1B1B;
-  color: #FFFFFF;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: transform var(--sc-transition), background var(--sc-transition);
-}
-
-.dash-btn-primary:hover {
-  background: #333333;
-  transform: translateY(-2px);
-}
-
-.dash-btn-ghost {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0 20px;
-  border-radius: 10px;
-  border: 1px solid var(--sc-border-hover);
-  background: transparent;
-  color: var(--sc-text-main);
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: border-color var(--sc-transition), transform var(--sc-transition);
-}
-
-.dash-btn-ghost:hover {
-  border-color: #1B1B1B;
-  transform: translateY(-2px);
-}
-
-.dash-hero-avatar {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  opacity: 0;
-  transform: scale(0.96);
-  transition: opacity 0.6s var(--sc-ease), transform 0.6s var(--sc-ease);
-}
-
-.dash-hero-avatar.is-ready {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.avatar-layer-box {
-  position: relative;
-  width: 280px;
-  height: 280px;
-}
-
-.avatar-layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  pointer-events: none;
-}
-
-/* 5. 文章区域样式 */
-.dash-articles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
-}
-
-.dash-article-card {
-  background: var(--sc-surface);
-  border: 1px solid var(--sc-border);
-  border-radius: 14px;
-  padding: 16px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  transition: transform var(--sc-transition), border-color var(--sc-transition), box-shadow var(--sc-transition);
-}
-
-.dash-article-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(164, 136, 48, 0.4);
-  box-shadow: var(--sc-shadow-hover);
-}
-
-.article-cover-wrap {
-  width: 100%;
-  height: 120px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--sc-surface-alt);
-}
-
-.article-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.article-date {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11px;
-  color: var(--sc-text-dim);
-}
-
-.article-title {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--sc-text-main);
-  line-height: 1.35;
-}
-
-.article-summary {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--sc-text-sub);
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-
-.article-link {
-  margin-top: 4px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #A48830;
-}
-
-/* 6. 页脚区域 */
-.dash-footer-band {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 24px;
-  border-top: 1px solid var(--sc-border);
-  font-size: 12px;
-  color: var(--sc-text-dim);
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.footer-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.footer-brand {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-weight: 800;
-  color: var(--sc-text-main);
-}
-
-@media (max-width: 860px) {
-  .dash-hero-section {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-  .avatar-layer-box {
-    width: 220px;
-    height: 220px;
-  }
-  .dash-page-container {
-    gap: 44px;
-    padding: 24px 16px 64px;
-  }
-}
+/* 「4. 仪表盘整体页面结构流式规范」「5. 文章区域样式」「6. 页脚区域」三整段（共 255 行）已删除：
+   .dash-page-container / .dash-hero-* / .dash-btn-* / .dash-hero-avatar / .avatar-layer* /
+   .dash-articles-grid / .dash-article-card / .article-* / .dash-footer-band / .footer-* / .hero-kicker-dot。
+   这些类名在整个 src/ 里一次都没被 JSX 用到 —— 首页真正的骨架是 Dashboard.jsx 内联 style 里那套 .vr-*。
+   规格附件当初是照着一个「独立仪表盘页面」写的，而那个页面从来没有存在过。 */
 
 /* ════════════════════════════════════════════════════════════
    应用卡真实软件图标（.sc-brand）
@@ -1626,10 +1338,12 @@ body{
   transition: transform 0.32s var(--sc-ease), box-shadow 0.32s var(--sc-ease), border-color 0.2s ease;
 }
 
+/* 100% 而不是写死 34px：.sc-brand 是 34×34 带 1px 描边，内容盒只有 32px，
+   原来 img 写 34px 会被 overflow:hidden 切掉一圈。 */
 .sc-card .sc-brand img {
   display: block;
-  width: 34px;
-  height: 34px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -1645,7 +1359,6 @@ body{
 /* 图标与标题同行后，窄屏把图标收到 30px，保住舞台高度 */
 @media (max-width: 768px) {
   .sc-card .sc-brand { width: 30px; height: 30px; border-radius: 8px; }
-  .sc-card .sc-brand img { width: 30px; height: 30px; }
   .sc-card .sc-title-row { gap: 9px; }
 }
 
@@ -1655,17 +1368,7 @@ body{
   .sc-card:hover .sc-brand { transform: none; }
 }
 
-/* 图标与标题同行后窄屏头部变高，收回 .sc-card-head 的下外边距（12→6px）
-   还回被占用的竖向空间，保住规格要求的"舞台至少 220px 真实绘制空间" */
-@media (max-width: 768px) {
-  .sc-card .sc-card-head { margin-bottom: 6px; }
-}
-
-/* 产品/Skill 卡的图形瓦片：直接吃规格 CSS 里每张卡自己的主题令牌
-   （.theme-* 上的 --p-accent / --p-soft / --p-line），让 19 张卡各有语义色。
-   注意：语义色只用于图标描边与色块底，不承载任何小字（小字仍是 --sc-text-main/sub）。 */
-.sc-card .sc-brand--glyph {
-  color: var(--p-accent, var(--sc-text-main));
-  background: var(--p-soft, #fff);
-  border-color: var(--p-line, rgba(27, 27, 27, 0.10));
-}
+/* 删掉两条失效规则：
+   - .sc-card-head{margin-bottom} —— 这个 DOM 在三段式改造里已经不存在了。
+   - .sc-brand--glyph —— 图标瓦片变体。现在 .sc-brand 统一渲染 logo 或 lucide
+     图标，配色也收敛成一个蓝，不再需要「每卡一个语义色」的瓦片。 */
