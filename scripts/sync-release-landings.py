@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 UPDATES = {
     "ai-chronicle": [("0.6.7", "0.6.8", 6)],
-    "local-toolbox": [("0.5.0", "0.5.1", 17)],
+    "local-toolbox": [("0.5.1", "0.5.2", 17)],
     "checkin": [("3.8.1", "3.9.0", 6)],
     "token-monitor": [("1.9.12", "2.0.0", 6)],
 }
