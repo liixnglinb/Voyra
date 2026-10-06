@@ -1,10 +1,10 @@
 {
-  "version": "0.22.0",
-  "notes": "Zenew v0.22.0",
-  "pub_date": "2026-10-05T13:42:55Z",
+  "version": "0.22.1",
+  "notes": "# Zenew v0.22.1 · 加固版\n\n不带来新功能，只把 v0.22.0 的底子再夯一遍：\n- 安全：WebView 内加 CSP 白名单（默认仅允许本包资源与 IPC）\n- 可靠性：未捕获异常与 Promise 拒绝全局留痕，崩溃不再静默\n- 维护：移除无人引用的依赖；按钮过渡清理\n- 测试：新增 25 项核心逻辑与失败路径自动化测试",
+  "pub_date": "2026-10-06T04:45:39Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVM1c2FTT2FzdzIraGQ1TjJIbDBtVG5nUkxuakdxY05qZGI3V3hvT1lCc3ZvblVwaUxXTjJJYmZIOS9XbWd2emRrS1E0WmI1RCt1MlkwaTE1UzhBTmdVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMjA3Nzc1CWZpbGU6WmVuZXdfMC4yMi4wX3g2NC1zZXR1cC5leGUKYzZ0SHZVQzZ4TE1raWlFTXdTaGtiZFZLcVYyTmJTbHlDN01sR1R2VW02Y05kMzR0UGZpRFdLaGcwSFhVbmZKdzRRN2l6ZDBwSnVrVEVIcDYwOTVjQmc9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWVaTmFmbTBhNzFmNzU1YnZWNENNVjFJdVlNOEF6aXBIOU5jUVVnUGVuVUNjQXpCTnRkTUpWQi9JYnFjejU2UEx2S0MzSUhoUUpzbjBjbWJzUmQxdXdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMjYxOTM4CWZpbGU6WmVuZXdfMC4yMi4xX3g2NC1zZXR1cC5leGUKa3p0RHVMYlE1VkpBU3JnNHVYVUZvT3NQRWhOV09UVnVlTUZnblBWeno5a0p1OE50a3AxOUp0STJ6Rmlld3R1MFk0cGRzRGJJSk1ILzZrWEVHZlRORFE9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
