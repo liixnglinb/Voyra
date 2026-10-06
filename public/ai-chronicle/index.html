@@ -6,7 +6,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>AI 轨迹 v0.6.11 · 本地 AI 工作观测台 — Voyra</title>
+  <title>AI 轨迹 v0.6.12 · 本地 AI 工作观测台 — Voyra</title>
   <meta name="description" content="AI 轨迹自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个本机 AI 软件的数据源，把会话、任务和产出整理成每日日报、历史档案与趋势看板。数据默认留在本机。">
   <meta property="og:title" content="AI 轨迹 · 本地 AI 工作观测台">
   <meta property="og:description" content="12 个本机 AI 软件数据源 · 每日日报与历史档案 · 数据留在本机 · 仅支持 Windows 10/11">
@@ -261,7 +261,7 @@
         <a href="#download">下载</a>
       </div>
       <span class="grow"></span>
-      <span class="version-pill"><i></i><span id="version-pill">v0.6.11</span></span>
+      <span class="version-pill"><i></i><span id="version-pill">v0.6.12</span></span>
     </div>
   </nav>
 
@@ -274,7 +274,7 @@
           <h1 data-reveal style="--d:.06s">AI 每天替你做了什么，<br>都记在这一本<em>轨迹</em>里</h1>
           <p class="lead" data-reveal style="--d:.12s">AI 轨迹在本机自动解析 Codex、Claude Code、WorkBuddy、CatPaw 等 12 个 AI 软件的工作数据，把零散的会话整理成每日日报、历史档案与趋势看板。会话内容不联网、不上传，一切留在你的电脑里。</p>
           <div class="cta-row" data-reveal style="--d:.18s">
-            <a class="btn btn-primary" id="download-hero" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">下载安装版 <span class="mono" id="hero-size" style="font-weight:600;opacity:.85">109 MB</span></a>
+            <a class="btn btn-primary" id="download-hero" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">下载安装版 <span class="mono" id="hero-size" style="font-weight:600;opacity:.85">107 MB</span></a>
             <a class="btn btn-ghost" href="#sources">看看支持哪些软件</a>
           </div>
           <div class="hero-stats" data-reveal style="--d:.24s">
@@ -288,7 +288,7 @@
             <div class="window-bar">
               <span class="window-dots"><i></i><i></i><i></i></span>
               <span>AI 轨迹 — 今天</span>
-              <b id="window-version">v0.6.11</b>
+              <b id="window-version">v0.6.12</b>
             </div>
             <div class="win-kpis">
               <div class="win-kpi"><small>有效会话</small><b>20</b><em>+6 vs 昨天</em></div>
@@ -421,8 +421,8 @@
           <div class="badge-mock" data-reveal style="--d:.12s">
             <div class="ring"><span class="val"><b>68%</b><span>DOWNLOAD</span></span></div>
             <div class="ring-tip">
-              <strong><i></i>v0.6.11 更新内容</strong>
-              <p>做了一次整体自查与瘦身：图表纵轴不再出现"一天 255 小时"的失真——标题如实改为「每日会话时长合计」并说明并行会话会重复计入；柱状图刻度文字不再被拉伸变形；全站补上按下的物理反馈；清理了无引用的组件与 34 条死样式，界面行为不变。自动更新链路与上一版一致：下载需确认、静默安装、每 6 小时补检。</p>
+              <strong><i></i>v0.6.12 更新内容</strong>
+              <p>这一版把界面上说的话逐条核对了一遍：Codex 会话不再显示「0 轮」，工具自己注入的块不再被当成会话标题，时间轴与 Ctrl/Cmd+K 现在能按模型名和产出文件名搜到；打开目录失败、采集超时这类以前「点了没反应」的操作现在都会给出可读原因；关掉定时轮询后，切回窗口仍会补一次采集。另外修掉了自动更新装不上、改一项桌面偏好会静默重置另外两项、加密备份导出后选不回来，安装包也不再重复打包已被编译进页面的前端依赖（内层归档 35.8MB 降到 2.8MB）。</p>
             </div>
             <span class="ring-cap">悬停查看更新内容 · 点击安装并重启</span>
           </div>
@@ -434,7 +434,7 @@
     <section class="section" id="download">
       <div class="wrap">
         <div class="section-head center" data-reveal>
-          <span class="eyebrow"><i></i>DOWNLOAD · <b id="download-version" style="color:var(--teal-ink)">v0.6.11</b></span>
+          <span class="eyebrow"><i></i>DOWNLOAD · <b id="download-version" style="color:var(--teal-ink)">v0.6.12</b></span>
           <h2>选择安装方式</h2>
           <p>推荐安装版：应用内自动更新依赖 GitHub Releases，装一次，之后每晚会自动检查新版本。</p>
         </div>
@@ -445,7 +445,7 @@
             <h3>安装版</h3>
             <div class="file">AI-Chronicle-Setup.exe</div>
             <p>支持选择安装目录、桌面快捷方式和开始菜单入口。内置自动更新：GitHub 直连 + 国内镜像自动测速。</p>
-            <div class="dl-size"><b id="setup-size">109</b><span>MB · Windows 10/11 x64</span></div>
+            <div class="dl-size"><b id="setup-size">107</b><span>MB · Windows 10/11 x64</span></div>
             <div class="dl-actions">
               <a class="btn btn-primary" id="download-setup" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Setup.exe">GitHub 直连下载</a>
               <div class="mirrors">
@@ -460,7 +460,7 @@
             <h3>便携版</h3>
             <div class="file">AI-Chronicle-Portable.exe</div>
             <p>单文件运行，不写注册表、不建安装目录，适合临时体验或放在移动硬盘里随用随开。</p>
-            <div class="dl-size"><b id="portable-size">108</b><span>MB · Windows 10/11 x64</span></div>
+            <div class="dl-size"><b id="portable-size">107</b><span>MB · Windows 10/11 x64</span></div>
             <div class="dl-actions">
               <a class="btn btn-ghost" id="download-portable" href="https://github.com/liixnglinb/AI-Chronicle/releases/latest/download/AI-Chronicle-Portable.exe">GitHub 直连下载</a>
               <div class="mirrors">
