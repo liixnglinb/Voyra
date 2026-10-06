@@ -312,7 +312,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
       <div class="dl-row">
         <a class="btn btn-primary" id="dlMain" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          下载 APK <span class="ver-inline" id="ver">v0.4.3</span>
+          下载 APK <span class="ver-inline" id="ver">v0.4.4</span>
           <em class="src-tag" id="srcTag">国内镜像</em>
         </a>
         <a class="btn btn-ghost" id="dlAlt" data-dl="secondary" href="https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">
@@ -321,7 +321,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
         </a>
       </div>
       <div class="src-note" id="srcNote"><span class="dot"></span>当前线路：<b>国内镜像</b></div>
-      <div class="dl-hint" id="dlHint">APK 约 123 KB · 装完按首页两步提示开启权限</div>
+      <div class="dl-hint" id="dlHint">APK 约 135 KB · 装完按首页两步提示开启权限</div>
       <!-- 微信内置浏览器无法安装 APK：点下载只会静默失败或提示「请在浏览器打开」。
            只在微信 / QQ 内置浏览器里插入这段引导，其余环境不占位、不干扰。 -->
       <div class="wx-tip" id="wxTip" hidden>
@@ -333,7 +333,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
         <span class="meta-chip">真机可用</span>
         <span class="meta-chip">免费 · 无广告</span>
         <span class="meta-chip">数据只存本机</span>
-        <span class="meta-chip">安装包 <b id="chipSize">123 KB</b></span>
+        <span class="meta-chip">安装包 <b id="chipSize">135 KB</b></span>
       </div>
     </div>
     <div class="phone-wrap">
@@ -423,7 +423,16 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="sec-kicker rv">CHANGELOG</div>
     <div class="sec-title rv">更新日志</div>
     <div class="log rv">
-      <h4><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.4.3 · 审查修复</span><span style="display:inline-flex;align-items:center;gap:12px"><span id="logDate" style="color:rgba(0,0,0,.4);font-weight:600">最近构建</span><span id="log-ver">当前最新</span></span></h4>
+      <h4><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.4.4 · 分页与检索</span><span style="display:inline-flex;align-items:center;gap:12px"><span id="logDate" style="color:rgba(0,0,0,.4);font-weight:600">最近构建</span><span id="log-ver">当前最新</span></span></h4>
+      <ul>
+        <li>账目多了不再只显示最近 200 条：列表底部有「加载更多（还有 N 条）」，翻到底自动消失</li>
+        <li>搜索改成数据库全量检索——商户、备注、账户、分类、金额都能搜（输 35.8 直接找到那笔账），以前只在已翻出的那一小段里找</li>
+        <li>搜索/翻页读库失败时明说「是读取问题」，不再说成「没找到相关记录」</li>
+        <li>修报表分类占比会随机挑 6 类的 bug（内部把排序结果装进了无序容器），现在严格按金额从大到小</li>
+        <li>「其余 N 类」看得见了；柱形图最矮几根不再隐形，「今天」那根加粗标识</li>
+        <li>全部文字对比度按 WCAG AA 逐像素校准；冷启动不再闪黑屏；鼠标悬停有反馈</li>
+      </ul>
+      <h4 style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)"><span style="display:inline-flex;align-items:center;gap:10px"><img src="/billtrace/icon-192.png" alt="">v0.4.3 · 审查修复</span></h4>
       <ul>
         <li>读取失败不再伪装成「未授权」：以前会打出 ¥NaN 并引导你反复开权限，现在显示明确的错误横幅</li>
         <li>删除账目需要确认，删完 6 秒内可撤销（数据改为软删除）</li>
@@ -462,7 +471,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
     <div class="dl-panel">
       <div>
         <h2><img src="/billtrace/icon-512.png" alt="账迹图标">现在安装，下一笔消费自动入账</h2>
-        <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.4.3</span> · 安装包约 123 KB</p>
+        <p>Android 8.0+ · <span class="ver-inline" id="ver2">v0.4.4</span> · 安装包约 135 KB</p>
       </div>
       <div class="btns">
         <a class="btn btn-primary" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">下载 APK</a>
@@ -482,7 +491,7 @@ footer .up:hover{color:var(--brand);border-color:var(--brand);transform:translat
 
 <div class="mbar" id="mbar">
   <img src="/billtrace/icon-192.png" alt="账迹图标">
-  <div><div class="mt">账迹 BillTrace</div><div class="ms">自动记账 · 安装包 <b id="mbarSize">123 KB</b></div></div>
+  <div><div class="mt">账迹 BillTrace</div><div class="ms">自动记账 · 安装包 <b id="mbarSize">135 KB</b></div></div>
   <a class="go" data-dl="primary" href="https://gh-proxy.com/https://github.com/liixnglinb/BillTrace/releases/latest/download/BillTrace.apk">下载 APK</a>
 </div>
 
