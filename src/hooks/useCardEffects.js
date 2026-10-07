@@ -7,7 +7,11 @@ export default function useCardEffects(rootRef, dependency) {
     if (!root) return undefined;
     const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const pointer = window.matchMedia('(hover: hover) and (pointer: fine)');
-    const cards = [...root.querySelectorAll('[data-voyra-card], .vr-card-entry, .vr-mathmodel-card, .vr-contact-row, .vr-experience-card')];
+    /* .sc-card 是首页 19 张橱窗卡的实际本体。它的祖先 .vr-card-entry 已经在列表里
+       （负责入场与舞台暂停），但指针效果要落在卡片自己身上，所以显式补上 ——
+       光靠 [data-voyra-card] 也行，写出来是为了让「哪些元素参与指针交互」一眼可读。 */
+    const POINTER_TARGET = '[data-voyra-card], .sc-card, .vr-mathmodel-card, .vr-contact-row';
+    const cards = [...root.querySelectorAll('[data-voyra-card], .sc-card, .vr-card-entry, .vr-mathmodel-card, .vr-contact-row, .vr-experience-card')];
     const rects = new WeakMap();
     let revision = 0;
     let frame = 0;
@@ -20,7 +24,7 @@ export default function useCardEffects(rootRef, dependency) {
     };
     const onMove = (event) => {
       if (motion.matches || !pointer.matches || event.pointerType === 'touch') return;
-      const card = event.target.closest('[data-voyra-card], .vr-mathmodel-card, .vr-contact-row');
+      const card = event.target.closest(POINTER_TARGET);
       if (!card || !root.contains(card)) return;
       if (active !== card) { reset(active); active = card; }
       pending = { card, x: event.clientX, y: event.clientY };
@@ -40,8 +44,10 @@ export default function useCardEffects(rootRef, dependency) {
         target.style.setProperty('--spot-x', `${px * 100}%`);
         target.style.setProperty('--spot-y', `${py * 100}%`);
         /* 3D 物理倾斜：鼠标在右 → rotateY 正（卡片向右转）；
-           鼠标在下 → rotateX 正（卡片低头）。角度极限 ±8deg（杂志封面微翻转）。 */
-        const maxTilt = 8;
+           鼠标在下 → rotateX 正（卡片低头）。角度极限 ±6deg —— 比原先的 8deg 收一档：
+           卡片只有 361px 宽，8deg 时四角位移接近 12px，相邻两列会视觉打架；
+           6deg 仍有明确的立体感，但不会在 2 列网格里互相干扰。 */
+        const maxTilt = 6;
         target.style.setProperty('--tilt-x', `${(py - 0.5) * maxTilt * 2}deg`);
         target.style.setProperty('--tilt-y', `${(px - 0.5) * maxTilt * 2}deg`);
         /* 艺术图反向微移，增强透视厚度感（极限 ±16px） */

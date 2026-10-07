@@ -11,7 +11,9 @@ import { ARTICLES } from '../data/articles';
 import { PELICAN_MODEL_COUNT } from './PelicanGallery';
 import useCardEffects from '../hooks/useCardEffects';
 import { ProductCard, SHOWCASE_GROUPS, CARD_BY_ID } from '../components/ShowcaseCards';
+import { toHashUrl } from '../lib/hash-url';
 import '../styles/dashboard-cards.css';
+import '../styles/stage-scenes.css';
 
 const FEATURED = [
   { theme: 'theme-api', to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
@@ -314,9 +316,9 @@ function updateSpotlight(event) {
   card.style.setProperty('--spot-y', `${event.clientY - cached.rect.top}px`);
 }
 
-function getToolUrl(path) {
-  return `${window.location.origin}${window.location.pathname}#${path}`;
-}
+/* 站内链接构造统一走 src/lib/hash-url —— 卡片（ProductCard）与本文件的
+   openProduct 共用同一份实现，避免两边各拼一次、哪天只改了一处。 */
+const getToolUrl = toHashUrl;
 
 /* 各卡片演示的节点数——驱动自动轮播 */
 const ART_CYCLE = { api: 4, prompts: 3, agents: 3, timetable: 5, skills: 3, learning: 3, mindmap: 4, uikit: 3, modelflow: 6, checkin: 3, toolbox: 4, pelican: 3, billtrace: 3, tokenmonitor: 3, zenew: 3, aichronicle: 4, draw: 6, mathmodel: MATHMODEL_STEPS.length, diet: 3 };

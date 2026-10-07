@@ -14,7 +14,12 @@
     "test:ui": "node --test scripts/ui-design-system.test.mjs",
     "ui:spec": "node scripts/generate-ui-spec.mjs",
     "ui:spec:check": "node scripts/generate-ui-spec.mjs --check",
-    "test:software-ui": "node scripts/software-ui-regression.mjs"
+    "test:software-ui": "node scripts/software-ui-regression.mjs",
+    "cards:palette": "node scripts/check-palette.mjs",
+    "cards:verify": "node scripts/verify-cards.mjs",
+    "cards:a11y": "node scripts/verify-a11y.mjs",
+    "cards:shots": "node scripts/shot-clean.mjs",
+    "cards:shots:each": "node scripts/shot-per-card.mjs"
   },
   "dependencies": {
     "@dicebear/core": "^9.4.3",

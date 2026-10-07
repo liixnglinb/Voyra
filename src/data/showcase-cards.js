@@ -17,16 +17,34 @@
  *   badge-cluster 顶栏 + 最多 3 行键值徽章。表达「一份清单 / 榜单 / 统计」。
  *   metric-panel  顶栏 + 一个大数字 + 三行细分项。表达「当前运行状态」。
  *
- * 颜色：不再由这份数据决定
+ * 差异化：tone（四色基调）× layout（三种版式）
  * ---------------------------------------------------------------------------
- * 试过两条路：① 每族一个色相（19 色 → 6 色），② 6 族收敛成「黑蓝」但给了蓝的
- * 5 档明度。第一条太花；第二条更糟 —— 5 档蓝在 361px 窄卡上分不出彼此，却让人
- * 隐约觉得"这几张卡颜色好像不一样"，付出色相差异的代价，没换来任何分组信息。
- * 而且分组本身早就不成立：ai 族 7 张、mute 族 0 张。
+ * 上一版给 19 张卡各配了一个色相（蓝/靛/紫/琥珀/青/金/…），结果是整页
+ * 「黑字 + 黄标签 + 白卡 + 一堆蓝紫」的杂色拼盘，用户评价"太丑了"。
  *
- * 现在整页一个蓝（见 dashboard-cards.css 的 .sc-card），分组职责交给 no 字段的类目词
- * （API GATEWAY / WORKSPACE / LUCKY DRAW…）—— 那是读得出来的，颜色不是。
- * family 字段保留，但只剩一个作用：resolveIcon 的图标兜底。
+ * 本版把配色收敛到站内既有的四个颜色 —— 黑 / 金 / 白 / 蓝 —— 并改用
+ * 两个维度组合出差异，而不是靠 19 个色相：
+ *
+ *   tone（舞台与强调色的基调，4 种）
+ *     ink    墨：舞台反色成黑底白线，卡片强调色走金。19 张里最"重"的一档。
+ *     gold   金：暖米色舞台 + 金调描边，站内金 #8A6D1F 家族。
+ *     blue   蓝：淡蓝舞台 + 蓝调描边，整页唯一的冷色。
+ *     paper  纸：近白舞台 + 黑细线，最克制的一档，像技术图纸。
+ *
+ *   layout（卡内三段式的排布，3 种）
+ *     copy   文字在上、舞台在下（默认，信息优先）
+ *     stage  舞台在上、文字在下（演示优先，舞台更高）
+ *     bleed  舞台出血贴满卡片上半部，文字压在下方留白区（海报感）
+ *
+ * 4 × 3 = 12 种组合，19 张卡按 Tab 分组后**组内组合两两不同**：
+ *   产品 11 张占 11 种，应用 7 张占 7 种，Skills 1 张。
+ * 加上 19 个各不相同的舞台画面，"每一张卡的样子都不一样"由此成立 ——
+ * 靠的是版式与画面，而不是色相数量。
+ *
+ * 对比度（scripts/check-palette.mjs 可复核）：四个基调的强调色在白底上
+ * 全部 ≥ 4.5:1；ink 基调的舞台是黑底白线，白线对黑底对比度更高。
+ *
+ * family 字段保留，仍只剩一个作用：resolveIcon 的图标兜底。
  *
  * seq：底部页脚里的空心序号，只收 1-2 位纯数字
  * ---------------------------------------------------------------------------
@@ -47,6 +65,8 @@ export const SHOWCASE_CARDS = [
     href: 'https://apilxl.bbroot.com/',
     external: true,
     family: 'core',
+    tone: 'ink',
+    layout: 'copy',
     Icon: 'Globe',
     /* 原来 status / metricLabel / 首行值三处是英文大写（RELAY CLUSTER ACTIVE、
        AVG LATENCY、Smart Failover），和其余 18 张卡的中文口吻不一致。
@@ -62,6 +82,8 @@ export const SHOWCASE_CARDS = [
     cta: '打开日程',
     href: '/timetable',
     family: 'core',
+    tone: 'paper',
+    layout: 'stage',
     Icon: 'CalendarRange',
     /* 原来三行是「周视图 | 课程表」「日程 | 日历」「规划 | 待办」——
        键和值互为同义词，等于什么都没演示。 */
@@ -78,6 +100,8 @@ export const SHOWCASE_CARDS = [
     cta: '查看对比',
     href: '/pelican-gallery',
     family: 'ai',
+    tone: 'blue',
+    layout: 'bleed',
     Icon: 'Film',
     /* 原来 4 行：实测末行超出 stage 底边 2.3px，被 overflow:hidden 切掉下边框。
        而且 182 / 124 / 98 这些数没写单位，读者不知道是分数还是秒 ——
@@ -93,6 +117,8 @@ export const SHOWCASE_CARDS = [
     cta: '管理提示词',
     href: '/prompts',
     family: 'ai',
+    tone: 'gold',
+    layout: 'copy',
     Icon: 'Lightbulb',
     /* 原标题「提问 → 审查 → 执行」和下面三个节点标签逐字重复，
        同一句话在 150px 高的小盒子里写了两遍。 */
@@ -107,6 +133,8 @@ export const SHOWCASE_CARDS = [
     cta: '查看图鉴',
     href: '/uikit',
     family: 'ai',
+    tone: 'ink',
+    layout: 'stage',
     Icon: 'Shapes',
     stage: { kind: "component-bench" },
   },
@@ -119,6 +147,8 @@ export const SHOWCASE_CARDS = [
     cta: '查看热榜',
     href: '/skills',
     family: 'ai',
+    tone: 'gold',
+    layout: 'bleed',
     Icon: 'Sparkles',
     /* 原标题「本周上升」与右侧徽章「每日刷新」是两个互相矛盾的时间口径，
        而描述写的是"星数排行每天自动刷新"。以描述为准。 */
@@ -133,6 +163,8 @@ export const SHOWCASE_CARDS = [
     cta: '查看资源',
     href: '/agents',
     family: 'ai',
+    tone: 'blue',
+    layout: 'copy',
     Icon: 'Bot',
     stage: { kind: "dispatch" },
   },
@@ -145,6 +177,8 @@ export const SHOWCASE_CARDS = [
     cta: '打开导图',
     href: '/mindmap',
     family: 'ai',
+    tone: 'paper',
+    layout: 'bleed',
     Icon: 'Route',
     stage: { kind: "radial-tree" },
   },
@@ -159,6 +193,8 @@ export const SHOWCASE_CARDS = [
     cta: '进入护理',
     href: '/baby-care',
     family: 'life',
+    tone: 'gold',
+    layout: 'stage',
     Icon: 'Milk',
     stage: { kind: "day-arc" },
   },
@@ -173,6 +209,8 @@ export const SHOWCASE_CARDS = [
     cta: '开始抽取',
     href: '/draw',
     family: 'tool',
+    tone: 'ink',
+    layout: 'bleed',
     Icon: 'Dices',
     /* 原标题「花名册 → 抽取」又是节点名的复述。 */
     stage: { kind: "slot-roll" },
@@ -188,6 +226,8 @@ export const SHOWCASE_CARDS = [
     cta: '今日打卡',
     href: '/diet-checkin',
     family: 'life',
+    tone: 'blue',
+    layout: 'stage',
     Icon: 'ClipboardCheck',
     stage: { kind: "meal-stamps" },
   },
@@ -205,6 +245,8 @@ export const SHOWCASE_CARDS = [
     href: 'https://github.com/liixnglinb/Mathmodel-skill',
     external: true,
     family: 'learn',
+    tone: 'gold',
+    layout: 'copy',
     Icon: 'Star',
     stage: { kind: "paper-build" },
   },
@@ -219,8 +261,13 @@ export const SHOWCASE_CARDS = [
     desc: '本地智能体流水线工作台，流程可编辑，产物实时落盘。',
     cta: '下载软件',
     href: '/modelflow/',
+    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
+       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
+    staticPage: true,
     logo: '/modelflow/logo-256.png',
     family: 'ai',
+    tone: 'ink',
+    layout: 'copy',
     Icon: 'Workflow',
     /* glyph 原来是 HardDrive —— 那是磁盘清理助手的图标，复制过来的，
        和「智能体流水线」没有关系。 */
@@ -234,8 +281,13 @@ export const SHOWCASE_CARDS = [
     desc: '常驻后台自动监听课程签到，支持普通、位置、二维码。',
     cta: '下载软件',
     href: '/checkin/',
+    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
+       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
+    staticPage: true,
     logo: '/checkin/favicon.png',
     family: 'tool',
+    tone: 'blue',
+    layout: 'stage',
     /* 原标题「监听中」与右侧徽章「后台常驻」是同一件事说两遍。 */
     stage: { kind: "auto-click" },
   },
@@ -247,8 +299,13 @@ export const SHOWCASE_CARDS = [
     desc: '磁盘扫描、分类与目录分析一站完成，预览后再确认清理。',
     cta: '下载软件',
     href: '/local-toolbox/',
+    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
+       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
+    staticPage: true,
     logo: '/local-toolbox/favicon.png',
     family: 'tool',
+    tone: 'paper',
+    layout: 'bleed',
     /* metricLabel 原来是「GB 可用 / 256」—— 单位塞在标签里，和左边 34px 的
        「118」对不上。单位交给 metricUnit 承担。 */
     stage: { kind: "junk-shrink" },
@@ -261,8 +318,13 @@ export const SHOWCASE_CARDS = [
     desc: '付款后 2 秒自动入库，双引擎采集，数据只存本机不上传。',
     cta: '下载 APK',
     href: '/billtrace/',
+    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
+       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
+    staticPage: true,
     logo: '/billtrace/icon-512.png',
     family: 'life',
+    tone: 'gold',
+    layout: 'copy',
     /* 原来三行的值不是同一个量纲：第一行「已捕获」是状态，后两行是金额。
        「自动入库」本来就是这张卡要讲的事，挪进标题；三行统一成金额，
        合计 39.80 由下面两笔相加得到，没有引入新数字。 */
@@ -276,8 +338,13 @@ export const SHOWCASE_CARDS = [
     desc: '本机 AI 编程工具用量看板，Token、请求与缓存一目了然。',
     cta: '下载软件',
     href: '/token-monitor/',
+    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
+       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
+    staticPage: true,
     logo: '/token-monitor/favicon.png',
     family: 'ai',
+    tone: 'ink',
+    layout: 'stage',
     stage: { kind: "sparkline" },
   },
   {
@@ -288,8 +355,13 @@ export const SHOWCASE_CARDS = [
     desc: '四本词书 + 教材 PDF 导入，AI 生成卡片，FSRS 排复习。',
     cta: '下载软件',
     href: '/zenew/',
+    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
+       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
+    staticPage: true,
     logo: '/zenew/icon.png',
     family: 'learn',
+    tone: 'blue',
+    layout: 'bleed',
     stage: { kind: "flip-card" },
   },
   {
@@ -300,8 +372,13 @@ export const SHOWCASE_CARDS = [
     desc: '本机解析 12 个数据源，把会话与产出整理成日报和趋势。',
     cta: '下载软件',
     href: '/ai-chronicle/',
+    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
+       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
+    staticPage: true,
     logo: '/ai-chronicle/icon.png',
     family: 'tool',
+    tone: 'gold',
+    layout: 'stage',
     stage: { kind: "timeline" },
   },
 ];
