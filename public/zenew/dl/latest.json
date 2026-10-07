@@ -1,11 +1,17 @@
 {
-  "version": "0.23.1",
-  "notes": "Zenew v0.23.1 · UI 刷新\n\n- 新增全局视觉覆盖层 ui-overhaul.css：信息层级、空间节奏、交互反馈与窄窗体验优化\n- 业务逻辑零改动，学习/复习/统计功能不变\n\n升级方式：双击安装包覆盖安装即可（自动更新亦可拉取）",
-  "pub_date": "2026-10-07T10:42:26Z",
+  "version": "0.23.2",
+  "notes": "Zenew v0.23.2\n- 双通道更新系统：安装版走 Tauri 更新器；绿色版内置 Rust 更新器（SHA-256 + Minisign 双重校验、Zip Slip 防护、替换回滚）\n- 修复窗口标题乱码（知新 Zenew）\n- UI 刷新（ui-overhaul.css 全局视觉覆盖层）\n升级方式：安装版双击覆盖安装；绿色版程序目录含 .zenew-portable 标记时自动走绿色版更新。",
+  "pub_date": "2026-10-07T11:32:46Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVR0YkpUQkhlbmZQTVI1Vm1WdW9PZThUdC9nZG0rekE4TEhZdWFEbGtQTGM5Nnp0VzEvNnJiSmxqZlA3ajNwY2RhWDhUc0xBWWhpaThzQUE2RFFIS0FRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzY5Njg4CWZpbGU6WmVuZXctU2V0dXAuZXhlCkhEV2dGZHpYdjJHT2dSdUVoMU1BY0FTMFpNc2VKcXJkd0JCYytGclF5alhhSTI1cWxkbUFSbDJzZU5uRTRwVFh5Q0s1RFRiajFTeWFzN293UkJRY0F3PT0K",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWVhWTJaZHVoWU1QT1pzT0xacEY4VWZWMjQ2U0pVVXNOY055SndFaXBVamIzbkE1VmtldmdHY2tVT2F4cDI1QktPTHUxZkRTQU9xN3JMaUVOejgzY3c0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzcxODM1CWZpbGU6WmVuZXctU2V0dXAuZXhlCktSdnFSTFNicnZWdHRRd3g4Qk1ObzJiK1dISnY3RVdFN3RtMmw5ZXpOM01nVGtPRkF5MGl2ZDFTa09qWWFhMXg4b3NCcWNCNzY3T2tmN1pMN1NFRkNRPT0K",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
+  },
+  "portable": {
+    "url": "https://lxlrwxs.top/zenew/dl/Zenew_0.23.2_x64_green.zip",
+    "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWN6ZG1QZ1Ira0dTWXJpZmEreXFPZTJiZkt1TGRvUFFCM3FZamt4eXI2V1NKWGJOd3R2U0RGdFE2aGk1NERQYWh1azE4eEZsdjFtYW1VSEVna2pESVFNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzcxODM3CWZpbGU6WmVuZXdfMC4yMy4yX3g2NF9ncmVlbi56aXAKM0s1NHNGd2UzYytsMkNMRTV3a1RKdkFYM3RJQWpsQWZNanJOZjJyRUMyT0QyQnJ5TFgza1FFV011eURmaXZKRnV0YUdhaEVDdGIxbWZaL3AwR0pSQ0E9PQo=",
+    "sha256": "fcc025e3a16121507a68eeda8c662e8a35f14164d9c0e58010e252bac60a12ed",
+    "size": 9110970
   }
 }
