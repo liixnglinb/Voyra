@@ -887,198 +887,99 @@ body{
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   VOYRA 橱窗卡 · 视觉层
+   VOYRA 橱窗卡 · 视觉层（现代简约）
    ---------------------------------------------------------------------------
    上方到这一行为止是骨架：token / .sc-card 盒模型 / .sc-body 四段式 / .sc-seq。
-   这一段负责骨架之外的一切 —— 基调配色、版式变体、杂志化排版、悬停交互、舞台质感。
+   这一段负责骨架之外的一切 —— 基调配色、版式变体、排版、悬停交互、舞台质感。
 
-   配色只用了四个颜色：黑 / 金 / 白 / 蓝。
-   差异不靠堆色相，而靠「基调（tone）× 版式（layout）× 舞台画面（stage）」：
-     4 基调 × 3 版式 = 12 种组合，19 张卡按 Tab 分组后组内组合两两不同。
+   **这一轮改掉了什么（用户评价"像 10 年前的风格"）**
+     ① 去掉「高光扫过」：一条斜向白光从卡面掠过，是 2013~2016 年的典型手法。
+     ② 去掉「3D 倾斜」：跟着鼠标做 3D 旋转同样是那个年代的炫技，且会让
+        相邻两列在指针扫过时互相打架。改成纯粹的抬升 + 加深投影 —— 现代、
+        安静，也更能让人看清内容。
+     ③ 去掉舞台底的点阵纹理：密密麻麻的小点会把 10px 的小字磨花，
+        也是"旧"的观感来源之一。底色改为极淡的基调渐变。
+     ④ 描边从 0.08 降到 0.07 并只在卡片外沿用；卡片内部一律改用阴影分层。
+     ⑤ 圆角 18 → 20px，阴影换成两层（近处锐、远处柔），纵深更干净。
 
-   作用域：全部以 .sc-card 或 .sc-* 为前缀，不触碰 Hero / Tabs / About / Contact。
+   配色仍然只用四个颜色：黑 / 金 / 白 / 蓝。
+   差异不靠堆色相，而靠「基调（tone）× 版式（layout）× 舞台画面」的组合。
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ── 1 · 基调变量（兜底值） ───────────────────────────────────────────────
    ProductCard 把两组变量内联写在每张 .sc-card 上：
      --p-accent / --p-rgb / --p-soft / --p-line / --p-glow / --p-ink   卡片外壳
-     --stg-ink / --stg-ink-rgb / --stg-panel / --stg-bg1 / --stg-bg2   舞台内部
-   这里给的兜底等价于 paper 基调（近白舞台 + 黑细线），最克制，
-   任何一张卡漏了 tone 字段退到它都不会突兀。
-   --p-rgb / --stg-ink-rgb 是逗号分隔三元组，供 rgba(var(--x), α) 派生透明度。
-   必须带逗号：rgba(var(--x), α) 里若 var 展开成空格分隔的 "31 95 224"，
-   拼出来是 rgba(31 95 224, .3) —— 非法值，整条声明被丢弃，SVG 会退回黑色填充。
+     --stg-ink / --stg-text / --stg-text-rgb / --stg-panel / --stg-bg* 舞台内部
+   这里的兜底等价于 paper 基调。
+   --p-rgb / --stg-text-rgb 必须**逗号分隔**：`rgba(var(--x), α)` 里若 var 展开成
+   空格分隔，拼出的是非法值，整条声明被丢弃。
    ─────────────────────────────────────────────────────────────────────────── */
 .sc-card {
   --p-accent: #1A1A1A;
   --p-rgb: 26, 26, 26;
-  --p-soft: rgba(26, 26, 26, 0.10);
-  --p-line: rgba(26, 26, 26, 0.30);
-  --p-glow: rgba(26, 26, 26, 0.30);
+  --p-soft: rgba(26, 26, 26, 0.08);
+  --p-line: rgba(26, 26, 26, 0.24);
+  --p-glow: rgba(26, 26, 26, 0.16);
   --p-ink: #000000;
 
   --stg-ink: #1A1A1A;
-  --stg-ink-rgb: 26, 26, 26;
+  --stg-text: #1A1A1A;
+  --stg-text-rgb: 26, 26, 26;
   --stg-panel: #FFFFFF;
-  --stg-bg1: #F0F0EE;
+  --stg-bg1: #F2F2F1;
   --stg-bg2: #FFFFFF;
 }
 
-/* ── 2 · 悬停基座：3D 倾斜 ─────────────────────────────────────────────────
-   --tilt-x / --tilt-y 由 useCardEffects 按指针在卡内的位置写入（±6deg）。
-   透视写在卡片自己的 transform 里，而不是给父级 .vr-roll-wrap 加 perspective：
-   父级同时承载 19 张卡，父级透视会让倾斜量随卡片在网格中的列位漂移。
-   translateY 走 --lift，和旋转合并在同一条 transform 上 ——
-   拆成两条规则会互相覆盖，这是上一版悬停失效的原因之一。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── 2 · 卡片表面 ─────────────────────────────────────────────────────────
+   静止时几乎不投影（只有 1px 的贴合感），悬停时抬升 6px 并把远投影拉开。
+   两层阴影：近的一层负责"贴着桌面"，远的一层负责"浮起来"。 */
 .sc-card {
-  transform:
-    perspective(1000px)
-    rotateX(var(--tilt-x, 0deg))
-    rotateY(var(--tilt-y, 0deg))
-    translateY(var(--lift, 0px));
+  transform: translateY(var(--lift, 0px));
   transition:
-    transform 0.5s var(--sc-ease),
-    border-color 0.5s var(--sc-ease),
-    box-shadow 0.5s var(--sc-ease);
+    transform .55s cubic-bezier(.16, 1, .3, 1),
+    border-color .45s cubic-bezier(.16, 1, .3, 1),
+    box-shadow .55s cubic-bezier(.16, 1, .3, 1);
 }
 
-/* ── 3 · 装饰层：流光 + 指针光斑 ───────────────────────────────────────────
-   两层都铺满卡片、pointer-events:none，叠在背景之上、.sc-body（z-index:1）之下。
-   流光是一条 110° 斜向高光带，悬停时自左向右扫过 —— 材质感来自"光扫过纸面"，
-   而不是把卡片本身涂上颜色。
-   光斑吃 useCardEffects 写入的 --spot-x/--spot-y，颜色取该卡的主题色。
-   ─────────────────────────────────────────────────────────────────────────── */
-.sc-sheen,
-.sc-spot {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-.sc-sheen {
-  background: linear-gradient(
-    110deg,
-    transparent 34%,
-    rgba(var(--p-rgb), 0.10) 47%,
-    rgba(255, 255, 255, 0.62) 51%,
-    transparent 66%
-  );
-  background-size: 260% 100%;
-  background-position: 150% 0;
-  opacity: 0;
-  transition: opacity 0.3s ease, background-position 1s var(--sc-ease);
-}
-
-.sc-spot {
-  background: radial-gradient(
-    240px circle at var(--spot-x, 50%) var(--spot-y, 50%),
-    var(--p-glow),
-    transparent 68%
-  );
-  opacity: 0;
-  transition: opacity 0.28s ease;
-}
-
-/* ── 4 · 底部主题色光带 ─────────────────────────────────────────────────────
-   悬停时从卡片中线向两侧展开的 2px 光带，给卡片一个"落地"的收尾。
-   ::before 在上一版被删空，这里只用 ::after。
-   ─────────────────────────────────────────────────────────────────────────── */
-.sc-card::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 2px;
-  z-index: 2;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, var(--p-accent), transparent);
-  opacity: 0;
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.5s var(--sc-ease), opacity 0.4s ease;
-}
-
-/* ── 5 · 悬停总装（仅真鼠标设备） ─────────────────────────────────────────
-   抬升 4px + 主题色辉光 + 流光扫过 + 光斑 + 底部光带。
-   阴影里那层 var(--p-glow) 是"卡片自己会发光"的关键：中性阴影只说明它浮起来了，
-   主题色辉光才让 19 张卡在悬停时也保持各自的颜色身份。
-   ─────────────────────────────────────────────────────────────────────────── */
 @media (hover: hover) and (pointer: fine) {
   .sc-card:hover {
-    --lift: -4px;
-    border-color: var(--p-line);
+    --lift: -6px;
+    border-color: rgba(var(--p-rgb), 0.20);
     box-shadow:
-      0 2px 4px rgba(20, 20, 20, 0.04),
-      0 30px 54px -22px rgba(20, 20, 20, 0.22),
-      0 18px 40px -26px var(--p-glow);
+      0 2px 4px rgba(16, 16, 16, .04),
+      0 18px 40px -14px rgba(16, 16, 16, .14),
+      0 8px 20px -14px rgba(var(--p-rgb), .30);
   }
 
-  .sc-card:hover .sc-sheen {
-    opacity: 1;
-    background-position: -60% 0;
-  }
-
-  .sc-card:hover .sc-spot {
-    opacity: 0.5;
-  }
-
-  .sc-card:hover::after {
-    opacity: 0.9;
-    transform: scaleX(1);
-  }
+  /* 触屏没有 hover，按压给一点回弹，避免"点了没反应" */
+  .sc-card:active { --lift: -2px; }
 }
 
-/* ── 6 · 眉标（no 字段的类目词） ──────────────────────────────────────────
-   改造前 no 字段在卡片上一次都没渲染，等于白存了 19 条类目信息。
-   现在拆成两段：短码（01 / APP 01 / SKILL）走主题色，类目词走灰，
-   9.5px 等宽大写 + 字距撑开 —— 这是杂志刊头的做法，
-   也补回了「这张卡属于哪一类」这一层信息（颜色不该独自承担分类职责）。
-   ─────────────────────────────────────────────────────────────────────────── */
-.sc-eyebrow {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
-  margin-bottom: 10px;
-  font: 600 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--sc-text-dim);
+@media (hover: none) or (pointer: coarse) {
+  .sc-card { -webkit-tap-highlight-color: transparent; }
+  .sc-card:active { --lift: -2px; transition-duration: .12s; }
 }
 
-.sc-eyebrow b {
-  font-weight: 700;
-  color: var(--p-accent);
-}
-
-/* ── 7 · 标题与描述：把字号跳变收窄 ───────────────────────────────────────
-   27px 标题下面直接接 12.5px 描述，两级差 2.16 倍，中间没有过渡，
-   读起来像两个不相干的元素。改成 25px / 13.5px（差 1.85 倍），
-   再靠眉标（9.5px）垫一级，层级变成 9.5 → 25 → 13.5，跳变更缓、秩序更清楚。
-   描述 min-height 跟着字号走：13.5 × 1.7 × 2 行 ≈ 46px，
-   19 张卡都按 2 行预留，视觉区才严格等高。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── 3 · 排版 ─────────────────────────────────────────────────────────────
+   现代排版的要点：标题重而紧、正文松而浅、层级靠字号与灰度而不是靠线条。 */
 .sc-title {
   flex: 1 1 auto;
   margin: 0;
   font-size: 25px;
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.024em;
   color: var(--sc-text-main);
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .sc-desc {
-  margin: 10px 0 0;
+  margin: 9px 0 0;
   font-size: 13.5px;
-  line-height: 1.7;
+  line-height: 1.66;
   color: var(--sc-text-sub);
-  min-height: 46px;
+  min-height: 45px;
   text-wrap: balance;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -1086,21 +987,34 @@ body{
   overflow: hidden;
 }
 
-/* 三段式行距从 16 收到 14：眉标多占了一行，把空间还一部分给舞台 */
-.sc-body {
-  gap: 14px;
+/* 眉标：一个小点 + 类目词。去掉了等宽大写与夸张字距（那是 2010 年代的痕迹）。 */
+.sc-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: rgba(23, 23, 23, 0.52);
+}
+.sc-eyebrow b {
+  flex: 0 0 auto;
+  font-weight: 650;
+  color: var(--p-accent);
+}
+/* 小点用强调色，是整张卡里唯一一处"亮"的色块 */
+.sc-eyebrow::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--p-accent);
 }
 
-/* ── 8 · 图标盒：主题色淡底，悬停反色 ─────────────────────────────────────
-   默认主题色 9% 淡底 + 主题色描边 + 主题色图标；悬停整块反色成主题色实底、
-   图标转白。这是卡片里唯一一处"大面积主题色"，压在 34px 方块上刚好够辨认又不吵。
-   带 logo 的应用卡不参与反色 —— logo 自带配色，铺一层主题色实底会脏。
-
-   注意：下面这段几何定义（flex 同行 / 34px 方块 / overflow:hidden / img 撑满）
-   必须留在这里。它原先散在文件末尾的 .sc-brand 一节，上一版随死代码一起删掉了，
-   结果 .sc-brand 退化成裸 inline span（实测 177×21），图标被挤到标题上一行、
-   app logo 也不再裁圆角。这里是它唯一的归属。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── 4 · 图标盒 ───────────────────────────────────────────────────────────
+   淡底 + 强调色图标；悬停反色。带 logo 的应用卡不反色 —— logo 自带配色。 */
 .sc-card .sc-title-row {
   display: flex;
   align-items: center;
@@ -1109,31 +1023,25 @@ body{
 }
 
 .sc-card .sc-brand {
-  /* flex:0 0 auto 保证图标盒不被标题挤压；标题用 flex:1 吃掉剩余宽度，
-     否则长标题会被压到 min-content（配合 overflow-wrap:anywhere 会竖排） */
+  /* flex:0 0 auto 保证图标盒不被标题挤压 */
   flex: 0 0 auto;
   display: grid;
   place-items: center;
   width: 34px;
   height: 34px;
-  border: 1px solid var(--p-line);
-  border-radius: 9px;
+  border: 1px solid rgba(var(--p-rgb), 0.14);
+  border-radius: 10px;
   overflow: hidden;
   background: var(--p-soft);
   color: var(--p-accent);
-  box-shadow:
-    0 1px 2px rgba(20, 20, 20, 0.04),
-    0 6px 14px -10px rgba(var(--p-rgb), 0.55);
   transition:
-    transform 0.32s var(--sc-ease),
-    background 0.28s ease,
-    color 0.28s ease,
-    border-color 0.28s ease,
-    box-shadow 0.32s var(--sc-ease);
+    transform .45s cubic-bezier(.16, 1, .3, 1),
+    background .35s ease,
+    color .35s ease,
+    border-color .35s ease;
 }
 
-/* 100% 而不是写死 34px：.sc-brand 是 34×34 带 1px 描边，内容盒只有 32px，
-   写 34px 会被 overflow:hidden 切掉一圈。源图均 ≥160px，显示 34px 不会糊。 */
+/* 100% 而不是写死 34px：内容盒只有 32px，写 34px 会被 overflow 切一圈。 */
 .sc-card .sc-brand img {
   display: block;
   width: 100%;
@@ -1141,88 +1049,75 @@ body{
   object-fit: contain;
 }
 
-/* logo 卡：中性底，只有描边跟主题色走 */
 .sc-card .sc-brand.has-logo {
   background: #fff;
-  border-color: var(--p-line);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .sc-card:hover .sc-brand {
-    transform: translateY(-2px) scale(1.05);
+    transform: translateY(-2px);
     background: var(--p-accent);
     border-color: var(--p-accent);
     color: #fff;
-    box-shadow:
-      0 4px 10px -4px rgba(var(--p-rgb), 0.5),
-      0 12px 22px -12px rgba(var(--p-rgb), 0.6);
   }
-
-  /* logo 卡悬停只抬起 + 描边加深，不反色 */
   .sc-card:hover .sc-brand.has-logo {
     background: #fff;
     border-color: var(--p-accent);
   }
 }
 
-/* ── 9 · 舞台质感 ─────────────────────────────────────────────────────────
-   舞台是三套版式里面积最大的一块，也是「基调」最明显的落点。
-   四件事让它从"线框示意图"变成"真产品界面的一角"：
-     ① 基调渐变底：顶部最浓、向下过渡到另一种基调色（ink 是黑→更黑，
-        其余是浅色→白），模拟界面被光打到
-     ② inset 内阴影：面板有厚度，不是平贴的一张纸
-     ③ 极低透明度点阵纸纹：呼应整站 32px 网格底纹，把纯色块变成有材质的面
-     ④ 1px 基调描边：给浅色舞台一道收口
-
-   纸纹走 background-image 而不是叠加伪元素 —— 这样它天然压在 SVG 之下，
-   不会把舞台里的描边和小字磨淡。
-
-   所有颜色取自 --stg-*，所以 ink 基调（--stg-ink 是白）能整套反色：
-   同一条 .sc-stage 规则在黑底上自动变成「白描边 + 白纸纹 + 白内发光」。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── 5 · 舞台 ─────────────────────────────────────────────────────────────
+   底色是极淡的基调渐变（不再有点阵纹理）；描边只在悬停时跟基调走。 */
 .sc-stage {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-height: 150px;
-  border: 1px solid rgba(var(--stg-ink-rgb), 0.28);
-  border-radius: 12px;
-  /* overflow:hidden 同时承担两件事：裁掉舞台里越界的动画元素
-     （例如 .st-spark-scan 的横向扫掠会扫出 SVG 之外），
-     以及给 .stg 建立裁剪边界。 */
+  border: 1px solid rgba(var(--stg-text-rgb), 0.08);
+  border-radius: 14px;
+  /* overflow:hidden 裁掉舞台里越界的内容（滚动名单、折线扫掠） */
   overflow: hidden;
   background-color: var(--stg-bg2);
-  /* 纸纹压得很淡（10% / 4.5%）：舞台里现在是真的文字和数字，
-     纹理再重一点就会从"材质"变成"噪点"，把 9px 的小字磨花。 */
-  background-image:
-    radial-gradient(rgba(var(--stg-ink-rgb), 0.10) 0.7px, transparent 0.9px),
-    radial-gradient(rgba(var(--stg-ink-rgb), 0.045) 0.7px, transparent 0.9px),
-    radial-gradient(130% 100% at 50% 0%, var(--stg-bg1) 0%, var(--stg-bg2) 68%, var(--stg-bg2) 100%);
-  background-size: 14px 14px, 14px 14px, 100% 100%;
-  background-position: 0 0, 7px 7px, 0 0;
-  box-shadow:
-    inset 0 1px 0 rgba(var(--stg-ink-rgb), 0.05),
-    inset 0 -18px 28px -24px rgba(var(--stg-ink-rgb), 0.55);
-  transition: border-color 0.5s var(--sc-ease), box-shadow 0.5s var(--sc-ease);
+  background-image: radial-gradient(120% 100% at 50% 0%, var(--stg-bg1) 0%, var(--stg-bg2) 72%, var(--stg-bg2) 100%);
+  transition: border-color .45s cubic-bezier(.16, 1, .3, 1);
 }
 
 .sc-card:hover .sc-stage {
-  border-color: var(--stg-ink);
-  box-shadow:
-    inset 0 1px 0 rgba(var(--stg-ink-rgb), 0.05),
-    inset 0 -22px 34px -24px rgba(var(--stg-ink-rgb), 0.7);
+  border-color: rgba(var(--stg-ink-rgb), 0.22);
+}
+
+/* ── 6 · 页脚 ───────────────────────────────────────────────────────────── */
+.sc-seq {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: rgba(23, 23, 23, 0.34);
+  letter-spacing: 0.02em;
+}
+
+.sc-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--p-accent);
+  transition: color .3s ease;
+}
+
+.sc-cta svg {
+  transition: transform .35s cubic-bezier(.16, 1, .3, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .sc-cta { color: var(--p-ink); }
+  .sc-card:hover .sc-cta svg { transform: translate(4px, -4px); }
 }
 
 /* ══ 版式变体：copy / stage / bleed ══════════════════════════════════════
-   三套版式只改「四段在卡内的排布」，不改任何内容 —— 所以 19 张卡共用同一个
-   组件、同一套数据，却能排出不同的样子。
-   四段在 .sc-body 里已有默认行号（眉标 1 / 文案 2 / 舞台 3 / 页脚 4），
-   下面只需按版式重排行号与行高。
-
-     copy  （骨架里的默认值）眉标 / 文案 / 舞台 / 页脚 —— 信息优先
-     stage 眉标 / 舞台 / 文案 / 页脚 —— 演示优先，舞台吃掉全部剩余高度
-     bleed 舞台出血贴满上半部，文字压在下方留白区 —— 海报感
+   三套版式只改「四段在卡内的排布」，不改内容。
+   四段在 .sc-body 里已有默认行号（眉标 1 / 文案 2 / 舞台 3 / 页脚 4）。
    ──────────────────────────────────────────────────────────────────────── */
 
 /* stage · 舞台在上 */
@@ -1233,19 +1128,18 @@ body{
 .sc-card.layout-stage .sc-copy { grid-row: 3; }
 .sc-card.layout-stage .sc-foot { grid-row: 4; }
 
-/* bleed · 舞台出血。
-   .sc-body 的内边距归零，改由各文字段自带左右外边距，舞台才能真正顶到
-   卡片左右沿。卡片自身的 border-radius + overflow:hidden 负责把舞台的
-   直角裁成圆角，所以这里给 stage 去掉圆角与三边描边。 */
+/* bleed · 舞台出血贴满上半部。
+   .sc-body 内边距归零，改由各文字段自带 --sc-pad-x，舞台才能真正顶到左右沿；
+   卡片自身的 border-radius + overflow:hidden 负责把直角裁成圆角。 */
 .sc-card.layout-bleed .sc-body {
-  grid-template-rows: minmax(0, 1.3fr) auto auto auto;
-  gap: 10px;
+  grid-template-rows: minmax(0, 1.25fr) auto auto auto;
+  gap: 11px;
   padding: 0 0 20px;
 }
 .sc-card.layout-bleed .sc-stage {
   grid-row: 1;
   border: 0;
-  border-bottom: 1px solid rgba(var(--stg-ink-rgb), 0.28);
+  border-bottom: 1px solid rgba(var(--stg-text-rgb), 0.10);
   border-radius: 0;
   margin-bottom: 4px;
 }
@@ -1253,125 +1147,34 @@ body{
 .sc-card.layout-bleed .sc-copy { grid-row: 3; margin: 0 var(--sc-pad-x); }
 .sc-card.layout-bleed .sc-foot { grid-row: 4; margin: 0 var(--sc-pad-x); }
 
-/* ── 10 · 页脚：序号与 CTA ────────────────────────────────────────────────
-   序号描边走基调强调色（38% 不透明度），CTA 走强调色、悬停转深色 + 箭头磁吸。
-   强调色由基调决定：paper 是黑、gold/ink 是金、blue 是蓝。
-   悬停色统一交给 --p-ink（各基调的深色版），对比度都在 7.9:1 以上。
-   ─────────────────────────────────────────────────────────────────────────── */
-.sc-seq {
-  -webkit-text-stroke: 1px rgba(var(--p-rgb), 0.38);
-}
-
-.sc-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--p-accent);
-  transition: color 0.22s ease, gap 0.22s var(--sc-ease);
-}
-
-.sc-cta svg {
-  transition: transform 0.22s cubic-bezier(.22, 1, .36, 1);
-}
-
-.sc-card:hover .sc-cta {
-  color: var(--p-ink);
-}
-
-.sc-card:hover .sc-cta svg {
-  transform: translate(3px, -3px);
-}
-
-/* ── 11 · 视口门控（性能） ────────────────────────────────────────────────
-   视口外的卡片暂停舞台动画；页面切到后台也暂停。
-   这两条原本夹在已删除的 .sg-* 死代码里，原样搬过来保留。
-   ─────────────────────────────────────────────────────────────────────────── */
-.vr-card-entry:not([data-card-visible]) .sc-stage,
-.vr-card-entry:not([data-card-visible]) .sc-stage *,
-.vr-card-entry:not([data-card-visible]) .sc-stage *::after,
-.vr-card-entry:not([data-card-visible]) .sc-stage *::before {
-  animation-play-state: paused !important;
-}
-
-.vr-home[data-page-hidden] .sc-stage,
-.vr-home[data-page-hidden] .sc-stage *,
-.vr-home[data-page-hidden] .sc-stage *::after,
-.vr-home[data-page-hidden] .sc-stage *::before {
-  animation-play-state: paused !important;
-}
-
-/* ── 12 · 窄屏 ────────────────────────────────────────────────────────────
-   ≤960 已是单列（在栅格一节）。这里只收字号与图标盒，避免小屏上
-   「25px 标题 + 13.5px 描述 + 眉标」把舞台挤扁。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── 7 · 窄屏 ───────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sc-card { --sc-pad-x: 22px; }
-  .sc-card .sc-title { font-size: 23px; }
-  .sc-card .sc-desc { font-size: 12.5px; line-height: 1.65; min-height: 42px; }
-  .sc-card .sc-eyebrow { margin-bottom: 8px; font-size: 9px; }
-  .sc-card .sc-brand { width: 30px; height: 30px; border-radius: 8px; }
+  .sc-card .sc-title { font-size: 22px; }
+  .sc-card .sc-desc { font-size: 12.5px; line-height: 1.6; min-height: 40px; }
+  .sc-card .sc-brand { width: 30px; height: 30px; border-radius: 9px; }
   .sc-card .sc-title-row { gap: 9px; }
 }
 
-/* ── 13 · 触屏降级 ────────────────────────────────────────────────────────
-   没有悬停这回事：关掉 3D 倾斜与流光光斑，只留 :active 的轻微按压反馈。
-   ─────────────────────────────────────────────────────────────────────────── */
-@media (hover: none) or (pointer: coarse) {
-  .sc-card {
-    transform: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .sc-sheen,
-  .sc-spot {
-    display: none;
-  }
-
-  .sc-card:active {
-    transform: scale(0.985);
-    transition-duration: 0.12s;
-  }
-}
-
-/* ── 14 · 减少动态效果 ────────────────────────────────────────────────────
-   全部动效与位移关闭；装饰层直接不渲染，避免"静止的斜光带"这种半成品观感。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── 8 · 减少动态效果 ─────────────────────────────────────────────────────
+   关掉位移与过渡；舞台内部的终态由 stage-scenes.css 里的同名规则补写。 */
 @media (prefers-reduced-motion: reduce) {
   .sc-card {
     transform: none !important;
     transition: none !important;
   }
-
-  .sc-card *,
-  .sc-card *::before,
-  .sc-card *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .sc-sheen,
-  .sc-spot,
-  .sc-card::after {
-    display: none !important;
-  }
-
-  .sc-card:hover .sc-brand {
-    transform: none;
-  }
+  .sc-card:hover,
+  .sc-card:active { --lift: 0px; }
+  .sc-card:hover .sc-brand,
+  .sc-card:hover .sc-cta svg { transform: none !important; }
 }
 
-/* ── 15 · 高对比度模式 ────────────────────────────────────────────────────
-   forced-colors 下浏览器会重写颜色，主题色体系失效，靠 1px 边框保住轮廓。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* ── 9 · 高对比度模式 ───────────────────────────────────────────────────── */
 @media (forced-colors: active) {
   .sc-card,
   .sc-stage {
     border: 1px solid CanvasText;
   }
-
-  .sc-eyebrow b {
-    color: CanvasText;
-  }
+  .sc-eyebrow::before { background: CanvasText; }
+  .sc-eyebrow b { color: CanvasText; }
 }

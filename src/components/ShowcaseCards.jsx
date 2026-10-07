@@ -164,11 +164,9 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
       style={toneVars(card.tone)}
       aria-label={`${card.name}：${card.cta}${card.external ? '（新标签页）' : ''}`}
     >
-      {/* 装饰层：流光扫过（hover）与指针光斑（跟随 --spot-x/--spot-y）。
-          两者都 pointer-events:none，不参与命中，也不进可访问性树。 */}
-      <span className="sc-sheen" aria-hidden="true" />
-      <span className="sc-spot" aria-hidden="true" />
-
+      {/* 这里原本有两个装饰层：悬停时的「高光扫过」与跟随指针的「光斑」。
+          二者都是 2013~2016 年的手法，观感显旧，本轮连同样式一起删掉 ——
+          现在的悬停反馈是卡片抬升 + 投影加深 + 舞台焦点轻微放大。 */}
       <div className="sc-body">
         {/* 眉标是三套版式共用的第一个网格项。放在 .sc-copy 之外，
             layout-stage / layout-bleed 才能把它留在最上方、

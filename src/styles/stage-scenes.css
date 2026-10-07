@@ -1,19 +1,15 @@
 /* ==========================================================================
-   19 个舞台 · 外观与动画
+   19 个舞台 · 极简现代
    --------------------------------------------------------------------------
-   舞台展示的是「该产品真实界面的一角」，所以这里写的是一套**迷你 UI 组件库**：
-   标题条、状态点、进度条、列表行、标签、面板……19 个舞台用同一套材质拼出
-   各自的内容（请求日志 / 课表 / 排名 / 账单 / 磁盘占用…）。
+   设计语言（与上一版的「密集假 UI」相反）：
+     · **留白优先**：一个焦点 + 一行小注 + 干净几何，元素少、字号大。
+     · **阴影分层**：面板靠柔和投影浮起，描边只出现在极少数地方。
+     · **克制用色**：形状用基调色，其余全是中性灰。
+     · **有分寸的动效**：错峰淡入、悬停微放大、状态点缓慢呼吸。
+       已移除「高光扫过」和「3D 倾斜」这两个旧时代手法（在 dashboard-cards.css）。
 
-   统一材质是为了让 19 张卡看起来像一个产品家族；差异来自内容本身 ——
-   字段、单位、文案、结构各不相同。
-
-   颜色全部取自基调变量（ProductCard 按该卡 tone 注入）：
-     --stg-text / --stg-text-rgb   文字（对舞台底 ≥ 4.5:1）
-     --stg-ink  / --stg-ink-rgb    描边、进度条、实心块（图形，≥ 3:1 即可）
-     --stg-panel                   面板 / 卡片填充
-   分 text 与 ink 是必需的：金色基调的 #8A6D1F 作图形有 4.02:1（够），
-   但当文字只有 4.02:1 差一点点，所以文字用更深的 #6B5417（5.95:1）。
+   颜色取自基调变量（ProductCard 按该卡 tone 注入）：
+     --stg-ink / --stg-text / --stg-text-rgb / --stg-panel
    ========================================================================== */
 
 .stg {
@@ -21,212 +17,453 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
   justify-content: center;
-  padding: 12px 13px;
+  gap: 15px;
+  padding: 20px 22px;
   overflow: hidden;
   color: var(--stg-text);
-  font-size: 10px;
-  line-height: 1.35;
+  line-height: 1.4;
   pointer-events: none;
 }
 
-/* ── 基础件 ─────────────────────────────────────────────────────────────── */
+/* ── 通用件 ─────────────────────────────────────────────────────────────── */
 
-/* ⚠️ 命名陷阱：舞台根节点同时带 `stg` 和 `stg-<kind>`（如 `stg stg-week`）。
-   所以**内层容器绝不能再叫 `stg-<kind>`** —— 两者特异性相同，内层规则在文件里
-   更靠后，`.stg-week{display:grid}` 会直接盖掉 `.stg{display:flex}`，
-   整个舞台塌成一条窄缝。内层一律另起名字（`stg-week-grid` / `stg-bench-grid` /
-   `stg-tree-map` / `stg-disk-list` / `stg-spark-chart`），与根修饰类彻底分开。 */
-
-/* 小标题条：状态点 + 主标签 + 右侧元信息 */
-.stg-head { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; min-width: 0; }
-.stg-head b { overflow: hidden; font-size: 10.5px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.stg-head em { margin-left: auto; flex: 0 0 auto; font: 500 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.55); }
-
-.stg-dot { flex: 0 0 auto; width: 6px; height: 6px; border-radius: 50%; background: var(--stg-ink); animation: stgLive 1.9s ease-in-out infinite; }
-
-/* 进度条：宽度走 --w，入场用 scaleX 展开（只动 transform） */
-.stg-bar { position: relative; display: block; height: 5px; border-radius: 99px; background: rgba(var(--stg-ink-rgb), 0.16); overflow: hidden; }
-.stg-bar i { display: block; width: var(--w, 50%); height: 100%; border-radius: 99px; background: var(--stg-ink); transform: scaleX(0); transform-origin: left center; animation: stgBarIn 0.7s var(--sc-ease) forwards; }
-
-/* 「标签 + 条 + 数值」的横向一行，多处复用 */
-.stg-foot-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 9px; color: rgba(var(--stg-text-rgb), 0.62); }
-.stg-foot-row b { font: 700 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-text); }
-
-/* 大数字（磁盘可清理量、Token 用量） */
-.stg-big { display: flex; align-items: baseline; gap: 5px; margin: 0; font: 800 25px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -0.02em; color: var(--stg-text); }
-.stg-big small { font: 500 9px/1 inherit; letter-spacing: 0; color: rgba(var(--stg-text-rgb), 0.55); }
-
-.stg-note { margin: 0; font: 8.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.5); }
-
-/* 主列表在有富余高度时把行距均摊开 —— bleed 版式的舞台有 240px 高，
-   内容自然高度只有 100~140px，居中会留下上下两大块空白。
-   space-evenly 只分配「正的空隙」，行高保持自然：空间不够时它退化成 start，
-   不会把行压扁或裁掉内容。
-   max-height 是必要的刹车：不限高的话 3 行的列表会被拉到 60px 的行距，
-   排名和星数之间空到看不出是一行。封顶后多余的高度交回 .stg 居中。 */
-.stg-reqs,
-.stg-ranks,
-.stg-prompts,
-.stg-repos,
-.stg-steps,
-.stg-log,
-.stg-meals,
-.stg-courses,
-.stg-disk-list,
-.stg-bills {
-  flex: 1 1 auto;
-  max-height: 168px;
-  align-content: space-evenly;
+/* 焦点：大数字 / 关键词。悬停时轻微放大 —— 有分寸的反馈，不是弹跳。 */
+.stg-focus { display: grid; gap: 7px; justify-items: start; }
+.stg-figure {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--stg-ink);
+  transform-origin: left center;
+  transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+}
+.stg-figure small {
+  margin-left: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  opacity: .58;
 }
 
-/* ── 01 · Voyra Relay API：请求日志 ─────────────────────────────────────── */
-.stg-api .stg-reqs { display: grid; gap: 5px; }
-.stg-api .stg-reqs li { display: grid; grid-template-columns: 32px minmax(0, 1fr) 22px 32px; align-items: center; gap: 6px; }
-.stg-method { padding: 2px 0; border-radius: 4px; background: var(--stg-ink); color: var(--stg-panel); font: 700 7.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: center; letter-spacing: 0.04em; }
-.stg-method.is-get { background: rgba(var(--stg-ink-rgb), 0.18); color: var(--stg-text); }
-.stg-api code { overflow: hidden; font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.8); text-overflow: ellipsis; white-space: nowrap; }
-.stg-api .stg-reqs b { font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-ink); }
-.stg-api .stg-reqs em { font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.55); text-align: right; }
+/* 小注：次要信息。0.62 是算过的 —— 0.55 时浅色底上只有 3.95:1，不达 AA。 */
+.stg-cap {
+  font-size: 10.5px;
+  color: rgba(var(--stg-text-rgb), 0.62);
+}
 
-/* ── 02 · 日程中心：真实课表 ────────────────────────────────────────────── */
-.stg-week-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: auto repeat(5, minmax(0, 1fr)); gap: 4px; }
-.stg-week-h { font: 500 8.5px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.5); text-align: center; }
-.stg-week-c { display: grid; place-items: center; padding: 2px 3px; overflow: hidden; border-left: 2px solid var(--stg-ink); border-radius: 4px; background: rgba(var(--stg-ink-rgb), 0.13); font-size: 8.5px; line-height: 1.15; text-align: center; animation: stgRise 0.5s var(--sc-ease) backwards; animation-delay: calc(var(--i) * 0.06s); }
+/* 药丸节点（步骤 / 分支 / 流水线）。浮起靠阴影，不靠描边。 */
+.stg-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: var(--stg-panel);
+  box-shadow:
+    0 1px 2px rgba(16, 16, 16, .05),
+    0 8px 18px -10px rgba(16, 16, 16, .30);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+/* 强调节点：实心底 + 同色柔光，纵深靠光晕而不是边框 */
+.stg-node.is-lead,
+.stg-node.is-live {
+  background: var(--stg-ink);
+  color: var(--stg-panel);
+  box-shadow: 0 6px 16px -6px rgba(var(--stg-ink-rgb), .55);
+}
 
-/* ── 03 · AI 模型对比秀：得分榜 ─────────────────────────────────────────── */
-.stg-ranks { display: grid; gap: 6px; }
-.stg-ranks li { display: grid; grid-template-columns: 62px minmax(0, 1fr) 20px; align-items: center; gap: 8px; }
-.stg-ranks b { overflow: hidden; font-size: 9.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.stg-ranks em { font: 700 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: var(--stg-ink); text-align: right; }
+.stg-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--stg-ink);
+  animation: stgBreathe 2.4s ease-in-out infinite;
+}
+.stg-node.is-live .stg-dot { background: var(--stg-panel); }
 
-/* ── 04 · 提示词库：搜索框 + 提示词卡片 ─────────────────────────────────── */
-.stg-search { display: block; padding: 5px 8px; border: 1px solid rgba(var(--stg-ink-rgb), 0.22); border-radius: 6px; background: var(--stg-panel); font-size: 9px; color: rgba(var(--stg-text-rgb), 0.5); }
-.stg-prompts { display: grid; gap: 5px; }
-.stg-prompts li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid rgba(var(--stg-ink-rgb), 0.14); border-radius: 6px; background: var(--stg-panel); animation: stgRise 0.5s var(--sc-ease) backwards; animation-delay: calc(var(--i) * 0.08s); }
-.stg-prompts b { overflow: hidden; font-size: 9.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.stg-prompts span { font-size: 8.5px; color: rgba(var(--stg-text-rgb), 0.5); white-space: nowrap; }
-.stg-prompts em { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: var(--stg-ink); }
+/* 进度条：圆角、细 */
+.stg-bar {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(var(--stg-ink-rgb), 0.13);
+  overflow: hidden;
+}
+.stg-bar i {
+  display: block;
+  width: var(--w, 60%);
+  height: 100%;
+  border-radius: 99px;
+  background: var(--stg-ink);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: stgBarIn .9s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .08s + .15s);
+}
+/* 「通栏」条：.stg 是纵向 flex，这里要用 align-self 撑**宽度**。
+   写 flex:1 会沿主轴（纵向）长高，把 7px 的条拉成一大块 —— 踩过。 */
+.stg-bar.is-wide { width: auto; align-self: stretch; height: 7px; }
 
-/* ── 05 · 组件图鉴：四个真组件 ──────────────────────────────────────────── */
-.stg-bench-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-.stg-bench-t { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 8px; border: 1px solid rgba(var(--stg-ink-rgb), 0.16); border-radius: 8px; background: var(--stg-panel); animation: stgRise 0.5s var(--sc-ease) backwards; animation-delay: calc(var(--i) * 0.07s); }
-.stg-bench-t em { font: 500 7.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; letter-spacing: 0.05em; color: rgba(var(--stg-text-rgb), 0.45); }
-.stg-btn { padding: 3px 11px; border-radius: 99px; background: var(--stg-ink); color: var(--stg-panel); font-size: 9px; font-weight: 600; }
-.stg-switch { position: relative; width: 26px; height: 14px; border-radius: 99px; background: var(--stg-ink); }
-.stg-switch i { position: absolute; top: 2px; left: 14px; width: 10px; height: 10px; border-radius: 50%; background: var(--stg-panel); }
-.stg-input { padding: 3px 9px; border: 1px solid rgba(var(--stg-ink-rgb), 0.3); border-radius: 5px; font-size: 9px; color: rgba(var(--stg-text-rgb), 0.55); }
-.stg-tag { padding: 2px 8px; border: 1px solid rgba(var(--stg-ink-rgb), 0.3); border-radius: 99px; font-size: 8.5px; }
+/* 列表行：行距放宽，字号比上一版大 3px */
+.stg-rows { display: grid; gap: 13px; }
+.stg-rows li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 12.5px;
+  animation: stgRise .6s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .09s);
+}
+.stg-rows b {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stg-rows em {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  font: 700 12.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: normal;
+  color: var(--stg-ink);
+}
+.stg-rows em.is-live { color: rgba(var(--stg-text-rgb), .62); }
+.stg-rank {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(var(--stg-ink-rgb), .13);
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: normal;
+}
+.stg-rows li:first-child .stg-rank { background: var(--stg-ink); color: var(--stg-panel); }
 
-/* ── 06 · Skill 热榜：GitHub 星数排行 ──────────────────────────────────── */
-.stg-repos { display: grid; gap: 5px; }
-.stg-repos li { display: grid; grid-template-columns: 15px minmax(0, 1fr) auto auto; align-items: center; gap: 7px; padding: 5px 7px; border-radius: 6px; }
-.stg-repos li.is-top { background: rgba(var(--stg-ink-rgb), 0.12); }
-.stg-repos i { font: 700 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.45); }
-.stg-repos li.is-top i { color: var(--stg-ink); }
-.stg-repos b { overflow: hidden; font-size: 9.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.stg-repos span { font: 600 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; }
-.stg-repos em { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: var(--stg-ink); }
+/* ── 01 · API 网关 ─────────────────────────────────────────────────────── */
+.stg-flow { display: flex; align-items: center; gap: 10px; }
+.stg-wire {
+  flex: 1 1 auto;
+  height: 1px;
+  min-width: 16px;
+  background: linear-gradient(90deg, var(--stg-ink), rgba(var(--stg-ink-rgb), .15));
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: stgBarIn .8s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: .35s;
+}
 
-/* ── 07 / 12 · 步骤流（Agent 任务、CUMCM 工作流） ──────────────────────── */
-.stg-steps { display: grid; gap: 5px; }
-.stg-steps li { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; gap: 7px; font-size: 9.5px; }
-.stg-steps li > i { display: grid; place-items: center; width: 14px; height: 14px; border: 1px solid rgba(var(--stg-ink-rgb), 0.35); border-radius: 50%; font-size: 7.5px; font-style: normal; color: rgba(var(--stg-text-rgb), 0.4); }
-.stg-steps li.is-done > i { border-color: var(--stg-ink); background: var(--stg-ink); color: var(--stg-panel); }
-.stg-steps li.is-run > i { border-color: var(--stg-ink); color: var(--stg-ink); animation: stgPulse 1.7s ease-in-out infinite; }
-.stg-steps li.is-run b { color: var(--stg-ink); }
-.stg-steps li.is-todo b { color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-steps code { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.5); }
-.stg-steps em { font-size: 8.5px; font-style: normal; color: rgba(var(--stg-text-rgb), 0.5); }
-.stg-steps.is-dense { gap: 4px; }
-.stg-steps.is-dense li { font-size: 9px; }
+/* ── 02 · 日程中心 ───────────────────────────────────────────────────────
+   行高必须写死。`minmax(0, 1fr)` 的行在**高度不确定**的网格里会塌成 0 ——
+   这里曾经把 flex 改成 `0 1 auto` 之后，整个网格就只剩表头那一行，
+   看上去像"课表没渲染出来"。22px 的固定行高同时换来更紧凑的观感。 */
+.stg-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: auto;
+  grid-auto-rows: 22px;
+  gap: 6px;
+}
+.stg-week-h {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: rgba(var(--stg-text-rgb), 0.65);
+  text-align: center;
+}
+.stg-week-c {
+  position: relative;
+  border-radius: 6px;
+  background: rgba(var(--stg-ink-rgb), 0.34);
+  animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .035s);
+}
+.stg-week-c.is-on { background: var(--stg-ink); }
+/* 标记「今天」—— 在某个 is-on 格上叠一圈细描边，让 20 格的网格里有一个明显焦点 */
+.stg-week-c.is-now::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(var(--stg-ink-rgb), .7);
+}
 
-/* ── 08 · 思维导图：根 + 分支 ──────────────────────────────────────────── */
-.stg-tree-map { display: grid; flex: 1; min-height: 0; grid-template-columns: auto 16px minmax(0, 1fr); align-items: center; }
-.stg-tree-root { padding: 5px 10px; border-radius: 99px; background: var(--stg-ink); color: var(--stg-panel); font-size: 9.5px; font-weight: 700; white-space: nowrap; }
-.stg-tree-stem { height: 1px; background: rgba(var(--stg-ink-rgb), 0.4); }
-.stg-tree-leaves { display: grid; gap: 5px; }
-.stg-tree-leaves li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid rgba(var(--stg-ink-rgb), 0.22); border-radius: 6px; background: var(--stg-panel); font-size: 9.5px; animation: stgRise 0.5s var(--sc-ease) backwards; animation-delay: calc(var(--i) * 0.09s); }
-.stg-tree-leaves em { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.5); }
+/* ── 04 · 提示词库 ─────────────────────────────────────────────────────── */
+.stg-search {
+  padding: 9px 15px;
+  border-radius: 99px;
+  background: var(--stg-panel);
+  box-shadow:
+    0 1px 2px rgba(16, 16, 16, .05),
+    0 8px 18px -12px rgba(16, 16, 16, .30);
+  font-size: 11.5px;
+  color: rgba(var(--stg-text-rgb), 0.45);
+}
+.stg-cards { display: grid; gap: 10px; }
+.stg-cards li {
+  padding: 13px 15px;
+  border-radius: 13px;
+  background: var(--stg-panel);
+  box-shadow:
+    0 1px 2px rgba(16, 16, 16, .05),
+    0 10px 22px -14px rgba(16, 16, 16, .34);
+  font-size: 12.5px;
+  font-weight: 600;
+  animation: stgRise .6s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .11s);
+}
 
-/* ── 09 · 宝宝护理：统计 + 护理记录 ────────────────────────────────────── */
-.stg-kpi3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.stg-kpi3 span { display: grid; gap: 2px; padding: 6px 7px; border: 1px solid rgba(var(--stg-ink-rgb), 0.14); border-radius: 7px; background: var(--stg-panel); font-size: 8.5px; color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-kpi3 b { font: 800 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-text); }
-.stg-log { display: grid; gap: 4px; }
-.stg-log li { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 8px; font-size: 9.5px; }
-.stg-log time { font: 9px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.5); }
+/* ── 05 · 组件图鉴 ─────────────────────────────────────────────────────── */
+.stg-glyphs { display: flex; align-items: center; gap: 20px; }
+.stg-glyph {
+  animation: stgRise .55s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .1s);
+}
+/* 按钮 */
+.stg-glyph.is-btn { width: 64px; height: 30px; border-radius: 99px; background: var(--stg-ink); }
+/* 开关：底 + 滑到右侧的旋钮 */
+.stg-glyph.is-switch { position: relative; width: 54px; height: 29px; border-radius: 99px; background: var(--stg-ink); }
+.stg-glyph.is-switch i {
+  position: absolute;
+  top: 4px;
+  left: 29px;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--stg-panel);
+}
+/* 标签 */
+.stg-glyph.is-tag { width: 60px; height: 27px; border: 2px solid var(--stg-ink); border-radius: 9px; }
 
-/* ── 10 · 随机抽人：名单滚动 ───────────────────────────────────────────── */
-.stg-roll-win { position: relative; height: 90px; overflow: hidden; border: 1px solid rgba(var(--stg-ink-rgb), 0.22); border-radius: 8px; background: var(--stg-panel); -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(180deg, transparent, #000 22%, #000 78%, transparent); }
-.stg-roll { display: grid; animation: stgRoll 4.8s cubic-bezier(.16, 1, .3, 1) infinite; }
-.stg-roll li { display: grid; place-items: center; height: 30px; font-size: 11px; color: rgba(var(--stg-text-rgb), 0.55); }
-.stg-roll li.is-hit { font-size: 15px; font-weight: 800; color: var(--stg-ink); }
+/* ── 07 / 13 · 流水线链 ────────────────────────────────────────────────── */
+.stg-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.stg-chain .stg-node {
+  animation: stgRise .55s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .1s);
+}
 
-/* ── 11 · 饮食打卡：三餐 + 饮水 ────────────────────────────────────────── */
-.stg-meals { display: grid; gap: 5px; }
-.stg-meals li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: center; gap: 7px; font-size: 9.5px; }
-.stg-meals li > i { display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; font-size: 8.5px; font-style: normal; }
-.stg-meals li.is-on > i { background: var(--stg-ink); color: var(--stg-panel); }
-.stg-meals li.is-off > i { border: 1px dashed rgba(var(--stg-ink-rgb), 0.45); color: rgba(var(--stg-text-rgb), 0.4); }
-.stg-meals li.is-off b { color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-meals em { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.5); }
+/* ── 08 · 思维导图 ─────────────────────────────────────────────────────── */
+.stg-branch { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 16px; }
+.stg-branch ul { display: grid; gap: 9px; }
+.stg-branch li .stg-node {
+  animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .1s + .12s);
+}
 
-/* ── 13 · 织流：流水线 ─────────────────────────────────────────────────── */
-.stg-pipe { display: flex; flex-wrap: nowrap; align-items: center; }
-.stg-pipe span { display: flex; align-items: center; }
-.stg-pipe b { padding: 5px 8px; border: 1px solid rgba(var(--stg-ink-rgb), 0.24); border-radius: 6px; background: var(--stg-panel); font-size: 9px; font-weight: 600; white-space: nowrap; }
-.stg-pipe u { display: block; width: 12px; height: 1px; background: rgba(var(--stg-ink-rgb), 0.4); }
-.stg-pipe .is-run b { border-color: var(--stg-ink); background: var(--stg-ink); color: var(--stg-panel); animation: stgPulse 1.9s ease-in-out infinite; }
+/* ── 09 · 宝宝护理：弧线 ───────────────────────────────────────────────── */
+.stg-arc-chart { display: block; width: 100%; height: 46px; }
+.stg-arc-track { fill: none; stroke: rgba(var(--stg-ink-rgb), 0.16); stroke-width: 7; stroke-linecap: round; }
+.stg-arc-fill {
+  fill: none;
+  stroke: var(--stg-ink);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-dasharray: 320;
+  stroke-dashoffset: 320;
+  animation: stgDraw 1.6s cubic-bezier(.16, 1, .3, 1) forwards;
+  animation-delay: .2s;
+}
 
-/* ── 14 · 学习通自动签到：课程状态 ─────────────────────────────────────── */
-.stg-courses { display: grid; gap: 5px; }
-.stg-courses li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; font-size: 9.5px; }
-.stg-courses b { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.stg-courses em { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
-.stg-courses em.is-ok { color: var(--stg-ink); }
-.stg-courses em.is-run { color: rgba(var(--stg-text-rgb), 0.5); animation: stgPulse 1.7s ease-in-out infinite; }
+/* ── 10 · 随机抽人：窗口只放一个名字，遮罩让上下两个半隐，滚动才有「停住」感 ── */
+.stg-roll-win {
+  height: 54px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 26%, #000 74%, transparent);
+}
+.stg-roll { animation: stgRoll 5s cubic-bezier(.16, 1, .3, 1) infinite; }
+.stg-roll li {
+  display: flex;
+  align-items: center;
+  height: 54px;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(var(--stg-text-rgb), 0.35);
+}
+.stg-roll li.is-hit { font-size: 27px; font-weight: 800; color: var(--stg-ink); }
 
-/* ── 15 · 磁盘清理：分类占用 ───────────────────────────────────────────── */
-.stg-disk-list { display: grid; gap: 5px; }
-.stg-disk-list li { display: grid; grid-template-columns: 26px minmax(0, 1fr) 44px; align-items: center; gap: 8px; font-size: 9px; }
-.stg-disk-list em { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.6); text-align: right; }
+/* ── 11 · 饮食打卡 ─────────────────────────────────────────────────────── */
+.stg-checks { display: flex; gap: 15px; }
+.stg-check {
+  display: grid;
+  place-content: center;
+  width: 27px;
+  height: 27px;
+  border: 2px solid rgba(var(--stg-ink-rgb), 0.28);
+  border-radius: 50%;
+  animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .09s);
+}
+.stg-check.is-on { border-color: var(--stg-ink); background: var(--stg-ink); }
+.stg-check.is-on::after {
+  content: "";
+  width: 7px;
+  height: 12px;
+  margin-top: -2px;
+  border: 2px solid var(--stg-panel);
+  border-top: 0;
+  border-left: 0;
+  transform: rotate(42deg);
+}
 
-/* ── 16 · 账迹：账单 + 合计 ────────────────────────────────────────────── */
-.stg-bills { display: grid; gap: 5px; }
-.stg-bills li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid rgba(var(--stg-ink-rgb), 0.14); border-radius: 6px; background: var(--stg-panel); font-size: 9.5px; animation: stgRise 0.5s var(--sc-ease) backwards; animation-delay: calc(var(--i) * 0.1s); }
-.stg-bills em { font: 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; }
-.stg-total { display: flex; align-items: baseline; justify-content: space-between; padding-top: 6px; border-top: 1px solid rgba(var(--stg-ink-rgb), 0.22); }
-.stg-total span { font-size: 9px; color: rgba(var(--stg-text-rgb), 0.55); }
-.stg-total b { font: 800 14px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-ink); }
+/* ── 12 · 数学建模：阶段点 ─────────────────────────────────────────────── */
+.stg-steps { display: flex; align-items: center; gap: 12px; }
+.stg-step {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(var(--stg-ink-rgb), 0.20);
+  animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .08s);
+}
+.stg-step.is-done { background: var(--stg-ink); }
+.stg-step.is-live {
+  width: 15px;
+  height: 15px;
+  background: var(--stg-ink);
+  animation: stgBreathe 2s ease-in-out infinite;
+}
 
-/* ── 17 · Token Monitor：KPI + 折线 ────────────────────────────────────── */
-.stg-kpi2 { display: flex; gap: 12px; font-size: 8.5px; color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-kpi2 b { font: 700 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-text); }
-.stg-spark-chart { display: block; width: 100%; height: 38px; }
-.stg-spark-area { fill: rgba(var(--stg-ink-rgb), 0.18); }
-.stg-spark-line { fill: none; stroke: var(--stg-ink); stroke-width: 1.6; stroke-dasharray: 320; stroke-dashoffset: 320; vector-effect: non-scaling-stroke; animation: stgDraw 1.9s var(--sc-ease) forwards; }
+/* ── 15 · 磁盘清理 ─────────────────────────────────────────────────────── */
+.stg-bars { display: grid; gap: 9px; }
+.stg-bars .stg-bar { width: 100%; }
+
+/* ── 16 · 账迹 ─────────────────────────────────────────────────────────── */
+.stg-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid rgba(var(--stg-ink-rgb), 0.16);
+}
+.stg-total span { font-size: 11px; color: rgba(var(--stg-text-rgb), 0.62); }
+.stg-total b {
+  font: 750 18px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: -0.02em;
+  color: var(--stg-ink);
+}
+
+/* ── 17 · Token Monitor ────────────────────────────────────────────────── */
+.stg-spark-chart { display: block; width: 100%; height: 48px; }
+.stg-spark-area { fill: rgba(var(--stg-ink-rgb), 0.13); }
+.stg-spark-line {
+  fill: none;
+  stroke: var(--stg-ink);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 340;
+  stroke-dashoffset: 340;
+  animation: stgDraw 1.8s cubic-bezier(.16, 1, .3, 1) forwards;
+}
 
 /* ── 18 · 知新：单词卡翻面 ─────────────────────────────────────────────── */
-.stg-flip-stage { display: grid; flex: 1; min-height: 0; place-items: center; perspective: 620px; }
-.stg-flip-card { position: relative; width: 84%; height: 100%; max-height: 92px; transform-style: preserve-3d; animation: stgFlip 5.4s ease-in-out infinite; }
-.stg-flip-face { position: absolute; inset: 0; display: grid; place-content: center; gap: 6px; border: 1px solid rgba(var(--stg-ink-rgb), 0.22); border-radius: 9px; background: var(--stg-panel); text-align: center; backface-visibility: hidden; box-shadow: 0 5px 12px -8px rgba(0, 0, 0, 0.3); }
-.stg-flip-face b { font-size: 14px; font-weight: 800; }
-.stg-flip-face span { font: 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.55); }
-.stg-flip-face.is-back { transform: rotateY(180deg); border-color: var(--stg-ink); border-width: 2px; }
-.stg-flip-face.is-back b { color: var(--stg-ink); }
+.stg-flip-stage { perspective: 760px; }
+.stg-flip-card {
+  position: relative;
+  width: 100%;
+  max-width: 196px;
+  height: 80px;
+  transform-style: preserve-3d;
+  animation: stgFlip 6.4s cubic-bezier(.45, 0, .25, 1) infinite;
+}
+.stg-flip-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  border-radius: 14px;
+  background: var(--stg-panel);
+  text-align: center;
+  backface-visibility: hidden;
+  box-shadow:
+    0 1px 2px rgba(16, 16, 16, .05),
+    0 14px 28px -16px rgba(16, 16, 16, .40);
+}
+.stg-flip-face b { font-size: 17px; font-weight: 750; letter-spacing: -0.02em; }
+.stg-flip-face span { font-size: 10.5px; color: rgba(var(--stg-text-rgb), 0.62); }
+.stg-flip-face.is-back {
+  transform: rotateY(180deg);
+  background: var(--stg-ink);
+  color: var(--stg-panel);
+}
+.stg-flip-face.is-back span { color: var(--stg-panel); opacity: .8; }
 
-/* ── 19 · AI 轨迹：一天的时间轴 ────────────────────────────────────────── */
-.stg-tl { display: grid; gap: 2px; }
-.stg-tl li { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 10px; padding: 5px 0 5px 16px; font-size: 9.5px; }
-/* 圆点 + 竖向主轴：主轴按首尾项各裁掉一半，避免两端露出多余线段 */
-.stg-tl li::before { content: ""; position: absolute; left: 3px; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 50%; background: var(--stg-ink); }
-.stg-tl li::after { content: ""; position: absolute; left: 5.5px; top: 0; bottom: 0; width: 1px; background: rgba(var(--stg-ink-rgb), 0.28); }
-.stg-tl li:first-child::after { top: 50%; }
-.stg-tl li:last-child::after { bottom: 50%; }
-.stg-tl time { font: 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.5); }
-.stg-tl b { font-weight: 600; }
+/* ── 19 · AI 轨迹 ──────────────────────────────────────────────────────── */
+.stg-track { display: grid; gap: 12px; }
+.stg-track li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 18px 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  animation: stgRise .6s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .1s);
+}
+/* 圆点 + 竖向连线：首尾各裁一半，两端不会露出多余线段 */
+.stg-track li::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--stg-ink);
+}
+.stg-track li::after {
+  content: "";
+  position: absolute;
+  left: 8.5px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(var(--stg-ink-rgb), 0.26);
+}
+.stg-track li:first-child::after { top: 50%; }
+.stg-track li:last-child::after { bottom: 50%; }
+.stg-track time { font: 10.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.6); }
+.stg-track b { font-weight: 600; }
+
+/* ── 环境光：一团很淡的基调色高光在舞台里缓慢漂移 ──────────────────────────
+   这是「一直有动静」的那层动效。14s 一轮、幅度很小、只动 transform：
+   19 张卡同屏时不会互相抢注意力，但静止画面里能看出是有生命的。
+   （比给每个元素都加循环动画克制得多。） */
+.sc-stage::before {
+  content: "";
+  position: absolute;
+  inset: -28%;
+  pointer-events: none;
+  background: radial-gradient(
+    46% 38% at 30% 26%,
+    rgba(var(--stg-ink-rgb), 0.11),
+    transparent 70%
+  );
+  animation: stgDrift 14s ease-in-out infinite;
+}
+
+/* ── 悬停：反馈落在内容上（焦点放大），而不是给边框加特效 ────────────────── */
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .stg-figure { transform: scale(1.045); }
+  .sc-card:hover .stg-node.is-live { transform: translateY(-1px); }
+}
 
 /* ── 门控与降级 ─────────────────────────────────────────────────────────── */
 .vr-card-entry:not([data-card-visible]) .stg,
@@ -237,46 +474,46 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* 关掉所有动效，并把「入场时才出现」的元素（进度条、列表行）直接置为终态，
-     否则它们会停在 scaleX(0) / opacity:0 上，舞台看起来是空的。 */
+  /* 关掉动效，并把「靠动画才出现」的元素写回终态 —— 否则会停在
+     opacity:0 / scaleX(0) / dashoffset 上，舞台看起来是空的。 */
   .stg,
   .stg * { animation: none !important; }
-  .stg-bar i { transform: none !important; }
-  .stg-roll { transform: translateY(-30px) !important; }
+  .stg-bar i,
+  .stg-wire { transform: none !important; }
+  .stg-arc-fill,
+  .stg-spark-line { stroke-dashoffset: 0 !important; }
+  .stg-roll { transform: translateY(-108px) !important; }
   .stg-flip-card { transform: none !important; }
   .stg-flip-face.is-back { transform: rotateY(180deg) !important; }
+  .sc-card:hover .stg-figure { transform: none !important; }
+  /* 环境光停在一个不动的位置，而不是被 animation:none 打回初始位 */
+  .sc-stage::before { animation: none !important; }
 }
 
 @media (forced-colors: active) {
-  .stg-bar,
-  .stg-bar i,
-  .stg-dot,
-  .stg-tl li::before { background: CanvasText; }
-  .stg-week-c,
-  .stg-prompts li,
-  .stg-bench-t,
-  .stg-tree-leaves li,
-  .stg-bills li,
-  .stg-flip-face { border: 1px solid CanvasText; background: Canvas; }
+  .stg-bar, .stg-bar i, .stg-dot, .stg-step, .stg-week-c.is-on,
+  .stg-track li::before { background: CanvasText; }
+  .stg-node, .stg-search, .stg-cards li, .stg-flip-face { border: 1px solid CanvasText; background: Canvas; }
+  .stg-check { border-color: CanvasText; }
 }
 
-/* ── 窄屏：舞台变矮变窄，整体收一档 ─────────────────────────────────────── */
+/* ── 窄屏 ───────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  .stg { gap: 6px; padding: 11px 12px; font-size: 9.5px; }
-  .stg-big { font-size: 22px; }
-  .stg-roll-win { height: 78px; }
-  .stg-roll li { height: 26px; font-size: 10.5px; }
-  .stg-roll li.is-hit { font-size: 14px; }
-  .stg-ranks li { grid-template-columns: 56px minmax(0, 1fr) 18px; }
-  .stg-pipe u { width: 8px; }
-  .stg-pipe b { padding: 4px 6px; font-size: 8.5px; }
-  .stg-spark-chart { height: 32px; }
+  .stg { gap: 13px; padding: 18px 20px; }
+  .stg-figure { font-size: 30px; }
+  .stg-roll-win { height: 50px; }
+  .stg-roll li { height: 50px; font-size: 19px; }
+  .stg-roll li.is-hit { font-size: 24px; }
+  .stg-bar { width: 62px; }
+  .stg-glyphs { gap: 16px; }
 }
 
 /* ── 关键帧 ─────────────────────────────────────────────────────────────── */
-@keyframes stgLive {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.82); }
+
+/* 入场：小幅上移淡入。位移只有 8px —— 现代感靠短促、克制，不是大动作。 */
+@keyframes stgRise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes stgBarIn {
@@ -284,28 +521,29 @@
   to { transform: scaleX(1); }
 }
 
-@keyframes stgRise {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes stgPulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
+/* 呼吸：只动不透明度和极小的缩放，2.4s 一轮，不抢注意力 */
+@keyframes stgBreathe {
+  0%, 100% { opacity: .45; transform: scale(.9); }
+  50% { opacity: 1; transform: scale(1.12); }
 }
 
 @keyframes stgDraw {
-  from { stroke-dashoffset: 320; }
+  from { stroke-dashoffset: 340; }
   to { stroke-dashoffset: 0; }
 }
 
 @keyframes stgRoll {
-  0%, 8% { transform: translateY(30px); }
-  62%, 100% { transform: translateY(-30px); }
+  0%, 12% { transform: translateY(0); }
+  62%, 100% { transform: translateY(-108px); }
 }
 
 @keyframes stgFlip {
-  0%, 16% { transform: rotateY(0deg); }
-  46%, 68% { transform: rotateY(180deg); }
+  0%, 18% { transform: rotateY(0deg); }
+  46%, 66% { transform: rotateY(180deg); }
   100% { transform: rotateY(0deg); }
+}
+
+@keyframes stgDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(11%, 9%, 0) scale(1.14); }
 }
