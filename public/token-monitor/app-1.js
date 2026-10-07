@@ -145,7 +145,7 @@ function loadAsset(){
       }
       if (!setup || !setup.url) return;
       state.asset = setup;
-      var mb = setup.size > 0 ? '约 ' + Math.round(setup.size / 1048576) + ' MB' : '约 29 MB';
+      var mb = setup.size > 0 ? '约 ' + Math.round(setup.size / 1048576) + ' MB' : '约 31 MB';
       setTxt('verPill', 'v' + ver);
       setTxt('verBtn', 'v' + ver);
       setTxt('fileName', setup.name);
