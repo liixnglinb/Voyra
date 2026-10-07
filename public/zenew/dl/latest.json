@@ -1,10 +1,10 @@
 {
-  "version": "0.22.1",
-  "notes": "# Zenew v0.22.1 · 加固版\n\n不带来新功能，只把 v0.22.0 的底子再夯一遍：\n- 安全：WebView 内加 CSP 白名单（默认仅允许本包资源与 IPC）\n- 可靠性：未捕获异常与 Promise 拒绝全局留痕，崩溃不再静默\n- 维护：移除无人引用的依赖；按钮过渡清理\n- 测试：新增 25 项核心逻辑与失败路径自动化测试",
-  "pub_date": "2026-10-06T04:45:39Z",
+  "version": "0.23.0",
+  "notes": "v0.23.0 视觉重构：\n- 电光蓝品牌体系（#3366FF 主色，白/深色双主题自动适配）\n- 黑曜石深色主题（底板 #0B0F17 / 卡面 #131926）\n- 8px 间距体系与圆角梯度、微交互与焦点反馈\n- 桌面端 TitleBar / SideNav / Appbar 打磨\n- 基础组件（按钮/表单/Toast/抽屉/表格）全面打磨\n- 各页面逐页优化（今日驾驶舱/词库/复习/查词/统计/任务排行榜/设置）\n- 仅样式与展示交互层改动，业务逻辑（FSRS 调度/SQLite/路由）零改动",
+  "pub_date": "2026-10-07T09:16:24Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWVaTmFmbTBhNzFmNzU1YnZWNENNVjFJdVlNOEF6aXBIOU5jUVVnUGVuVUNjQXpCTnRkTUpWQi9JYnFjejU2UEx2S0MzSUhoUUpzbjBjbWJzUmQxdXdzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMjYxOTM4CWZpbGU6WmVuZXdfMC4yMi4xX3g2NC1zZXR1cC5leGUKa3p0RHVMYlE1VkpBU3JnNHVYVUZvT3NQRWhOV09UVnVlTUZnblBWeno5a0p1OE50a3AxOUp0STJ6Rmlld3R1MFk0cGRzRGJJSk1ILzZrWEVHZlRORFE9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVFYcHdoeTI5cTVjT2FWcndZT3djZVRPQ1o4US91YWxvaHdTVnBCNmd0bXlYbmZNMmdJaElJMnFpbWh4TXVXMEZBNjN3ajZpWHRTQ21KNjZUS1ZONkFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzY0NTMxCWZpbGU6WmVuZXdfMC4yMy4wX3g2NC1zZXR1cC5leGUKR0U4bThGZVhsWXFwWjlqS0xrVXJaSmRGZERIMWN6OEVscUpKQ2FiUWMxNnM4Wk1BTzdtb3BFV1pGNXU5ME8vOHdkMmk2alJhWjFlamNuQ2NmWDlYQ0E9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
