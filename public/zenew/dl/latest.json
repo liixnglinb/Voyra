@@ -1,10 +1,10 @@
 {
-  "version": "0.23.0",
-  "notes": "v0.23.0 视觉重构：\n- 电光蓝品牌体系（#3366FF 主色，白/深色双主题自动适配）\n- 黑曜石深色主题（底板 #0B0F17 / 卡面 #131926）\n- 8px 间距体系与圆角梯度、微交互与焦点反馈\n- 桌面端 TitleBar / SideNav / Appbar 打磨\n- 基础组件（按钮/表单/Toast/抽屉/表格）全面打磨\n- 各页面逐页优化（今日驾驶舱/词库/复习/查词/统计/任务排行榜/设置）\n- 仅样式与展示交互层改动，业务逻辑（FSRS 调度/SQLite/路由）零改动",
-  "pub_date": "2026-10-07T09:16:24Z",
+  "version": "0.23.1",
+  "notes": "Zenew v0.23.1 · UI 刷新\n\n- 新增全局视觉覆盖层 ui-overhaul.css：信息层级、空间节奏、交互反馈与窄窗体验优化\n- 业务逻辑零改动，学习/复习/统计功能不变\n\n升级方式：双击安装包覆盖安装即可（自动更新亦可拉取）",
+  "pub_date": "2026-10-07T10:42:26Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVFYcHdoeTI5cTVjT2FWcndZT3djZVRPQ1o4US91YWxvaHdTVnBCNmd0bXlYbmZNMmdJaElJMnFpbWh4TXVXMEZBNjN3ajZpWHRTQ21KNjZUS1ZONkFRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzY0NTMxCWZpbGU6WmVuZXdfMC4yMy4wX3g2NC1zZXR1cC5leGUKR0U4bThGZVhsWXFwWjlqS0xrVXJaSmRGZERIMWN6OEVscUpKQ2FiUWMxNnM4Wk1BTzdtb3BFV1pGNXU5ME8vOHdkMmk2alJhWjFlamNuQ2NmWDlYQ0E9PQo=",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVR0YkpUQkhlbmZQTVI1Vm1WdW9PZThUdC9nZG0rekE4TEhZdWFEbGtQTGM5Nnp0VzEvNnJiSmxqZlA3ajNwY2RhWDhUc0xBWWhpaThzQUE2RFFIS0FRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzY5Njg4CWZpbGU6WmVuZXctU2V0dXAuZXhlCkhEV2dGZHpYdjJHT2dSdUVoMU1BY0FTMFpNc2VKcXJkd0JCYytGclF5alhhSTI1cWxkbUFSbDJzZU5uRTRwVFh5Q0s1RFRiajFTeWFzN293UkJRY0F3PT0K",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   }
