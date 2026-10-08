@@ -24,7 +24,7 @@ function reply(value) {
   return new Response(JSON.stringify(value), { status: 200, headers: HEADERS });
 }
 
-async function fromApi() {
+async function fromApi(onDiag) {
   try {
     const response = await fetch(
       `https://api.github.com/repos/${REPO}/releases/tags/latest`,
@@ -35,12 +35,18 @@ async function fromApi() {
         },
       },
     );
-    if (!response.ok) return null;
+    if (!response.ok) {
+      onDiag && onDiag("http-" + response.status);
+      return null;
+    }
     const data = await response.json();
     const title = String(data.name || "");
     const body = String(data.body || "");
     const match = title.match(/v(\d+\.\d+\.\d+)/) || body.match(/v(\d+\.\d+\.\d+)/);
-    if (!match) return null;
+    if (!match) {
+      onDiag && onDiag("no-version-in-payload");
+      return null;
+    }
     const assets = data.assets || [];
     const asset = assets.find((a) => a.name === ASSET) || assets[0] || {};
     return {
@@ -52,7 +58,8 @@ async function fromApi() {
       notes: body.slice(0, 600),
       source: "api",
     };
-  } catch {
+  } catch (e) {
+    onDiag && onDiag("exception:" + (e && e.message ? e.message : e));
     return null;
   }
 }
@@ -63,15 +70,21 @@ async function fromApi() {
  * 这里改读 Release 页面的 HTML —— 标题里就带着版本号（「账迹 BillTrace v0.5.0」）。
  * 拿不到资产字节数就返回 0：App 会显示「当前 vX」而不是编一个体积出来。
  */
-async function fromHtml() {
+async function fromHtml(onDiag) {
   try {
     const response = await fetch(`https://github.com/${REPO}/releases/tag/latest`, {
       headers: { "User-Agent": UA },
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      onDiag && onDiag("http-" + response.status);
+      return null;
+    }
     const html = await response.text();
     const match = html.match(/v(\d+\.\d+\.\d+)/);
-    if (!match) return null;
+    if (!match) {
+      onDiag && onDiag("no-version-in-html:" + html.length);
+      return null;
+    }
     return {
       version: match[1],
       url: MIRROR,
@@ -81,13 +94,16 @@ async function fromHtml() {
       notes: "",
       source: "html",
     };
-  } catch {
+  } catch (e) {
+    onDiag && onDiag("exception:" + (e && e.message ? e.message : e));
     return null;
   }
 }
 
 export async function onRequestGet() {
-  const result = (await fromApi()) || (await fromHtml());
-  if (!result) return reply({ error: "unavailable" });
+  const diag = { api: "not-tried", html: "not-tried" };
+  let result = await fromApi((m) => { diag.api = m; });
+  if (!result) result = await fromHtml((m) => { diag.html = m; });
+  if (!result) return reply({ error: "unavailable", diag });
   return reply(result);
 }
