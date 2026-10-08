@@ -57,8 +57,37 @@ async function fromApi() {
   }
 }
 
+/**
+ * 兜底：匿名 GitHub API 的额度是按出口 IP 算的，Cloudflare 的出口 IP 被大量共享，
+ * 实测经常直接 403 限流（这也是 ac-api 那条代理带 redirect 兜底的原因）。
+ * 这里改读 Release 页面的 HTML —— 标题里就带着版本号（「账迹 BillTrace v0.5.0」）。
+ * 拿不到资产字节数就返回 0：App 会显示「当前 vX」而不是编一个体积出来。
+ */
+async function fromHtml() {
+  try {
+    const response = await fetch(`https://github.com/${REPO}/releases/tag/latest`, {
+      headers: { "User-Agent": UA },
+    });
+    if (!response.ok) return null;
+    const html = await response.text();
+    const match = html.match(/v(\d+\.\d+\.\d+)/);
+    if (!match) return null;
+    return {
+      version: match[1],
+      url: MIRROR,
+      direct: DIRECT,
+      size: 0,
+      published: null,
+      notes: "",
+      source: "html",
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function onRequestGet() {
-  const result = await fromApi();
+  const result = (await fromApi()) || (await fromHtml());
   if (!result) return reply({ error: "unavailable" });
   return reply(result);
 }
