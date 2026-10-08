@@ -2,7 +2,7 @@
       var REPO = 'liixnglinb/AI-Chronicle';
       var GH = 'https://github.com/' + REPO + '/releases';
       var MIRRORS = ['https://gh-proxy.com/', 'https://ghfast.top/'];
-      var fallback = '0.7.0';
+      var fallback = '0.8.0';
 
       /* hero chart bars */
       var bars = [34,52,41,68,49,86,63,77,56,91,69,83,58,74,46,88,65,79];

@@ -1,17 +1,17 @@
 {
-  "version": "0.23.2",
-  "notes": "Zenew v0.23.2\n- 双通道更新系统：安装版走 Tauri 更新器；绿色版内置 Rust 更新器（SHA-256 + Minisign 双重校验、Zip Slip 防护、替换回滚）\n- 修复窗口标题乱码（知新 Zenew）\n- UI 刷新（ui-overhaul.css 全局视觉覆盖层）\n升级方式：安装版双击覆盖安装；绿色版程序目录含 .zenew-portable 标记时自动走绿色版更新。",
-  "pub_date": "2026-10-07T11:32:46Z",
+  "version": "0.24.0",
+  "notes": "Zenew v0.24.0",
+  "pub_date": "2026-10-08T15:15:20Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWVhWTJaZHVoWU1QT1pzT0xacEY4VWZWMjQ2U0pVVXNOY055SndFaXBVamIzbkE1VmtldmdHY2tVT2F4cDI1QktPTHUxZkRTQU9xN3JMaUVOejgzY3c0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzcxODM1CWZpbGU6WmVuZXctU2V0dXAuZXhlCktSdnFSTFNicnZWdHRRd3g4Qk1ObzJiK1dISnY3RVdFN3RtMmw5ZXpOM01nVGtPRkF5MGl2ZDFTa09qWWFhMXg4b3NCcWNCNzY3T2tmN1pMN1NFRkNRPT0K",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWR5SmowcUJDU2lpSnJhTlB3WERscCt4elNoWHptVUhlVFVKZlNjYmRtVWFHS2xxUFZabERqUGhSVVk1TnFibUVEWlJaMlBIN0szMVR2QXQxRlRiU0F3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxNDcyMzcyCWZpbGU6WmVuZXdfMC4yNC4wX3g2NC1zZXR1cC5leGUKK0QvM0ZHSE1UYStYakNjTkdQUEhHWUFnSjB1a2pqbG45WncwRDVrMjc0c0UwYzNpUkx4TXplWGFNc3VFaWZhRHVHODZxc1AvVkNuWUxhQnBZTzJIQ1E9PQo=",
       "url": "https://lxlrwxs.top/zenew/dl/Zenew-Setup.exe"
     }
   },
   "portable": {
-    "url": "https://lxlrwxs.top/zenew/dl/Zenew_0.23.2_x64_green.zip",
-    "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROWN6ZG1QZ1Ira0dTWXJpZmEreXFPZTJiZkt1TGRvUFFCM3FZamt4eXI2V1NKWGJOd3R2U0RGdFE2aGk1NERQYWh1azE4eEZsdjFtYW1VSEVna2pESVFNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxMzcxODM3CWZpbGU6WmVuZXdfMC4yMy4yX3g2NF9ncmVlbi56aXAKM0s1NHNGd2UzYytsMkNMRTV3a1RKdkFYM3RJQWpsQWZNanJOZjJyRUMyT0QyQnJ5TFgza1FFV011eURmaXZKRnV0YUdhaEVDdGIxbWZaL3AwR0pSQ0E9PQo=",
-    "sha256": "fcc025e3a16121507a68eeda8c662e8a35f14164d9c0e58010e252bac60a12ed",
-    "size": 9110970
+    "url": "https://lxlrwxs.top/zenew/dl/Zenew_0.24.0_x64_green.zip",
+    "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRVUhtOEZYdlJROVlNK1J1YjZIMy9Ba0V0U2FlUlZMeFlHYVFQNC9od3RSZEhUeGxBN01GMmNsRWFHZzBTRG4vRjFvVHVVTkxCT25GZkdDSlBRY0tmUlpkelEvZFZmUkFFPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxNDcyNTAzCWZpbGU6WmVuZXdfMC4yNC4wX3g2NF9ncmVlbi56aXAKS2xHNm1UTEdWRCtkVTlPYVhwdmMzMnlDY2lzUEhyL2I1M2dyazRhQ081cGE1dTEvZUhYaWtTSW8wZXh5VlVqajB4M1dLK3dlVXAzSkczVS8yUGl1REE9PQo=",
+    "sha256": "6b21265093507a6a2fa35d4da0b16d1c338c3a6c4eca1c13113b4b9c2dac470f",
+    "size": 9117495
   }
 }
