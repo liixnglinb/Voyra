@@ -56,7 +56,7 @@
   gap: 14px;
   padding-top: 8px;
   border-top: 1px solid rgba(var(--stg-text-rgb), 0.10);
-  font-size: 9px;
+  font-size: 11px;
   color: rgba(var(--stg-text-rgb), 0.55);
 }
 .stg-foot b {
@@ -85,7 +85,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
+  font-size: 11px;
   animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
   animation-delay: calc(var(--i, 0) * .06s);
 }
@@ -152,7 +152,7 @@
   padding: 2px 6px;
   border-radius: 5px;
   background: rgba(var(--stg-ink-rgb), 0.10);
-  font-size: 8.5px;
+  font-size: 11px;
   color: rgba(var(--stg-text-rgb), 0.72);
 }
 .stg-up { flex: 0 0 auto; font: 650 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-ink); }
@@ -209,12 +209,15 @@
   flex: 1 1 auto;
   min-height: 0;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: auto repeat(5, 15px);
+  /* 行高 15 → 17px：格子跨两行，装得下 11px 中文而不挤。课程数据用到 2~5 行，
+     表头单独占第 1 行（auto）。 */
+  grid-template-rows: auto repeat(5, 17px);
   gap: 4px;
 }
 .stg-grid-h {
-  font: 600 9px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: rgba(var(--stg-text-rgb), 0.5);
+  /* 星期标记：9px/50% 太淡太小，中文单字在 10.5px 下才立得住 */
+  font: 600 10.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: rgba(var(--stg-text-rgb), 0.62);
   text-align: center;
 }
 .stg-grid-c {
@@ -222,11 +225,12 @@
   place-items: center;
   padding: 1px 2px;
   overflow: hidden;
-  border-radius: 5px;
-  background: rgba(var(--stg-ink-rgb), 0.13);
-  /* 有课的名额给一道强调色左沿，空档保持中性 —— 一眼看出课表分布 */
-  border-left: 2px solid var(--stg-ink);
-  font-size: 8.5px;
+  border-radius: 6px;
+  /* 靠底色区分有课/空档。原先每格左侧还有一道 2px 强调色竖线，
+     六个格子六道线只是重复的边框（每格已有底色），去掉后分布照样一眼可读。 */
+  background: rgba(var(--stg-ink-rgb), 0.16);
+  /* 8.5px 的中文课名在真机上糊成一团，11px 是中文标签的下限 */
+  font-size: 11px;
   line-height: 1.15;
   text-align: center;
   animation: stgRise .45s cubic-bezier(.16, 1, .3, 1) backwards;
@@ -245,7 +249,7 @@
   border-radius: 99px;
   background: var(--stg-panel);
   box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 6px 14px -10px rgba(16, 16, 16, .3);
-  font-size: 10px;
+  font-size: 11px;
   color: rgba(var(--stg-text-rgb), 0.5);
 }
 .stg--type .is-prompt em { color: var(--stg-ink); }
@@ -273,11 +277,11 @@
   animation-delay: calc(var(--i, 0) * .06s);
 }
 .stg-bench-t em { font: 500 7.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.42); }
-.stg-btn { padding: 3px 9px; border-radius: 99px; background: var(--stg-ink); color: var(--stg-panel); font-size: 8.5px; font-weight: 600; }
+.stg-btn { padding: 3px 9px; border-radius: 99px; background: var(--stg-ink); color: var(--stg-panel); font-size: 11px; font-weight: 600; }
 .stg-switch { position: relative; width: 24px; height: 13px; border-radius: 99px; background: var(--stg-ink); }
 .stg-switch i { position: absolute; top: 2px; left: 13px; width: 9px; height: 9px; border-radius: 50%; background: var(--stg-panel); }
 .stg-input { padding: 2px 7px; border: 1px solid rgba(var(--stg-ink-rgb), 0.3); border-radius: 4px; font-size: 8.5px; color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-tag { padding: 1px 7px; border: 1px solid rgba(var(--stg-ink-rgb), 0.3); border-radius: 99px; font-size: 8px; }
+.stg-tag { padding: 1px 7px; border: 1px solid rgba(var(--stg-ink-rgb), 0.3); border-radius: 99px; font-size: 11px; }
 .stg-slider { position: relative; display: grid; width: 34px; height: 10px; align-items: center; }
 .stg-slider::before { content: ""; grid-area: 1 / 1; height: 3px; border-radius: 99px; background: rgba(var(--stg-ink-rgb), 0.2); }
 .stg-slider i { grid-area: 1 / 1; width: 10px; height: 10px; margin-left: 18px; border-radius: 50%; background: var(--stg-ink); }
@@ -349,7 +353,7 @@
   border-radius: 7px;
   background: var(--stg-panel);
   box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 6px 14px -12px rgba(16, 16, 16, .3);
-  font-size: 8.5px;
+  font-size: 11px;
   color: rgba(var(--stg-text-rgb), 0.6);
 }
 .stg-kpi3 b { font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-text); }
@@ -400,7 +404,7 @@
   border-radius: 6px;
   background: var(--stg-panel);
   box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 5px 12px -10px rgba(16, 16, 16, .3);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -441,7 +445,7 @@
   padding-top: 8px;
   border-top: 1px solid rgba(var(--stg-text-rgb), 0.10);
 }
-.stg-total span { font-size: 9px; color: rgba(var(--stg-text-rgb), 0.55); }
+.stg-total span { font-size: 11px; color: rgba(var(--stg-text-rgb), 0.55); }
 .stg-total b { font: 750 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -0.02em; color: var(--stg-ink); }
 
 /* ── 17 · Token Monitor：数字 + 折线 + 拆分 ────────────────────────────── */
@@ -483,7 +487,7 @@
   box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 12px 24px -14px rgba(16, 16, 16, .38);
 }
 .stg-flip-face b { font-size: 15px; font-weight: 750; letter-spacing: -0.02em; }
-.stg-flip-face span { font-size: 9.5px; color: rgba(var(--stg-text-rgb), 0.6); }
+.stg-flip-face span { font-size: 11px; color: rgba(var(--stg-text-rgb), 0.6); }
 .stg-flip-face.is-back { transform: rotateY(180deg); background: var(--stg-ink); color: var(--stg-panel); }
 .stg-flip-face.is-back span { color: var(--stg-panel); opacity: .8; }
 .stg--flip > .stg-bar { flex: 0 0 auto; }

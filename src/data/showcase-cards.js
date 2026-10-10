@@ -48,7 +48,7 @@
  *
  * seq：底部页脚里的空心序号，只收 1-2 位纯数字
  * ---------------------------------------------------------------------------
- * 之前是从 no 切 '/' 前段推导，于是 'SKILL / CUMCM WORKFLOW' 画出 192px 宽的空心
+ * 之前是从 no 切 '/' 前段推导，于是 'SKILL / 建模流程' 画出 192px 宽的空心
  * 单词、'APP 01 / …' 画出 255px 宽的「APP 01」，在 361px 的卡上被右缘裁断。
  * 现在显式写死，不给数字就不画。
  */
@@ -58,7 +58,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'api',
     seq: '01',
-    no: '01 / API GATEWAY',
+    no: '01 / 接口网关',
     name: 'Voyra Relay API',
     desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。',
     cta: '访问网关',
@@ -76,7 +76,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'timetable',
     seq: '02',
-    no: '02 / WORKSPACE',
+    no: '02 / 日程管理',
     name: '日程中心',
     desc: '课程表与日历二合一，每周课程与每日安排一站管理。',
     cta: '打开日程',
@@ -94,7 +94,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'pelican',
     seq: '03',
-    no: '03 / BENCHMARK SHOW',
+    no: '03 / 模型评测',
     name: 'AI 模型对比秀',
     desc: '同一题交给 16 个 AI 模型分别生成，效果一页对比。',
     cta: '查看对比',
@@ -111,7 +111,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'prompts',
     seq: '04',
-    no: '04 / PROMPT HUB',
+    no: '04 / 提示词管理',
     name: '提示词库',
     desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。',
     cta: '管理提示词',
@@ -127,7 +127,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'uikit',
     seq: '05',
-    no: '05 / DESIGN SYSTEM',
+    no: '05 / 设计资产',
     name: '组件图鉴',
     desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。',
     cta: '查看图鉴',
@@ -141,7 +141,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'skills',
     seq: '06',
-    no: '06 / GITHUB HUB',
+    no: '06 / 技能热榜',
     name: 'Skill 热榜',
     desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。',
     cta: '查看热榜',
@@ -157,7 +157,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'agents',
     seq: '07',
-    no: '07 / AUTONOMOUS WORKFLOW',
+    no: '07 / 智能体工作流',
     name: 'AI Agent',
     desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。',
     cta: '查看资源',
@@ -171,7 +171,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'mindmap',
     seq: '08',
-    no: '08 / THOUGHT TREE',
+    no: '08 / 思路梳理',
     name: '思维导图',
     desc: '将学习与创作中的线索展开为可继续补充的结构。',
     cta: '打开导图',
@@ -187,7 +187,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'care',
     seq: '09',
-    no: '09 / FAMILY CARE',
+    no: '09 / 家庭护理',
     name: '宝宝护理',
     desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。',
     cta: '进入护理',
@@ -203,7 +203,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'draw',
     seq: '10',
-    no: '10 / LUCKY DRAW',
+    no: '10 / 随机抽取',
     name: '随机抽人',
     desc: '课堂点名、活动抽奖随机抽取，支持花名册识别。',
     cta: '开始抽取',
@@ -220,7 +220,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'diet',
     seq: '11',
-    no: '11 / HEALTH & NUTRITION',
+    no: '11 / 饮食记录',
     name: '饮食打卡',
     desc: '三餐执行、饮水与力量训练每日打卡，多端同步。',
     cta: '今日打卡',
@@ -236,7 +236,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'mathmodel',
     seq: '12',
-    no: 'SKILL / CUMCM WORKFLOW',
+    no: 'SKILL / 建模流程',
     name: '数学建模 Skill',
     /* 原文写"十阶段工作流"，但 stage 只画得出 4 个节点，同一张卡上自相矛盾。
        去掉具体阶段数，改成描述能兑现的范围。 */
@@ -255,7 +255,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'modelflow',
     seq: '01',
-    no: 'APP 01 / LOCAL AGENT PIPELINE',
+    no: 'APP 01 / 建模流水线',
     name: '织流 Jacquard',
     /* 原描述 37 字，在 303px 窄栏里折成 3 行，把 stage 顶掉 22px。 */
     desc: '本地智能体流水线工作台，流程可编辑，产物实时落盘。',
@@ -276,7 +276,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'checkin',
     seq: '02',
-    no: 'APP 02 / ATTENDANCE AUTOMATION',
+    no: 'APP 02 / 签到自动化',
     name: '学习通自动签到助手',
     desc: '常驻后台自动监听课程签到，支持普通、位置、二维码。',
     cta: '下载软件',
@@ -294,7 +294,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'toolbox',
     seq: '03',
-    no: 'APP 03 / DISK CLEANUP',
+    no: 'APP 03 / 磁盘清理',
     name: '磁盘清理助手',
     desc: '磁盘扫描、分类与目录分析一站完成，预览后再确认清理。',
     cta: '下载软件',
@@ -313,7 +313,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'billtrace',
     seq: '04',
-    no: 'APP 04 / AUTO EXPENSE TRACKER',
+    no: 'APP 04 / 自动记账',
     name: '账迹 BillTrace',
     desc: '付款后 2 秒自动入库，双引擎采集，数据只存本机不上传。',
     cta: '下载 APK',
@@ -333,7 +333,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'token',
     seq: '05',
-    no: 'APP 05 / USAGE OBSERVATORY',
+    no: 'APP 05 / 用量统计',
     name: 'Token Monitor',
     desc: '本机 AI 编程工具用量看板，Token、请求与缓存一目了然。',
     cta: '下载软件',
@@ -350,7 +350,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'zenew',
     seq: '06',
-    no: 'APP 06 / FSRS SCHEDULING',
+    no: 'APP 06 / 记忆复习',
     name: '知新 Zenew',
     desc: '四本词书 + 教材 PDF 导入，AI 生成卡片，FSRS 排复习。',
     cta: '下载软件',
@@ -367,7 +367,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'chronicle',
     seq: '07',
-    no: 'APP 07 / AI OBSERVATORY',
+    no: 'APP 07 / 工作观测',
     name: 'AI 轨迹',
     desc: '本机解析 12 个数据源，把会话与产出整理成日报和趋势。',
     cta: '下载软件',

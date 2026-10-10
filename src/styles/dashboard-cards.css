@@ -987,21 +987,26 @@ body{
   overflow: hidden;
 }
 
-/* 眉标：一个小点 + 类目词。去掉了等宽大写与夸张字距（那是 2010 年代的痕迹）。 */
+/* 眉标：一个小点 + 类目词。去掉了等宽大写与夸张字距（那是 2010 年代的痕迹）。
+   类目词从英文大写改成中文后字号必须跟着上提：同样的 10.5px，拉丁大写字母的
+   字面高度够用，中文方块字则糊成一团。12px 是中文标签的下限，再小就要靠猜。 */
 .sc-eyebrow {
   display: flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.005em;
-  color: rgba(23, 23, 23, 0.52);
+  /* 12px 起这一行按正文算，要 4.5:1：0.52 的墨在纸色底上只有 3.47:1 */
+  color: rgba(23, 23, 23, 0.62);
 }
 .sc-eyebrow b {
   flex: 0 0 auto;
   font-weight: 650;
-  color: var(--p-accent);
+  /* 序号走 --p-ink（金/墨 #634E16 对白 7.98:1）而不是 --p-accent：
+     强调色是给图形用的（金色 #8A6D1F 只有 4.02:1），当 12px 文字差一点点。 */
+  color: var(--p-ink);
 }
 /* 小点用强调色，是整张卡里唯一一处"亮"的色块 */
 .sc-eyebrow::before {
