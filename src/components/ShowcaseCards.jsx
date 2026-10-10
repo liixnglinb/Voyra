@@ -57,26 +57,32 @@ function resolveIcon(name, family) {
    ────────────────────────────────────────────────────────────────── */
 const TONES = {
   /* 墨：舞台反色成深色底 + 浅色描边。19 张里最重的一档。
-     底色不用纯黑（#000/#111 会变成一块生硬的黑板），改成带一点冷调的炭灰，
-     面板再亮一档 —— 深色面板要能看出层次，而不是糊成一片。 */
+     底色不用纯黑（#000/#111 会变成一块生硬的黑板），改成炭灰，面板再亮一档 ——
+     深色面板要能看出层次，而不是糊成一片。
+     色温：跟全站的暖米纸张同一侧（偏暖的中性灰）。原先带一点蓝调，放在米色页面上
+     像一块从别的产品搬来的石墨板。 */
   ink: {
     accent: '#8A6D1F', accentInk: '#634E16',
-    stgInk: '#FFFFFF', stgText: '#FFFFFF', stgPanel: '#33333A', stgBg1: '#1E1E22', stgBg2: '#131316',
+    stgInk: '#FFFFFF', stgText: '#FFFFFF', stgPanel: '#33312E', stgBg1: '#1F1D1B', stgBg2: '#141311',
   },
-  /* 金：暖米色舞台 + 金调描边，站内金家族。 */
+  /* 金：暖米色舞台 + 金调描边，站内金家族。这一档就是全站的基准色温。 */
   gold: {
     accent: '#8A6D1F', accentInk: '#634E16',
     stgInk: '#8A6D1F', stgText: '#6B5417', stgPanel: '#FFFCF3', stgBg1: '#F2E8D2', stgBg2: '#FFFFFF',
   },
-  /* 蓝：淡蓝舞台 + 蓝调描边，整页唯一的冷色。 */
+  /* 蓝：整页唯一的冷色。底色是"降过饱和的冷灰蓝"而不是天蓝 —— 天蓝（原 #E6EEFC）
+     在米色页面上是一块会跳出来的补色，压得整页发花；降饱和后它仍是冷的那一档，
+     但和暖调页面同处一个亮度层，靠色相而不是靠明度抢眼。
+     描边与文字用的 stgInk/stgText 保持原来的正蓝：那是图形与数据该有的重量。 */
   blue: {
     accent: '#1F5FE0', accentInk: '#1644A1',
-    stgInk: '#1F5FE0', stgText: '#1F5FE0', stgPanel: '#FFFFFF', stgBg1: '#E6EEFC', stgBg2: '#FFFFFF',
+    stgInk: '#1F5FE0', stgText: '#1F5FE0', stgPanel: '#FFFFFF', stgBg1: '#E9EDF6', stgBg2: '#FFFFFF',
   },
-  /* 纸：近白舞台 + 黑细线，最克制的一档，像技术图纸。 */
+  /* 纸：近白舞台 + 黑细线，最克制的一档，像技术图纸。
+     底色从冷灰（原 #F0F0EE）换成暖灰：站点的纸是米白的，冷灰压在上面显脏。 */
   paper: {
     accent: '#1A1A1A', accentInk: '#000000',
-    stgInk: '#1A1A1A', stgText: '#1A1A1A', stgPanel: '#FFFFFF', stgBg1: '#F0F0EE', stgBg2: '#FFFFFF',
+    stgInk: '#1A1A1A', stgText: '#1A1A1A', stgPanel: '#FFFFFF', stgBg1: '#F1EEE6', stgBg2: '#FFFFFF',
   },
 };
 

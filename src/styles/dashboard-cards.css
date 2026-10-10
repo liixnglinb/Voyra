@@ -791,7 +791,13 @@ body{
      两种底都过 AA。19 张卡的主题色淡底都复核过（scripts/check-palette.mjs）。 */
   --sc-text-dim: #666B70;
 
-  --sc-shadow-sm: 0 2px 6px rgba(20, 20, 20, 0.03);
+  /* 静止态阴影跟 hover 同构、只压低：一条贴地的近影定边界，一条大范围远影给"浮起"。
+     原先是单层 0 2px 6px/0.03 —— 静止时几乎看不见，一悬停又突然出现三层影，
+     落差太大。影色用微暖黑（22,19,14）而不是中性灰：站点是暖米纸张，
+     中性灰影压在米色上会发灰发脏。 */
+  --sc-shadow-sm:
+    0 1px 2px rgba(22, 19, 14, 0.04),
+    0 10px 26px -18px rgba(22, 19, 14, 0.16);
   --sc-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -1085,6 +1091,9 @@ body{
   overflow: hidden;
   background-color: var(--stg-bg2);
   background-image: radial-gradient(120% 100% at 50% 0%, var(--stg-bg1) 0%, var(--stg-bg2) 72%, var(--stg-bg2) 100%);
+  /* 顶沿一道内高光：让舞台像一张被压出弧度的纸，而不是一块平涂色块。
+     深色基调（ink）上它是舞台里唯一的亮线，浅色基调上则是一条几乎看不见的纸边。 */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: border-color .45s cubic-bezier(.16, 1, .3, 1);
 }
 
