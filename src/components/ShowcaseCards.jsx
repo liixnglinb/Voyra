@@ -8,16 +8,19 @@ import { STAGES } from './stages';
 import { toHashUrl } from '../lib/hash-url';
 
 /* ==========================================================================
-   首页 19 张产品卡 · 统一产品名片
+   首页橱窗卡 · 统一产品名片
    --------------------------------------------------------------------------
-   改造前：19 个独立组件 + 19 段专属 stage 样式，共约 2962 行。
-           每张卡都是「微缩软件界面」的复刻，因此 19 张卡长成 19 种样子，
-           放在一起像拼贴；stage 内容还与对应下载页重复，且不可交互。
-   改造后：1 个 ProductCard + 19 个独立舞台。
-           骨架（眉标 / 图标 / 标题 / 描述 / 序号 / CTA）完全共用，
-           卡片之间只允许在三个维度上不同 —— 基调（tone）、版式（layout）、
-           舞台画面（stage）。配色收敛到黑 / 金 / 白 / 蓝四色，
-           差异交给「4 基调 × 3 版式 × 19 画面」的组合，而不是靠堆色相。
+   骨架（眉标 / 图标 / 标题 / 描述 / 序号 / CTA）完全共用，卡片之间只允许在
+   两个维度上不同 —— 基调（tone）与舞台画面（stage）。
+   配色收敛到黑 / 金 / 白 / 蓝四色，差异交给「4 基调 × 19 画面」的组合，
+   而不是靠堆色相。
+
+   2026-10 按参考站 oiloil.org 重做「长度、宽度与内部风格」：
+     · 列表改**单列全宽**（参考站产品区就是一列全宽卡），卡片净宽 ≈746px；
+     · 卡内改「文字 1.15fr | 舞台 1fr」左右分栏，奇偶左右交替；
+     · 标题 40px / 800、图标盒 40px、序号 42px 空心描边 —— 全部照搬参考站。
+   数据里的 `layout` 字段保留但**不再参与渲染**（契约不破）：参考站没有版式
+   变体，而且产品区只剩 2 张卡，凑不出有意义的组合。
    ========================================================================== */
 
 /* lucide 图标名 → 组件。数据里存字符串是为了让 showcase-cards.js 保持零 React 依赖，
@@ -151,32 +154,35 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
      'APP 01 / …' 渲染出 255px 宽的「APP 01」，在 361px 的卡上被右缘裁断。
      现在由数据显式给 seq，取不到数字就不渲染。 */
   const seq = /^\d{1,2}$/.test(card.seq ?? '') ? card.seq : null;
-  /* 眉标取自 no 字段的「类目词」段（'01 / API GATEWAY' → 'API GATEWAY'）。
-     改造前 no 在卡片上一次都没渲染，等于白存了 19 条类目信息；
-     现在它拆成两段：左侧短码走强调色、右侧类目词走灰，补回杂志刊头的层级。 */
+  /* 眉标取自 no 字段的「类目词」段（'01 / 接口网关' → '接口网关'）。
+     no 拆成两段：左侧短码走强调色、右侧类目词走灰，补回杂志刊头的层级。 */
   const [noCode, noLabel] = String(card.no ?? '').split('/').map((part) => part.trim());
-  /* 版式：copy 文字在上 / stage 舞台在上 / bleed 舞台出血。
-     缺字段时退回 copy，保证新增数据不会渲染成一张没有排布的卡。 */
+  /* 版式字段保留在数据里但不再驱动渲染（参考站没有版式变体）。
+     类名照旧带上 layout-<x>，只是 CSS 里已无对应规则 —— 这样数据契约不破，
+     日后想恢复某种版式也能从 DOM 上一眼看到原值。 */
   const layout = card.layout || 'copy';
 
   return (
     <a
       href={href}
       {...linkProps}
+      /* layout-<x> 类名保留但 CSS 里已无对应规则（版式变体取消）。
+         留着是为了不改数据契约，也方便日后想恢复某种版式时一眼看到原值。 */
       className={`sc-card st-${card.family} layout-${layout}`}
-      /* data-voyra-card 是 useCardEffects 的挂钩。改造时漏挂，导致 3D 倾斜 /
-         Spotlight / 视差三套指针效果整体失效，卡片悬停只剩 2px 上移。 */
+      /* data-voyra-card 是 useCardEffects 的挂钩。 */
       data-voyra-card
       style={toneVars(card.tone)}
       aria-label={`${card.name}：${card.cta}${card.external ? '（新标签页）' : ''}`}
     >
-      {/* 这里原本有两个装饰层：悬停时的「高光扫过」与跟随指针的「光斑」。
-          二者都是 2013~2016 年的手法，观感显旧，本轮连同样式一起删掉 ——
-          现在的悬停反馈是卡片抬升 + 投影加深 + 舞台焦点轻微放大。 */}
+      {/* 指针跟随的金色光斑 —— 参考站 .card-spotlight 的招牌效果。
+          --spot-x / --spot-y 由 useCardEffects 的 rAF 写入（已做 rect 缓存，
+          不会在 pointermove 上触发强制布局）。
+          aria-hidden：纯装饰；它盖在卡面之上但不拦截指针（pointer-events:none）。 */}
+      <span className="sc-spotlight" aria-hidden="true" />
       <div className="sc-body">
-        {/* 眉标是三套版式共用的第一个网格项。放在 .sc-copy 之外，
-            layout-stage / layout-bleed 才能把它留在最上方、
-            而把「标题 + 描述」整块挪到舞台之后。 */}
+        {/* 眉标 / 文案 / 页脚三段各占一行，舞台独占一列跨满三行（见 .sc-body
+            的 grid-template-areas）。这样舞台高度自动等于文字段总高，
+            不必给舞台写死高度，两张卡也自然等高。 */}
         <span className="sc-eyebrow">
           {noLabel ? (<><b>{noCode}</b>{noLabel}</>) : null}
         </span>
@@ -185,8 +191,8 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
           <div className="sc-title-row">
             <span className={`sc-brand${card.logo ? ' has-logo' : ''}`} aria-hidden="true">
               {card.logo
-                ? <img src={card.logo} alt="" width="34" height="34" loading="lazy" decoding="async" />
-                : <Icon size={19} strokeWidth={1.9} />}
+                ? <img src={card.logo} alt="" width="40" height="40" loading="lazy" decoding="async" />
+                : <Icon size={20} strokeWidth={1.9} />}
             </span>
             <h3 className="sc-title">{card.name}</h3>
           </div>
@@ -198,11 +204,13 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
         </div>
 
         <div className="sc-foot">
-          {seq ? <span className="sc-seq" aria-hidden="true">{seq}</span> : <span />}
           <span className="sc-cta">
-            {card.cta} <ArrowUpRight size={14} />
+            {card.cta} <ArrowUpRight size={15} />
           </span>
         </div>
+        {/* 序号绝对定位在卡片左下角（参考站 .pnum 的做法），因此放在 .sc-body
+            之外 —— 它不参与网格，永远不会把 CTA 挤走。 */}
+        {seq ? <span className="sc-seq" aria-hidden="true">{seq}</span> : null}
       </div>
     </a>
   );

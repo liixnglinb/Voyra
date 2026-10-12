@@ -41,18 +41,31 @@ export default function useCardEffects(rootRef, dependency) {
         const { rect } = cached;
         const px = Math.min(1, Math.max(0, (x - rect.left) / rect.width));
         const py = Math.min(1, Math.max(0, (y - rect.top) / rect.height));
+        /* ── 只写「真的有消费者」的变量（2026-10 性能收敛）────────────────────
+           原来这里无条件写 6 个自定义属性：--spot-x/y、--tilt-x/y、--art-x/y。
+           但当前实际渲染的交互目标只剩三类，各自只消费其中一部分：
+             .sc-card        →  --spot-x / --spot-y（金色光斑）+ --lift（CSS :hover 给）
+             .vr-experience-card → --spot-x / --spot-y
+             .vr-contact-row     → --spot-x / --spot-y
+           而 --tilt-x/y、--art-x/y 的消费者是 .vr-unified-card / .vr-mathmodel-card /
+           .vr-showcase-visual —— 这三个类名在 JSX 里**一次都没有渲染**
+           （ShowcaseCard 已无调用点，是死代码）。也就是说每个 pointermove
+           都在给不存在的元素写 4 个变量：既让该元素的样式每帧失效，
+           又白白产生 4 次 setProperty 调用。
+           现在按目标实际消费的变量写入，pointermove 的写入量减少 2/3。 */
         target.style.setProperty('--spot-x', `${px * 100}%`);
         target.style.setProperty('--spot-y', `${py * 100}%`);
-        /* 3D 物理倾斜：鼠标在右 → rotateY 正（卡片向右转）；
-           鼠标在下 → rotateX 正（卡片低头）。角度极限 ±6deg —— 比原先的 8deg 收一档：
-           卡片只有 361px 宽，8deg 时四角位移接近 12px，相邻两列会视觉打架；
-           6deg 仍有明确的立体感，但不会在 2 列网格里互相干扰。 */
-        const maxTilt = 6;
-        target.style.setProperty('--tilt-x', `${(py - 0.5) * maxTilt * 2}deg`);
-        target.style.setProperty('--tilt-y', `${(px - 0.5) * maxTilt * 2}deg`);
-        /* 艺术图反向微移，增强透视厚度感（极限 ±16px） */
-        target.style.setProperty('--art-x', `${(0.5 - px) * 16}px`);
-        target.style.setProperty('--art-y', `${(0.5 - py) * 16}px`);
+        /* 只有仍挂着 3D 倾斜/视差消费者的目标才写这两组变量 */
+        if (target.classList.contains('vr-unified-card') || target.classList.contains('vr-mathmodel-card')) {
+          const maxTilt = 6;
+          target.style.setProperty('--tilt-x', `${(py - 0.5) * maxTilt * 2}deg`);
+          target.style.setProperty('--tilt-y', `${(px - 0.5) * maxTilt * 2}deg`);
+        }
+        if (target.querySelector('.vr-unified-visual, .vr-mathmodel-art, .vr-showcase-visual')) {
+          /* 艺术图反向微移，增强透视厚度感（极限 ±16px） */
+          target.style.setProperty('--art-x', `${(0.5 - px) * 16}px`);
+          target.style.setProperty('--art-y', `${(0.5 - py) * 16}px`);
+        }
         target.setAttribute('data-pointer-active', '');
       });
     };

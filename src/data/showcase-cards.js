@@ -235,7 +235,10 @@ export const SHOWCASE_CARDS = [
   /* ══════════════ Skills ══════════════ */
   {
     id: 'mathmodel',
-    seq: '12',
+    /* seq 原来是 '12' —— 那是 19 张卡**全局连续编号**的产物（产品 01–11、
+       Skills 12、应用再从头 01–07）。产品区收到 2 张之后，Skills 单独一个 Tab
+       却挂着 12，看着像漏了 10 张卡。改成组内编号 '01'，与产品 / 应用一致。 */
+    seq: '01',
     no: 'SKILL / 建模流程',
     name: '数学建模 Skill',
     /* 原文写"十阶段工作流"，但 stage 只画得出 4 个节点，同一张卡上自相矛盾。
@@ -385,7 +388,10 @@ export const SHOWCASE_CARDS = [
 
 /** 按 Tab 分组，供 Dashboard 直接消费 */
 export const SHOWCASE_GROUPS = {
-  products: ['api', 'timetable', 'pelican', 'prompts', 'uikit', 'skills', 'agents', 'mindmap', 'care', 'draw', 'diet'],
+  /* 产品区只留前两张（2026-10 用户要求：产品里除第一、第二个卡片外全部下架）。
+     其余 9 条数据刻意留在 SHOWCASE_CARDS 里 —— 它们对应的站内页面与独立仓库都还在，
+     下架的只是首页橱窗位。要重新上架，把 id 加回这一行即可，不必恢复数据。 */
+  products: ['api', 'timetable'],
   skills: ['mathmodel'],
   apps: ['modelflow', 'checkin', 'toolbox', 'billtrace', 'token', 'zenew', 'chronicle'],
 };

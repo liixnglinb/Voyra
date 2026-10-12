@@ -8,11 +8,21 @@
 :root{
   /* 杂志语义：暖白纸张 / 极黑墨水 / 表面 / 辅助 / 细线 */
   --vr-mag-bg:#FDFCF9; --vr-mag-ink:#111111; --vr-mag-surface:#FFFFFF;
-  --vr-mag-muted:#8A8F99; --vr-mag-line:rgba(17,17,17,.08);
+  --vr-mag-muted:#666B70; --vr-mag-line:rgba(17,17,17,.08);
   /* 卡片圆角升级 */
   --vr-radius-card:24px;
-  /* Apple 级弹簧（foundation --vr-ease 更克制；spring 用于入场/悬停） */
-  --vr-spring:cubic-bezier(.16,1,.3,1);
+  /* ── 动效令牌：与参考站 oiloil.org 对齐（2026-10）─────────────────────────
+     参考站全站只用一个主缓动，实测取值为：
+       --ease:   cubic-bezier(.19,1,.22,1)   ← 强 ease-out：起步极快、收尾很长
+       --spring: cubic-bezier(.34,1.56,.64,1) ← 带过冲的回弹
+     而 foundation 里的 --vr-ease 是 cubic-bezier(.2,.8,.2,1)：起步没那么快、
+     收尾也短一截，观感偏「顿」。所以这里另立一个 --vr-ease-out 专供
+     入场 / 滚动 / 悬停使用，**不改 foundation 的 --vr-ease**（它是全站基线，
+     另有下载页与内部规范页在引用）。
+     「丝滑」的观感八成来自这条曲线：位移在前 15% 就走完大半，
+     剩下 85% 用来收尾，所以看起来是「滑到位」而不是「走到底」。 */
+  --vr-ease-out:cubic-bezier(.19,1,.22,1);
+  --vr-spring:cubic-bezier(.34,1.56,.64,1);
   /* 柔深物理阴影 */
   --vr-shadow-card:0 24px 48px -12px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.02);
   --vr-shadow-hover:0 32px 64px -16px rgba(0,0,0,.12),0 8px 24px rgba(0,0,0,.04);
@@ -99,19 +109,13 @@ body{
 /* 单列全宽卡：参考站产品区就是「一列全宽卡」，卡片宽高比才与参考一致；
    间距 16px 取自参考站的 .plist{gap:16px}。注意这条基线必须在外部样式里就地改：
    内联同名选择器（0-2-0）注入更晚，任何新加的 0-2-0 规则都会被它压掉。 */
-/* grid-auto-rows 是这次改造里最关键的一行。
-   单列 grid 默认按每行内容给高度，四套 stage 模板的内容量不同
-   （metric-panel 有 34px 大数字、flow-nodes 只有一行），于是行高变成
-   380 / 380 / 432 / 380 / 392…，19 张卡连成锯齿。
-   统一成固定行高后，每张卡的 stage 拿到完全相同的空间，
-   差异只在内部如何排布 —— 这才是「统一名片」该有的样子。 */
+/* 行高不再写死。
+   旧版给单列 grid 定死 grid-auto-rows:430px 是为了压住 19 张卡连成的锯齿
+   （四套舞台内容量不同 → 行高 380/380/432/…）。现在产品区只剩 2 张、
+   每行一张全宽卡，等高由卡片自身的 min-height + 内容决定即可；
+   写死 430px 反而会把参考站 300px 的比例拉回瘦高矩形。 */
 .vr-home .vr-product-list {
   grid-template-columns:minmax(0,1fr);
-  /* 固定行高：19 张卡拿完全相同的空间，视觉上是一排整齐的名片。
-     380 → 430px：改成「文字 + 视觉区」纵向堆叠后，stage 需要 150px 才不扁，
-     加标题 27px + 描述 3 行 66px + CTA 30px + 内外边距 64px ≈ 430px。
-     够宽的容器（≥560px）会走横排，此时 430px 反而更宽松，视觉区能拿到更多高度。 */
-  grid-auto-rows: 430px;
   gap:16px;
   align-items:stretch;
 }
@@ -238,8 +242,12 @@ body{
 .vr-home .vr-article-card {transition:box-shadow 200ms,border-color 200ms,transform 200ms;}
 .vr-home .vr-article-card:is(:hover,:focus-visible){border-color:#c2b17c;box-shadow:var(--vr-shadow-hover);}
 .vr-home [data-voyra-card]:not([data-card-visible]) .vr-art *, .vr-home[data-page-hidden] .vr-art * {animation-play-state:paused!important;}
-.vr-home .vr-card-entry[data-reveal] {animation:vr-card-arrive 360ms var(--vr-ease) var(--reveal-delay,0s) both;}
-@keyframes vr-card-arrive {from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+/* 这里原本还有一条 `animation:vr-card-arrive 360ms ... both`。
+   它与下面第 1 节（.vr-card-entry[data-reveal] 的 transition）是两套并存、
+   互相打架的入场实现：animation 的 both 会把末帧 transform 永久写死成
+   translateY(0)，而 3D 悬停位移也想写 transform，结果谁后解析谁赢，
+   悬停时灵时不灵。统一收敛到下面那一条 transition（参考站同款）。
+   @keyframes vr-card-arrive 已无任何引用，一并删除。 */
 @media(max-width:960px){.vr-home .vr-stage.vr-tab-zone{width:calc(100% - 40px)}.vr-home .vr-product-list{gap:18px}.vr-home .vr-product-list .vr-showcase .vr-feature-copy{padding:24px}.vr-home .vr-product-list .vr-showcase .vr-feature-title h2{font-size:24px}.vr-home .vr-panel .vr-mathmodel-card{grid-template-columns:1fr 1fr;padding:28px}}
 @media(max-width:720px){
   .vr-home .vr-stage.vr-tab-zone{width:calc(100% - 32px)}.vr-home .vr-product-list{grid-template-columns:1fr;gap:20px}.vr-home .vr-showcase-wrap.is-lead{grid-column:auto}
@@ -267,11 +275,17 @@ body{
    废弃左右交替布局：所有卡片上下结构（内容在上、演示区沉底）。
    ════════════════════════════════════════════════════════════════ */
 
-/* P0 ── 统一栅格：桌面 2 列、间距 24；≤960 单列、间距 16 */
+/* P0 ── 统一栅格：**单列全宽**、间距 16（2026-10 按参考站改）
+   ---------------------------------------------------------------------------
+   参考站产品区（.plist）实测就是一列全宽卡：756px 宽、gap 16。
+   旧版是桌面两列 361px —— 那个宽度放不下参考站那种 40px 大标题，
+   卡片会退回「小图 + 小字」的名片感，正是用户不满意的来源。
+   两列改单列后卡片净宽 ≈746（容器 858 − 两侧 56 内缩），与参考站 756
+   只差 10px，标题 / 描述 / 舞台都能照搬参考站的尺寸。 */
 .vr-home .vr-product-list {
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-  gap:24px !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  gap:16px !important;
   align-items:stretch;
 }
 @media(max-width:960px){
@@ -488,18 +502,36 @@ body{
    6 层丝滑动效系统
    ════════════════════════════════════════════════════════════════ */
 
-/* 1. 入场动效：微模糊 + 3D 上浮错落（spring 缓动；reveal-delay 由 JS 注入做 stagger） */
+/* 1. 入场动效：纯位移 + 淡入（2026-10 按参考站重做）
+   ---------------------------------------------------------------------------
+   参考站的入场是 `panelin .9s var(--ease)` —— 只有 opacity + translateY(24px)，
+   没有缩放、没有 3D 旋转、没有模糊。本站原来三个都上了：
+
+     filter:blur(8px)  →  **最贵的一项**。模糊不能交给合成器，每帧都要在
+                           CPU/GPU 上重算一遍 8px 高斯核；卡片宽 746px、
+                           一屏两三张同时入场，滚动时掉帧主要来自这里。
+     rotateX(5deg)     →  3D 旋转会让浏览器把该层提升为合成层并做透视采样，
+                          在 `overflow:hidden` 的父级里还要额外裁剪一次。
+     scale(.98)        →  相对便宜，但和 blur 叠加后同样触发重绘。
+
+   现在只保留 opacity + translateY —— 两者都能在合成器线程完成，
+   不碰主线程、不触发重排重绘，这才是「丝滑」的前提。
+   will-change 也从常驻改为「只在入场期间存在」：常驻会让每张卡永久占一个
+   合成层（10 张卡 = 10 层显存），滚动时反而更容易爆显存掉帧。
+   --------------------------------------------------------------------------- */
 .vr-home .vr-card-entry[data-reveal] {
   animation:none;
   opacity:0;
-  transform:translateY(40px) scale(.98) rotateX(5deg);
-  filter:blur(8px);
-  transition:opacity .8s cubic-bezier(.16,1,.3,1) var(--reveal-delay,0s),
-             transform .8s cubic-bezier(.16,1,.3,1) var(--reveal-delay,0s),
-             filter .8s cubic-bezier(.16,1,.3,1) var(--reveal-delay,0s);
-  will-change:transform,opacity,filter;
+  transform:translateY(24px);
+  transition:opacity .9s var(--vr-ease-out) var(--reveal-delay,0s),
+             transform .9s var(--vr-ease-out) var(--reveal-delay,0s);
 }
-.vr-home .vr-card-entry[data-reveal].vr-is-visible { opacity:1; transform:translateY(0) scale(1) rotateX(0); filter:blur(0); }
+.vr-home .vr-card-entry[data-reveal].vr-is-visible {
+  opacity:1;
+  transform:translateY(0);
+  /* 入场结束后立刻释放合成层，别让它常驻 */
+  will-change:auto;
+}
 
 /* 2. 3D 悬停倾斜（rotateX/rotateY 由 JS 的 --tilt-* 驱动；--lift 合成悬停上浮） */
 .vr-home .vr-unified-card {
@@ -747,87 +779,76 @@ body{
 }
 
 /* ── About：VOYRA 水印 + 自述放大 + 经历卡 hover 位移 ── */
-.vr-home .vr-about-panel { position:relative; }
-.vr-home .about-watermark {
-  position:absolute; top:-26px; left:-24px; z-index:0; pointer-events:none;
-  font-size:150px; font-weight:900; line-height:1; letter-spacing:-.04em; color:rgba(17,17,17,.03);
-}
-.vr-home .vr-about-intro, .vr-home .vr-experience { position:relative; z-index:1; }
-.vr-home .vr-about-intro p { font-size:24px !important; line-height:1.55; letter-spacing:-.02em; }
-.vr-home .vr-panel .vr-experience-card { transition:border-color .3s, box-shadow .3s, transform .4s var(--vr-spring) !important; }
-.vr-home .vr-panel .vr-experience-card:hover { transform:translateX(8px) !important; }
+
 
 /* ── Contact：末尾箭头 hover 位移（复制逻辑保留） ── */
 .vr-home .vr-panel .vr-contact-row svg:last-child { transition:transform .35s var(--vr-spring), color .3s !important; }
 .vr-home .vr-panel .vr-contact-row:hover svg:last-child { transform:translate(4px,-4px); }
 
-/* ════════════════════════════════════════════════════════════
-   规格全量橱窗卡体系（.sc-card / .sc-stage / 19 个 .theme-* 主题）
-   来源：Voyra 卡片规格附件，按"甲：插入现有首页"追加，不改动上方 .vr-* 任何规则
-   ════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   橱窗卡体系（.sc-card）· 按参考站 oiloil.org 重做
+   ---------------------------------------------------------------------------
+   2026-10 用户要求：产品只留前两张，产品 / Skills / 应用三区的卡片按参考站
+   重新设计「长度、宽度与内部风格」，Skills 卡与产品卡同宽。
 
-/* ==========================================================================
-   VOYRA SHOWCASE CARDS MASTER STYLESHEET
-   100% 完整代码，无任何省略号
-   ========================================================================== */
+   参考站实测（1440 视口，Playwright 取计算值）：
+     .pcard  756 × 300，padding 22px 26px，radius 20px，1px #E8E8E8 边框
+             内部 grid「文字 1.15fr / 演示 1fr」，gap 36，奇偶左右交替
+     h3      40px / 800 / letter-spacing -0.03em
+     .pbrand 40px 方形，radius 10px
+     p       15px / line-height 1.95 / #555
+     .go     14px / #999（本站按 WCAG AA 上调到 #666，见下）
+     .pnum   42px 空心描边数字，绝对定位在卡片左下角
+
+   本站的落点：容器 858 − 2×56 内缩 = 746，与参考站的 756 只差 10px，
+   因此**照搬单列全宽 + 左右分栏**就能得到与参考站几乎一致的卡片尺寸。
+
+   与旧版的三点差异（有意为之，不是漏改）：
+     ① 单列全宽取代桌面两列 361px —— 参考站产品区就是一列全宽卡。
+     ② 三种版式（copy / stage / bleed）取消，改为**奇偶左右交替**：
+        版式变体是上一轮「同一分类内组合两两不同」的产物，参考站不用它，
+        而且 2 张卡也凑不出有意义的组合。数据里的 layout 字段保留但不再分支
+        （契约不破，见 src/data/showcase-cards.js）。
+     ③ 卡片外壳回到中性白 + 细灰边，强调色只留在舞台与图标上 ——
+        参考站的高级感来自留白与字号对比，不是来自卡片本身的彩色。
+
+   对比度（scripts/check-palette.mjs 可复核）：
+     正文 #555 对白 7.46:1、描述 #666 对白 5.74:1、眉标 #666B70 对白 5.38:1，
+     全部 ≥ 4.5:1。参考站的 #999（2.85:1）只用于它自己的大字号场景，
+     本站 CTA 是 14px 小字，按 §0.9 第 3 条上调到 #666 承载小字。
+   ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* 卡片高度改由 .vr-product-list 的 grid-auto-rows 统一决定（当前 430px）。
-     430px 对应三段式纵向堆叠：
-     眉标 19 + 标题 29 + 描述 46 + 舞台 209 + 页脚 34 + 段间距 42 ≈ 430。
-     描述按 2 行预留（min-height:46px），19 张卡因此严格等高。 */
-  --card-min-height: 430px;
-  --card-radius: 18px;
+  /* 参考站卡片高度 300px（min-height），本站文案略长，用 minmax 兜底不裁切。
+     单列全宽后卡片不再需要固定行高来「对齐锯齿」—— 每行只有一张卡。 */
+  --card-min-height: 300px;
+  --card-radius: 20px;
   --card-border-width: 1px;
 
   --sc-surface: #FFFFFF;
-  --sc-border: rgba(27, 27, 27, 0.08);
+  --sc-border: #E8E8E8;
   --sc-text-main: #1A1A1A;
   --sc-text-sub: #666666;
-  /* 原来 #999999 只有 2.85:1，而它承载的全是 9.5~12px 的小字
-     （卡片眉标、序号与舞台内的小字）。
-     先试 #6E7378 = 4.79:1，但那是对纯白算的：这些字实际落在舞台的主题色淡底上，
-     只剩 4.31:1，还是不达标。#666B70 对淡底实测 4.63~4.84:1、对白 5.38:1，
-     两种底都过 AA。19 张卡的主题色淡底都复核过（scripts/check-palette.mjs）。 */
+  /* 眉标 / 序号 / 舞台内小字。对纯白 5.38:1、对舞台淡底 4.63~4.84:1，
+     两种底都过 WCAG AA。 */
   --sc-text-dim: #666B70;
 
-  /* 静止态阴影跟 hover 同构、只压低：一条贴地的近影定边界，一条大范围远影给"浮起"。
-     原先是单层 0 2px 6px/0.03 —— 静止时几乎看不见，一悬停又突然出现三层影，
-     落差太大。影色用微暖黑（22,19,14）而不是中性灰：站点是暖米纸张，
-     中性灰影压在米色上会发灰发脏。 */
+  /* 静止态阴影：参考站是 0 3px 6px / 0 26px 48px -18px 两层。
+     本站收敛成一条贴地近影 + 一条大范围远影，静止时几乎看不见，
+     悬停才拉开 —— 与参考站的 .pcard 悬停行为一致。 */
   --sc-shadow-sm:
     0 1px 2px rgba(22, 19, 14, 0.04),
     0 10px 26px -18px rgba(22, 19, 14, 0.16);
-  --sc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* --sc-ease 已于 2026-10 删除：它与 --vr-ease-out 是两条几乎相同的曲线
+     （.22,1,.36,1 vs .19,1,.22,1），并存只会让「到底哪条在生效」变模糊。
+     参考站全站只有一个 --ease，这里统一到 --vr-ease-out。 */
 }
 
-/* 上一版这里还有 --card-width / --card-padding / --sc-bg / --sc-surface-alt /
-   --sc-border-hover / --sc-shadow-hover / --sc-transition 七个变量。
-   逐个 grep 过 src/：它们只在声明处出现，没有任何一处引用 —— 卡片改横排时
-   padding 收窄到 0、悬停阴影与边框色改成按卡主题色现算，舞台底色换成主题色
-   渐变，这七个就都失去了唯一的引用点。留着只会让人以为还有个开关可调。 */
-
-/* 单强调色。上一版这里是 19 条 .theme-*{--p-accent}（蓝/金/橙/紫/墨/青绿/珊瑚…），
-   卡片体系数据化后 .sc-card 只挂 st-<family>，这 19 条已经没有任何选择器命中，
-   属于死代码，整块删除。真正生效的配色族在下面「配色」一节收敛为一个蓝。 */
-
-/* 「区块与网格」整段（.dash-showcase-container / .dash-section / .dash-section-head /
-   .sec-title-wrap / .sec-tag / .showcase-grid / .grid-featured-skill）已删除：
-   19 张卡实际由 Dashboard 的 .vr-product-list 承载（桌面 2 列、gap 24、
-   grid-auto-rows:430px），
-   这些类名在 JSX 里一次都没出现过。留着会让人以为卡片还有一套独立的分区网格。 */
-
-/* 卡片基础骨架 */
+/* ── 1 · 卡片本体 ───────────────────────────────────────────────────────── */
 .sc-card {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* 卡片左右内缩。抽成变量是因为 bleed 版式要把 .sc-body 的内边距归零、
-     再让文字段各自带上同样的左右外边距 —— 两处写死同一个数字迟早会漂。 */
-  --sc-pad-x: 26px;
-  /* 高度跟住 grid 行高（.vr-product-list 的 grid-auto-rows:430px），不跟内容：
-     四套舞台的内容量不同，若让卡片按内容收缩，19 张卡会连成锯齿。
-     height:100% + min-height 兜底，保证严格等高。 */
   min-height: var(--card-min-height);
   height: 100%;
   background: var(--sc-surface);
@@ -837,89 +858,30 @@ body{
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  /* 内边距全部交给 .sc-body：描边序号要贴到卡片左下角，
-     由卡片自身的内边距撑着会被推离边缘。 */
+  /* 内边距交给 .sc-body：空心序号要贴到卡片左下角，由卡片自身内边距撑着
+     会被推离边缘。 */
   padding: 0;
+  container-type: inline-size;
+  container-name: showcase-card;
   /* 入场动画交给祖先 .vr-card-entry[data-reveal]，这里刻意不挂 animation：
-     带 fill-mode:both 的动画会让末帧的 transform 永久生效，把 .sc-card 的
-     transform 锁成单位矩阵 —— 悬停位移与 3D 倾斜会被静默压死。
-     transform / transition 见下方「视觉层」第 2 节。 */
+     带 fill-mode:both 的动画会让末帧 transform 永久生效，把悬停位移压死。
+
+     悬停时长/曲线照搬参考站 .pcard：
+       transition: transform .45s var(--ease), box-shadow .7s var(--ease), border-color .7s var(--ease)
+     三件事用**不同的时长**是刻意的 —— 位移 .45s 先到（手感跟手），
+     投影与描边 .7s 后到（重量感）。原来本站把三者都写成 .55s/.45s，
+     结果位移和投影一起到，看起来像「整块弹了一下」而不是「浮起来」。
+     曲线统一 --vr-ease-out = cubic-bezier(.19,1,.22,1)，与参考站 --ease 一致。 */
+  transform: translateY(var(--lift, 0px));
+  transition:
+    transform .45s var(--vr-ease-out),
+    box-shadow .7s var(--vr-ease-out),
+    border-color .7s var(--vr-ease-out);
 }
 
-/* 描边序号：从「压在卡片左下角的 76px 巨型水印」降级为页脚里的 34px 空心序号。
-   76px / line-height .8 实测占高约 61px，而 stage 底边距卡底只有 67 / 45 / 35px
-   三档 —— 也就是说只要视觉区一长，数字必然被裁掉一截，看起来像事故而不是设计。
-   现在它是 .sc-foot 的 flex 子项，参与布局，物理上不可能再和视觉区重叠。 */
-.sc-seq {
-  font-size: 34px;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -.03em;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(17, 24, 39, .16);
-  user-select: none;
-  font-variant-numeric: tabular-nums;
-}
-
-/* 四段式：眉标 / 文案 / 视觉 / 页脚。
-   之前是两段 + align-content:center，实测视觉区高度有 150 / 193 / 214 三档，
-   430px 卡高减去内容后剩下的空间被平均摊成卡上下的死空气（底部空 67/45/35px），
-   19 张卡并排时纵向节奏对不齐。改成 minmax(0,1fr) 让视觉区吃掉全部剩余高度，
-   于是只要文案段和页脚段等高，19 张卡的视觉区就严格等高。
-   眉标之所以独立成一行（而不是塞在 .sc-copy 里）：三套版式要把「舞台」插到
-   不同位置，眉标始终留在最上方，才需要它自己是一个可单独定位的网格项。 */
-.sc-card { container-type: inline-size; container-name: showcase-card; }
-.sc-body {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-  gap: 14px;
-  height: 100%;
-  padding: 26px var(--sc-pad-x) 20px;
-}
-.sc-eyebrow { grid-row: 1; }
-.sc-copy { grid-row: 2; }
-.sc-stage { grid-row: 3; }
-.sc-foot { grid-row: 4; }
-.sc-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
-.sc-foot {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 34px;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   VOYRA 橱窗卡 · 视觉层（现代简约）
-   ---------------------------------------------------------------------------
-   上方到这一行为止是骨架：token / .sc-card 盒模型 / .sc-body 四段式 / .sc-seq。
-   这一段负责骨架之外的一切 —— 基调配色、版式变体、排版、悬停交互、舞台质感。
-
-   **这一轮改掉了什么（用户评价"像 10 年前的风格"）**
-     ① 去掉「高光扫过」：一条斜向白光从卡面掠过，是 2013~2016 年的典型手法。
-     ② 去掉「3D 倾斜」：跟着鼠标做 3D 旋转同样是那个年代的炫技，且会让
-        相邻两列在指针扫过时互相打架。改成纯粹的抬升 + 加深投影 —— 现代、
-        安静，也更能让人看清内容。
-     ③ 去掉舞台底的点阵纹理：密密麻麻的小点会把 10px 的小字磨花，
-        也是"旧"的观感来源之一。底色改为极淡的基调渐变。
-     ④ 描边从 0.08 降到 0.07 并只在卡片外沿用；卡片内部一律改用阴影分层。
-     ⑤ 圆角 18 → 20px，阴影换成两层（近处锐、远处柔），纵深更干净。
-
-   配色仍然只用四个颜色：黑 / 金 / 白 / 蓝。
-   差异不靠堆色相，而靠「基调（tone）× 版式（layout）× 舞台画面」的组合。
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── 1 · 基调变量（兜底值） ───────────────────────────────────────────────
-   ProductCard 把两组变量内联写在每张 .sc-card 上：
-     --p-accent / --p-rgb / --p-soft / --p-line / --p-glow / --p-ink   卡片外壳
-     --stg-ink / --stg-text / --stg-text-rgb / --stg-panel / --stg-bg* 舞台内部
-   这里的兜底等价于 paper 基调。
-   --p-rgb / --stg-text-rgb 必须**逗号分隔**：`rgba(var(--x), α)` 里若 var 展开成
-   空格分隔，拼出的是非法值，整条声明被丢弃。
-   ─────────────────────────────────────────────────────────────────────────── */
+/* 兜底基调变量（等价 paper）。ProductCard 会把真实基调内联写上来。
+   --p-rgb / --stg-text-rgb 必须是**逗号分隔**三元组：rgba(var(--x), α) 里
+   若 var 展开成空格分隔，拼出的是非法值，整条声明会被丢弃。 */
 .sc-card {
   --p-accent: #1A1A1A;
   --p-rgb: 26, 26, 26;
@@ -936,28 +898,15 @@ body{
   --stg-bg2: #FFFFFF;
 }
 
-/* ── 2 · 卡片表面 ─────────────────────────────────────────────────────────
-   静止时几乎不投影（只有 1px 的贴合感），悬停时抬升 6px 并把远投影拉开。
-   两层阴影：近的一层负责"贴着桌面"，远的一层负责"浮起来"。 */
-.sc-card {
-  transform: translateY(var(--lift, 0px));
-  transition:
-    transform .55s cubic-bezier(.16, 1, .3, 1),
-    border-color .45s cubic-bezier(.16, 1, .3, 1),
-    box-shadow .55s cubic-bezier(.16, 1, .3, 1);
-}
-
 @media (hover: hover) and (pointer: fine) {
   .sc-card:hover {
     --lift: -6px;
-    border-color: rgba(var(--p-rgb), 0.20);
+    border-color: #D5D5D5;
     box-shadow:
-      0 2px 4px rgba(16, 16, 16, .04),
-      0 18px 40px -14px rgba(16, 16, 16, .14),
-      0 8px 20px -14px rgba(var(--p-rgb), .30);
+      0 3px 6px rgba(0, 0, 0, .04),
+      0 26px 48px -18px rgba(0, 0, 0, .18);
   }
-
-  /* 触屏没有 hover，按压给一点回弹，避免"点了没反应" */
+  /* 触屏没有 hover，按压给一点回弹，避免「点了没反应」 */
   .sc-card:active { --lift: -2px; }
 }
 
@@ -966,36 +915,144 @@ body{
   .sc-card:active { --lift: -2px; transition-duration: .12s; }
 }
 
+/* ── 1b · 指针跟随的金色光斑（参考站 .card-spotlight） ────────────────────
+   参考站实测：
+     .card-spotlight {
+       position:absolute; inset:0; z-index:0; border-radius:inherit;
+       pointer-events:none; opacity:0;
+       background:radial-gradient(circle 170px at var(--spot-x,50%) var(--spot-y,50%),
+                                  #ffe28a3d, #ffe28a14 42%, transparent 74%);
+       transition:opacity .45s var(--ease);
+     }
+     .card-hitbox:hover > .scard .card-spotlight { opacity:1 }
+
+   两个实现要点：
+     ① 用 radial-gradient 的**背景**而不是动一个元素的位置 —— 光斑跟着指针
+        移动时只改 CSS 变量，浏览器只需重绘这一层的渐变，不触发任何布局；
+        而且 opacity 的淡入淡出可以交给合成器。
+     ② 参考站用的是**浅金** #ffe28a（中心 0x3d ≈ 24% 透明度）—— 它是「打亮」
+        而不是「压暗」，这一点必须照搬。第一版我图省事用了该卡的强调色
+        --p-rgb，结果 paper 基调（#1A1A1A）与 ink 基调渲染出来是一团**深灰**：
+        在白卡上像块污渍，在深色舞台上又完全看不见（实测中心灰阶 -81）。
+        浅金对四种基调都是提亮，与参考站一致，也永远不会脏。
+     ③ 只在「真悬停」设备上启用；触屏没有指针，白留一层渐变。
+   ───────────────────────────────────────────────────────────────────────── */
+.sc-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle 190px at var(--spot-x, 50%) var(--spot-y, 50%),
+    rgba(255, 226, 138, 0.40),
+    rgba(255, 226, 138, 0.15) 42%,
+    transparent 74%
+  );
+  transition: opacity .45s var(--vr-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .sc-spotlight { opacity: 1; }
+}
+
+/* ── 2 · 卡内骨架：单行「文字 | 舞台」左右分栏 ─────────────────────────────
+   grid-template-areas 让眉标 / 文案 / CTA 三段各占一行、舞台独占一列跨满三行，
+   于是舞台高度自动等于文字段的总高 —— 不必给舞台写死高度。
+   奇偶交替由 .sc-roll-wrap:nth-child(even) 负责（参考站同款做法）。 */
+.sc-body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "eyebrow stage"
+    "copy    stage"
+    "foot    stage";
+  align-content: center;
+  gap: 12px 36px;
+  height: 100%;
+  padding: 22px 26px;
+}
+
+/* 偶数位卡：舞台换到左边。用 :nth-child(even) 而不是 :nth-of-type ——
+   列表里每张卡外面还套着 .vr-roll-wrap，这里定位的正是那个 wrap。 */
+.sc-roll-wrap:nth-child(even) .sc-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  grid-template-areas:
+    "stage eyebrow"
+    "stage copy"
+    "stage foot";
+}
+
+.sc-eyebrow { grid-area: eyebrow; }
+.sc-copy { grid-area: copy; }
+.sc-stage { grid-area: stage; }
+.sc-foot { grid-area: foot; }
+
+.sc-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.sc-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-height: 0;
+}
+
 /* ── 3 · 排版 ─────────────────────────────────────────────────────────────
-   现代排版的要点：标题重而紧、正文松而浅、层级靠字号与灰度而不是靠线条。 */
+   参考站的层级：标题重而紧、正文松而浅，靠字号与灰度分层，不靠线条。 */
 .sc-title {
   flex: 1 1 auto;
   margin: 0;
-  font-size: 25px;
-  font-weight: 700;
-  line-height: 1.16;
-  letter-spacing: -0.024em;
+  /* 参考站 40px；本站标题最长 8 个汉字（学习通自动签到助手），
+     文字列约 352px，40px 时 8×40=320 放得下，不折行。 */
+  font-size: clamp(28px, 3.4vw, 40px);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
   color: var(--sc-text-main);
   min-width: 0;
   overflow-wrap: anywhere;
+  /* ── 参考站的招牌悬停：标题底下一道金色高亮从左扫入 ──────────────────────
+     做法照搬参考站 .sname / .pinfo h3：
+       background-image: linear-gradient(var(--hl), var(--hl))
+       background-size: 0 42%   → 悬停时 100% 42%
+       background-position: 0 68%（压在基线偏下的位置）
+     用 background-size 而不是 ::after 下划线，是因为它不占布局、不引起重排，
+     而且能跟着文字折行自然覆盖每一行。
+     用 --p-accent 而不是固定金色：卡片有四套基调（ink/gold/blue/paper），
+     金色扫在蓝色卡的标题上会打架。 */
+  background-image: linear-gradient(var(--p-soft), var(--p-soft));
+  background-position: 0 68%;
+  background-repeat: no-repeat;
+  background-size: 0 42%;
+  transition: background-size .6s var(--vr-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .sc-title { background-size: 100% 42%; }
 }
 
 .sc-desc {
-  margin: 9px 0 0;
-  font-size: 13.5px;
-  line-height: 1.66;
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.95;
   color: var(--sc-text-sub);
-  min-height: 45px;
-  text-wrap: balance;
+  max-width: 34em;
+  text-wrap: pretty;
   display: -webkit-box;
   -webkit-box-orient: vertical;
+  /* 参考站描述 2 行（29.25px × 2）。限 2 行保证两张卡严格等高。 */
   -webkit-line-clamp: 2;
   overflow: hidden;
 }
 
-/* 眉标：一个小点 + 类目词。去掉了等宽大写与夸张字距（那是 2010 年代的痕迹）。
-   类目词从英文大写改成中文后字号必须跟着上提：同样的 10.5px，拉丁大写字母的
-   字面高度够用，中文方块字则糊成一团。12px 是中文标签的下限，再小就要靠猜。 */
+/* 眉标：类目词 + 序号短码。参考站用等宽小字 + 宽字距。 */
 .sc-eyebrow {
   display: flex;
   align-items: center;
@@ -1003,18 +1060,16 @@ body{
   min-width: 0;
   font-size: 12px;
   font-weight: 500;
-  letter-spacing: 0.005em;
-  /* 12px 起这一行按正文算，要 4.5:1：0.52 的墨在纸色底上只有 3.47:1 */
+  letter-spacing: 0.02em;
   color: rgba(23, 23, 23, 0.62);
 }
 .sc-eyebrow b {
   flex: 0 0 auto;
   font-weight: 650;
-  /* 序号走 --p-ink（金/墨 #634E16 对白 7.98:1）而不是 --p-accent：
-     强调色是给图形用的（金色 #8A6D1F 只有 4.02:1），当 12px 文字差一点点。 */
+  /* 序号走 --p-ink 而不是 --p-accent：强调色是给图形用的（金色 #8A6D1F
+     只有 4.02:1），当 12px 文字差一点点。 */
   color: var(--p-ink);
 }
-/* 小点用强调色，是整张卡里唯一一处"亮"的色块 */
 .sc-eyebrow::before {
   content: "";
   flex: 0 0 auto;
@@ -1024,49 +1079,46 @@ body{
   background: var(--p-accent);
 }
 
-/* ── 4 · 图标盒 ───────────────────────────────────────────────────────────
-   淡底 + 强调色图标；悬停反色。带 logo 的应用卡不反色 —— logo 自带配色。 */
+/* ── 4 · 图标盒（参考站 .pbrand：40px 方形 / radius 10） ─────────────────── */
 .sc-card .sc-title-row {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 12px;
   min-width: 0;
 }
-
 .sc-card .sc-brand {
-  /* flex:0 0 auto 保证图标盒不被标题挤压 */
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border: 1px solid rgba(var(--p-rgb), 0.14);
   border-radius: 10px;
   overflow: hidden;
   background: var(--p-soft);
   color: var(--p-accent);
   transition:
-    transform .45s cubic-bezier(.16, 1, .3, 1),
+    /* 参考站 .pbrand 是 `transition:transform .65s var(--ease)` —— 图标盒是
+       全卡最"重"的一小块，给它最长的时长，与卡片本体 .45s 的位移形成错落：
+       卡片先到、图标随后旋转就位，层次感就是这么来的。 */
+    transform .65s var(--vr-ease-out),
     background .35s ease,
     color .35s ease,
     border-color .35s ease;
 }
-
-/* 100% 而不是写死 34px：内容盒只有 32px，写 34px 会被 overflow 切一圈。 */
+/* 100% 而不是写死 40px：内容盒只有 38px，写 40px 会被 overflow 切一圈。 */
 .sc-card .sc-brand img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
 }
-
-.sc-card .sc-brand.has-logo {
-  background: #fff;
-}
+.sc-card .sc-brand.has-logo { background: #fff; }
 
 @media (hover: hover) and (pointer: fine) {
+  /* 参考站 .pbrand 悬停是 rotate(-4deg) scale(1.06) */
   .sc-card:hover .sc-brand {
-    transform: translateY(-2px);
+    transform: rotate(-4deg) scale(1.06);
     background: var(--p-accent);
     border-color: var(--p-accent);
     color: #fff;
@@ -1077,14 +1129,17 @@ body{
   }
 }
 
-/* ── 5 · 舞台 ─────────────────────────────────────────────────────────────
-   底色是极淡的基调渐变（不再有点阵纹理）；描边只在悬停时跟基调走。 */
+/* ── 5 · 舞台（参考站 .stage：右侧 1fr 的演示面板） ─────────────────────── */
 .sc-stage {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 150px;
+  align-self: stretch;
+  /* 舞台撑住文字段的高度；文字只有 ~185px，给到 200px 才不让舞台显扁。
+     参考站舞台实测 352×180（比例 1.95），本站约 306×200（1.53）——
+     本站舞台是横向数据看板，比参考站的插画更宽扁一些更好读。 */
+  min-height: 200px;
   border: 1px solid rgba(var(--stg-text-rgb), 0.08);
   border-radius: 14px;
   /* overflow:hidden 裁掉舞台里越界的内容（滚动名单、折线扫掠） */
@@ -1094,80 +1149,90 @@ body{
   /* 顶沿一道内高光：让舞台像一张被压出弧度的纸，而不是一块平涂色块。
      深色基调（ink）上它是舞台里唯一的亮线，浅色基调上则是一条几乎看不见的纸边。 */
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: border-color .45s cubic-bezier(.16, 1, .3, 1);
+  transition: border-color .45s var(--vr-ease-out);
 }
-
 .sc-card:hover .sc-stage {
   border-color: rgba(var(--stg-ink-rgb), 0.22);
 }
 
-/* ── 6 · 页脚 ───────────────────────────────────────────────────────────── */
+/* ── 6 · 页脚：空心序号（参考站 .pnum 的落位）+ CTA（.go） ─────────────────
+   序号从「页脚里的 11px 小字」升级为参考站那种 42px 空心描边数字，
+   绝对定位到卡片左下角。它不再参与布局，因此永远不会把 CTA 挤走。 */
 .sc-seq {
-  font-size: 11px;
-  font-weight: 600;
+  position: absolute;
+  left: 26px;
+  bottom: 14px;
+  z-index: 0;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(17, 24, 39, .14);
+  user-select: none;
+  pointer-events: none;
   font-variant-numeric: tabular-nums;
-  color: rgba(23, 23, 23, 0.34);
-  letter-spacing: 0.02em;
+  transition: transform .9s var(--vr-ease-out);
+}
+/* 参考站 .pnum 悬停时轻微上移 */
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .sc-seq { transform: translateY(-6px); }
 }
 
 .sc-cta {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--p-accent);
-  transition: color .3s ease;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  /* 参考站 .go 是 #999（对白 2.85:1，不达 AA）。14px 属正文小字，
+     按 §0.9 第 3 条上调到 #666（5.74:1）。 */
+  color: #666666;
+  transition: color .5s var(--vr-ease-out);
 }
-
-.sc-cta svg {
-  transition: transform .35s cubic-bezier(.16, 1, .3, 1);
-}
+.sc-cta svg { transition: transform .7s var(--vr-ease-out); }
 
 @media (hover: hover) and (pointer: fine) {
-  .sc-card:hover .sc-cta { color: var(--p-ink); }
-  .sc-card:hover .sc-cta svg { transform: translate(4px, -4px); }
+  .sc-card:hover .sc-cta { color: var(--sc-text-main); }
+  /* 参考站 .arr 悬停 translate(6px) */
+  .sc-card:hover .sc-cta svg { transform: translate(6px, 0); }
 }
 
-/* ══ 版式变体：copy / stage / bleed ══════════════════════════════════════
-   三套版式只改「四段在卡内的排布」，不改内容。
-   四段在 .sc-body 里已有默认行号（眉标 1 / 文案 2 / 舞台 3 / 页脚 4）。
-   ──────────────────────────────────────────────────────────────────────── */
-
-/* stage · 舞台在上 */
-.sc-card.layout-stage .sc-body {
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+/* ── 7 · 窄屏：参考站手机档（单列，舞台在上，文字在下） ───────────────────── */
+@media (max-width: 960px) {
+  .sc-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "stage"
+      "eyebrow"
+      "copy"
+      "foot";
+    gap: 14px;
+    padding: 18px 16px 24px;
+  }
+  /* 手机档不做左右交替：单列里换序只会让节奏乱掉。 */
+  .sc-roll-wrap:nth-child(even) .sc-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "stage"
+      "eyebrow"
+      "copy"
+      "foot";
+  }
+  .sc-stage { min-height: 0; height: clamp(190px, 55vw, 260px); align-self: auto; }
+  /* 窄屏四段纵向堆叠后，页脚里只剩左对齐的 CTA，左下角被它占住了 ——
+     序号若仍在 left:18px 会与 CTA 直接叠在一起（实测重叠 855px²）。
+     单列里右侧整条都是空的，把序号挪到右下角即可。 */
+  .sc-seq { left: auto; right: 18px; bottom: 16px; font-size: 34px; }
 }
-.sc-card.layout-stage .sc-stage { grid-row: 2; }
-.sc-card.layout-stage .sc-copy { grid-row: 3; }
-.sc-card.layout-stage .sc-foot { grid-row: 4; }
 
-/* bleed · 舞台出血贴满上半部。
-   .sc-body 内边距归零，改由各文字段自带 --sc-pad-x，舞台才能真正顶到左右沿；
-   卡片自身的 border-radius + overflow:hidden 负责把直角裁成圆角。 */
-.sc-card.layout-bleed .sc-body {
-  grid-template-rows: minmax(0, 1.25fr) auto auto auto;
-  gap: 11px;
-  padding: 0 0 20px;
-}
-.sc-card.layout-bleed .sc-stage {
-  grid-row: 1;
-  border: 0;
-  border-bottom: 1px solid rgba(var(--stg-text-rgb), 0.10);
-  border-radius: 0;
-  margin-bottom: 4px;
-}
-.sc-card.layout-bleed .sc-eyebrow { grid-row: 2; margin: 0 var(--sc-pad-x); }
-.sc-card.layout-bleed .sc-copy { grid-row: 3; margin: 0 var(--sc-pad-x); }
-.sc-card.layout-bleed .sc-foot { grid-row: 4; margin: 0 var(--sc-pad-x); }
-
-/* ── 7 · 窄屏 ───────────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .sc-card { --sc-pad-x: 22px; }
-  .sc-card .sc-title { font-size: 22px; }
-  .sc-card .sc-desc { font-size: 12.5px; line-height: 1.6; min-height: 40px; }
-  .sc-card .sc-brand { width: 30px; height: 30px; border-radius: 9px; }
-  .sc-card .sc-title-row { gap: 9px; }
+@media (max-width: 720px) {
+  .sc-card { --sc-pad-x: 16px; }
+  .sc-card .sc-title { font-size: 26px; line-height: 1.2; }
+  .sc-card .sc-desc { font-size: 13.5px; line-height: 1.8; }
+  .sc-card .sc-brand { width: 34px; height: 34px; border-radius: 9px; }
+  .sc-card .sc-title-row { gap: 10px; }
 }
 
 /* ── 8 · 减少动态效果 ─────────────────────────────────────────────────────
@@ -1180,7 +1245,8 @@ body{
   .sc-card:hover,
   .sc-card:active { --lift: 0px; }
   .sc-card:hover .sc-brand,
-  .sc-card:hover .sc-cta svg { transform: none !important; }
+  .sc-card:hover .sc-cta svg,
+  .sc-card:hover .sc-seq { transform: none !important; }
 }
 
 /* ── 9 · 高对比度模式 ───────────────────────────────────────────────────── */
@@ -1191,4 +1257,402 @@ body{
   }
   .sc-eyebrow::before { background: CanvasText; }
   .sc-eyebrow b { color: CanvasText; }
+  .sc-seq { -webkit-text-stroke-color: CanvasText; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   「关于我」与「交流」· 按参考站 oiloil.org 重做
+   ---------------------------------------------------------------------------
+   用户反馈两条：① 内容左边超出范围；② 范围内容不太合理。
+
+   ① 左溢出的根因（两处，都在这里修掉）：
+      · `.about-watermark` 是 left:-24px 的出血巨型水印，在 858px 容器里
+        看着就是「左边冒出来一截」。参考站没有这个水印 —— 不再渲染它
+        （JSX 里已移除，这里的规则一并删除，避免留下死代码）。
+      · `[data-roll]` 带 perspective(900px) rotateX(±14deg)。3D 旋转会让
+        元素的可视包围盒横向外扩：实测 .vr-about-intro 858 → 859.6、
+        .vr-contact-panel 858 → 861.6、.vr-experience-card 858 → 861.6。
+        关于我 / 交流是长文本块，倾斜只让边缘发虚、并不好看，所以这两个
+        节点不再带 data-roll（JSX 里已摘掉），彻底没有外扩。
+
+   ② 内容重做（数据在 Dashboard.jsx 的 EXPERIENCES / CONTACTS）：
+      · 经历卡原来写的是技术选型（Cloudflare Pages / Bmob），摆在「经历」
+        下面名不副实；现在改成「在做什么」的三条事实，并补上右侧备注。
+      · 联系卡原来只有「编号 + 名称 + 值」；现在补齐眉标 / 说明 / 备注 / 箭头，
+        与参考站的咨询卡同构。
+
+   参考站实测（1440）：.me-intro padding 10px 0 72px、自述 18px/38.7px、
+   标签 11px 圆角胶囊；经历区 margin-top 72px、卡 min-height 230px、
+   padding 16px 32px、radius 18px、标题 42px/900、编号 42px 空心描边。
+   本站容器 858（参考站 756），因此字号沿用参考站档位、留白略放大。
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.vr-home .vr-about-panel {
+  display: grid;
+  gap: 72px;
+}
+
+/* ── 自述区 ───────────────────────────────────────────────────────────────
+   与参考站 .me-intro 同构：kicker 等宽小字 → 自述 → 标签组，底部一条分隔线。 */
+.vr-home .vr-about-intro {
+  position: relative;
+  z-index: 1;
+  padding: 10px 0 56px;
+  border-bottom: 1px solid var(--vr-line, rgba(27, 27, 27, .11));
+}
+.vr-home .vr-about-intro > span {
+  display: block;
+  margin-bottom: 18px;
+  color: #666B70;
+  font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .18em;
+}
+/* 自述是这一屏的主角：参考站 18px / 行高 2.15 / 最大 34em。
+   本站容器更宽（858 vs 756），上限收到 40em 免得行长过宽难读。 */
+.vr-home .vr-about-intro p {
+  max-width: 40em;
+  margin: 0;
+  color: #4A4A4A;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.75;
+  letter-spacing: -.01em;
+}
+.vr-home .vr-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 24px;
+}
+.vr-home .vr-tags span {
+  border: 1px solid #DEDEDE;
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: #555;
+  background: rgba(255, 255, 255, .7);
+  font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .04em;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.vr-home .vr-tags span:hover {
+  border-color: #C2B17C;
+  color: #1B1B1B;
+}
+
+/* ── 经历区 ───────────────────────────────────────────────────────────────
+   区头与参考站 .me-section-head 同款：左侧等宽小标签走墨色，
+   右侧一句结论走灰。 */
+.vr-home .vr-experience {
+  position: relative;
+  z-index: 1;
+}
+.vr-home .vr-experience-label,
+.vr-home .vr-contact-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--vr-line, rgba(27, 27, 27, .11));
+  color: #666B70;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .16em;
+}
+.vr-home .vr-experience-label > span,
+.vr-home .vr-contact-head > span { color: #1B1B1B; font-weight: 650; }
+/* color 必须显式写：Dashboard.jsx 内联有一条
+   `.vr-experience-label b,.vr-contact-head b{color:#999}`（0-2-0）。
+   只覆盖 font-weight / letter-spacing 的话它会漏过来 —— #999 对白
+   仅 2.85:1，不达 WCAG AA（实测这是唯一残留的对比度失败项）。 */
+.vr-home .vr-experience-label > b,
+.vr-home .vr-contact-head > b {
+  color: #666B70;
+  font-weight: 400;
+  letter-spacing: .08em;
+}
+
+.vr-home .vr-experience-list {
+  display: grid;
+  gap: 16px;
+}
+
+/* 经历卡：左「文案」/ 中「备注」/ 右「图标」，与参考站 .experience-card
+   （1.08fr / 0.92fr 两栏 + 箭头）同一套骨架。本站比参考站多一列备注。 */
+.vr-home .vr-panel .vr-experience-card {
+  position: relative;
+  display: grid;
+  /* 显式三列 + 单行：编号是绝对定位的覆盖层，不参与网格。 */
+  grid-template-columns: minmax(0, 1fr) auto 44px;
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 24px;
+  min-height: 0;
+  padding: 26px 32px;
+  overflow: hidden;
+  border: 1px solid var(--vr-line, rgba(27, 27, 27, .11));
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--vr-shadow-card, 0 24px 48px -12px rgba(0, 0, 0, .06));
+  transition: border-color .3s, box-shadow .3s, transform .4s var(--vr-spring, cubic-bezier(.16, 1, .3, 1));
+}
+/* 注意：这条 0-4-0 的 `> *:not(.vr-spotlight)` 会把**所有**子元素设成
+   position:relative，包括本应绝对定位的 .vr-experience-index。
+   实测后果：编号被拉回正常流、占掉第一列，文案/备注/图标整体右移一格、
+   图标掉到第二行。所以下面凡是要脱离网格的覆盖层，都必须用 ≥0-4-0 的
+   选择器把 position 改回去（`.vr-experience-card > .vr-experience-index`
+   是 0-4-0，与它同级、源码序更靠后，能压住）。 */
+.vr-home .vr-panel .vr-experience-card > *:not(.vr-spotlight) {
+  position: relative;
+  z-index: 1;
+}
+/* .vr-spotlight 只在 .vr-showcase / .vr-unified-card 里有定位规则，经历卡里
+   它是没有定位的行内元素 —— 会被当成正常 grid 项占掉第一格。
+   这里补上绝对定位，让它回到「覆盖层」的本分。 */
+.vr-home .vr-panel .vr-experience-card > .vr-spotlight {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(380px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(164, 136, 48, .14), transparent 70%);
+  transition: opacity .3s ease;
+}
+.vr-home .vr-panel .vr-experience-card[data-pointer-active] > .vr-spotlight { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .vr-home .vr-panel .vr-experience-card:hover {
+    border-color: #C2B17C;
+    box-shadow: var(--vr-shadow-hover, 0 32px 64px -16px rgba(0, 0, 0, .12));
+    /* 参考站是整卡轻微上浮；旧版 translateX(8px) 会把卡片推出右沿，改掉。 */
+    transform: translateY(-3px);
+  }
+}
+
+/* 编号：参考站 .experience-no 是 42px 空心描边，压在卡片左下角。
+   本站文案更宽，放在文案左侧当「行首序号」会与标题抢眼，
+   改为贴在卡片右下的浅描边数字（与产品卡 .sc-seq 同一语言）。
+   选择器必须写足 `> .vr-experience-index`（0-4-0）才能压过上面的
+   `> *:not(.vr-spotlight)`（同为 0-4-0，靠源码序取胜）。 */
+.vr-home .vr-panel .vr-experience-card > .vr-experience-index {
+  position: absolute;
+  /* left:auto 是必需的：Dashboard.jsx 的内联样式里有一条
+     `.vr-experience-index{left:22px;bottom:15px}`（0-1-0）。
+     绝对定位元素同时给了 left 与 right 时，LTR 下 **left 优先、right 被忽略**，
+     于是序号会跑回左边并压住描述文字（实测 x=23 与文案重叠）。
+     这里显式清掉 left，right 才生效。 */
+  left: auto;
+  right: 26px;
+  bottom: 10px;
+  z-index: 0;
+  /* width:max-content 是必需的：绝对定位的 grid 子项若只写 right 而 left 留
+     auto，它的静态位置矩形是**整个网格区域**，于是会从网格左沿一直拉到
+     right:26px（实测宽 808px，数字被拉成横贯整卡的透明色块）。
+     定住宽度后它才是右下角那个 42px 的序号。 */
+  width: max-content;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(27, 27, 27, .10);
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.02em;
+  pointer-events: none;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+.vr-home .vr-experience-copy { min-width: 0; }
+.vr-home .vr-experience-copy > span {
+  color: #666B70;
+  font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .18em;
+}
+.vr-home .vr-experience-copy h2 {
+  margin: 9px 0 10px;
+  color: #1B1B1B;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -.03em;
+}
+.vr-home .vr-experience-copy p {
+  max-width: 46em;
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.8;
+}
+/* 右侧备注：等宽小字胶囊，参考站 .experience-status 的位置。 */
+.vr-home .vr-experience-meta {
+  justify-self: end;
+  padding: 7px 12px;
+  border: 1px solid var(--vr-line, rgba(27, 27, 27, .11));
+  border-radius: 999px;
+  color: #666;
+  background: rgba(255, 255, 255, .7);
+  font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+}
+.vr-home .vr-experience-icon {
+  justify-self: end;
+  color: #A48830;
+  transition: transform .4s var(--vr-spring, cubic-bezier(.16, 1, .3, 1));
+}
+.vr-home .vr-panel .vr-experience-card:hover .vr-experience-icon {
+  transform: translateY(-2px) rotate(-5deg);
+}
+
+/* ── 交流区 ───────────────────────────────────────────────────────────────
+   参考站咨询卡：编号 · 眉标+标题 · 说明 · 备注 · 箭头。
+   这里做成四列 grid：编号 / 图标 / 文案 / 右侧值 + 箭头。 */
+.vr-home .vr-contact-panel {
+  border-top: 0;
+  padding-top: 0;
+}
+.vr-home .vr-contact-list {
+  display: grid;
+  gap: 16px;
+}
+.vr-home .vr-panel :is(a, button).vr-contact-row {
+  display: grid;
+  grid-template-columns: 44px 52px minmax(0, 1fr) minmax(0, auto) 24px;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  min-height: 0;
+  padding: 24px 28px;
+  border: 1px solid var(--vr-line, rgba(27, 27, 27, .11));
+  border-radius: 18px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  box-shadow: var(--vr-shadow-card, 0 24px 48px -12px rgba(0, 0, 0, .06));
+  transition: border-color .3s, box-shadow .3s, transform .4s var(--vr-spring, cubic-bezier(.16, 1, .3, 1));
+}
+@media (hover: hover) and (pointer: fine) {
+  .vr-home .vr-panel :is(a, button).vr-contact-row:hover {
+    /* 旧版悬停是 padding-left:16px —— 会顶动整行文字，改成整卡上浮。 */
+    padding: 24px 28px;
+    border-color: #C2B17C;
+    background: #fff;
+    box-shadow: var(--vr-shadow-hover, 0 32px 64px -16px rgba(0, 0, 0, .12));
+    transform: translateY(-3px);
+  }
+}
+.vr-home .vr-panel :is(a, button).vr-contact-row:focus-visible {
+  outline: 2px solid var(--vr-ink, #1b1b1b);
+  outline-offset: 4px;
+}
+.vr-home .vr-contact-no {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(27, 27, 27, .16);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.vr-home .vr-contact-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--vr-line, rgba(27, 27, 27, .11));
+  border-radius: 12px;
+  background: #FAF9F6;
+  color: #A48830;
+}
+.vr-home .vr-contact-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.vr-home .vr-contact-eyebrow {
+  color: #666B70;
+  font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .16em;
+}
+.vr-home .vr-panel .vr-contact-row strong {
+  color: #1B1B1B;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -.03em;
+}
+.vr-home .vr-contact-summary {
+  color: #666;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+.vr-home .vr-contact-side {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+  min-width: 0;
+  text-align: right;
+}
+.vr-home .vr-panel .vr-contact-row em {
+  color: #666B70;
+  font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: normal;
+  letter-spacing: .08em;
+}
+.vr-home .vr-contact-side b {
+  max-width: 100%;
+  overflow: hidden;
+  color: #1B1B1B;
+  font: 650 13.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 箭头：默认静止可见（参考站的 .sopen 是常显的圆形箭头），悬停再位移。
+   旧版 opacity:0 只在悬停出现，触屏上等于没有提示。 */
+.vr-home .vr-contact-arrow {
+  justify-self: end;
+  color: #A48830;
+  transition: transform .4s var(--vr-spring, cubic-bezier(.16, 1, .3, 1));
+}
+.vr-home .vr-panel .vr-contact-row:hover .vr-contact-arrow {
+  transform: translate(4px, -4px);
+}
+.vr-home .vr-contact-feedback {
+  min-height: 24px;
+  margin: 14px 0 0;
+  color: #666;
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+/* ── 窄屏 ─────────────────────────────────────────────────────────────────
+   经历卡与联系卡都塌成单列，右侧备注/值改左对齐。 */
+@media (max-width: 960px) {
+  .vr-home .vr-about-panel { gap: 52px; }
+  .vr-home .vr-about-intro { padding-bottom: 40px; }
+  .vr-home .vr-about-intro p { font-size: 19px; line-height: 1.7; }
+  .vr-home .vr-panel .vr-experience-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    padding: 22px 20px;
+  }
+  .vr-home .vr-experience-meta { display: none; }
+  .vr-home .vr-experience-copy h2 { font-size: 23px; }
+  .vr-home .vr-panel :is(a, button).vr-contact-row,
+  .vr-home .vr-panel :is(a, button).vr-contact-row:hover {
+    grid-template-columns: 34px 40px minmax(0, 1fr) 20px;
+    gap: 12px;
+    padding: 20px 18px;
+  }
+  .vr-home .vr-contact-side { display: none; }
+  .vr-home .vr-contact-icon { width: 40px; height: 40px; border-radius: 11px; }
+  .vr-home .vr-panel .vr-contact-row strong { font-size: 20px; }
+  .vr-home .vr-contact-no { font-size: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vr-home .vr-panel .vr-experience-card,
+  .vr-home .vr-panel :is(a, button).vr-contact-row { transition: none !important; }
+  .vr-home .vr-panel .vr-experience-card:hover,
+  .vr-home .vr-panel :is(a, button).vr-contact-row:hover { transform: none !important; }
+  .vr-home .vr-panel .vr-experience-card:hover .vr-experience-icon { transform: none !important; }
 }

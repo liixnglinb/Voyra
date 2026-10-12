@@ -94,16 +94,69 @@ function preloadHeroLayer(src) {
   });
 }
 
+/* 「关于我」的经历卡。2026-10 按用户「现在的范围内容不太合理」重做：
+   旧的三条是 Voyra 个人站 / Cloudflare Pages / Bmob 云后端 —— 后两条是
+   **技术选型**，不是「经历」，摆在「经历 / EXPERIENCE」下面名不副实。
+   现在改成「我在做什么」的三条事实：在线工具、桌面软件、技术栈，
+   每条都能在站内找到对应入口，读者读完知道这里有什么、怎么做的。 */
 const EXPERIENCES = [
-  { state: '现在', name: 'Voyra 个人站', desc: '云端一站式创作与效率平台，聚合常用工具与 AI 资源。', Icon: NotebookPen },
-  { state: '基建', name: 'Cloudflare Pages', desc: 'GitHub 推送后自动构建，自定义域名稳定访问。', Icon: Globe },
-  { state: '数据', name: 'Bmob 云后端', desc: '工具数据可云端保存，免去自建服务端的维护成本。', Icon: LayoutGrid },
+  {
+    state: '在线工具',
+    name: '云端工具站',
+    desc: '日程中心、提示词库、思维导图、组件图鉴、饮食打卡等在线工具，登录后多端同步。',
+    meta: '9 个在线入口',
+    Icon: NotebookPen,
+  },
+  {
+    state: '桌面软件',
+    name: '本地应用',
+    desc: '织流、学习通签到、磁盘清理、账迹、Token Monitor、知新与 AI 轨迹，覆盖 Windows 与 Android。',
+    meta: '7 款软件',
+    Icon: LayoutGrid,
+  },
+  {
+    state: '技术栈',
+    name: '构建方式',
+    desc: 'React 18 + Vite 构建前端，Cloudflare Pages 托管与自动部署，Bmob 负责账号与云端数据。',
+    meta: '开源可查',
+    Icon: Globe,
+  },
 ];
 
+/* 「交流」的三条渠道。同样按用户要求重做：旧版只有「编号 + 名称 + 值」三列，
+   看完不知道点进去会得到什么。现在每条补齐了眉标 / 说明 / 备注，
+   与参考站的咨询卡同构（编号 · 眉标 · 标题 · 说明 · 备注 · 箭头）。 */
 const CONTACTS = [
-  { no: '01', label: 'GitHub', value: '@liixnglinb', href: 'https://github.com/liixnglinb', Icon: Github },
-  { no: '02', label: 'Email', value: 'hello@lxlrwxs.top', copy: true, Icon: Sparkles },
-  { no: '03', label: '网站', value: 'lxlrwxs.top', href: 'https://lxlrwxs.top', Icon: Globe },
+  {
+    no: '01',
+    label: 'GitHub',
+    eyebrow: 'OPEN SOURCE / 开源代码',
+    summary: '站内工具与桌面软件的源码都在这一个账号下，欢迎提 Issue。',
+    meta: '公开仓库 · 持续更新',
+    value: '@liixnglinb',
+    href: 'https://github.com/liixnglinb',
+    Icon: Github,
+  },
+  {
+    no: '02',
+    label: 'Email',
+    eyebrow: 'MAIL / 邮件联系',
+    summary: '合作、问题反馈，或者只是想聊聊，都发这个地址。',
+    meta: '点击复制 · 域名邮箱',
+    value: 'hello@lxlrwxs.top',
+    copy: true,
+    Icon: Sparkles,
+  },
+  {
+    no: '03',
+    label: '网站',
+    eyebrow: 'SITE / 本站地址',
+    summary: 'Voyra 的正式地址，在线工具与软件下载都从这里进。',
+    meta: '收藏这一个就够',
+    value: 'lxlrwxs.top',
+    href: 'https://lxlrwxs.top',
+    Icon: Globe,
+  },
 ];
 
 const TABS = [['products', '产品'], ['skills', 'Skills'], ['apps', '应用'], ['me', '关于我'], ['contact', '交流']];
@@ -256,24 +309,51 @@ function useScrollRoll(rootRef, activeTab) {
     let frame = 0;
     let needsUpdate = true;
     const activeNodes = new Set();
+    /* 每个节点记住上一帧写过的值，值没变就跳过这次写入。
+       滚动时相邻两帧的角度往往只差 0.1deg，而每一次 setProperty 都会让该元素
+       的样式失效、下一帧重新计算 —— 跳过没必要的写入能实打实省下合成开销。 */
+    const lastValues = new WeakMap();
     const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
     const smoothStep = (value) => value * value * (3 - (2 * value));
     const update = () => {
       frame = 0;
       if (!needsUpdate) return;
+      needsUpdate = false;
       const viewport = scroller.getBoundingClientRect();
+      /* ── 读写分离（关键）────────────────────────────────────────────────
+         原来是一个 forEach 里「读 rect → 写 style → 读下一个 rect → 写…」。
+         交替读写会让浏览器在每次 getBoundingClientRect() 时**强制同步布局**
+         （layout thrashing）：写完样式布局就脏了，下一次读又必须先把布局算回来。
+         一屏 13 个 [data-roll] 节点 = 每帧最多 13 次强制重排，滚动自然发涩。
+
+         现在先跑一遍只读的 rect（不碰样式，布局保持干净、可批量缓存），
+         把结果收进数组，再统一写。读阶段零强制布局，写阶段零读取。 */
+      const reads = [];
       activeNodes.forEach((node) => {
         const rect = node.getBoundingClientRect();
         const local = clamp((viewport.height - (rect.top - viewport.top)) / Math.max(1, viewport.height + rect.height), 0, 1);
-        const entering = smoothStep(clamp((0.3 - local) / 0.3, 0, 1));
-        const leaving = smoothStep(clamp((local - 0.7) / 0.3, 0, 1));
-        node.style.setProperty('--roll-origin-y', entering > 0 ? '4%' : leaving > 0 ? '96%' : '50%');
-        node.style.setProperty('--roll-angle', `${(-14 * entering) + (28 * leaving)}deg`);
-        node.style.setProperty('--roll-angle-mobile', `${(-9 * entering) + (18 * leaving)}deg`);
-        node.style.setProperty('--roll-y', `${(6 * entering) - (10 * leaving)}px`);
-        node.style.setProperty('--roll-opacity', `${1 - (0.1 * entering) - (0.14 * leaving)}`);
+        reads.push({
+          node,
+          entering: smoothStep(clamp((0.3 - local) / 0.3, 0, 1)),
+          leaving: smoothStep(clamp((local - 0.7) / 0.3, 0, 1)),
+        });
       });
-      needsUpdate = false;
+      for (const { node, entering, leaving } of reads) {
+        /* 角度/位移/透明度合成一个字符串一起比，四个变量要么都写、要么都不写
+           （它们由同一组 entering/leaving 派生，不会出现只变一个的情况）。 */
+        const angle = `${(-14 * entering) + (28 * leaving)}deg`;
+        const angleMobile = `${(-9 * entering) + (18 * leaving)}deg`;
+        const shiftY = `${(6 * entering) - (10 * leaving)}px`;
+        const opacity = `${1 - (0.1 * entering) - (0.14 * leaving)}`;
+        const key = `${angle}|${shiftY}|${opacity}`;
+        if (lastValues.get(node) === key) continue;
+        lastValues.set(node, key);
+        node.style.setProperty('--roll-origin-y', entering > 0 ? '4%' : leaving > 0 ? '96%' : '50%');
+        node.style.setProperty('--roll-angle', angle);
+        node.style.setProperty('--roll-angle-mobile', angleMobile);
+        node.style.setProperty('--roll-y', shiftY);
+        node.style.setProperty('--roll-opacity', opacity);
+      }
     };
     const requestUpdate = () => {
       needsUpdate = true;
@@ -891,7 +971,13 @@ function ProductPanel() {
 }
 
 function SkillsPanel() {
-  return <div className="vr-product-list vr-panel-stagger" data-roll>
+  /* 这里原本还挂着 data-roll。列表级 data-roll 会套一层
+     perspective(900px) rotateX(±14deg)，把整块列表的可视宽度外扩约 1.6%
+     （实测 858 → 861.2），于是 Skills 卡的左右沿与产品卡对不齐 ——
+     用户的要求正是「Skill 的长度、宽度和产品一样」。
+     每张卡自己已经带 data-roll（SpecCardSlot 的 .sc-roll-wrap），
+     容器这一层是多余的，去掉后两者严格同位。 */
+  return <div className="vr-product-list vr-panel-stagger">
     {SHOWCASE_GROUPS.skills.map((id, index) => <SpecCardSlot key={id} id={id} index={index} />)}
   </div>;
 }
@@ -913,12 +999,21 @@ function HomeTabs({ activeTab, onChange }) {
 }
 
 function AboutPanel() {
+  /* 结构对齐参考站的「关于我」：kicker（等宽小字身份）→ 一段自述 → 标签组
+     → 分隔线 → 「经历」区（等宽小标签 + 右侧一句结论）→ 一排全宽卡。
+
+     左溢出的两处根因（用户反馈「内容左边有点超出范围」）都在样式层修掉：
+       ① .about-watermark 用 left:-24px 故意出血，在 858px 容器里看起来就是
+          「内容左边冒出来了」。参考站根本没有这个水印，直接不再渲染。
+       ② [data-roll] 带 perspective(900px) rotateX(±14deg)，3D 旋转会让元素的
+          可视包围盒横向外扩约 1.6%（实测 about-intro 858 → 859.6，
+          contact-panel 858 → 861.6）。关于我 / 交流这两块是长文本，
+          滚动倾斜只会让边缘发虚，去掉这两个节点的 data-roll。 */
   return <div className="vr-about-panel">
-    <div className="about-watermark" aria-hidden="true">VOYRA</div>
-    <section className="vr-about-intro" data-roll><span>SHUAI SHUAI / VOYRA</span><p>个人开发者，持续把灵感、工具和 AI 能力整理成真正能反复使用的产品。</p><div className="vr-tags" aria-label="个人标签">{['VOYRA', 'FRONTEND', 'AI', 'CREATOR', 'CLOUDFLARE', 'BMOB'].map((tag) => <span key={tag}>{tag}</span>)}</div></section>
-    <section className="vr-experience" data-reveal><div className="vr-experience-label"><span>经历 / EXPERIENCE</span><b>持续构建</b></div><div className="vr-experience-list">{EXPERIENCES.map((item, index) => {
+    <section className="vr-about-intro"><span>SHUAI SHUAI / VOYRA</span><p>个人开发者，把灵感、工具和 AI 能力整理成真正能反复使用的产品。</p><div className="vr-tags" aria-label="个人标签">{['VOYRA', 'FRONTEND', 'AI', 'CREATOR', 'CLOUDFLARE', 'BMOB'].map((tag) => <span key={tag}>{tag}</span>)}</div></section>
+    <section className="vr-experience" data-reveal><div className="vr-experience-label"><span>经历 / EXPERIENCE</span><b>在做什么</b></div><div className="vr-experience-list">{EXPERIENCES.map((item, index) => {
       const Icon = item.Icon;
-      return <article className="vr-experience-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.2)}s` }} onPointerMove={updateSpotlight} key={item.name}><span className="vr-spotlight" aria-hidden="true" /><span className="vr-experience-index">{String(index + 1).padStart(2, '0')}</span><div><span>{item.state}</span><h2>{item.name}</h2><p>{item.desc}</p></div><Icon className="vr-experience-icon" size={35} strokeWidth={1.35} /></article>;
+      return <article className="vr-experience-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.2)}s` }} onPointerMove={updateSpotlight} key={item.name}><span className="vr-spotlight" aria-hidden="true" /><span className="vr-experience-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-experience-copy"><span>{item.state}</span><h2>{item.name}</h2><p>{item.desc}</p></div><span className="vr-experience-meta">{item.meta}</span><Icon className="vr-experience-icon" size={30} strokeWidth={1.4} /></article>;
     })}</div></section>
   </div>;
 }
@@ -958,15 +1053,31 @@ function ContactPanel() {
     clearTimeout(copyTimer.current);
     copyTimer.current = setTimeout(() => setCopied(false), 2000);
   };
-  return <section className="vr-contact-panel" data-roll><div className="vr-contact-head" data-reveal><span>联系 / ELSEWHERE</span><b>保持交流</b></div><div className="vr-contact-list">{CONTACTS.map((contact, index) => {
+  return <section className="vr-contact-panel"><div className="vr-contact-head" data-reveal><span>联系 / ELSEWHERE</span><b>保持交流</b></div><div className="vr-contact-list">{CONTACTS.map((contact, index) => {
     const Icon = contact.Icon;
     const reveal = { '--reveal-delay': `${index * 0.08}s` };
     const feedback = contact.copy && copied;
-    const inner = <React.Fragment><span>{contact.no}</span><Icon size={19} strokeWidth={1.6} /><strong>{contact.label}</strong><em>{feedback ? '已复制，可直接粘贴' : contact.value}</em>{feedback ? <Check size={18} /> : <ArrowUpRight size={18} />}</React.Fragment>;
+    /* 每条渠道补齐眉标 / 说明 / 备注，与参考站的咨询卡同构：
+       编号 · 图标 · 眉标+标题 · 说明 · 备注 · 箭头。
+       旧版只有「编号 + 名称 + 值」，读者看不出点进去会得到什么。 */
+    const inner = <React.Fragment>
+      <span className="vr-contact-no" aria-hidden="true">{contact.no}</span>
+      <span className="vr-contact-icon" aria-hidden="true"><Icon size={20} strokeWidth={1.6} /></span>
+      <span className="vr-contact-copy">
+        <span className="vr-contact-eyebrow">{contact.eyebrow}</span>
+        <strong>{contact.label}</strong>
+        <span className="vr-contact-summary">{contact.summary}</span>
+      </span>
+      <span className="vr-contact-side">
+        <em>{feedback ? '已复制，可直接粘贴' : contact.meta}</em>
+        <b>{contact.value}</b>
+      </span>
+      {feedback ? <Check className="vr-contact-arrow" size={18} /> : <ArrowUpRight className="vr-contact-arrow" size={18} />}
+    </React.Fragment>;
     return contact.copy ? (
       <button type="button" className="vr-contact-row" data-reveal style={reveal} key={contact.label} onClick={copyEmail} title="点击复制邮箱">{inner}</button>
     ) : (
-      <a href={contact.href} className="vr-contact-row" data-reveal style={reveal} target="_blank" rel="noreferrer" key={contact.label}>{inner}</a>
+      <a href={contact.href} className="vr-contact-row" data-reveal style={reveal} key={contact.label} target="_blank" rel="noreferrer">{inner}</a>
     );
   })}</div><p className="vr-contact-feedback" role="status" aria-live="polite">{copyFailed ? '无法访问剪贴板，请手动复制邮箱：hello@lxlrwxs.top' : copied ? '邮箱已复制，可直接粘贴。' : ''}</p></section>;
 }
@@ -1074,12 +1185,33 @@ export default function Dashboard() {
 
   return <div className="vr-home" ref={rootRef}>
     <style>{`
-      .vr-home{--ink:#1b1b1b;--muted:#8d8d8d;--line:rgba(27,27,27,.11);--paper:#fff;min-height:100%;color:var(--ink);background-color:var(--paper);background-image:linear-gradient(rgba(0,0,0,.031) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.031) 1px,transparent 1px);background-size:32px 32px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}.vr-home *,.vr-home *::before,.vr-home *::after{box-sizing:border-box}.vr-home button,.vr-home a{font:inherit}.vr-home button{cursor:pointer}.vr-home button:focus-visible,.vr-home a:focus-visible{outline:2px solid #1b1b1b;outline-offset:4px}.vr-stage{width:min(100% - 48px,756px);margin:0 auto}.vr-rail{position:fixed;left:28px;top:42%;z-index:30;display:grid;grid-template-columns:2px 30px;align-items:end;gap:9px;color:#9c9c9c;font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-rail-line{position:relative;height:120px;background:var(--line)}.vr-rail-line::before{content:"";position:absolute;top:0;left:0;width:2px;height:34px;background:var(--ink);transform:translateY(var(--rail-y));transition:transform .16s linear}.vr-progress-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.vr-top{width:min(100% - 48px,756px);margin:0 auto;padding:40px 0 0;display:flex;align-items:center;justify-content:space-between;color:#666;font:14px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-brand{display:inline-flex;gap:6px;align-items:center;color:#555}.vr-brand::before{content:"";width:7px;height:7px;border:1px solid #a48830;border-radius:50%}.vr-brand sup{font-size:8px}.vr-github{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;transition:color .2s ease}.vr-github:hover{color:var(--ink)}.vr-hero{min-height:555px;display:flex;flex-direction:column;justify-content:center;padding:72px 0 48px}.vr-hero h1{max-width:620px;margin:0;font-size:106px;font-weight:780;line-height:.99}.vr-hero h1 span{display:block;animation:vr-word-in .72s cubic-bezier(.16,1,.3,1) both}.vr-hero h1 span:nth-child(2){animation-delay:.07s}.vr-hero h1 span:nth-child(3){animation-delay:.14s}@keyframes vr-word-in{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}.vr-hero-meta{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:36px;color:#686868;font-size:13px}.vr-hero-meta strong{color:var(--ink);font-size:17px}.vr-scroll-cue{display:inline-flex;gap:7px;align-items:center;margin-top:28px;color:#999;font-size:13px;animation:vr-cue 1.7s ease-in-out infinite}@keyframes vr-cue{50%{transform:translateY(5px)}}.vr-tab-zone{position:relative;padding-top:26px}.vr-tab-zone::after{content:"01";position:absolute;top:-4px;right:4px;color:transparent;-webkit-text-stroke:1px rgba(27,27,27,.08);font-size:190px;font-weight:800;line-height:1;pointer-events:none}.vr-tabs{position:sticky;top:0;z-index:20;display:flex;gap:38px;align-items:flex-end;padding:0 0 24px;background:rgba(255,255,255,.78);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.vr-tab{position:relative;flex:0 0 auto;border:0;padding:0;background:transparent;color:#c5c5c5;font-size:48px;font-weight:760;line-height:1;transition:color .2s ease,transform .2s ease}.vr-tab:hover{color:#777;transform:translateY(-2px)}.vr-tab.is-active{color:var(--ink)}.vr-tab.is-active::after{content:"";position:absolute;left:-3px;right:-3px;bottom:1px;z-index:-1;height:13px;background:#ffe08a;transform-origin:left;animation:vr-marker .35s cubic-bezier(.16,1,.3,1) both}@keyframes vr-marker{from{transform:scaleX(0)}to{transform:scaleX(1)}}.vr-panel{position:relative;padding:42px 0 110px;min-height:520px;animation:vr-panel-in .48s cubic-bezier(.16,1,.3,1) both}@keyframes vr-panel-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}[data-reveal]{opacity:0;transform:translateY(18px);transition:opacity .64s cubic-bezier(.16,1,.3,1),transform .64s cubic-bezier(.16,1,.3,1)}[data-reveal].vr-is-visible{opacity:1;transform:translateY(0)}.vr-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,0,.02);transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}.vr-card:hover{border-color:rgba(27,27,27,.18);box-shadow:0 18px 34px rgba(34,30,15,.1);transform:translateY(-3px)}.vr-spotlight{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;background:radial-gradient(220px circle at var(--spot-x,50%) var(--spot-y,50%),rgba(255,224,134,.3),transparent 72%);transition:opacity .22s ease}.vr-card:hover .vr-spotlight{opacity:1}.vr-product-list{display:grid;gap:18px}.vr-feature{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:278px}.vr-feature.is-reverse .vr-feature-copy{order:2}.vr-feature.is-reverse .vr-art{order:1}.vr-feature-copy{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:40px 32px}.vr-feature-index,.vr-skill-number,.vr-article-index,.vr-experience-index{position:absolute;color:transparent;-webkit-text-stroke:1px rgba(27,27,27,.12);font-size:44px;font-weight:760;line-height:1}.vr-feature-index{bottom:18px;left:25px}.vr-feature-title{display:flex;align-items:center;gap:12px}.vr-feature-title h2{margin:0;font-size:40px;font-weight:760;line-height:1}.vr-feature-copy p{max-width:285px;margin:18px 0 22px;color:#626262;font-size:15px;line-height:1.8}.vr-arrow-link{display:inline-flex;align-items:center;gap:7px;border:0;padding:0;color:#666;background:transparent;font-size:14px;transition:color .2s ease,transform .2s ease}.vr-arrow-link:hover{color:var(--ink);transform:translateX(4px)}.vr-art{position:relative;z-index:1;align-self:center;justify-self:stretch;min-height:202px;margin:24px;border:1px solid rgba(27,27,27,.1);border-radius:8px;background:#fcfcfc;box-shadow:0 12px 22px rgba(30,30,30,.07)}.vr-note-art{padding:18px;transform:rotate(-1deg)}.vr-note-toolbar,.vr-browser-bar{display:flex;gap:5px;align-items:center;padding-bottom:12px;border-bottom:1px solid #ececec}.vr-note-toolbar span,.vr-browser-bar span{width:7px;height:7px;border-radius:50%;background:#d8d8d8}.vr-note-title{margin-top:17px;font-size:13px;font-weight:700}.vr-note-line{height:7px;width:68%;margin-top:13px;background:#e5e5e5;border-radius:2px}.vr-note-line.wide{width:90%}.vr-note-line.short{width:44%}.vr-note-chip{position:absolute;right:15px;bottom:16px;display:inline-flex;gap:4px;align-items:center;padding:5px 8px;border:1px solid #dbe4d7;border-radius:99px;background:#f3f8f1;color:#608059;font-size:10px}.vr-prompt-art{padding:17px 20px;transform:rotate(1deg);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.vr-code-top{display:flex;align-items:center;gap:7px;color:#666;font-size:11px}.vr-code-top i{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#f2c641}.vr-prompt-art p{margin:15px 0 0;color:#4e4e4e;font-size:12px}.vr-prompt-art mark{padding:2px 3px;background:#f2e4a4;color:inherit}.vr-code-status{display:flex;justify-content:space-between;margin-top:25px;color:#929292;font-size:10px}.vr-code-status b{color:#71976b;font-weight:600}.vr-motion-art{display:grid;grid-template-rows:auto 1fr auto;padding:14px;overflow:hidden}.vr-motion-title{display:flex;align-items:center;gap:7px;color:#626262;font-size:11px;font-weight:700}.vr-motion-stage{display:grid;min-height:121px;place-items:center}.vr-hover-sample,.vr-spring-sample{border:1px solid #222;border-radius:7px;padding:13px 17px;background:#fff;color:var(--ink);font-weight:700;transition:transform .25s cubic-bezier(.16,1,.3,1),background .25s ease,color .25s ease}.vr-hover-sample:hover{background:var(--ink);color:#fff;transform:translateY(-5px) rotate(-2deg)}.vr-hover-sample span{padding-left:5px}.vr-spring-sample{animation:vr-spring .82s cubic-bezier(.34,1.56,.64,1) both}.vr-spring-sample:hover{background:#ffe08a;transform:translateY(-3px)}@keyframes vr-spring{0%{opacity:0;transform:scale(.5)}55%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}.vr-glass-sample{position:relative;width:88%;padding:14px;overflow:hidden;border:1px solid rgba(27,27,27,.12);border-radius:7px;background:rgba(255,255,255,.64)}.vr-glass-sample::before{content:"";position:absolute;inset:-20px;background:repeating-linear-gradient(135deg,#f2d760 0 16px,#fff 16px 32px,#8bd0d2 32px 48px)}.vr-glass-sample.is-blurred{backdrop-filter:blur(9px)}.vr-glass-copy,.vr-glass-sample button{position:relative;z-index:1}.vr-glass-copy{display:flex;justify-content:space-between;align-items:center}.vr-glass-copy b{font-size:14px}.vr-glass-copy span{color:#666;font-size:10px}.vr-glass-sample button{margin-top:13px;border:1px solid rgba(27,27,27,.16);border-radius:99px;padding:4px 7px;background:rgba(255,255,255,.82);color:#555;font-size:10px}.vr-motion-controls{display:flex;justify-content:center;align-items:center;gap:8px}.vr-motion-controls button{display:grid;place-items:center;width:19px;height:19px;border:0;padding:0;color:#8a8a8a;background:transparent}.vr-control-dot::after{content:"";width:5px;height:5px;border-radius:50%;background:#c6c6c6}.vr-control-dot.is-active{width:24px}.vr-control-dot.is-active::after{width:20px;height:3px;border-radius:99px;background:var(--ink)}.vr-calendar-art{padding:15px;transform:rotate(-1deg)}.vr-calendar-head{display:flex;align-items:center;gap:7px;border-bottom:1px solid #e8e8e8;padding-bottom:9px;color:#555;font-size:11px}.vr-calendar-head span{margin-left:auto;color:#999}.vr-days,.vr-date-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.vr-days{margin-top:10px;color:#aaa;font-size:8px;font-style:normal}.vr-date-grid{margin-top:8px}.vr-date-grid span{display:grid;place-items:center;width:19px;height:18px;justify-self:center;color:#666;font-size:9px}.vr-date-grid span.is-marked{border-radius:50%;background:#f6da73;color:#333;font-weight:700}.vr-calendar-event{margin-top:10px;border-left:3px solid #6d9875;padding:4px 7px;background:#f4f8f1;color:#5e735a;font-size:9px}.vr-link-art{padding:14px;transform:rotate(1deg)}.vr-browser-bar{padding-bottom:11px}.vr-browser-bar b{margin-left:8px;color:#999;font-size:10px;font-weight:500}.vr-link-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:7px;padding:12px 2px;border-bottom:1px solid #ededed;color:#555;font-size:12px}.vr-link-row:last-child{border-bottom:0}.vr-link-row i{display:grid;place-items:center;width:20px;height:20px;border:1px solid #ddd;border-radius:50%;color:#999;font-size:9px;font-style:normal}.vr-skill-groups{display:grid;gap:53px}.vr-group-label,.vr-experience-label,.vr-contact-head{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:18px;color:#444;font-size:13px;font-weight:700}.vr-group-label b{color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-skill-grid,.vr-article-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.vr-skill-card{min-height:186px;border:1px solid var(--line);padding:22px;text-align:left;color:var(--ink)}.vr-skill-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-skill-number{right:15px;bottom:13px;font-size:38px}.vr-skill-icon{display:grid;place-items:center;width:41px;height:41px;border:1px solid #e3e3e3;border-radius:7px;background:#fff;transition:transform .25s cubic-bezier(.16,1,.3,1),background .25s ease,color .25s ease}.vr-skill-card:hover .vr-skill-icon{background:var(--ink);color:#fff;transform:rotate(-6deg) scale(1.08)}.vr-skill-name{display:block;margin-top:27px;font-size:28px;font-weight:760;line-height:1.05}.vr-skill-hint{display:block;margin-top:8px;color:#707070;font-size:13px}.vr-skill-open{position:absolute;top:19px;right:19px;display:grid;place-items:center;width:29px;height:29px;border:1px solid #dedede;border-radius:50%;color:#777;transition:background .2s ease,color .2s ease,transform .2s ease}.vr-skill-card:hover .vr-skill-open{background:#fff;color:var(--ink);transform:translate(2px,-2px)}.vr-article-card{min-height:235px;border:1px solid var(--line);padding:26px 24px 22px;text-align:left;color:var(--ink)}.vr-article-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-article-index{right:16px;bottom:14px;font-size:42px}.vr-article-date{display:block;color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-article-card strong{display:block;max-width:260px;margin-top:17px;font-size:23px;line-height:1.34}.vr-article-desc{display:block;margin-top:12px;color:#666;font-size:13px;line-height:1.65}.vr-article-open{position:absolute;left:24px;bottom:20px;display:inline-flex;gap:5px;color:#777;font-size:12px;transition:color .2s ease,transform .2s ease}.vr-article-card:hover .vr-article-open{color:var(--ink);transform:translateX(3px)}.vr-all-link{grid-column:1/-1;justify-self:start;display:inline-flex;gap:8px;align-items:center;border:0;padding:3px 0;color:#555;background:transparent;font-size:14px;text-decoration:underline;text-decoration-color:#df6262;text-decoration-thickness:2px;text-underline-offset:5px}.vr-about-panel{display:grid;gap:66px}.vr-about-intro>span{color:#888;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-about-intro p{max-width:590px;margin:26px 0 22px;color:#666;font-size:19px;line-height:1.9}.vr-tags{display:flex;flex-wrap:wrap;gap:8px}.vr-tags span{border:1px solid #dedede;border-radius:99px;padding:7px 10px;color:#666;background:rgba(255,255,255,.7);font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;transition:background .2s ease,border-color .2s ease,color .2s ease}.vr-tags span:hover{border-color:#e7c750;background:#fff4c8;color:var(--ink)}.vr-experience{border-top:1px solid var(--line);padding-top:24px}.vr-experience-label b,.vr-contact-head b{color:#999;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400}.vr-experience-list{display:grid;gap:14px}.vr-experience-card{display:grid;grid-template-columns:58px 1fr auto;align-items:center;min-height:154px;padding:26px 28px}.vr-experience-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-experience-index{left:22px;bottom:15px;font-size:40px}.vr-experience-card div>span{color:#999;font-size:12px}.vr-experience-card h2{margin:7px 0 8px;font-size:28px;line-height:1}.vr-experience-card p{max-width:425px;margin:0;color:#666;font-size:13px;line-height:1.65}.vr-experience-icon{color:#7c7c7c}.vr-contact-panel{border-top:1px solid var(--line);padding-top:24px}.vr-contact-list{display:grid}.vr-contact-row{display:grid;grid-template-columns:38px 34px minmax(124px,1fr) minmax(0,1fr) 24px;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:20px 3px;color:var(--ink);text-decoration:none;transition:padding .25s cubic-bezier(.16,1,.3,1),background .25s ease}.vr-contact-row:hover{padding-left:16px;background:rgba(255,255,255,.52)}.vr-contact-row>span{color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-contact-row strong{font-size:24px;line-height:1}.vr-contact-row em{overflow:hidden;color:#777;font-size:13px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.vr-contact-row svg:last-child{justify-self:end;color:#777;opacity:0;transform:translateX(-5px);transition:opacity .2s ease,transform .2s ease}.vr-contact-row:hover svg:last-child{opacity:1;transform:translateX(0)}.vr-footer{width:min(100% - 48px,756px);margin:0 auto;padding:0 0 42px;color:#999;font-size:12px}@media(max-width:720px){.vr-stage,.vr-top,.vr-footer{width:min(100% - 40px,756px)}.vr-top{padding-top:24px;font-size:11px}.vr-github{max-width:170px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.vr-rail{display:none}.vr-hero{min-height:465px;padding:72px 0 38px}.vr-hero h1{font-size:62px}.vr-hero-meta{gap:10px;margin-top:28px;color:#686868;font-size:11px}.vr-hero-meta strong{color:var(--ink);font-size:14px}.vr-tab-zone{padding-top:10px}.vr-tab-zone::after{top:10px;right:-12px;font-size:116px}.vr-tabs{gap:26px;overflow-x:auto;padding:0 0 16px;scrollbar-width:none}.vr-tabs::-webkit-scrollbar{display:none}.vr-tab{font-size:28px}.vr-tab.is-active::after{height:8px}.vr-panel{padding:30px 0 72px}.vr-feature{grid-template-columns:1fr;min-height:0}.vr-feature.is-reverse .vr-feature-copy,.vr-feature.is-reverse .vr-art{order:initial}.vr-art{min-height:192px;margin:18px 18px 18px}.vr-feature-copy{padding:26px 24px 30px}.vr-feature-title h2{font-size:31px}.vr-feature-copy p{margin:14px 0 18px;font-size:14px}.vr-feature-index{left:17px;bottom:13px;font-size:38px}.vr-skill-groups{gap:38px}.vr-skill-grid,.vr-article-grid{grid-template-columns:1fr}.vr-skill-card{min-height:166px}.vr-skill-name{margin-top:22px;font-size:27px}.vr-article-card{min-height:208px}.vr-article-card strong{font-size:21px}.vr-about-panel{gap:46px}.vr-about-intro p{margin-top:20px;font-size:17px}.vr-experience-card{grid-template-columns:44px 1fr;padding:24px 20px}.vr-experience-icon{display:none}.vr-contact-row{grid-template-columns:28px 27px minmax(82px,1fr) 18px;gap:8px}.vr-contact-row em{display:none}.vr-contact-row strong{font-size:19px}.vr-contact-row svg:last-child{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.vr-home *,.vr-home *::before,.vr-home *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+      .vr-home{--ink:#1b1b1b;--muted:#8d8d8d;--line:rgba(27,27,27,.11);--paper:#fff;min-height:100%;color:var(--ink);background-color:var(--paper);background-image:linear-gradient(rgba(0,0,0,.031) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.031) 1px,transparent 1px);background-size:32px 32px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}.vr-home *,.vr-home *::before,.vr-home *::after{box-sizing:border-box}.vr-home button,.vr-home a{font:inherit}.vr-home button{cursor:pointer}.vr-home button:focus-visible,.vr-home a:focus-visible{outline:2px solid #1b1b1b;outline-offset:4px}.vr-stage{width:min(100% - 48px,756px);margin:0 auto}.vr-rail{position:fixed;left:28px;top:42%;z-index:30;display:grid;grid-template-columns:2px 30px;align-items:end;gap:9px;color:#9c9c9c;font:10px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-rail-line{position:relative;height:120px;background:var(--line)}.vr-rail-line::before{content:"";position:absolute;top:0;left:0;width:2px;height:34px;background:var(--ink);transform:translateY(var(--rail-y));transition:transform .16s linear}.vr-progress-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.vr-top{width:min(100% - 48px,756px);margin:0 auto;padding:40px 0 0;display:flex;align-items:center;justify-content:space-between;color:#666;font:14px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-brand{display:inline-flex;gap:6px;align-items:center;color:#555}.vr-brand::before{content:"";width:7px;height:7px;border:1px solid #a48830;border-radius:50%}.vr-brand sup{font-size:8px}.vr-github{display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;transition:color .2s ease}.vr-github:hover{color:var(--ink)}.vr-hero{min-height:555px;display:flex;flex-direction:column;justify-content:center;padding:72px 0 48px}.vr-hero h1{max-width:620px;margin:0;font-size:106px;font-weight:780;line-height:.99}.vr-hero h1 span{display:block;animation:vr-word-in .72s cubic-bezier(.16,1,.3,1) both}.vr-hero h1 span:nth-child(2){animation-delay:.07s}.vr-hero h1 span:nth-child(3){animation-delay:.14s}@keyframes vr-word-in{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}.vr-hero-meta{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:36px;color:#686868;font-size:13px}.vr-hero-meta strong{color:var(--ink);font-size:17px}.vr-scroll-cue{display:inline-flex;gap:7px;align-items:center;margin-top:28px;color:#999;font-size:13px;animation:vr-cue 1.7s ease-in-out infinite}@keyframes vr-cue{50%{transform:translateY(5px)}}.vr-tab-zone{position:relative;padding-top:26px}.vr-tab-zone::after{content:"01";position:absolute;top:-4px;right:4px;color:transparent;-webkit-text-stroke:1px rgba(27,27,27,.08);font-size:190px;font-weight:800;line-height:1;pointer-events:none}.vr-tabs{position:sticky;top:0;z-index:20;display:flex;gap:38px;align-items:flex-end;padding:0 0 24px;background:rgba(255,255,255,.78);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}.vr-tab{position:relative;flex:0 0 auto;border:0;padding:0;background:transparent;color:#c5c5c5;font-size:48px;font-weight:760;line-height:1;transition:color .25s var(--vr-ease-out),transform .35s var(--vr-ease-out)}.vr-tab:hover{color:#777;transform:translateY(-2px)}.vr-tab.is-active{color:var(--ink)}.vr-tab.is-active::after{content:"";position:absolute;left:-3px;right:-3px;bottom:1px;z-index:-1;height:13px;background:#ffe08a;transform-origin:left;animation:vr-marker .5s var(--vr-ease-out) both}@keyframes vr-marker{from{transform:scaleX(0)}to{transform:scaleX(1)}}.vr-panel{position:relative;padding:42px 0 110px;min-height:520px;animation:vr-panel-in .48s cubic-bezier(.16,1,.3,1) both}@keyframes vr-panel-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}[data-reveal]{opacity:0;transform:translateY(18px);transition:opacity .64s cubic-bezier(.16,1,.3,1),transform .64s cubic-bezier(.16,1,.3,1)}[data-reveal].vr-is-visible{opacity:1;transform:translateY(0)}.vr-card{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:8px;background:rgba(255,255,255,.88);box-shadow:0 1px 0 rgba(0,0,0,.02);transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s ease,border-color .3s ease}.vr-card:hover{border-color:rgba(27,27,27,.18);box-shadow:0 18px 34px rgba(34,30,15,.1);transform:translateY(-3px)}.vr-spotlight{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;background:radial-gradient(220px circle at var(--spot-x,50%) var(--spot-y,50%),rgba(255,224,134,.3),transparent 72%);transition:opacity .22s ease}.vr-card:hover .vr-spotlight{opacity:1}.vr-product-list{display:grid;gap:18px}.vr-feature{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:278px}.vr-feature.is-reverse .vr-feature-copy{order:2}.vr-feature.is-reverse .vr-art{order:1}.vr-feature-copy{position:relative;z-index:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:40px 32px}.vr-feature-index,.vr-skill-number,.vr-article-index,.vr-experience-index{position:absolute;color:transparent;-webkit-text-stroke:1px rgba(27,27,27,.12);font-size:44px;font-weight:760;line-height:1}.vr-feature-index{bottom:18px;left:25px}.vr-feature-title{display:flex;align-items:center;gap:12px}.vr-feature-title h2{margin:0;font-size:40px;font-weight:760;line-height:1}.vr-feature-copy p{max-width:285px;margin:18px 0 22px;color:#626262;font-size:15px;line-height:1.8}.vr-arrow-link{display:inline-flex;align-items:center;gap:7px;border:0;padding:0;color:#666;background:transparent;font-size:14px;transition:color .2s ease,transform .2s ease}.vr-arrow-link:hover{color:var(--ink);transform:translateX(4px)}.vr-art{position:relative;z-index:1;align-self:center;justify-self:stretch;min-height:202px;margin:24px;border:1px solid rgba(27,27,27,.1);border-radius:8px;background:#fcfcfc;box-shadow:0 12px 22px rgba(30,30,30,.07)}.vr-note-art{padding:18px;transform:rotate(-1deg)}.vr-note-toolbar,.vr-browser-bar{display:flex;gap:5px;align-items:center;padding-bottom:12px;border-bottom:1px solid #ececec}.vr-note-toolbar span,.vr-browser-bar span{width:7px;height:7px;border-radius:50%;background:#d8d8d8}.vr-note-title{margin-top:17px;font-size:13px;font-weight:700}.vr-note-line{height:7px;width:68%;margin-top:13px;background:#e5e5e5;border-radius:2px}.vr-note-line.wide{width:90%}.vr-note-line.short{width:44%}.vr-note-chip{position:absolute;right:15px;bottom:16px;display:inline-flex;gap:4px;align-items:center;padding:5px 8px;border:1px solid #dbe4d7;border-radius:99px;background:#f3f8f1;color:#608059;font-size:10px}.vr-prompt-art{padding:17px 20px;transform:rotate(1deg);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.vr-code-top{display:flex;align-items:center;gap:7px;color:#666;font-size:11px}.vr-code-top i{margin-left:auto;width:7px;height:7px;border-radius:50%;background:#f2c641}.vr-prompt-art p{margin:15px 0 0;color:#4e4e4e;font-size:12px}.vr-prompt-art mark{padding:2px 3px;background:#f2e4a4;color:inherit}.vr-code-status{display:flex;justify-content:space-between;margin-top:25px;color:#929292;font-size:10px}.vr-code-status b{color:#71976b;font-weight:600}.vr-motion-art{display:grid;grid-template-rows:auto 1fr auto;padding:14px;overflow:hidden}.vr-motion-title{display:flex;align-items:center;gap:7px;color:#626262;font-size:11px;font-weight:700}.vr-motion-stage{display:grid;min-height:121px;place-items:center}.vr-hover-sample,.vr-spring-sample{border:1px solid #222;border-radius:7px;padding:13px 17px;background:#fff;color:var(--ink);font-weight:700;transition:transform .25s cubic-bezier(.16,1,.3,1),background .25s ease,color .25s ease}.vr-hover-sample:hover{background:var(--ink);color:#fff;transform:translateY(-5px) rotate(-2deg)}.vr-hover-sample span{padding-left:5px}.vr-spring-sample{animation:vr-spring .82s cubic-bezier(.34,1.56,.64,1) both}.vr-spring-sample:hover{background:#ffe08a;transform:translateY(-3px)}@keyframes vr-spring{0%{opacity:0;transform:scale(.5)}55%{opacity:1;transform:scale(1.12)}100%{transform:scale(1)}}.vr-glass-sample{position:relative;width:88%;padding:14px;overflow:hidden;border:1px solid rgba(27,27,27,.12);border-radius:7px;background:rgba(255,255,255,.64)}.vr-glass-sample::before{content:"";position:absolute;inset:-20px;background:repeating-linear-gradient(135deg,#f2d760 0 16px,#fff 16px 32px,#8bd0d2 32px 48px)}.vr-glass-sample.is-blurred{backdrop-filter:blur(9px)}.vr-glass-copy,.vr-glass-sample button{position:relative;z-index:1}.vr-glass-copy{display:flex;justify-content:space-between;align-items:center}.vr-glass-copy b{font-size:14px}.vr-glass-copy span{color:#666;font-size:10px}.vr-glass-sample button{margin-top:13px;border:1px solid rgba(27,27,27,.16);border-radius:99px;padding:4px 7px;background:rgba(255,255,255,.82);color:#555;font-size:10px}.vr-motion-controls{display:flex;justify-content:center;align-items:center;gap:8px}.vr-motion-controls button{display:grid;place-items:center;width:19px;height:19px;border:0;padding:0;color:#8a8a8a;background:transparent}.vr-control-dot::after{content:"";width:5px;height:5px;border-radius:50%;background:#c6c6c6}.vr-control-dot.is-active{width:24px}.vr-control-dot.is-active::after{width:20px;height:3px;border-radius:99px;background:var(--ink)}.vr-calendar-art{padding:15px;transform:rotate(-1deg)}.vr-calendar-head{display:flex;align-items:center;gap:7px;border-bottom:1px solid #e8e8e8;padding-bottom:9px;color:#555;font-size:11px}.vr-calendar-head span{margin-left:auto;color:#999}.vr-days,.vr-date-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}.vr-days{margin-top:10px;color:#aaa;font-size:8px;font-style:normal}.vr-date-grid{margin-top:8px}.vr-date-grid span{display:grid;place-items:center;width:19px;height:18px;justify-self:center;color:#666;font-size:9px}.vr-date-grid span.is-marked{border-radius:50%;background:#f6da73;color:#333;font-weight:700}.vr-calendar-event{margin-top:10px;border-left:3px solid #6d9875;padding:4px 7px;background:#f4f8f1;color:#5e735a;font-size:9px}.vr-link-art{padding:14px;transform:rotate(1deg)}.vr-browser-bar{padding-bottom:11px}.vr-browser-bar b{margin-left:8px;color:#999;font-size:10px;font-weight:500}.vr-link-row{display:grid;grid-template-columns:24px 1fr auto;align-items:center;gap:7px;padding:12px 2px;border-bottom:1px solid #ededed;color:#555;font-size:12px}.vr-link-row:last-child{border-bottom:0}.vr-link-row i{display:grid;place-items:center;width:20px;height:20px;border:1px solid #ddd;border-radius:50%;color:#999;font-size:9px;font-style:normal}.vr-skill-groups{display:grid;gap:53px}.vr-group-label,.vr-experience-label,.vr-contact-head{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:18px;color:#444;font-size:13px;font-weight:700}.vr-group-label b{color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-skill-grid,.vr-article-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.vr-skill-card{min-height:186px;border:1px solid var(--line);padding:22px;text-align:left;color:var(--ink)}.vr-skill-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-skill-number{right:15px;bottom:13px;font-size:38px}.vr-skill-icon{display:grid;place-items:center;width:41px;height:41px;border:1px solid #e3e3e3;border-radius:7px;background:#fff;transition:transform .25s cubic-bezier(.16,1,.3,1),background .25s ease,color .25s ease}.vr-skill-card:hover .vr-skill-icon{background:var(--ink);color:#fff;transform:rotate(-6deg) scale(1.08)}.vr-skill-name{display:block;margin-top:27px;font-size:28px;font-weight:760;line-height:1.05}.vr-skill-hint{display:block;margin-top:8px;color:#707070;font-size:13px}.vr-skill-open{position:absolute;top:19px;right:19px;display:grid;place-items:center;width:29px;height:29px;border:1px solid #dedede;border-radius:50%;color:#777;transition:background .2s ease,color .2s ease,transform .2s ease}.vr-skill-card:hover .vr-skill-open{background:#fff;color:var(--ink);transform:translate(2px,-2px)}.vr-article-card{min-height:235px;border:1px solid var(--line);padding:26px 24px 22px;text-align:left;color:var(--ink)}.vr-article-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-article-index{right:16px;bottom:14px;font-size:42px}.vr-article-date{display:block;color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-article-card strong{display:block;max-width:260px;margin-top:17px;font-size:23px;line-height:1.34}.vr-article-desc{display:block;margin-top:12px;color:#666;font-size:13px;line-height:1.65}.vr-article-open{position:absolute;left:24px;bottom:20px;display:inline-flex;gap:5px;color:#777;font-size:12px;transition:color .2s ease,transform .2s ease}.vr-article-card:hover .vr-article-open{color:var(--ink);transform:translateX(3px)}.vr-all-link{grid-column:1/-1;justify-self:start;display:inline-flex;gap:8px;align-items:center;border:0;padding:3px 0;color:#555;background:transparent;font-size:14px;text-decoration:underline;text-decoration-color:#df6262;text-decoration-thickness:2px;text-underline-offset:5px}.vr-about-panel{display:grid;gap:66px}.vr-about-intro>span{color:#888;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-about-intro p{max-width:590px;margin:26px 0 22px;color:#666;font-size:19px;line-height:1.9}.vr-tags{display:flex;flex-wrap:wrap;gap:8px}.vr-tags span{border:1px solid #dedede;border-radius:99px;padding:7px 10px;color:#666;background:rgba(255,255,255,.7);font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;transition:background .2s ease,border-color .2s ease,color .2s ease}.vr-tags span:hover{border-color:#e7c750;background:#fff4c8;color:var(--ink)}.vr-experience{border-top:1px solid var(--line);padding-top:24px}.vr-experience-label b,.vr-contact-head b{color:#999;font:12px/1 ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:400}.vr-experience-list{display:grid;gap:14px}.vr-experience-card{display:grid;grid-template-columns:58px 1fr auto;align-items:center;min-height:154px;padding:26px 28px}.vr-experience-card>*:not(.vr-spotlight){position:relative;z-index:1}.vr-experience-index{left:22px;bottom:15px;font-size:40px}.vr-experience-card div>span{color:#999;font-size:12px}.vr-experience-card h2{margin:7px 0 8px;font-size:28px;line-height:1}.vr-experience-card p{max-width:425px;margin:0;color:#666;font-size:13px;line-height:1.65}.vr-experience-icon{color:#7c7c7c}.vr-contact-panel{border-top:1px solid var(--line);padding-top:24px}.vr-contact-list{display:grid}.vr-contact-row{display:grid;grid-template-columns:38px 34px minmax(124px,1fr) minmax(0,1fr) 24px;gap:10px;align-items:center;border-bottom:1px solid var(--line);padding:20px 3px;color:var(--ink);text-decoration:none;transition:padding .25s cubic-bezier(.16,1,.3,1),background .25s ease}.vr-contact-row:hover{padding-left:16px;background:rgba(255,255,255,.52)}.vr-contact-row>span{color:#999;font:11px/1 ui-monospace,SFMono-Regular,Menlo,monospace}.vr-contact-row strong{font-size:24px;line-height:1}.vr-contact-row em{overflow:hidden;color:#777;font-size:13px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.vr-contact-row svg:last-child{justify-self:end;color:#777;opacity:0;transform:translateX(-5px);transition:opacity .2s ease,transform .2s ease}.vr-contact-row:hover svg:last-child{opacity:1;transform:translateX(0)}.vr-footer{width:min(100% - 48px,756px);margin:0 auto;padding:0 0 42px;color:#999;font-size:12px}@media(max-width:720px){.vr-stage,.vr-top,.vr-footer{width:min(100% - 40px,756px)}.vr-top{padding-top:24px;font-size:11px}.vr-github{max-width:170px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.vr-rail{display:none}.vr-hero{min-height:465px;padding:72px 0 38px}.vr-hero h1{font-size:62px}.vr-hero-meta{gap:10px;margin-top:28px;color:#686868;font-size:11px}.vr-hero-meta strong{color:var(--ink);font-size:14px}.vr-tab-zone{padding-top:10px}.vr-tab-zone::after{top:10px;right:-12px;font-size:116px}.vr-tabs{gap:26px;overflow-x:auto;padding:0 0 16px;scrollbar-width:none}.vr-tabs::-webkit-scrollbar{display:none}.vr-tab{font-size:28px}.vr-tab.is-active::after{height:8px}.vr-panel{padding:30px 0 72px}.vr-feature{grid-template-columns:1fr;min-height:0}.vr-feature.is-reverse .vr-feature-copy,.vr-feature.is-reverse .vr-art{order:initial}.vr-art{min-height:192px;margin:18px 18px 18px}.vr-feature-copy{padding:26px 24px 30px}.vr-feature-title h2{font-size:31px}.vr-feature-copy p{margin:14px 0 18px;font-size:14px}.vr-feature-index{left:17px;bottom:13px;font-size:38px}.vr-skill-groups{gap:38px}.vr-skill-grid,.vr-article-grid{grid-template-columns:1fr}.vr-skill-card{min-height:166px}.vr-skill-name{margin-top:22px;font-size:27px}.vr-article-card{min-height:208px}.vr-article-card strong{font-size:21px}.vr-about-panel{gap:46px}.vr-about-intro p{margin-top:20px;font-size:17px}.vr-experience-card{grid-template-columns:44px 1fr;padding:24px 20px}.vr-experience-icon{display:none}.vr-contact-row{grid-template-columns:28px 27px minmax(82px,1fr) 18px;gap:8px}.vr-contact-row em{display:none}.vr-contact-row strong{font-size:19px}.vr-contact-row svg:last-child{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.vr-home *,.vr-home *::before,.vr-home *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
     `}</style>
     <style>{`
       html { scroll-behavior: smooth; }
-      .vr-home { position: relative; isolation: isolate; background-color: #fff; background-image: linear-gradient(rgba(0,0,0,.031) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.031) 1px, transparent 1px); background-size: 32px 32px; background-attachment: fixed; }
+      /* ── 背景网格：从「容器上的 fixed 背景」改为「独立固定层」（2026-10）────
+         原来写的是
+           .vr-home { background-image: …; background-attachment: fixed }
+         这是滚动掉帧的经典成因：background-attachment:fixed 会让浏览器**每次滚动**
+         都重新光栅化整张背景（它的坐标系不随滚动移动，只能每帧重画），
+         而 .vr-home 又是包住全部卡片的大容器 —— 它一重绘，整页跟着重绘，
+         已经合成好的卡片图层也被拖下来重新走一遍。
+         参考站的做法正好相反：网格放在**独立的 position:fixed 元素**（.bg-grid）上，
+         容器本身不带背景。这样网格是一次性光栅化的独立图层，滚动时合成器
+         只需平移内容层，背景层原地不动 —— 零重绘。
+
+         这里沿用参考站的方案：容器只留 background-color，
+         网格交给下面 .vr-bg-grid 这个 fixed 层（z-index:0，在内容之下）。 */
+      .vr-home { position: relative; isolation: isolate; background-color: #fff; }
       .vr-home > .vr-top, .vr-home > main, .vr-home > .vr-footer { position: relative; z-index: 1; }
+      /* 固定网格层：与容器原背景同样的 32px 方格，一次性光栅化后不再重绘 */
+      .vr-home .vr-bg-grid {
+        position: fixed; z-index: 0; inset: 0; pointer-events: none;
+        background-image:
+          linear-gradient(rgba(0,0,0,.031) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0,0,0,.031) 1px, transparent 1px);
+        background-size: 32px 32px;
+      }
       .vr-home .vr-bg-fade { position: fixed; z-index: 0; inset: 0; pointer-events: none; background: radial-gradient(80% 50% at 50% -10%, rgba(255,226,138,.2), transparent 70%); }
       .vr-home .vr-ambient { position: fixed; z-index: 0; inset: 0; overflow: clip; pointer-events: none; opacity: .16; }
       .vr-home .vr-ambient i { position: absolute; display: block; width: 40vmax; height: 40vmax; border-radius: 50%; background: radial-gradient(circle, #ffe28af5 0%, #ffe28a94 45%, #ffe28a00 74%); }
@@ -1101,7 +1233,11 @@ export default function Dashboard() {
       .vr-home [data-roll] { --roll-y: 0px; --roll-angle: 0deg; --roll-angle-mobile: 0deg; --roll-opacity: 1; --roll-origin-y: 50%; min-width: 0; opacity: var(--roll-opacity); transform: perspective(900px) translate3d(0, var(--roll-y), 0) rotateX(var(--roll-angle)); transform-origin: 50% var(--roll-origin-y); transform-style: preserve-3d; backface-visibility: hidden; }
       .vr-home [data-roll].vr-scroll-active { will-change: transform, opacity; }
       .vr-home .vr-roll-wrap > .vr-feature, .vr-home .vr-roll-wrap > .vr-article-card { width: 100%; height: 100%; }
-      .vr-home [data-reveal] { opacity: 0; transform: translateY(30px); transition: opacity 1.3s cubic-bezier(.19,1,.22,1) var(--reveal-delay, 0s), transform 1.3s cubic-bezier(.19,1,.22,1) var(--reveal-delay, 0s); }
+      /* 入场统一到参考站的 panelin 节奏：.9s + 强 ease-out（--vr-ease-out）。
+         原来是 1.3s —— 比参考站慢 44%，位移早已走完、却还在慢慢收尾，
+         观感是「拖」而不是「滑」。两处 [data-reveal]（这里与
+         dashboard-cards.css 的 .vr-card-entry）现在同一条曲线、同一个时长。 */
+      .vr-home [data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity .9s var(--vr-ease-out) var(--reveal-delay, 0s), transform .9s var(--vr-ease-out) var(--reveal-delay, 0s); }
       .vr-home [data-reveal].vr-is-visible { opacity: 1; transform: translateY(0); }
       .vr-home .vr-card[data-reveal].vr-is-visible:hover { transform: translateY(-3px); }
       .vr-home .vr-top { width: min(100% - 48px, 756px); }
@@ -1379,7 +1515,7 @@ export default function Dashboard() {
 .vr-checkin-art{padding:18px}.vr-checkin-stats{display:flex;gap:12px;margin-top:14px}.vr-checkin-stats span{flex:1;padding:10px 8px;border:1px solid #eee;border-radius:8px;background:#fff;text-align:center;font-size:10px;color:#999}.vr-checkin-stats span b{display:block;font-size:20px;font-weight:700;color:#1b1b1b;font-family:ui-monospace,monospace;margin-bottom:2px}.vr-checkin-list{display:grid;gap:6px;margin-top:14px}.vr-checkin-list button{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-checkin-list button.is-active{border-color:#FF6B35;background:#FFF3EE}.vr-checkin-list button span{font-size:12px;font-weight:600;color:#333}.vr-checkin-list button em{font-size:10px;font-style:normal;padding:3px 8px;border-radius:99px;font-weight:600}.vr-checkin-list button em.monitoring{background:#e8f5e9;color:#28a745}.vr-checkin-list button em.done{background:#fff3e0;color:#f57c00}
 .vr-toolbox-art{padding:18px}.vr-toolbox-drive{margin-top:14px}.vr-toolbox-drive span{font-size:11px;font-weight:600;color:#333}.vr-toolbox-drive i{display:block;height:6px;border-radius:99px;background:#eee;margin-top:6px;position:relative;overflow:hidden}.vr-toolbox-drive i b{position:absolute;left:0;top:0;bottom:0;width:var(--fill);background:linear-gradient(90deg,#a48830,#d4a930);border-radius:99px}.vr-toolbox-drive i.is-done b{width:100%;background:linear-gradient(90deg,#34c759,#28a745)}.vr-toolbox-drive em{display:block;font-size:10px;font-style:normal;color:#999;margin-top:6px}.vr-toolbox-cats{display:grid;gap:6px;margin-top:14px}.vr-toolbox-cats button{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border:1px solid #eee;border-radius:8px;background:#fff;transition:all .2s;cursor:pointer;text-align:left}.vr-toolbox-cats button.is-active{border-color:#a48830;background:#FFFAEB}.vr-toolbox-cats button span{font-size:12px;font-weight:600;color:#333}.vr-toolbox-cats button em{font-size:10px;font-style:normal;color:#888;font-family:ui-monospace,monospace}.vr-toolbox-foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#999}.vr-toolbox-foot b{color:#a48830;font-family:ui-monospace,monospace}
 `}</style>
-    <div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
+    <div className="vr-bg-grid" aria-hidden="true" /><div className="vr-bg-fade" aria-hidden="true" /><div className="vr-ambient" aria-hidden="true"><i className="vr-ambient-left" /><i className="vr-ambient-right" /></div>
     <style>{`
       /* ============ 统一卡片尺寸：所有产品/应用卡片与首个卡片等高 ============ */
       @media (min-width: 721px) {
@@ -1484,12 +1620,21 @@ export default function Dashboard() {
         .vr-home .vr-checkin-list button span { font-size: 11.5px; }
       }
 
-      /* ============ 动态效果：网格缓慢流动 + 卡片轮播进度条 ============ */
-      .vr-home { animation: vr-grid-drift 26s linear infinite; }
-      @keyframes vr-grid-drift {
-        from { background-position: 0 0, 0 0; }
-        to { background-position: 32px 32px, 32px 32px; }
-      }
+      /* ============ 动态效果：卡片轮播进度条 ============ */
+      /* ── 已移除：整页网格漂移动画（vr-grid-drift 26s linear infinite）──
+         这条把**整页背景的 background-position** 从 0,0 推到 32px,32px 无限循环。
+         它是全站最贵的一条动画，也是滚动掉帧的主因：
+
+           · background-position 不能交给合成器，每帧都要在主线程重新光栅化
+             整张背景图（background-attachment:fixed 时更是整个视口那么大）；
+           · .vr-home 是包含所有卡片的那个大容器 —— 它一重绘，**整页**跟着重绘，
+             连带着把卡片已经合成好的图层也拖下来；
+           · 26s 一个循环、永不停止，也就是说用户只要停在首页，主线程就一直在忙，
+             滚动时 rAF 回调被迫和它抢时间。
+
+         参考站根本不做这种「背景自己动」的效果（实测它的 .bg-grid 是静止的、
+         且带 transform:none!important）。删掉之后网格仍在，只是不再漂移 ——
+         观感差异几乎为零，但滚动时的每帧预算省下一大块。 */
       .vr-home .vr-preview-top { position: relative; }
       /* 分隔线本身是 1px 的 #e9e9e9。这条扫光必须与它同厚、同位：原来写
          height:1.5px + bottom:-1px，深金色会从线上沿露出 0.5px，手机上就是
