@@ -480,90 +480,97 @@
 .stg-pipe .is-todo b { color: rgba(var(--stg-text-rgb), 0.55); }
 .stg--weave .is-file code { flex: 1 1 auto; min-width: 0; }
 
-/* ── 20 · VoyraAI 商城：商品货架 + 下单流水 ─────────────────────────────────
-   .stg-flow 与 .stg-pipe 是同一套视觉语言（纸片方块 + 连接线 + 状态反色），
-   复用它的定义而不是复制一份 —— 织流那张卡的流水线已经验证过这套观感，
-   两处同源改动只需要维护一处。
+/* ── 20 · VoyraAI 商城：商城首页缩略 ────────────────────────────────────────
+   v4 重画。v3 及之前这里是「4 行数据 + 进度条 + 三步流水」的数据看板，
+   与参考站 oiloil.org 的舞台语言完全不同 —— 参考站的舞台全是**产品界面缩略**
+   （Wolfcha 是插画、Text-Well 是编辑器、悬停是设置面板），没有一个是图表。
+   进度条更是图表专属语汇：真实商城没有「商品热度条」，只有商品卡。
 
-   区别只有一个：商城这三步全是「已完成」态（流程是既定的，
-   不像织流有 running/todo），所以只保留 .is-done 的基础样式即可。 */
-.stg-flow { display: flex; flex: 0 0 auto; flex-wrap: nowrap; align-items: center; }
-.stg-flow span {
-  display: flex;
-  align-items: center;
-  animation: stgRise .5s cubic-bezier(.19, 1, .22, 1) backwards;
-  animation-delay: calc(var(--i, 0) * .08s);
+   v4 改成真实商城的第一个屏幕：
+     顶部一条搜索栏（商城首页最标志性的元素，复用 .stg-search 的样式）
+     下面 2×2 商品网格，每格 = 品牌 logo + 名称 + 价格
+     底部一条页脚给出站点级事实（18 件在售 / 7×24 自动发货）
+
+   商品格用 .stg-goods：白底纸片 + 极淡描边 + 内高光，
+   与全站舞台的「纸片」材质统一（见 .stg-grid-c 的注释）。 */
+.stg-shelf {
+  display: grid;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 210px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 7px;
 }
-.stg-flow b {
-  padding: 4px 9px;
-  border-radius: 6px;
-  border: 1px solid rgba(var(--stg-ink-rgb), 0.14);
+.stg-goods {
+  display: grid;
+  grid-template-areas:
+    "logo name"
+    "logo price";
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  align-items: center;
+  gap: 1px 8px;
+  padding: 8px 9px;
+  border-radius: 9px;
   background: var(--stg-panel);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 1px 2px rgba(16, 16, 16, .05);
+  animation: stgRise .5s cubic-bezier(.19, 1, .22, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .06s);
+  min-width: 0;
+  overflow: hidden;
+}
+/* logo 占两行（name + price），垂直居中 —— 商品卡的logo惯例是左侧居大，
+   这里压缩到 16px 是因为舞台只有 200px 高、一格约 62px，
+   再大的 logo 会把名称和价格挤出格子。 */
+.stg-goods .stg-brand {
+  grid-area: logo;
+  align-self: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+.stg-goods b {
+  grid-area: name;
+  min-width: 0;
+  overflow: hidden;
   font-size: 10.5px;
-  font-weight: 600;
-  letter-spacing: .02em;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   color: var(--stg-text);
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 连接线用箭头端点而非纯横线：读起来是「流向下一步」而不是「分隔」。 */
-.stg-flow u {
-  position: relative;
-  display: block;
-  width: 14px;
-  height: 1px;
-  background: rgba(var(--stg-ink-rgb), 0.30);
+.stg-goods em {
+  grid-area: price;
+  min-width: 0;
+  overflow: hidden;
+  font: 600 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: normal;
+  color: var(--stg-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.stg-flow u::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: -2px;
-  width: 4px;
-  height: 4px;
-  border-top: 1px solid rgba(var(--stg-ink-rgb), 0.45);
-  border-right: 1px solid rgba(var(--stg-ink-rgb), 0.45);
-  transform: rotate(45deg);
-}
-/* 商品行：品牌 logo + 名称左、条形中、价格右 —— 与 Token / 磁盘两张卡同一套三栏，
-   读者扫过去不用重新学一遍怎么读这个舞台。
-
-   ⚠️ logo 必须放在最前且 flex:0 0 auto：
-   排在 <b> 后面时，名称会被 logo 挤成两行（实测「ChatGPT Plus」
-   在 14px logo + 窄栏下折行），整行高度从 15px 涨到 28px，
-   四行就把舞台底部顶出 40px。 */
-.stg--mall .is-mall .stg-brand,
-.stg--referral .is-ref .stg-brand {
-  flex: 0 0 auto;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  /* 14px 是中文标签的可读下限（docs/CARD-DESIGN-SPEC.md §6.4），
-     品牌 logo 再小就糊成一个色点、失去识别作用。 */
-}
-.stg--mall .is-mall b { flex: 1 1 auto; min-width: 0; }
-.stg--mall .is-mall .stg-bar { width: auto; flex: 0 1 56px; }
-.stg--mall .is-mall em { flex: 0 0 auto; color: var(--stg-text); }
-
-/* ── 21 · VoyraAI 推荐通道：四类目 + 推荐码条 ─────────────────────────────── */
-.stg--referral .is-ref b { flex: 0 0 auto; }
-.stg--referral .is-ref .stg-bar { flex: 0 1 48px; width: auto; }
-.stg--referral .is-ref em {
-  flex: 1 1 auto;
-  justify-content: flex-end;
-  color: rgba(var(--stg-text-rgb), 0.62);
-  font-family: inherit;
-  font-weight: 500;
+/* 商城舞台的搜索栏比提示词库那条更矮一点：商城格子里已有品牌 logo 做色彩点，
+   搜索栏不需要再抢注意力，做成一条安静的输入框轮廓。 */
+.stg--mall .stg-search {
+  padding: 5px 11px;
+  border-radius: 99px;
+  box-shadow: inset 0 0 0 1px rgba(var(--stg-ink-rgb), 0.14);
+  background: transparent;
 }
 
-/* 推荐码条：整张卡唯一「可以照着输」的信息，所以给它一点存在感 ——
-   等宽、大字、强调色描边，但不做成按钮（它是代码不是动作）。 */
-.stg-code {
+/* ── 21 · VoyraAI 推荐通道：推荐页缩略 ─────────────────────────────────────
+   与商城舞台的区别必须一眼看得出，否则读者以为两张卡是同一件事：
+     商城   搜索栏 + 商品网格（logo + 名称 + 价格）
+     推荐   推荐码横幅 + 类目网格（logo + 类目名 + 说明）
+   网格结构相同（都是 .stg-shelf / .stg-goods），但顶部元素与格子内容不同。 */
+.stg--referral .stg-code {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   gap: 9px;
-  padding: 7px 10px;
+  padding: 7px 11px;
   border: 1px dashed rgba(var(--stg-ink-rgb), 0.32);
   border-radius: 7px;
   background: var(--stg-panel);
@@ -578,6 +585,16 @@
   letter-spacing: .1em;
   color: var(--stg-ink);
 }
+/* 推荐站的类目格：说明文字比商城的价格长（「ChatGPT · Gemini」10 个字符），
+   价格位的等宽小字放不下，改用继承字号的普通小字并允许省略。 */
+.stg--referral .stg-goods em {
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 9.5px;
+  color: rgba(var(--stg-text-rgb), 0.62);
+}
+
+/* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
 
 /* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
 .stg--click .is-course em.is-ok { color: var(--stg-ink); }
@@ -737,14 +754,13 @@
     border: 1px solid CanvasText;
     background: Canvas;
   }
-  /* 2026-10-13：商城流水方块与推荐码条是新增的两种「有底色的容器」，
-     在 forced-colors 下颜色被系统接管，必须显式补边框，否则只剩一行文字、
-     容器消失（与 .sc-card 的 box-shadow 描边同一类问题）。 */
-  .stg-flow b, .stg-code {
+  /* v4：商品格 .stg-goods 与推荐码条 .stg-code 是两种「有底色的容器」，
+     在 forced-colors 下颜色被系统接管，必须显式补边框，
+     否则只剩一行文字、容器消失（与 .sc-card 的 box-shadow 描边同一类问题）。 */
+  .stg-goods, .stg-code {
     border: 1px solid CanvasText;
     background: Canvas;
   }
-  .stg-flow u, .stg-flow u::after { background: CanvasText; border-color: CanvasText; }
   .stg-code-value, .stg-code-label { color: CanvasText; }
 }
 

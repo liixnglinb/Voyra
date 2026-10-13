@@ -643,20 +643,18 @@ function StageTimeline() {
      · 商品分类计数：ChatGPT 9、Gemini 1、X Premium 4、Muse 1、Codex 1，共 18 件
      · 品牌主色 #0071E3（Apple 蓝系）
 
-   舞台画的是**商品货架 + 自动发货流水**：
-     上半是四件精选商品（带真实品牌 logo 与价格），下半是自动发货的三步流水，
-     页脚给出「18 件商品」与「7×24 自动发货」两个站点级事实。
-
-   v3（2026-10-13）：每行前面加品牌 logo。用户要求「卡片不能局限于文字」——
-   纯文字的「ChatGPT Plus ¥139」是一行价签，加了 logo 才是**货架上的商品**：
-   读者先认出牌子，再看价格，顺序和真实购物一样。
-   logo 从 simple-icons 取官方图形，按品牌真实色写入 SVG 的 fill
-   （不用 currentColor，避免被卡片基调变量染成灰）。 */
+   v4 重画：从「数据看板」改成「商城首页缩略」。
+   v3 及之前这个舞台是 4 行「logo + 名称 + 进度条 + 价格」的清单 ——
+   进度条是图表语汇，真实商城没有「商品热度条」，只有商品卡。
+   参考站 oiloil.org 的舞台全是**产品界面缩略**（插画 / 编辑器 / 设置面板），
+   不是图表。所以 v4 改成 2×2 商品网格：每格 = logo + 名称 + 价格，
+   顶部一条搜索栏（真实商城的第一个元素），底部一条自动发货状态。
+   这样舞台读起来是「一个商城长什么样」，不是「一组数据」。 */
 const MALL_ITEMS = [
-  ['ChatGPT Plus', '¥139', 0.86, 'openai'],
-  ['Gemini Pro 18 个月', '¥7', 0.31, 'googlegemini'],
-  ['X Premium 3 / 6 个月', '¥22', 0.52, 'x'],
-  ['多邻国年卡', '¥9.9', 0.18, 'duolingo'],
+  ['ChatGPT Plus', '¥139/月', 'openai'],
+  ['Gemini Pro', '18 个月 ¥7', 'googlegemini'],
+  ['X Premium', '3/6 个月 ¥22', 'x'],
+  ['多邻国', '年卡 ¥9.9', 'duolingo'],
 ];
 
 /* 品牌 logo 方块：白底 + 细描边，尺寸比文字行高略小，
@@ -679,26 +677,17 @@ function BrandLogo({ slug, size = 14 }) {
 function StageVoyraMall() {
   return (
     <Stage className="mall">
-      <Head live title="自动发货" meta="在线" />
-      <ul className="stg-rows is-mall">
-        {MALL_ITEMS.map(([name, price, ratio, slug], i) => (
-          <li key={name} style={{ '--i': i }}>
+      <span className="stg-search">搜索商品…</span>
+      <div className="stg-shelf">
+        {MALL_ITEMS.map(([name, price, slug], i) => (
+          <div key={name} className="stg-goods" style={{ '--i': i }}>
             <BrandLogo slug={slug} />
             <b>{name}</b>
-            <Bar ratio={ratio} />
             <em>{price}</em>
-          </li>
-        ))}
-      </ul>
-      <div className="stg-flow">
-        {['下单', '支付', '发货'].map((s, i) => (
-          <span key={s} className="is-done" style={{ '--i': i }}>
-            {i > 0 ? <u /> : null}
-            <b>{s}</b>
-          </span>
+          </div>
         ))}
       </div>
-      <Foot items={[['在售', '18 件'], ['发货', '7×24']]} />
+      <Foot items={[['在售', '18 件'], ['发货', '7×24 自动']]} />
     </Stage>
   );
 }
@@ -707,36 +696,37 @@ function StageVoyraMall() {
    21 · VoyraAI 推荐通道（gptibo.com/r/719F2E）
    ══════════════════════════════════════════════════════════════════════════
    与官方商城的区别必须看得出来，否则两张卡读者会以为是同一张：
-     · 入口带推荐码 719F2E → 舞台加一条「推荐码」条，这是它唯一的独有信息；
+     · 入口带推荐码 719F2E → 舞台加一条「推荐码」横幅，这是它唯一的独有信息；
      · 品类口径不同：推荐站在线商品里多了「语言学习 / 邮箱账号 / 工具服务」
        三个非 AI 类目（抓取自该页导航：AI 订阅 / 语言学习 / 邮箱账号 / 工具服务）；
      · 交付方式强调「邮件交付 / 领取链接」，与主站的「付款即发卡」不同。
 
-   舞台画的是**四类目分发 + 推荐码条**，密度 7 个可读元素。 */
+   v4 重画：同样从「数据行 + 进度条」改成「推荐页缩略」——
+   顶部一条推荐码横幅（真实推荐页最显眼的元素），下面四类目卡片网格。
+   两类卡片的舞台结构因此完全不同：商城是「搜索栏 + 商品网格」，
+   推荐是「推荐码横幅 + 类目网格」，读者不会混淆。 */
 const REF_CATS = [
-  ['AI 订阅', 'ChatGPT · Gemini', 0.92, 'openai'],
-  ['语言学习', 'Duolingo 年卡', 0.44, 'duolingo'],
-  ['邮箱账号', '美区 Gmail', 0.31, 'gmail'],
-  ['工具服务', 'Claude 会员', 0.58, 'anthropic'],
+  ['AI 订阅', 'ChatGPT · Gemini', 'openai'],
+  ['语言学习', 'Duolingo 年卡', 'duolingo'],
+  ['邮箱账号', '美区 Gmail', 'gmail'],
+  ['工具服务', 'Claude 会员', 'anthropic'],
 ];
 
 function StageVoyraRef() {
   return (
     <Stage className="referral">
-      <Head title="推荐通道" meta="719F2E" />
-      <ul className="stg-rows is-ref">
-        {REF_CATS.map(([name, sub, ratio, slug], i) => (
-          <li key={name} style={{ '--i': i }}>
-            <BrandLogo slug={slug} />
-            <b>{name}</b>
-            <Bar ratio={ratio} />
-            <em>{sub}</em>
-          </li>
-        ))}
-      </ul>
       <div className="stg-code">
         <span className="stg-code-label">推荐码</span>
         <span className="stg-code-value">719F2E</span>
+      </div>
+      <div className="stg-shelf">
+        {REF_CATS.map(([name, sub, slug], i) => (
+          <div key={name} className="stg-goods" style={{ '--i': i }}>
+            <BrandLogo slug={slug} />
+            <b>{name}</b>
+            <em>{sub}</em>
+          </div>
+        ))}
       </div>
       <Foot items={[['交付', '邮件直达'], ['品类', '4 类']]} />
     </Stage>

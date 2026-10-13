@@ -157,21 +157,15 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
       ? card.href
       : toHashUrl(card.href);
   const desc = (isMobile && shortDesc) || card.desc;
-  /* 描边序号只收纯数字。之前是从 no 字段切 '/' 前段推导，结果
-     'SKILL / CUMCM WORKFLOW' 渲染出 192px 宽的空心单词、
-     'APP 01 / …' 渲染出 255px 宽的「APP 01」，在 361px 的卡上被右缘裁断。
-     现在由数据显式给 seq，取不到数字就不渲染。
-     2026-10-13（v2）：v1 用 42px 空心描边数字钉在左下角占一整格，
-     信息价值为零却和 CTA 争视觉重心 —— 序号信息眉标里已经有了（'01 / 接口网关'），
-     属于重复表达。现在彻底删掉这一元素，把左下角让给 Meta 行。 */
-  const [noCode, noLabel] = String(card.no ?? '').split('/').map((part) => part.trim());
-  /* v2 新增：Meta 行三标签。缺 meta 的卡不渲染这一行（不写占位符，
-     空标签比没有标签更难看）。 */
-  const meta = Array.isArray(card.meta) ? card.meta.filter(Boolean).slice(0, 3) : [];
-  /* v3 新增：品牌带。只有声明了 brands 的卡才渲染（目前仅 VoyraAI 两张），
-     其它卡不出现这条横带 —— 它不是通用装饰，是「售卖范围」的索引。
-     数据里写 slug 与品牌名，路径在这里统一拼，避免每张卡写全 URL。 */
-  const brands = Array.isArray(card.brands) ? card.brands : null;
+  /* 序号：42px 空心描边数字，绝对定位在卡片左下角。
+     历史三次反复，结论以参考站为准：
+       v1  有（从 no 字段推导，会渲染出超宽单词，改为数据显式给 seq）
+       v2  删（理由「与眉标重复」—— 错判了它的职责）
+       v4  恢复（参考站 .pnum 一直在，它真正的职责不是编号，而是给左下角
+              一个视觉压角：CTA 左对齐后左下有块安静空白，序号填在这里，
+              卡面才有四角呼应）
+     只收 1-2 位纯数字，取不到就不渲染。 */
+  const seq = /^\d{1,2}$/.test(card.seq ?? '') ? card.seq : null;
   /* 版式字段保留在数据里但不再驱动渲染（参考站没有版式变体）。
      类名照旧带上 layout-<x>，只是 CSS 里已无对应规则 —— 这样数据契约不破，
      日后想恢复某种版式也能从 DOM 上一眼看到原值。 */
@@ -194,42 +188,29 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
           不会在 pointermove 上触发强制布局）。
           aria-hidden：纯装饰；它盖在卡面之上但不拦截指针（pointer-events:none）。 */}
       <span className="sc-spotlight" aria-hidden="true" />
-      {/* ── 品牌带（v3 新增）─────────────────────────────────────────────────
-         用户 2026-10-13 要求「上面最好有我售卖的那些东西的图标」。
-         放在 .sc-body 之外、卡片最顶端横跨全宽 —— 它是一个**横带**，
-         不是两栏布局里的某一栏，放进 grid 会和文字栏抢列宽。
-
-         为什么放顶部而不是塞进舞台：舞台是「产品长什么样」的演示，
-         品牌带是「我卖哪些牌子」的索引，两件事层级不同。
-         读者扫到卡片上半部就知道卖什么，不用读完描述再去看演示。
-
-         顺序即优先级：ChatGPT / Gemini / X Premium 是站内精选前三，
-         与舞台前三行一一对应；Claude / 多邻国 / Gmail 是品类补位。
-         aria-hidden：品牌识别由 aria-label 承担，读屏器念一串 logo 是噪音。 */}
-      {brands ? (
-        <div className="sc-brandstrip" aria-hidden="true">
-          {brands.map((b) => (
-            <img
-              key={b.slug}
-              className="sc-brandstrip-logo"
-              src={`/voyraai/brands/${b.slug}.svg`}
-              alt=""
-              width="22"
-              height="22"
-              loading="lazy"
-              decoding="async"
-            />
-          ))}
-        </div>
-      ) : null}
+      {/* v4：v3 在这里加过一条 6 枚品牌 logo 的顶部横带，已撤掉。
+         撤掉的原因：参考站 .pcard 顶部没有任何横带，卡片信息量只有四样；
+         我加上横带后信息量翻倍，且横带把「眉标→标题→描述→Meta」这条
+         阅读动线的起点又往上推了一层，读者第一眼看到的是一排小图标
+         而不是产品名。商品图标改放舞台内部（商品行前置 logo），
+         既满足「有售卖东西的图标」，又不与参考站的极简结构冲突。 */}
       <div className="sc-body">
-        {/* v2 结构：眉标 / 文案 / 页脚三段各占一行，舞台独占一列跨满三行
-            （见 .sc-body 的 grid-template-areas）。这样舞台高度自动等于文字段总高，
-            不必给舞台写死高度，两张卡也自然等高。 */}
-        <span className="sc-eyebrow">
-          {noLabel ? (<><b>{noCode}</b>{noLabel}</>) : null}
-        </span>
+        {/* v4 结构：严格对齐参考站 oiloil.org 的 .pcard。
+           参考站实测（Playwright 取计算值）只有四样东西：
+             .pinfo  logo 40px + 标题 + 一句描述 + CTA   ← 四样都在 .pinfo 内部
+             .stage  356×200、aspect-ratio 16/9 的产品界面缩略
+             .pnum   42px 空心描边序号，absolute bottom:18 left:28
+           **没有眉标、没有 Meta 行、没有顶部品牌带** —— 这三层都是我此前
+           自己加的，加上之后卡片信息量是参考站的两倍，视觉重心被小字吃掉，
+           用户连续两次反馈「不行」。v4 全部撤掉，只保留参考站验证过的四样。
 
+           ⚠️ CTA 必须留在 .sc-copy **内部**（参考站 .pinfo 的结构）。
+           v4 第一版把 .sc-foot 留在 .sc-body 外面，忘了 .sc-body 已经从
+           三行网格改成两列 —— 自动放置把 CTA 排到了第二行第一列，
+           卡片被撑到 377px（同行的另一张 300px），一排卡高度参差。
+
+           商品图标不丢：它在舞台内部（商品格前置品牌 logo），
+           那才是「售卖的东西」该在的位置 —— 参考站的舞台也是产品界面缩略。 */}
         <div className="sc-copy">
           <div className="sc-title-row">
             <span className={`sc-brand${card.logo ? ' has-logo' : ''}`} aria-hidden="true">
@@ -240,26 +221,23 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
             <h3 className="sc-title">{card.name}</h3>
           </div>
           <p className="sc-desc" title={card.desc}>{desc}</p>
-          {/* Meta 行：平台 · 形态 · 状态。放在描述与 CTA 之间 ——
-              视觉上紧跟描述（同一段「说明」），又与 CTA 之间留足 22px，
-              避免两行小字粘在一起。 */}
-          {meta.length ? (
-            <ul className="sc-meta">
-              {meta.map((item) => <li key={item}>{item}</li>)}
-            </ul>
-          ) : null}
+          <div className="sc-foot">
+            <span className="sc-cta">
+              {card.cta} <ArrowUpRight size={15} />
+            </span>
+          </div>
         </div>
 
         <div className="sc-stage">
           <Stage />
         </div>
-
-        <div className="sc-foot">
-          <span className="sc-cta">
-            {card.cta} <ArrowUpRight size={15} />
-          </span>
-        </div>
       </div>
+      {/* 序号：42px 空心描边数字，绝对定位在卡片左下角（参考站 .pnum 的做法）。
+         v2 时删过一次，理由是「信息与眉标重复」—— 但参考站一直保留它，
+         它真正的职责不是编号，而是**给左下角一个视觉压角**：
+         参考站的 CTA 左对齐，左下角有一块安静空白，序号填在这里，
+         卡面才有四角呼应。v4 恢复。 */}
+      {seq ? <span className="sc-seq" aria-hidden="true">{seq}</span> : null}
     </a>
   );
 }

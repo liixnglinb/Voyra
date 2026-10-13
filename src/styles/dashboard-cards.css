@@ -819,27 +819,17 @@ body{
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* v3：品牌带高度，声明在 :root 而不是 .sc-brandstrip 上。
-     第一版把 --sc-strip-h 写在 .sc-brandstrip 里，想着「谁用谁定义」，
-     结果 .sc-card 的 min-height: calc(var(--card-min-height) + var(--sc-strip-h))
-     读到的是空值 —— CSS 自定义属性**只向下继承**，定义在子元素上的变量
-     父元素拿不到。实测 cardMinH 一直是 268px（calc 整条声明失效），
-     而 --sc-strip-h 单独读又是 52px，很容易误判成「calc 语法错」。
-     声明在 :root 后两边都能读。 */
-  --sc-strip-h: 52px;
-
-  /* 卡片正文段（.sc-body）的 min-height。
-     v2 时是 268px（当时卡内只有「眉标+标题+描述+Meta+CTA」五层）。
-     v3（2026-10-13）结构变了：舞台内部要 200px 才装得下内容
-     （4 行商品 + flow + foot），而 .sc-body 的三行网格总高
-     = 眉标 17 + copy 200 + CTA 24 + 两处 gap 28 = 269px。
-     268 与 269 只差 1px，但就是这 1px 让 .sc-stage 的
-     min-block-size:200px 差一点点没能生效（grid item 的 min-height
-     不是硬下限，会被行高压掉），舞台实测只有 162px、flow 被裁。
-     收到 292px = 269 + 23px 余量（覆盖标题两行折行的情况），
-     舞台稳定拿到 200px，卡片总高 344px（无品牌带）
-     或 320px 下限 + stretch 拉齐到同行最高。 */
-  --card-min-height: 292px;
+  /* 卡片 min-height：**直接抄参考站的 300px**（v4 重新对齐）。
+     本站自己推导过两个值都错了：
+       v2  268px —— 按「眉标+标题+描述+Meta+CTA」五层内容算的，
+            但舞台内部要 200px，268 差一点没兜住，舞台被压到 162px。
+       v3  292px —— 按「眉标 17 + copy 200 + CTA 24 + gap 28」算的，
+            能兜住舞台，但卡片总高 344px，比参考站的 300px 高出一截，
+            观感是「我们的卡更高更瘦」，而参考站是「矮一档、更从容」。
+     v4 结论：不再自己算，直接用参考站实测值 300px。
+     本站文字内容确实比参考站长一点（描述最多 3 行），
+     所以 min-height 用 300px、内容超高时自然长高，不写死。 */
+  --card-min-height: 300px;
   --card-radius: 20px;
   --card-border-width: 1px;
 
@@ -874,25 +864,14 @@ body{
   position: relative;
   display: flex;
   flex-direction: column;
-  /* v3：min-height 用累加式，把品牌带的高度算进去。
+  /* v4：min-height 直接取 --card-min-height（参考站实测 300px），
+     不再用 calc 累加品牌带高度 —— 品牌带已在 v4 撤掉。
      .vr-product-list 是 align-items:stretch，同行卡片会被最高的一张拉齐，
      所以每张卡自己的 min-height 只决定「它至少要多高」。
-     无品牌带的卡：268px（正文段自己的下限）。
-     有品牌带的卡：268 + 52 = 320px，多出的 52px 正好是品牌带占掉的高度，
-     .sc-body 靠 flex:1 把剩下的空间吃掉，最终四张卡都由 stretch 拉齐到同一高度。
-     这样新卡不会因为多了品牌带而比旧卡矮一截。 */
-  min-height: calc(var(--card-min-height) + var(--sc-strip-h, 0px));
-  /* 去掉 height:100%（v3）。
-     它让卡片高度 = 父级分配的高度，而 .vr-product-list 的 grid 行高
-     是按**内容**算的（无品牌带的两张卡内容少，行高只有 282px），
-     于是带品牌带的新卡被压回 282px、min-height:344px 完全不起作用
-     —— height 作为确定高度会覆盖 min-height，这是 CSS 的既定行为。
-     去掉后卡片高度 = max(min-height, 内容高)：
-     无品牌带卡 292px 下限、有品牌带卡 344px 下限，
-     再由 .vr-product-list 的 align-items:stretch 把同行拉齐到最高那张。
-     ⚠️ 这也解释了之前几次「改了 CSS 数值不变」的误判：
-     我一度以为是 HMR 缓存，实际是 height:100% 把 min-height 屏蔽了，
-     量到的 cardH 是 grid 行高而不是卡片自己的高度。 */
+     ⚠️ 不要在这里写 height:100%（v3 删过一次，v4 保持不写）：
+     它作为确定高度会覆盖 min-height，卡片会被父级 grid 行高压成内容高度，
+     min-height 形同虚设。本站满页 transform，量高度必须用 offsetHeight。 */
+  min-height: var(--card-min-height);
   background: var(--sc-surface);
   /* v2：描边从 border 改成 box-shadow 的第一层。理由见 :root 里 --sc-shadow-sm
      的注释 —— CSS border 与 border-radius 叠加会在 20px 圆角处留下锯齿，
@@ -975,78 +954,6 @@ body{
   .sc-card:active { --lift: -2px; transition-duration: .12s; }
 }
 
-/* ── 1a-2 · 品牌带（v3 新增）────────────────────────────────────────────────
-   位置：卡片最顶端，横跨全宽，在 .sc-body 之外。
-   它回答的是「我卖哪些牌子」，与舞台回答的「产品长什么样」是两件事 ——
-   所以放在顶部而不是塞进舞台：读者扫到卡片上半部就知道卖什么，
-   不用读完描述再去看演示。
-
-   视觉处理（对照 Vercel / Geist 的徽标带做法）：
-     · 每枚 logo 放进 **26px 白底圆角方块**，不裸放。
-       理由：这些品牌 logo 有黑有蓝有绿有红，六枚裸放会变成一盒蜡笔；
-       统一放进同尺寸同底色的方格里，颜色差异被「同一容器」压住，
-       整条带读起来是「一组品牌」而不是「六张贴纸」。这是参考站
-       logo-marquee 的核心手法（grayscale + 统一容器 + 固定间距）。
-     · 方块间隙 6px，底部一条发丝线（--sc-border 同色）与正文分开。
-       不用彩色顶边（component-taste 硬规则：直线与圆角打架）。
-     · 内描边用 box-shadow inset 而不是 border：border 会让方块的
-       盒尺寸多出 2px，六枚方格的间距会出现 1px 抖动。 */
-.sc-brandstrip {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  /* 实际高度（含上下 padding 与 border）= 52px，与 :root 的 --sc-strip-h 一致。
-     改这里的 padding 时必须同步改那个变量，否则 .sc-card 的 min-height
-     会对不上，表现为新卡与旧卡高度差几像素。
-     ⚠️ 不要把 --sc-strip-h 定义在这里：自定义属性只向下继承，
-     定义在子元素上父元素读不到（见 :root 里的注释）。 */
-  padding: 11px 20px 9px;
-  border-bottom: 1px solid var(--sc-border);
-}
-.sc-brandstrip-logo {
-  display: block;
-  flex: 0 0 auto;
-  /* 26px → 32px。26px 时六枚 logo 在 352px 宽的卡里像一排小纽扣，
-     认不出是什么牌子；32px 是「一眼能认」与「不抢正文」的平衡点
-     （标题是 34px，logo 带不能与标题同量级）。 */
-  width: 32px;
-  height: 32px;
-  padding: 7px;
-  border-radius: 8px;
-  background: var(--sc-surface);
-  box-shadow: inset 0 0 0 1px rgba(27, 27, 27, 0.08);
-  /* logo 是 <img>，SVG 的透明区会露出这一层底色 —— 所以把背景与描边
-     都放在 img 自身上，不需要额外包一层容器。 */
-  transition: transform .45s var(--vr-ease-out);
-}
-/* 悬停时六枚一起轻微上浮，错峰 40ms —— 与舞台入场的 stagger 同语言，
-   但幅度极小（-2px），是「货架被点亮」而不是「弹一下」。 */
-@media (hover: hover) and (pointer: fine) {
-  .sc-card:hover .sc-brandstrip-logo { transform: translateY(-2px); }
-  .sc-brandstrip-logo:nth-child(1) { transition-delay: 0ms; }
-  .sc-brandstrip-logo:nth-child(2) { transition-delay: 40ms; }
-  .sc-brandstrip-logo:nth-child(3) { transition-delay: 80ms; }
-  .sc-brandstrip-logo:nth-child(4) { transition-delay: 120ms; }
-  .sc-brandstrip-logo:nth-child(5) { transition-delay: 160ms; }
-  .sc-brandstrip-logo:nth-child(6) { transition-delay: 200ms; }
-}
-/* 窄屏：六枚 32px + 五档 7px 间隙 = 227px，加卡片左右内边距 40px
-   在 390px 视口下约 267px，一行放得下，不折行。
-   若将来加到 8 枚以上，这里要改成允许换行并限行数。 */
-@media (max-width: 720px) {
-  .sc-brandstrip { gap: 6px; padding: 10px 16px 8px; }
-  .sc-brandstrip-logo { width: 28px; height: 28px; padding: 6px; border-radius: 7px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .sc-brandstrip-logo { transition: none !important; }
-  .sc-card:hover .sc-brandstrip-logo { transform: none !important; }
-}
-@media (forced-colors: active) {
-  /* 品牌 logo 是有色 SVG，forced-colors 下颜色被系统接管、图形会消失。
-     给方块补边框保住「这里有六个容器」的结构信息。 */
-  .sc-brandstrip-logo { border: 1px solid CanvasText; background: Canvas; }
-}
-
 /* ── 1b · 指针跟随的金色光斑（参考站 .card-spotlight） ────────────────────
    参考站实测：
      .card-spotlight {
@@ -1089,116 +996,72 @@ body{
 }
 
 /* ── 2 · 卡内骨架：单行「文字 | 舞台」左右分栏 ─────────────────────────────
-   grid-template-areas 让眉标 / 文案 / CTA 三段各占一行、舞台独占一列跨满三行，
-   于是舞台高度自动等于文字段的总高 —— 不必给舞台写死高度。
-   奇偶交替由 .sc-roll-wrap:nth-child(even) 负责（参考站同款做法）。
+   v4：grid-template-areas 从三行（eyebrow/copy/foot）收敛成**一行**
+   （copy | stage）。参考站 .pcard 实测就是这个结构：
+     grid-template-columns: 1.15fr 1fr; align-items: center; gap: 36px;
+     padding: 22px 26px;
+   眉标行是本站 v2 自己加的，v4 撤掉 —— 撤掉后 CTA 回到 .sc-copy 内部
+   （参考站 .pinfo 里 CTA 就在描述下面），不再单独占一行。
 
-   v2 两处调整：
-     ① 内边距 22px 26px → **28px 32px**。component-taste.md 的卡片第一条
-        就是「慷慨的内边距，让内容呼吸，不要贴着边缘」。746px 宽的卡配 26px
-        边距，左右各还剩 340px 给文字，视觉上像内容被挤在中间；
-        28/32 之后文字列宽 352px，8~9 个汉字的标题一行放得下。
-     ② 列比 1.15fr : 1fr → **1.05fr : 1fr**。原来文字栏 400px 但描述被
-        max-width:34em 压到 285px，两行 clamp 后句子断得很碎；
-        收窄比例差、放开 max-width 后，描述能自然换行到 3 行。 */
+   参考站精确值（Playwright 取计算值，1440 视口）：
+     卡片 756×300、radius 20、padding 22/26
+     两栏 356.2px（文字）+ 309.8px（舞台）、gap 36
+     舞台 aspect-ratio 16/9 → 356×200
+   本站容器 858 − 2×56 = 746，与参考站的 756 只差 10px，
+   所以照搬这套数值就能得到几乎一致的卡片比例。 */
 .sc-body {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  /* 三行都留 auto。中间行的 200px 下限**不在这里写** ——
-     试过 minmax(200px,auto) 和写死 200px 两种，都让 .vr-product-list 的
-     align-items:stretch 把卡片总高顶到 376px（同行无品牌带卡仍是 344px），
-     一排卡高度不齐，比舞台矮几帧显眼得多。
-     舞台的 200px 下限由 .sc-stage 自己的 min-block-size 承担，
-     实测在 auto 行高下它能把 body 撑到 233px、舞台拿到 200px
-     （前提是 .sc-copy 不参与拉伸，见下一段）。 */
-  grid-template-rows: auto auto auto;
-  grid-template-areas:
-    "eyebrow stage"
-    "copy    stage"
-    "foot    stage";
-  /* 去掉 align-content:center（v2 遗留）。
-     它让三行内容在 body 内垂直居中，副作用是 body 高度 = 三行内容高之和
-     （233px），而不是撑满可用空间 —— 于是 .sc-stage 的 min-block-size:200px
-     被 grid 行高压掉（grid item 的 min-height 不是硬下限），舞台只拿到 160px，
-     里面的 flow 与 foot 被 overflow:hidden 裁掉。
-     改成 start 后，行高仍由 auto 内容决定，但舞台的 min-block-size
-     能正常把 body 顶到 ≥200px（实测 stage 稳定 200~213px）。 */
-  align-content: start;
-  gap: 14px 36px;
-  /* height:100% 改成 flex:1 1 auto：让 .sc-body 吃掉 .sc-card（flex column）
-     在品牌带之后剩余的全部空间。
-     （原来写 height:100% 时，height 作为确定高度会覆盖任何 min-height，
-      min-height 形同虚设 —— 实测设 236px 后 body 仍被算成 233px。）
-
-     ⚠️ grid-template-rows 不要写 minmax(0,1fr)：
-     试过把中间行改成 minmax(0,1fr) 想让舞台主导行高，结果 copy 段
-     被拉到 209px（自身内容只有 123px）、舞台反而缩到 188px ——
-     minmax(0,1fr) 的 1fr 会**吸收**多余空间，谁大谁小全看剩余空间怎么分，
-     不可控。三行都留 auto，让内容高度自己说话。 */
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 36px;
   flex: 1 1 auto;
   min-height: 0;
-  padding: 28px 32px;
-  /* ── 纵向下限的真正归属（v3 三次试错后的结论）───────────────────────────
-     目标：舞台（.sc-stage）不能低于 200px，否则里面的行组被 overflow 裁掉。
-
-     试过且**无效**的三条路（都实测过，别重复踩）：
-       ① 给 .sc-copy 设 min-block-size:196px —— v2 的方案。
-          grid item 的 min-height 不是硬下限，行高由该行所有 item 共同决定。
-       ② 给 .sc-body 设 min-height:236px —— 同①，且 flex 容器里
-          height:100% 会覆盖 min-height，两条一起写时 min-height 完全失效。
-       ③ grid-template-rows 写 minmax(0,1fr) —— 1fr 会吸收剩余空间，
-          copy 段被拉到 209px（自身内容 123px）、舞台反而缩到 188px。
-
-     **有效的机制**：卡片 .sc-card 是 flex column，min-height 用
-     `calc(var(--card-min-height) + var(--sc-strip-h))` 把品牌带的高度
-     一起算进去（320px）。卡片有确定下限后，flex:1 的 .sc-body 自然
-     分到 344−52−? 的空间，网格三行 auto 由内容决定，舞台跨三行
-     自动拿到 body 的全高。品牌带少的量由卡片 min-height 补齐，
-     而不是从正文段或舞台里抠 —— 这就是四张卡最终都是 344px 的原因。
-
-     所以 .sc-body 这里保持 min-height:0（不设下限），
-     .sc-stage 的 min-block-size:200px 也保留（它管的是舞台内部
-     排版的最窄情形，比如窄屏单列时），但都不承担「保卡片总高」的职责。 */
-  min-height: 0;
+  padding: 22px 26px;
+  /* 不设 min-height：v4 起卡片总高由 .sc-card 的 min-height（参考站 300px）
+     兜底，.sc-body 作为 flex:1 的一项自然分到剩余空间，不需要自己再算一遍。
+     此前在这里试过 236px / 0px 两个值，都在解决「舞台被压扁」，
+     而那个问题的根源是卡片总高不够，不是 body 不够 —— 在 body 上打补丁
+     等于治标。v4 从卡片总高下手，这里回归 0。 */
 }
 
-/* 偶数位卡：舞台换到左边。用 :nth-child(even) 而不是 :nth-of-type ——
-   列表里每张卡外面还套着 .vr-roll-wrap，这里定位的正是那个 wrap。 */
+/* 偶数位卡：舞台换到左边（参考站 .card-hitbox:nth-child(2n) > .pcard 同款）。
+   用 :nth-child(even) 而不是 :nth-of-type —— 列表里每张卡外面还套着
+   .vr-roll-wrap，这里定位的正是那个 wrap。
+   v4 起 .sc-body 只有两列，交替只需交换列宽比例与两个子元素的 order，
+   不再需要 grid-template-areas（那个是三行结构的遗留）。 */
 .sc-roll-wrap:nth-child(even) .sc-body {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  grid-template-areas:
-    "stage eyebrow"
-    "stage copy"
-    "stage foot";
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
 }
+.sc-roll-wrap:nth-child(even) .sc-stage { order: 1; }
+.sc-roll-wrap:nth-child(even) .sc-copy { order: 2; }
 
-.sc-eyebrow { grid-area: eyebrow; }
-.sc-copy { grid-area: copy; }
-.sc-stage { grid-area: stage; }
-.sc-foot { grid-area: foot; }
-
+/* v4：眉标行与 grid-area 一起撤掉（参考站 .pcard 没有眉标）。
+   .sc-copy 现在是 .sc-body 的第一列，内部按参考站 .pinfo 的结构排：
+     标题行（logo + 标题）→ 描述 → CTA。
+   CTA 从 .sc-foot 挪进 .sc-copy 尾部，与参考站一致。 */
 .sc-copy {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  min-width: 0;
-  /* 内容在行内垂直居中，**不参与拉伸**。
-     默认 align-items 是 stretch 的伴生行为：grid item 会被行高拉高，
-     于是 copy 段从 105px 被拉到 190px，里面多出的 85px 全落在
-     描述与 Meta 之间 —— 视觉上是「描述与标签中间空了一大块」。
-     加 justify-content:center 后，行高怎么变都不影响 copy 内部布局，
-     内容始终在自身高度内居中。这是让 200px 中间行方案不破坏文案排版的关键。 */
   justify-content: center;
-  min-block-size: 0;
+  min-width: 0;
+  min-height: 0;
 }
+/* CTA：参考站 .go 是 14px / #999（对白 2.85:1，不达 AA）。
+   本站按无障碍要求上调到 #666（5.74:1），并给一个右上的箭头图标。
+   悬停时颜色加深 + 箭头右移 6px（参考站 .arr 的做法）。
+   margin-top 18px —— v4 第一版把 .sc-copy 的 gap 去掉后忘了补这个间距，
+   实测描述底边与 CTA 顶边重合（间距 0），两行文字糊成一坨。
+   18px 是描述（15px 正文）与动作（14px）之间的标准间距。 */
 .sc-foot {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
   min-height: 0;
+  margin-top: 18px;
 }
 
 /* ── 3 · 排版 ─────────────────────────────────────────────────────────────
@@ -1238,51 +1101,6 @@ body{
   .sc-card:hover .sc-title { background-size: 100% 42%; }
 }
 
-/* ── 3b · Meta 行（v2 新增）────────────────────────────────────────────────
-   GitHub 三份规范的一致结论：
-     component-patterns.md 给出标准卡片结构 ——「Meta · Meta · Meta」是必备行；
-     open-bridge 的 stat blocks 说「最小间距 32px，克制就是重点」；
-     Vercel 说「标签与元信息永远是 mono、永远小、永远弱」。
-
-   本站的落地：
-     · 11px / 600 / 等宽 / 字距 .06em —— 全卡信息价值最低的一层
-     · 三段用 · 分隔（不是竖线、不是胶囊），避免第三层再长出一个边框
-     · 颜色 --sc-text-meta 比眉标更浅一档：三层小字必须有强弱次序，
-       全部同色会让卡片下半截变成一堵灰字墙
-     · 紧跟描述 12px、离 CTA 22px —— 两行小字之间必须有呼吸，
-       否则「描述 / 标签 / 动作」会粘成一坨看不出层次的东西。 */
-.sc-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0 8px;
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.sc-meta li {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font: 600 11px/1 var(--vr-mono);
-  letter-spacing: .06em;
-  color: var(--sc-text-meta);
-  white-space: nowrap;
-}
-/* 分隔点画在标签**前面**（::before 而不是 ::after）——
-   v2 第一版用 li + li::after，结果分隔点落在最后一个标签尾部，
-   整行读起来是「Web 云端网关 · 4 个上游 ·」，尾巴上挂一个孤零零的点。
-   用 ::before + order:-1，点在标签之间，首尾都干净。 */
-.sc-meta li + li::before {
-  content: "";
-  order: -1;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: .45;
-}
-
 .sc-desc {
   margin: 14px 0 0;
   font-size: 15px;
@@ -1300,33 +1118,6 @@ body{
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
-}
-
-/* 眉标：类目词 + 序号短码。参考站用等宽小字 + 宽字距。 */
-.sc-eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: rgba(23, 23, 23, 0.62);
-}
-.sc-eyebrow b {
-  flex: 0 0 auto;
-  font-weight: 650;
-  /* 序号走 --p-ink 而不是 --p-accent：强调色是给图形用的（金色 #8A6D1F
-     只有 4.02:1），当 12px 文字差一点点。 */
-  color: var(--p-ink);
-}
-.sc-eyebrow::before {
-  content: "";
-  flex: 0 0 auto;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--p-accent);
 }
 
 /* ── 4 · 图标盒（参考站 .pbrand：40px 方形 / radius 10） ─────────────────── */
@@ -1386,24 +1177,14 @@ body{
   flex-direction: column;
   justify-content: center;
   align-self: stretch;
-  /* 舞台撑住文字段的高度；参考站舞台实测 352×180（比例 1.95），
-     本站约 306×200（1.53）—— 本站舞台是横向数据看板，比参考站的插画
-     更宽扁一些更好读。
-
-     v2 修一个真实的裁切 bug：`min-height` 在 grid 里不是硬下限。
-     `.sc-body` 是三行网格、舞台用 grid-area 跨满三行，
-     而三行的总高由**文案段**决定；文案短的卡（如磁盘清理，文案 119px）
-     撑出的行高小于 200px，网格就把舞台压到 182px ——
-     实测舞台 min-height 声明 200px、实际渲染 182px。
-     结果是行组只分到 52px、内容需要 96px，
-     多出的行排到列表之外、被本级 overflow:hidden 裁掉
-     （截图上「磁盘清理助手」只看得见第 1 行，Token Monitor 只看得见 3 行）。
-
-     解法不是加高舞台，而是让文案段成为**下限**：
-     文字区给一个 min-height，保证三行网格有足够高度，
-     舞台的 min-height:200px 就能真正生效。
-     min-block-size 对 flex/grid item 同样有效（不会被 flex 压缩），
-     而 min-height 在 flex 容器里可能被 shrink 覆盖 —— 这是两者的关键差别。 */
+  /* 参考站实测：356×200、aspect-ratio 16/9（1440 视口、列宽 356）。
+     本站舞台列宽约 306px，严格按 16/9 算是 172px，留 28px 余量取 200px ——
+     余量给舞台内部的内容：4 行清单 + 2×2 商品网格这类元素需要高度。
+     卡片 min-height 是参考站的 300px，可用空间 300 − 44（上下内边距）= 256px，
+     舞台占 200、剩 56px 给文字段（标题 40 + 描述 53 + CTA 20 + 两处间距）
+     —— 实测文字段 121px，会让卡片长到 365px。
+     所以本站的 min-height 需要比参考站高一点，见 :root 的 --card-min-height。
+     ⚠️ 这个值与卡片 min-height、.sc-body 内边距三者联动，改任何一个都要重算。 */
   min-block-size: 200px;
   border: 1px solid rgba(var(--stg-text-rgb), 0.08);
   border-radius: 14px;
@@ -1420,16 +1201,34 @@ body{
   border-color: rgba(var(--stg-ink-rgb), 0.22);
 }
 
-/* ── 6 · 页脚：CTA（参考站 .go） ───────────────────────────────────────────
-   v2：这里原本还有 .sc-seq —— 42px 空心描边序号绝对定位在左下角。
-   删掉的三个理由：
-     ① 信息重复。眉标里已经写着「01 / 接口网关」，序号 01 再出现一次，
-        读者得到的信息增量为零，只多了视觉重量。
-     ② 争重心。CTA 是这张卡唯一的动作入口，42px 的描边数字压在它左边，
-        视线先被大数字吃掉再落到动作上，路径变长。
-     ③ 撑高度。v1 卡片 344px 里，左下角这块空心数字占了近 60px 的视觉空白，
-        让整张卡显得「空」。删掉后 min-height 可以从 300 收到 268。
-   卡的编号信息没有丢 —— 它已经写在眉标里，且对读者的价值远高于一个大数字。 */
+/* ── 6 · 序号（参考站 .pnum）+ CTA（参考站 .go） ──────────────────────────
+   v4 恢复 .sc-seq。参考站实测值原样照搬：
+     font-size 42px / weight 800 / letter-spacing -0.02em
+     color transparent + -webkit-text-stroke 1px rgba(0,0,0,.14)
+     position absolute / bottom 18px / left 28px / z-index 0
+     悬停 translateY(-6px)（.9s）
+   v2 曾以「信息与眉标重复」为由删掉它，是误判 —— 它的职责不是编号，
+   而是给左下角一个视觉压角：参考站 CTA 左对齐，左下有块安静空白，
+   序号填在这里，卡面才有四角呼应。本站 v4 连眉标也撤了，序号更该在。 */
+.sc-seq {
+  position: absolute;
+  left: 28px;
+  bottom: 18px;
+  z-index: 0;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 0.14);
+  user-select: none;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+  transition: transform .9s var(--vr-ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .sc-seq { transform: translateY(-6px); }
+}
 .sc-cta {
   display: inline-flex;
   align-items: center;
@@ -1451,29 +1250,25 @@ body{
 
 /* ── 7 · 窄屏：参考站手机档（单列，舞台在上，文字在下） ───────────────────── */
 @media (max-width: 960px) {
+  /* 单列：舞台在上、文字在下（参考站手机档同款）。
+     gap 从 36px 收到 14px —— 36px 是桌面两栏的列间距，单列纵向用会太大。 */
   .sc-body {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto auto auto;
-    grid-template-areas:
-      "stage"
-      "eyebrow"
-      "copy"
-      "foot";
     gap: 14px;
-    padding: 18px 16px 24px;
+    padding: 18px 16px 22px;
   }
-  /* 手机档不做左右交替：单列里换序只会让节奏乱掉。 */
-  .sc-roll-wrap:nth-child(even) .sc-body {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "stage"
-      "eyebrow"
-      "copy"
-      "foot";
-  }
-  .sc-stage { min-height: 0; height: clamp(190px, 55vw, 260px); align-self: auto; }
-  /* v2：原来这里有一条把 .sc-seq 挪到右下角的规则（窄屏单列时左下角被 CTA 占住）。
-     元素本身已在 v2 删除，规则一并清掉。 */
+  /* 手机档不做左右交替，且要把桌面用 order 做的交替显式重置：
+     桌面偶数卡是「舞台左、文字右」（order 1/2），单列时若不重置，
+     偶数卡会变成「文字在上、舞台在下」，与奇数卡相反 —— 一列卡片两种顺序。
+     这里两个子元素都回到 order:0，靠 DOM 顺序（copy 在前、stage 在后）
+     自然得到「文字在上、舞台在下」。
+     但参考站手机档是**舞台在上**，所以再给 stage 一个负的 order 把它提到最前。 */
+  .sc-roll-wrap:nth-child(even) .sc-body { grid-template-columns: minmax(0, 1fr); }
+  .sc-copy { order: 2; }
+  .sc-stage { order: 1; min-height: 0; height: clamp(190px, 55vw, 260px); align-self: auto; }
+  /* 序号在单列档与 CTA 同处文字段内，left:28 会与 CTA 叠在一起
+     （参考站手机档也把它挪到右侧）。 */
+  .sc-seq { left: auto; right: 18px; bottom: 16px; font-size: 34px; }
 }
 
 @media (max-width: 720px) {
@@ -1482,10 +1277,6 @@ body{
   .sc-card .sc-desc { font-size: 13.5px; line-height: 1.8; }
   .sc-card .sc-brand { width: 34px; height: 34px; border-radius: 9px; }
   .sc-card .sc-title-row { gap: 10px; }
-  /* Meta 行在 390px 宽的手机上：三个标签（约 4+4+5 个汉字 + 两个分隔点）
-     实测约 210px，加上卡片内边距 36px 后仍放得下，但留一行折行的余地，
-     不加 white-space:nowrap 的父级约束。 */
-  .sc-meta li { font-size: 10.5px; letter-spacing: .04em; }
 }
 
 /* ── 8 · 减少动态效果 ─────────────────────────────────────────────────────
@@ -1514,12 +1305,9 @@ body{
   .sc-stage {
     border: 1px solid CanvasText;
   }
-  .sc-eyebrow::before { background: CanvasText; }
-  .sc-eyebrow b { color: CanvasText; }
-  /* Meta 行在 forced-colors 下靠颜色区分已经失效（颜色被系统接管），
-     改用分隔点撑开间隔来维持可读的分组感。 */
-  .sc-meta li { color: CanvasText; }
-  .sc-meta li + li::after { background: CanvasText; opacity: 1; }
+  /* 序号靠 -webkit-text-stroke 画空心轮廓，forced-colors 下描边色会被接管，
+     显式改回 CanvasText 保证那圈轮廓还在（否则 42px 的数字会整个消失）。 */
+  .sc-seq { -webkit-text-stroke-color: CanvasText; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

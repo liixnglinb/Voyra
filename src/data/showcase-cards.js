@@ -52,24 +52,6 @@
  * 单词、'APP 01 / …' 画出 255px 宽的「APP 01」，在 361px 的卡上被右缘裁断。
  * 现在显式写死，不给数字就不画。
  *
- * meta：卡内第二行的元信息标签（平台 / 形态 / 状态），三个值 dot 分隔。
- * ---------------------------------------------------------------------------
- * 2026-10-13 按 docs/CARD-DESIGN-SPEC.md v2 补齐。依据是 GitHub 上三份权威
- * 规范的一致结论 —— component-patterns.md 给出的标准卡片结构里，
- * 「Meta · Meta · Meta」是必备的一行：
- *
- *     ┌─────────────────────────┐
- *     │ [Icon]  Title           │
- *     │ Description (2-3 行)    │
- *     │ Meta · Meta · Meta      │  ← caption-style, dot-separated
- *     └─────────────────────────┘
- *
- * v1 只有「标题 + 描述 + CTA」，读者判断不了产品跑在哪儿、是云端还是本地、
- * 多久更新一次，于是 268px 高的卡片下半截是空的。补上这一行既补信息量，
- * 又把卡片的重心从「左上角一小块」拉回「整张卡」。
- *
- * 三个值的语义固定：**平台 · 形态 · 状态**，避免每张卡各写各的。
- * 取值必须来自卡片自身的真实属性，不允许写「高品质」「领先」这类没有信息量的词。
  */
 
 export const SHOWCASE_CARDS = [
@@ -80,7 +62,6 @@ export const SHOWCASE_CARDS = [
     no: '01 / 接口网关',
     name: 'Voyra Relay API',
     desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。',
-    meta: ['Web', '云端网关', '4 个上游'],
     cta: '访问网关',
     href: 'https://apilxl.bbroot.com/',
     external: true,
@@ -99,7 +80,6 @@ export const SHOWCASE_CARDS = [
     no: '02 / 日程管理',
     name: '日程中心',
     desc: '课程表与日历二合一，每周课程与每日安排一站管理。',
-    meta: ['Web', '本地存储', '每周课表'],
     cta: '打开日程',
     href: '/timetable',
     family: 'core',
@@ -125,26 +105,14 @@ export const SHOWCASE_CARDS = [
      在四色调里也正好是唯一的冷色档，读者扫一眼就知道这是外部服务。 */
   {
     id: 'voyraai-mall',
+    seq: '03',
     no: '03 / 数字服务',
     name: 'VoyraAI 商城',
     desc: 'AI 订阅与数字商品自动发货，付款后凭订单号查询与取货。',
-    meta: ['Web', '自助下单', '18 件在售'],
     cta: '进入商城',
     href: 'https://voyra.men/',
     external: true,
     logo: '/voyraai/logo.jpg',
-    /* v3 品牌带：卖什么，一眼看到，不用读完描述再去演示里找牌子。
-       顺序即优先级 —— 前三个与舞台前三行一一对应，后三个补品类。
-       slug 对应 public/voyraai/brands/<slug>.svg（simple-icons 官方图形 +
-       品牌真实色）。 */
-    brands: [
-      { slug: 'openai', name: 'ChatGPT' },
-      { slug: 'googlegemini', name: 'Gemini' },
-      { slug: 'x', name: 'X Premium' },
-      { slug: 'duolingo', name: 'Duolingo' },
-      { slug: 'anthropic', name: 'Claude' },
-      { slug: 'gmail', name: 'Gmail' },
-    ],
     family: 'core',
     tone: 'blue',
     layout: 'copy',
@@ -153,24 +121,14 @@ export const SHOWCASE_CARDS = [
   },
   {
     id: 'voyraai-ref',
+    seq: '04',
     no: '04 / 推荐通道',
     name: 'VoyraAI 推荐',
     desc: '同一套商品服务的推荐入口，AI 订阅、语言学习与邮箱账号一并取货。',
-    meta: ['Web', '推荐码通道', '邮件交付'],
     cta: '获取推荐',
     href: 'https://gptibo.com/r/719F2E',
     external: true,
     logo: '/voyraai/logo.jpg',
-    /* 同一套品牌带 —— 两站卖的是同一批牌子，带的内容必须一致，
-       差异只体现在舞台（推荐通道独有推荐码条与四类目口径）。 */
-    brands: [
-      { slug: 'openai', name: 'ChatGPT' },
-      { slug: 'googlegemini', name: 'Gemini' },
-      { slug: 'x', name: 'X Premium' },
-      { slug: 'duolingo', name: 'Duolingo' },
-      { slug: 'anthropic', name: 'Claude' },
-      { slug: 'gmail', name: 'Gmail' },
-    ],
     family: 'core',
     tone: 'blue',
     layout: 'stage',
@@ -185,7 +143,6 @@ export const SHOWCASE_CARDS = [
     no: '03 / 模型评测',
     name: 'AI 模型对比秀',
     desc: '同一题交给 16 个 AI 模型分别生成，效果一页对比。',
-    meta: ['Web', '云端网关', '16 个模型'],
     cta: '查看对比',
     href: '/pelican-gallery',
     family: 'ai',
@@ -203,7 +160,6 @@ export const SHOWCASE_CARDS = [
     no: '04 / 提示词管理',
     name: '提示词库',
     desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。',
-    meta: ['Web', '云端同步', '可检索'],
     cta: '管理提示词',
     href: '/prompts',
     family: 'ai',
@@ -220,7 +176,6 @@ export const SHOWCASE_CARDS = [
     no: '05 / 设计资产',
     name: '组件图鉴',
     desc: '网页与后台常见界面组件：名称、外观、场景与原理一页讲清。',
-    meta: ['Web', '静态图鉴', '持续补充'],
     cta: '查看图鉴',
     href: '/uikit',
     family: 'ai',
@@ -235,7 +190,6 @@ export const SHOWCASE_CARDS = [
     no: '06 / 技能热榜',
     name: 'Skill 热榜',
     desc: 'GitHub 优质 Skill 与每周热点，星数排行每天自动刷新。',
-    meta: ['Web', '每日刷新', 'GitHub 源'],
     cta: '查看热榜',
     href: '/skills',
     family: 'ai',
@@ -252,7 +206,6 @@ export const SHOWCASE_CARDS = [
     no: '07 / 智能体工作流',
     name: 'AI Agent',
     desc: '汇集 Agent 与 Skill 的实用入口，快速进入合适的工作流。',
-    meta: ['Web', '精选入口', '持续更新'],
     cta: '查看资源',
     href: '/agents',
     family: 'ai',
@@ -267,7 +220,6 @@ export const SHOWCASE_CARDS = [
     no: '08 / 思路梳理',
     name: '思维导图',
     desc: '将学习与创作中的线索展开为可继续补充的结构。',
-    meta: ['Web', '浏览器本地', '无限画布'],
     cta: '打开导图',
     href: '/mindmap',
     family: 'ai',
@@ -284,7 +236,6 @@ export const SHOWCASE_CARDS = [
     no: '09 / 家庭护理',
     name: '宝宝护理',
     desc: '记录宝宝的作息、喂养和成长数据，让日常护理有迹可循。',
-    meta: ['Web', '多端同步', '长期记录'],
     cta: '进入护理',
     href: '/baby-care',
     family: 'life',
@@ -301,7 +252,6 @@ export const SHOWCASE_CARDS = [
     no: '10 / 随机抽取',
     name: '随机抽人',
     desc: '课堂点名、活动抽奖随机抽取，支持花名册识别。',
-    meta: ['Web', '浏览器本地', '花名册导入'],
     cta: '开始抽取',
     href: '/draw',
     family: 'tool',
@@ -319,7 +269,6 @@ export const SHOWCASE_CARDS = [
     no: '11 / 饮食记录',
     name: '饮食打卡',
     desc: '三餐执行、饮水与力量训练每日打卡，多端同步。',
-    meta: ['Web', '多端同步', '每日打卡'],
     cta: '今日打卡',
     href: '/diet-checkin',
     family: 'life',
@@ -341,7 +290,6 @@ export const SHOWCASE_CARDS = [
     /* 原文写"十阶段工作流"，但 stage 只画得出 4 个节点，同一张卡上自相矛盾。
        去掉具体阶段数，改成描述能兑现的范围。 */
     desc: '国赛（CUMCM）数学建模工作流，从题意到提交一条流水线。',
-    meta: ['Claude Code', 'GitHub 仓库', '国赛流程'],
     cta: '打开 Skill 仓库',
     href: 'https://github.com/liixnglinb/Mathmodel-skill',
     external: true,
@@ -360,7 +308,6 @@ export const SHOWCASE_CARDS = [
     name: '织流 Jacquard',
     /* 原描述 37 字，在 303px 窄栏里折成 3 行，把 stage 顶掉 22px。 */
     desc: '本地智能体流水线工作台，流程可编辑，产物实时落盘。',
-    meta: ['Windows', '本地运行', '可编辑流程'],
     cta: '下载软件',
     href: '/modelflow/',
     /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
@@ -381,7 +328,6 @@ export const SHOWCASE_CARDS = [
     no: 'APP 01 / 签到自动化',
     name: '学习通自动签到助手',
     desc: '常驻后台自动监听课程签到，支持普通、位置、二维码。',
-    meta: ['Windows', '后台常驻', '三类签到'],
     cta: '下载软件',
     href: '/checkin/',
     /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
@@ -400,7 +346,6 @@ export const SHOWCASE_CARDS = [
     no: 'APP 02 / 磁盘清理',
     name: '磁盘清理助手',
     desc: '磁盘扫描、分类与目录分析一站完成，预览后再确认清理。',
-    meta: ['Windows', '本地运行', '预览后清理'],
     cta: '下载软件',
     href: '/local-toolbox/',
     /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
@@ -420,7 +365,6 @@ export const SHOWCASE_CARDS = [
     no: 'APP 03 / 自动记账',
     name: '账迹 BillTrace',
     desc: '付款后 2 秒自动入库，双引擎采集，数据只存本机不上传。',
-    meta: ['Android', '仅存本机', '2 秒入库'],
     cta: '下载 APK',
     href: '/billtrace/',
     /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
@@ -441,7 +385,6 @@ export const SHOWCASE_CARDS = [
     no: 'APP 04 / 用量统计',
     name: 'Token Monitor',
     desc: '本机 AI 编程工具用量看板，Token、请求与缓存一目了然。',
-    meta: ['Windows', '本地运行', '12 个工具'],
     cta: '下载软件',
     href: '/token-monitor/',
     /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
@@ -459,7 +402,6 @@ export const SHOWCASE_CARDS = [
     no: 'APP 06 / 记忆复习',
     name: '知新 Zenew',
     desc: '四本词书 + 教材 PDF 导入，AI 生成卡片，FSRS 排复习。',
-    meta: ['Windows', '本地运行', 'FSRS 排程'],
     cta: '下载软件',
     href: '/zenew/',
     /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
@@ -477,7 +419,6 @@ export const SHOWCASE_CARDS = [
     no: 'APP 05 / 工作观测',
     name: 'AI 轨迹',
     desc: '本机解析 12 个数据源，把会话与产出整理成日报和趋势。',
-    meta: ['Windows', '本地运行', '日报视图'],
     cta: '下载软件',
     href: '/ai-chronicle/',
     /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
