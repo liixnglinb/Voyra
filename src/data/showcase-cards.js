@@ -311,7 +311,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'checkin',
     seq: '02',
-    no: 'APP 02 / 签到自动化',
+    no: 'APP 01 / 签到自动化',
     name: '学习通自动签到助手',
     desc: '常驻后台自动监听课程签到，支持普通、位置、二维码。',
     meta: ['Windows', '后台常驻', '三类签到'],
@@ -330,7 +330,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'toolbox',
     seq: '03',
-    no: 'APP 03 / 磁盘清理',
+    no: 'APP 02 / 磁盘清理',
     name: '磁盘清理助手',
     desc: '磁盘扫描、分类与目录分析一站完成，预览后再确认清理。',
     meta: ['Windows', '本地运行', '预览后清理'],
@@ -350,7 +350,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'billtrace',
     seq: '04',
-    no: 'APP 04 / 自动记账',
+    no: 'APP 03 / 自动记账',
     name: '账迹 BillTrace',
     desc: '付款后 2 秒自动入库，双引擎采集，数据只存本机不上传。',
     meta: ['Android', '仅存本机', '2 秒入库'],
@@ -371,7 +371,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'token',
     seq: '05',
-    no: 'APP 05 / 用量统计',
+    no: 'APP 04 / 用量统计',
     name: 'Token Monitor',
     desc: '本机 AI 编程工具用量看板，Token、请求与缓存一目了然。',
     meta: ['Windows', '本地运行', '12 个工具'],
@@ -407,7 +407,7 @@ export const SHOWCASE_CARDS = [
   {
     id: 'chronicle',
     seq: '07',
-    no: 'APP 07 / 工作观测',
+    no: 'APP 05 / 工作观测',
     name: 'AI 轨迹',
     desc: '本机解析 12 个数据源，把会话与产出整理成日报和趋势。',
     meta: ['Windows', '本地运行', '日报视图'],
@@ -431,7 +431,12 @@ export const SHOWCASE_GROUPS = {
      下架的只是首页橱窗位。要重新上架，把 id 加回这一行即可，不必恢复数据。 */
   products: ['api', 'timetable'],
   skills: ['mathmodel'],
-  apps: ['modelflow', 'checkin', 'toolbox', 'billtrace', 'token', 'zenew', 'chronicle'],
+  /* 应用区去掉织流 Jacquard（modelflow）与知新 Zenew（zenew）——
+     2026-10-13 用户截图指认这两张要撤下。处理方式与产品区一致：
+     **只从橱窗分组里移除 id，数据条目、静态落地页（public/<slug>/index.html）、
+     独立 GitHub 仓库、GitHub Releases 全部保留**，不影响任何分发链路。
+     要恢复上架，把 id 加回这一行即可。 */
+  apps: ['checkin', 'toolbox', 'billtrace', 'token', 'chronicle'],
 };
 
 export const CARD_BY_ID = Object.fromEntries(SHOWCASE_CARDS.map((c) => [c.id, c]));
