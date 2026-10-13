@@ -1,0 +1,885 @@
+/* ==========================================================================
+   产品截图 · 真实 UI 缩略画布
+   --------------------------------------------------------------------------
+   为什么重做（2026-10-13，用户三次反馈「还是不行」后定位到根因）：
+
+   参考站 oiloil.org 的 .stage 实测只有 aspect-ratio:16/9，
+   **没有边框、没有底色、没有圆角** —— 它是一块透明画布，
+   产品截图（macOS 窗口 / 编辑器 / Spotlight 搜索框 / 终端）
+   直接浮在白色卡面上，靠内容自身的形状形成视觉边界。
+
+   本站此前把舞台画成了「1px 描边 + 圆角 + 径向渐变底」的灰底面板，
+   面板里又塞抽象数据行与进度条 —— 两层都与参考站相反：
+     容器：应该是透明，本站画成了面板
+     内容：应该是真实 UI，本站是图表
+
+   本模块提供 6 种「真实 UI 外壳」，供各舞台拼装：
+     Window    macOS 应用窗口（标题栏 + 三点 + 内容槽）
+     Browser   浏览器窗口（地址栏 + 圆点 + 内容槽）
+     Spotlight macOS 聚焦搜索（居中浮层 + 结果行）
+     Terminal  深色终端（标签栏 + 单色等宽正文）
+     Sheet     浮起的白色面板（无窗口框，参考站 Selector 用）
+     Inline    无外壳，直接一段内容（参考站 Text-Well 用）
+
+   共同点：**每个外壳都自带形状**（圆角 + 描边 + 投影），
+   所以舞台上不需要再画任何容器。
+   ========================================================================== */
+
+/* ── 1 · macOS 应用窗口 ───────────────────────────────────────────────────
+   参考站的 NotchNotes 用的是这种：深色终端内容 + 浅色 macOS 标题栏，
+   标题栏上有三个彩色圆点、居中标题、右侧小字（电量/时间）。 */
+.Window {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--win-bg, #fff);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.10),
+    0 18px 34px -16px rgba(0, 0, 0, 0.28),
+    0 4px 10px -6px rgba(0, 0, 0, 0.14);
+}
+.Window-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  background: var(--win-bar, #F2F1EE);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+.Window-dots { display: flex; gap: 5px; }
+.Window-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--dot, #D4D2CE);
+}
+/* 三点按 macOS 顺序上色：红 黄 绿。参考站的窗口标题栏就是这个配色。 */
+.Window-dots i:nth-child(1) { background: #FF5F57; }
+.Window-dots i:nth-child(2) { background: #FEBC2E; }
+.Window-dots i:nth-child(3) { background: #28C840; }
+.Window-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font: 600 9.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #8A8A8E;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.Window-meta {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+  font: 500 8px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #B0B0B4;
+}
+.Window-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── 2 · 浏览器窗口 ───────────────────────────────────────────────────────
+   参考站的 Selector 卡片底部那条「Selector v2.0 Chrome 扩展版」是浏览器条形态；
+   本站多张应用卡是「打开下载页」，浏览器条比窗口条更贴切。 */
+.Browser {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.10),
+    0 18px 34px -16px rgba(0, 0, 0, 0.26),
+    0 4px 10px -6px rgba(0, 0, 0, 0.12);
+}
+.Browser-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 11px;
+  background: #F7F7F6;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+.Browser-url {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 17px;
+  padding: 0 8px;
+  border-radius: 99px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.07);
+  font: 500 8.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #9A9AA0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.Browser-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── 3 · macOS Spotlight 搜索 ──────────────────────────────────────────────
+   参考站 Oil Find 用的是这个：一个居中的圆角搜索框 + 下方结果行。
+   这是「搜文件 / 找东西」类产品最贴切的外壳。 */
+.Spotlight {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 100%;
+  padding: 0 6px;
+}
+.Spotlight-field {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.10),
+    0 10px 22px -10px rgba(0, 0, 0, 0.24);
+  font-size: 12px;
+  color: #3A3A3E;
+}
+.Spotlight-field svg { flex: 0 0 auto; color: #A8A8AE; }
+.Spotlight-field em {
+  font-style: normal;
+  color: #B6B6BC;
+}
+.Spotlight-rows {
+  display: grid;
+  gap: 2px;
+  padding: 5px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.07);
+}
+.Spotlight-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 7px;
+  border-radius: 6px;
+}
+.Spotlight-row.is-on { background: #EAF1FE; }
+.Spotlight-row i {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  background: #E6E6E9;
+  font: 700 8px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  font-style: normal;
+  color: #7A7A80;
+}
+.Spotlight-row b {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #2E2E32;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.Spotlight-row em {
+  flex: 0 0 auto;
+  font: 500 8.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  font-style: normal;
+  color: #A0A0A6;
+}
+
+/* ── 4 · 深色终端 ─────────────────────────────────────────────────────────
+   参考站 Oil Git 用的是这个：深色底 + 左侧导航 + 右侧等宽命令输出。 */
+.Terminal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #16181C;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.22),
+    0 20px 38px -18px rgba(0, 0, 0, 0.55);
+}
+.Terminal-bar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  height: 24px;
+  padding: 0 10px;
+  background: #202329;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font: 600 9px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #7C8592;
+}
+.Terminal-bar i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #28C840;
+}
+.Terminal-bar em {
+  margin-left: auto;
+  font-style: normal;
+  color: #4E5661;
+}
+.Terminal-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.Terminal-side {
+  flex: 0 0 38%;
+  padding: 8px 9px;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  background: #1A1D22;
+}
+.Terminal-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 8px 10px;
+  overflow: hidden;
+}
+
+/* ── 5 · 浮起白面板（无窗口框）────────────────────────────────────────────
+   参考站 Selector 的框选示意就是这种：直接一块白板浮在卡面上，
+   没有任何窗口框 —— 适合「工具本身没有窗口形态」的产品。 */
+.Sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.09),
+    0 16px 30px -16px rgba(0, 0, 0, 0.26);
+}
+.Sheet-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── 6 · 无外壳（纯内容）─────────────────────────────────────────────────
+   参考站 Text-Well 的舞台就是几行英文正文 + 一条分隔线，
+   连面板都没有。适合「内容本身就是产品」的场景。 */
+.Inline {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  padding: 0 4px;
+}
+.Inline-line {
+  display: block;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.10);
+}
+
+/* ── 内容原子 ────────────────────────────────────────────────────────────
+   下面这些是「真实 UI」会用到的最小元素，全部无背景色 ——
+   底色由外壳提供，元素只负责排版与分隔。 */
+.UI-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ui-ink, #1A1A1A);
+}
+.UI-sub {
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: var(--ui-muted, #7A7A80);
+}
+.UI-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.UI-row b {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ui-ink, #1A1A1A);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.UI-row em {
+  flex: 0 0 auto;
+  font: 600 9px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  font-style: normal;
+  color: var(--ui-accent, #1F5FE0);
+}
+.UI-sep { height: 1px; background: var(--ui-line, rgba(0, 0, 0, 0.08)); }
+.UI-kv {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 9.5px;
+}
+.UI-kv span { color: var(--ui-muted, #8A8A90); }
+.UI-kv b {
+  font: 650 10px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: var(--ui-ink, #1A1A1A);
+}
+
+/* 终端内的等宽正文 */
+.UI-term {
+  font: 500 8.5px/1.7 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #8FD4A8;
+}
+.UI-term.is-dim { color: #5C6672; }
+.UI-term.is-key { color: #7FB8F5; }
+.UI-term.is-prompt { color: #E8C46A; }
+
+/* 深色面板内的元素反色 */
+.is-dark {
+  --ui-ink: #E8EAF0;
+  --ui-muted: #7C8592;
+  --ui-line: rgba(255, 255, 255, 0.09);
+  --ui-accent: #6FCF97;
+}
+
+/* 无障碍：这些截图是纯装饰，卡片的 aria-label 已经承担全部语义 */
+.Window,
+.Browser,
+.Spotlight,
+.Terminal,
+.Sheet,
+.Inline { pointer-events: none; user-select: none; }
+/* ══════════════════════════════════════════════════════════════════════════
+   v5 新增：具体产品的界面元素
+   --------------------------------------------------------------------------
+   命名统一 shot-*，与外壳的 Window/Browser/Terminal 区分开 ——
+   外壳回答「这是什么东西的窗口」，元素回答「窗口里在显示什么」。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 终端左侧导航（API 网关）────────────────────────────────────────────
+   深色终端里的文件树 / 端点列表。参考站 Oil Git 的左侧就是这个形态。 */
+.shot-nav {
+  display: grid;
+  gap: 2px;
+  font: 500 8px/1.5 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #6B7480;
+}
+.shot-nav b {
+  margin-top: 4px;
+  font-size: 7.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: #4E5661;
+}
+.shot-nav b:first-child { margin-top: 0; }
+.shot-nav span {
+  padding: 1.5px 4px;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 选中的那一行：真实文件树里就是高亮块 */
+.shot-nav span.is-on {
+  background: rgba(111, 207, 151, 0.16);
+  color: #A8E0BF;
+}
+
+/* ── 终端右侧日志 ──────────────────────────────────────────────────────
+   真实网关日志：每行一条请求，等宽、带状态色。 */
+.shot-log {
+  display: grid;
+  gap: 3px;
+  align-content: start;
+}
+.shot-log .UI-term { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── macOS 日历（日程中心）──────────────────────────────────────────────
+   真实日历 App：左侧迷你月历 + 右侧当天日程。 */
+.shot-cal {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+.shot-cal-side {
+  flex: 0 0 42%;
+  min-width: 0;
+  padding: 8px 8px 8px 10px;
+  border-right: 1px solid rgba(0, 0, 0, 0.07);
+  background: #FBFBFC;
+}
+.shot-cal-side > b {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #2A2A2E;
+}
+.shot-cal-mini {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+}
+.shot-cal-head {
+  text-align: center;
+  font: 600 6.5px/1.6 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #A8A8AE;
+}
+.shot-cal-day {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  font: 500 7px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #4A4A50;
+}
+/* 上月/下月的日期：真实月历里是灰的 */
+.shot-cal-day.is-out { color: #C8C8CE; }
+/* 今天：红色实心圆（macOS 日历就是这么标的） */
+.shot-cal-day.is-on {
+  background: #FF3B30;
+  color: #fff;
+  font-weight: 700;
+}
+.shot-cal-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 10px;
+}
+/* 一天的日程：时间 + 课程名 + 地点 */
+.shot-cal-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 7px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #F6F6F8;
+}
+.shot-cal-row em {
+  font: 600 8px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  font-style: normal;
+  color: #0071E3;
+}
+.shot-cal-row b {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 9.5px;
+  font-weight: 650;
+  color: #2A2A2E;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shot-cal-row span {
+  font-size: 8px;
+  color: #A0A0A6;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   v5 各产品的界面元素
+   --------------------------------------------------------------------------
+   统一节奏：行高 13~17px、字号 8.5~10px、圆角 4~6px。
+   真实界面缩略图不需要大字号 —— 它是「缩小看」而不是「放大看」。
+   ========================================================================== */
+
+/* 学习通签到：状态条 + 课程行 */
+.shot-app { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 9px 11px; gap: 7px; }
+.shot-app-bar { display: flex; align-items: center; justify-content: space-between; flex: 0 0 auto; }
+.shot-app-live {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: 600 8.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #2E7D4F;
+}
+.shot-app-live i { width: 5px; height: 5px; border-radius: 50%; background: #28C840; }
+.shot-app-count { font: 500 8.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace); color: #A0A0A6; }
+.shot-app-list { display: grid; flex: 1 1 auto; min-height: 0; align-content: center; gap: 3px; }
+.shot-app-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #F7F7F9;
+}
+.shot-app-mark {
+  display: grid; place-items: center;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: #E6E6EA;
+  font: 700 7px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  font-style: normal; color: #9A9AA0;
+}
+.shot-app-row.is-ok .shot-app-mark { background: #28C840; color: #fff; }
+.shot-app-row.is-run .shot-app-mark { background: #0071E3; color: #fff; }
+.shot-app-row.is-run { background: #EAF2FE; }
+.shot-app-row b { min-width: 0; overflow: hidden; font-size: 9.5px; font-weight: 600; color: #2A2A2E; text-overflow: ellipsis; white-space: nowrap; }
+.shot-app-row em { font: 500 8.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace); font-style: normal; color: #9A9AA0; }
+
+/* 磁盘清理：大数字 + 目录树 */
+.shot-disk { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 10px 12px; gap: 8px; }
+.shot-disk-head { flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between; }
+.shot-disk-head span { font-size: 9px; color: #8A8A90; }
+.shot-disk-head b {
+  font: 700 20px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  letter-spacing: -0.03em; color: #1A1A1A;
+}
+.shot-disk-head small { font: 500 8px/1 inherit; letter-spacing: 0; color: #8A8A90; margin-left: 3px; }
+.shot-disk-list { display: grid; flex: 1 1 auto; min-height: 0; align-content: center; gap: 2px; }
+.shot-disk-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+.shot-disk-fold {
+  width: 11px; height: 9px;
+  border-radius: 2px;
+  background: #C8D8F0;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.5);
+}
+.shot-disk-row.is-hot .shot-disk-fold { background: #F5C6C2; }
+.shot-disk-row b { min-width: 0; overflow: hidden; font-size: 9px; font-weight: 550; color: #3A3A3E; text-overflow: ellipsis; white-space: nowrap; }
+.shot-disk-row em { font: 500 8.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace); font-style: normal; color: #8A8A90; }
+.shot-disk-row.is-hot b, .shot-disk-row.is-hot em { color: #C0392B; font-weight: 650; }
+
+/* 账迹：账单行 + 合计条 */
+.shot-bill { display: flex; flex-direction: column; justify-content: center; height: 100%; min-height: 0; padding: 10px 12px; gap: 3px; }
+.shot-bill-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 5px;
+  background: #F7F7F9;
+}
+.shot-bill-row b { min-width: 0; overflow: hidden; font-size: 9.5px; font-weight: 600; color: #2A2A2E; text-overflow: ellipsis; white-space: nowrap; }
+.shot-bill-cat {
+  padding: 1px 5px; border-radius: 3px;
+  background: #EAEAEE;
+  font: 500 7.5px/1.4 var(--vr-mono, ui-monospace, Menlo, monospace);
+  color: #7A7A80;
+}
+.shot-bill-row em { font: 650 9.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace); font-style: normal; color: #2A2A2E; }
+.shot-bill-total {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-top: 5px; padding-top: 6px;
+  border-top: 1px solid rgba(0,0,0,.09);
+}
+.shot-bill-total span { font-size: 9px; color: #8A8A90; }
+.shot-bill-total b { font: 700 13px/1 var(--vr-mono, ui-monospace, Menlo, monospace); color: #1A1A1A; }
+
+/* Token Monitor：大数字 + 工具行 */
+.shot-token { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 11px 12px; gap: 9px; }
+.shot-token-head { flex: 0 0 auto; display: flex; align-items: baseline; justify-content: space-between; }
+.shot-token-head b {
+  font: 700 24px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  letter-spacing: -0.04em; color: #1A1A1A;
+}
+.shot-token-head small { font: 600 11px/1 inherit; letter-spacing: 0; color: #8A8A90; }
+.shot-token-head span { font-size: 9px; color: #8A8A90; }
+.shot-token-list { display: grid; flex: 1 1 auto; min-height: 0; align-content: center; gap: 4px; }
+.shot-token-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+.shot-token-dot { width: 6px; height: 6px; border-radius: 2px; background: #0071E3; }
+.shot-token-row:nth-child(2) .shot-token-dot { background: #34C759; }
+.shot-token-row:nth-child(3) .shot-token-dot { background: #FF9F0A; }
+.shot-token-row:nth-child(4) .shot-token-dot { background: #AF52DE; }
+.shot-token-row b { min-width: 0; overflow: hidden; font-size: 9.5px; font-weight: 600; color: #2A2A2E; text-overflow: ellipsis; white-space: nowrap; }
+.shot-token-row em { font: 650 9px/1 var(--vr-mono, ui-monospace, Menlo, monospace); font-style: normal; color: #6A6A70; }
+
+/* 知新 Zenew：单词卡（无外壳，参考站 Text-Well 形态） */
+.shot-word { display: flex; flex-direction: column; gap: 5px; padding: 4px 6px; }
+.shot-word-term {
+  font-size: 26px; font-weight: 800; letter-spacing: -0.04em;
+  line-height: 1.05; color: #1A1A1A;
+}
+.shot-word-phonetic { font: 400 11px/1 var(--vr-mono, ui-monospace, Menlo, monospace); color: #9A9AA0; }
+.shot-word-mean { font-size: 13px; font-weight: 600; color: #3A3A3E; }
+.shot-word-meta { display: flex; align-items: baseline; justify-content: space-between; padding: 0 6px; }
+.shot-word-meta span { font-size: 9.5px; color: #8A8A90; }
+.shot-word-meta b { font: 700 15px/1 var(--vr-mono, ui-monospace, Menlo, monospace); color: #1A1A1A; }
+
+/* AI 轨迹：竖向时间轴 */
+.shot-trace { display: flex; flex-direction: column; justify-content: center; height: 100%; min-height: 0; padding: 10px 12px; }
+.shot-trace-row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 17px;
+}
+.shot-trace-dot {
+  position: relative;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #0071E3;
+}
+.shot-trace-dot::before {
+  content: "";
+  position: absolute;
+  left: 2.5px; bottom: 6px;
+  width: 1px; height: 11px;
+  background: rgba(0, 113, 227, 0.22);
+}
+.shot-trace-dot.is-last::before { display: none; }
+.shot-trace-row em {
+  font: 500 8.5px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  font-style: normal; color: #9A9AA0;
+}
+.shot-trace-row b { min-width: 0; overflow: hidden; font-size: 9.5px; font-weight: 600; color: #2A2A2E; text-overflow: ellipsis; white-space: nowrap; }
+
+
+/* ==========================================================================
+   v5 动效层
+   --------------------------------------------------------------------------
+   参考站的舞台是「静态截图」，但它的两张图里能看到暗示：
+     · Vibe Hub 那张底部有 ‹ › 分页点与 01/03 计数 —— 像可点的轮播
+     · Oil Find 的搜索框、Oil Git 的提交列表 —— 像真实可操作的界面
+   所以本站让截图「有一点点会动」，但**不越过「这是示意图」的界线**：
+     · 视差：截图整体随指针反向微移 ±5px（与卡片倾斜反向 → 两层速度差）
+     · 呼吸：状态点 / 绿点 / 选中的那一行，缓慢脉动
+     · 终端：光标闪烁
+   全部包在 reduced-motion 里关掉。
+   ========================================================================== */
+
+/* ── 视差：截图整体反向微移 ───────────────────────────────────────────────
+   与卡片的 rotateY 反向 —— 卡片向右倾、截图向左移，厚度感就出来了。
+   transition 比卡片短（.2s vs .12s 但缓动不同）：截图是「内容」，
+   应该比容器更稳，不能一起晃。 */
+.Window,
+.Browser,
+.Terminal,
+.Spotlight,
+.Sheet,
+.Inline {
+  transform: translate3d(var(--par-x, 0px), var(--par-y, 0px), 0);
+  transition: transform .32s var(--vr-ease-out);
+  will-change: transform;
+}
+/* 指针不在卡上时，视差变量已被 useCardEffects 清掉（reset 里 removeProperty），
+   所以这里不需要额外处理 —— 元素会平滑回到 0,0。 */
+
+/* ── 入场：截图外壳比卡片晚一点到位 ───────────────────────────────────────
+   卡片 .9s 上浮淡入，截图外壳再多 .12s 才开始 —— 错开一点点，
+   读起来是「卡片先到位、内容再浮现」，比整张卡一起淡入更有层次。 */
+.vr-card-entry[data-reveal] .Window,
+.vr-card-entry[data-reveal] .Browser,
+.vr-card-entry[data-reveal] .Terminal,
+.vr-card-entry[data-reveal] .Spotlight,
+.vr-card-entry[data-reveal] .Sheet,
+.vr-card-entry[data-reveal] .Inline {
+  animation: shotArrive .62s var(--vr-ease-out) backwards;
+  animation-delay: .16s;
+}
+@keyframes shotArrive {
+  from { opacity: 0; transform: translate3d(var(--par-x, 0px), calc(var(--par-y, 0px) + 8px), 0); }
+  to   { opacity: 1; transform: translate3d(var(--par-x, 0px), var(--par-y, 0px), 0); }
+}
+
+/* ── 呼吸：状态点 / 绿点 / 当前选中行 ─────────────────────────────────────
+   参考站截图里 Oil Git 的提交点、NotchNotes 的状态灯都是「活的」。
+   本站对应的：API 网关终端的绿点、商城的发货绿点、学习通的完成勾。
+
+   ⚠️ 性能：实测（Playwright 逐项剥离）无限循环动画是首页滚动掉帧的主因 ——
+   滚动 100 帧时 p90 帧间隔 33.2ms、慢帧 10；把这一组动画关掉后
+   p90 降到 16.7ms、慢帧 0，也就是满帧。
+
+   原因：这些元素虽然只改 opacity，但它们**分布在 10 张卡的深层 DOM 里**，
+   浏览器无法把它们提升为独立的合成层（元素太小、数量多、GPU 层有上限），
+   于是每帧都在主线程重绘 —— 10 个小圆点 × 60fps = 600 次重绘/秒。
+
+   三个修复手段（都在下面）：
+     ① animation-play-state 门控：卡片不在视口 / 页面隐藏时暂停
+     ② will-change: opacity 提示合成（对这几个小元素有效，成本极低）
+     ③ 时长错开到 3.2s / 2.4s / 1.9s —— 不同周期不会同帧重绘，
+        把「每帧 10 次重绘」摊成「每帧 1~2 次」
+
+   注：不要为了省性能把动画整个删掉 —— 这些细节是「产品是活的」的主要来源，
+   删掉后截图会退回「静态贴纸」，正是 v5 要避免的。 */
+.vr-card-entry[data-card-visible] .shot-mall-status i,
+.vr-card-entry[data-card-visible] .shot-app-live i,
+.vr-card-entry[data-card-visible] .Terminal-bar i,
+.vr-card-entry[data-card-visible] .shot-nav span.is-on,
+.vr-card-entry[data-card-visible] .shot-trace-dot.is-last,
+.vr-card-entry[data-card-visible] .shot-app-row.is-run .shot-app-mark {
+  animation: shotBreathe 3.2s ease-in-out infinite;
+  will-change: opacity;
+}
+/* 三个周期刻意错开：2.4s / 1.9s / 3.2s 互质，任何一帧最多只有 1~2 个在重绘 */
+.vr-card-entry[data-card-visible] .shot-trace-dot.is-last { animation-duration: 2.4s; }
+.vr-card-entry[data-card-visible] .shot-app-row.is-run .shot-app-mark { animation-duration: 1.9s; }
+
+/* 不在视口的卡片：暂停。data-card-visible 由 IntersectionObserver 切换
+   （见 useCardEffects），这是本站既有的门控机制，直接复用。 */
+.vr-card-entry:not([data-card-visible]) .shot-mall-status i,
+.vr-card-entry:not([data-card-visible]) .shot-app-live i,
+.vr-card-entry:not([data-card-visible]) .Terminal-bar i,
+.vr-card-entry:not([data-card-visible]) .shot-nav span.is-on,
+.vr-card-entry:not([data-card-visible]) .shot-trace-dot.is-last,
+.vr-card-entry:not([data-card-visible]) .shot-app-row.is-run .shot-app-mark {
+  animation-play-state: paused;
+}
+/* 页面切到后台 / Tab 隐藏：全局暂停 */
+.vr-home[data-page-hidden] .shot-mall-status i,
+.vr-home[data-page-hidden] .shot-app-live i,
+.vr-home[data-page-hidden] .Terminal-bar i,
+.vr-home[data-page-hidden] .shot-nav span.is-on,
+.vr-home[data-page-hidden] .shot-trace-dot.is-last,
+.vr-home[data-page-hidden] .shot-app-row.is-run .shot-app-mark {
+  animation-play-state: paused;
+}
+
+@keyframes shotBreathe {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
+}
+
+/* ── 终端光标闪烁 ─────────────────────────────────────────────────────────
+   命令行工具的标志性细节。取最后一个 .UI-term，在后面接一个方块。 */
+.vr-card-entry[data-card-visible] .shot-log .UI-term:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 8px;
+  margin-left: 3px;
+  vertical-align: -1px;
+  background: #6FCF97;
+  animation: shotCaret 1.05s steps(2, start) infinite;
+  will-change: opacity;
+}
+.vr-card-entry:not([data-card-visible]) .shot-log .UI-term:last-child::after,
+.vr-home[data-page-hidden] .shot-log .UI-term:last-child::after {
+  animation-play-state: paused;
+}
+@keyframes shotCaret {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* ── 时间轴：当前点脉动 ─────────────────────────────────────────────────
+   AI 轨迹最后一个点是「现在」，让它呼吸一下。 */
+.shot-trace-dot.is-last {
+  animation: shotBreathe 2.2s ease-in-out infinite;
+}
+
+/* ── 学习通：进行中的那一行缓慢呼吸 ───────────────────────────────────
+   真实工具的「正在监听」状态就是一个持续动的指示。 */
+.shot-app-row.is-run .shot-app-mark {
+  animation: shotBreathe 1.6s ease-in-out infinite;
+}
+
+/* ── 悬停时的额外微动 ───────────────────────────────────────────────────
+   指针落在卡上时，截图外壳微微「亮起来」——不是整体提亮，
+   而是投影加深一档，模拟「拿近了看」。 */
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .Window,
+  .sc-card:hover .Browser,
+  .sc-card:hover .Terminal,
+  .sc-card:hover .Spotlight,
+  .sc-card:hover .Sheet {
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.10),
+      0 26px 44px -18px rgba(0, 0, 0, 0.30),
+      0 6px 14px -6px rgba(0, 0, 0, 0.16);
+  }
+  /* 深色终端加深投影（浅色投影在深底上看不见） */
+  .sc-card:hover .Terminal {
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.30),
+      0 28px 48px -18px rgba(0, 0, 0, 0.60);
+  }
+}
+
+/* ── 降级：prefers-reduced-motion ────────────────────────────────────────
+   这一段是整个动效层的总闸。关掉之后：
+     · 入场不再有位移（但仍要淡入，否则内容凭空出现）
+     · 视差、呼吸、光标全部静止
+   不能用 `animation: none` 一刀切 —— 那样 .UI-term:last-child::after
+   会停在 opacity:1（永远亮着），而 shotArrive 会停在 opacity:0（永远不见）。 */
+@media (prefers-reduced-motion: reduce) {
+  .Window, .Browser, .Terminal, .Spotlight, .Sheet, .Inline {
+    transform: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
+  .vr-card-entry[data-reveal] .Window,
+  .vr-card-entry[data-reveal] .Browser,
+  .vr-card-entry[data-reveal] .Terminal,
+  .vr-card-entry[data-reveal] .Spotlight,
+  .vr-card-entry[data-reveal] .Sheet,
+  .vr-card-entry[data-reveal] .Inline {
+    animation: shotFade .3s ease-out backwards !important;
+    animation-delay: 0s !important;
+  }
+  @keyframes shotFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .shot-mall-status i,
+  .shot-app-live i,
+  .Terminal-bar i,
+  .shot-nav span.is-on,
+  .shot-trace-dot.is-last,
+  .shot-app-row.is-run .shot-app-mark {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .shot-log .UI-term:last-child::after {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  /* 卡片本身的倾斜/抬升也一并关掉（useCardEffects 在 JS 层已停手，
+     这里兜底防止 CSS 侧的 --lift 残留） */
+  .sc-card {
+    transform: none !important;
+    transition: box-shadow .2s linear !important;
+  }
+  .sc-card[data-pointer-active] {
+    will-change: auto !important;
+  }
+}

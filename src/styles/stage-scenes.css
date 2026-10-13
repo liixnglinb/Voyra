@@ -480,29 +480,41 @@
 .stg-pipe .is-todo b { color: rgba(var(--stg-text-rgb), 0.55); }
 .stg--weave .is-file code { flex: 1 1 auto; min-width: 0; }
 
-/* ── 20 · VoyraAI 商城：商城首页缩略 ────────────────────────────────────────
-   v4 重画。v3 及之前这里是「4 行数据 + 进度条 + 三步流水」的数据看板，
-   与参考站 oiloil.org 的舞台语言完全不同 —— 参考站的舞台全是**产品界面缩略**
-   （Wolfcha 是插画、Text-Well 是编辑器、悬停是设置面板），没有一个是图表。
-   进度条更是图表专属语汇：真实商城没有「商品热度条」，只有商品卡。
-
-   v4 改成真实商城的第一个屏幕：
-     顶部一条搜索栏（商城首页最标志性的元素，复用 .stg-search 的样式）
-     下面 2×2 商品网格，每格 = 品牌 logo + 名称 + 价格
-     底部一条页脚给出站点级事实（18 件在售 / 7×24 自动发货）
-
-   商品格用 .stg-goods：白底纸片 + 极淡描边 + 内高光，
-   与全站舞台的「纸片」材质统一（见 .stg-grid-c 的注释）。 */
-.stg-shelf {
+/* ── 20 · VoyraAI 商城：浏览器窗口里的商城首页 ─────────────────────────────
+   v5：不再用 .stg 的三段式（head/rows/foot），改成「浏览器窗口 + 真实界面」。
+   舞台容器已透明（见 dashboard-cards.css 的 .sc-stage），
+   所以这里的窗口外壳自带圆角与投影，就是视觉边界。 */
+.shot-mall {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 11px 12px 10px;
+}
+/* 搜索框：真实商城的第一屏元素 */
+.shot-mall-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 7px;
+  background: #F4F4F5;
+  font-size: 10px;
+  color: #A8A8AE;
+}
+/* 商品网格 2×2：每格 = 品牌 logo + 名称 + 价格。
+   格子无背景色 —— 真实商品列表的卡片本来就是白底，
+   靠一条极淡的分隔线区分，不是彩色方块。 */
+.shot-mall-grid {
   display: grid;
   flex: 1 1 auto;
   min-height: 0;
-  max-height: 210px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 7px;
+  gap: 6px;
 }
-.stg-goods {
+.shot-goods {
   display: grid;
   grid-template-areas:
     "logo name"
@@ -510,89 +522,79 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-content: center;
   align-items: center;
-  gap: 1px 8px;
-  padding: 8px 9px;
-  border-radius: 9px;
-  background: var(--stg-panel);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 1px 2px rgba(16, 16, 16, .05);
-  animation: stgRise .5s cubic-bezier(.19, 1, .22, 1) backwards;
-  animation-delay: calc(var(--i, 0) * .06s);
+  gap: 0 6px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  background: #FAFAFB;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
   min-width: 0;
   overflow: hidden;
 }
-/* logo 占两行（name + price），垂直居中 —— 商品卡的logo惯例是左侧居大，
-   这里压缩到 16px 是因为舞台只有 200px 高、一格约 62px，
-   再大的 logo 会把名称和价格挤出格子。 */
-.stg-goods .stg-brand {
-  grid-area: logo;
-  align-self: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-}
-.stg-goods b {
+.shot-brand { grid-area: logo; align-self: center; width: 13px; height: 13px; }
+.shot-goods b {
   grid-area: name;
   min-width: 0;
   overflow: hidden;
-  font-size: 10.5px;
+  font-size: 9px;
   font-weight: 650;
   letter-spacing: -0.01em;
-  color: var(--stg-text);
+  color: #2A2A2E;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.stg-goods em {
+.shot-goods em {
   grid-area: price;
   min-width: 0;
   overflow: hidden;
-  font: 600 9px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 600 8px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
   font-style: normal;
-  color: var(--stg-ink);
+  color: #0071E3;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 商城舞台的搜索栏比提示词库那条更矮一点：商城格子里已有品牌 logo 做色彩点，
-   搜索栏不需要再抢注意力，做成一条安静的输入框轮廓。 */
-.stg--mall .stg-search {
-  padding: 5px 11px;
-  border-radius: 99px;
-  box-shadow: inset 0 0 0 1px rgba(var(--stg-ink-rgb), 0.14);
-  background: transparent;
-}
-
-/* ── 21 · VoyraAI 推荐通道：推荐页缩略 ─────────────────────────────────────
-   与商城舞台的区别必须一眼看得出，否则读者以为两张卡是同一件事：
-     商城   搜索栏 + 商品网格（logo + 名称 + 价格）
-     推荐   推荐码横幅 + 类目网格（logo + 类目名 + 说明）
-   网格结构相同（都是 .stg-shelf / .stg-goods），但顶部元素与格子内容不同。 */
-.stg--referral .stg-code {
+/* 底部状态条：绿点 + 一句话说明（真实商城的「自动发货」提示） */
+.shot-mall-status {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 9px;
-  padding: 7px 11px;
-  border: 1px dashed rgba(var(--stg-ink-rgb), 0.32);
+  gap: 5px;
+  font-size: 8.5px;
+  color: #8A8A90;
+}
+.shot-mall-status i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #28C840;
+}
+
+/* ── 21 · VoyraAI 推荐通道：浏览器窗口里的推荐页 ───────────────────────────
+   与商城卡的差异在「第一屏内容」：推荐码横幅（独有信息）+ 类目网格。
+   两张卡并排时读者能一眼分清。 */
+.shot-ref-banner {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 11px;
   border-radius: 7px;
-  background: var(--stg-panel);
+  background: linear-gradient(100deg, #FFF6D6, #FFFDF6);
+  box-shadow: inset 0 0 0 1px rgba(214, 168, 32, 0.28);
 }
-.stg-code-label {
-  font: 500 9.5px/1 inherit;
-  letter-spacing: .08em;
-  color: rgba(var(--stg-text-rgb), 0.55);
+.shot-ref-banner span {
+  font: 600 9px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
+  letter-spacing: .06em;
+  color: #9A7A16;
 }
-.stg-code-value {
-  font: 700 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+.shot-ref-banner b {
+  font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: .1em;
-  color: var(--stg-ink);
+  color: #7A5E10;
 }
-/* 推荐站的类目格：说明文字比商城的价格长（「ChatGPT · Gemini」10 个字符），
-   价格位的等宽小字放不下，改用继承字号的普通小字并允许省略。 */
-.stg--referral .stg-goods em {
-  font-family: inherit;
-  font-weight: 500;
-  font-size: 9.5px;
-  color: rgba(var(--stg-text-rgb), 0.62);
-}
+.shot-mall.is-ref .shot-goods em { color: #8A8A90; font-family: inherit; font-weight: 500; font-size: 8.5px; }
+
+/* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
 
 /* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
 

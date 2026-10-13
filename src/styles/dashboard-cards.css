@@ -895,9 +895,31 @@ body{
      投影与描边 .7s 后到（重量感）。原来本站把三者都写成 .55s/.45s，
      结果位移和投影一起到，看起来像「整块弹了一下」而不是「浮起来」。
      曲线统一 --vr-ease-out = cubic-bezier(.19,1,.22,1)，与参考站 --ease 一致。 */
-  transform: translateY(var(--lift, 0px));
+  /* v5：transform 从「只做抬升」扩成「抬升 + 3D 倾斜」两件事。
+     --tilt-x/y 由 useCardEffects 每帧写入（±3.2deg），
+     --lift 由 CSS :hover 给（-4px），两者合成同一条 transform。
+     perspective(1200px) 必须**留在元素自己身上**而不是祖先 ——
+     放祖先会让所有卡片共用一个灭点，转动时灭点在动，观感是「整页在转」。 */
+  transform:
+    perspective(1200px)
+    translateY(var(--lift, 0px))
+    rotateX(var(--tilt-x, 0deg))
+    rotateY(var(--tilt-y, 0deg));
   transition:
     transform .45s var(--vr-ease-out),
+    box-shadow .7s var(--vr-ease-out);
+  /* 只在指针真的落在卡上时才提升合成层。静止时回到 auto，
+     否则首页 10 张卡会常驻 10 个合成层，吃显存也吃首屏时间。
+     --par-x/y 的消费者是 .sc-stage 的截图，两层速度差做出厚度。 */
+  will-change: auto;
+}
+.sc-card[data-pointer-active] {
+  will-change: transform;
+  /* 指针移动时的倾斜不该有 .45s 的过渡延迟 —— 那样会「粘手」。
+     抬升（--lift）仍走 .45s，但倾斜要跟手，所以单独压到 .12s。
+     transition 声明写在 .sc-card 上，这里只覆盖 transform 的时长。 */
+  transition:
+    transform .12s linear,
     box-shadow .7s var(--vr-ease-out);
 }
 /* 描边颜色单独走 transition：它是 box-shadow 里的 #E8E8E8 常量，
@@ -1032,10 +1054,17 @@ body{
    v4 起 .sc-body 只有两列，交替只需交换列宽比例与两个子元素的 order，
    不再需要 grid-template-areas（那个是三行结构的遗留）。 */
 .sc-roll-wrap:nth-child(even) .sc-body {
+  /* 偶数卡舞台在左、文字在右：文字栏仍是 1.15fr 的宽栏（与奇数卡同宽），
+     只有左右顺序换了。之前写成 `1fr 1.15fr`（第一列窄），
+     而 order:1 让舞台占第一列 —— 结果舞台拿到了窄栏、文字拿到宽栏，
+     与参考站的「文字永远是宽栏」相反。
+     参考站 .card-hitbox:nth-child(2n) > .pcard { grid-template-columns: 1fr 1.15fr }
+     配合 .stage{order:2} .pinfo{order:1} —— 即第一列（窄）给文字、第二列（宽）给舞台。
+     本站沿用同一语义：列宽写死 1fr 1.15fr，order 让舞台去第二列（宽）。 */
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
 }
-.sc-roll-wrap:nth-child(even) .sc-stage { order: 1; }
-.sc-roll-wrap:nth-child(even) .sc-copy { order: 2; }
+.sc-roll-wrap:nth-child(even) .sc-stage { order: 2; }
+.sc-roll-wrap:nth-child(even) .sc-copy { order: 1; }
 
 /* v4：眉标行与 grid-area 一起撤掉（参考站 .pcard 没有眉标）。
    .sc-copy 现在是 .sc-body 的第一列，内部按参考站 .pinfo 的结构排：
@@ -1170,35 +1199,66 @@ body{
   }
 }
 
-/* ── 5 · 舞台（参考站 .stage：右侧 1fr 的演示面板） ─────────────────────── */
+/* ── 5 · 舞台（参考站 .stage）───────────────────────────────────────────────
+   v5 关键改动：**去掉边框、底色、圆角、内高光**，舞台变成一块透明区域。
+
+   参考站实测（Playwright 取计算值，1440 视口）：
+     .stage { border:0; border-radius:0; background:transparent;
+              overflow:visible; aspect-ratio:16/9 }  → 353×181
+   它不是「面板」，是一块**透明画布**：产品截图自己带形状
+   （macOS 窗口、编辑器、Spotlight 搜索框），直接浮在白卡上。
+   参考站截图里能清楚看到：卡片左半是插画/窗口，右半是文字，
+   中间没有任何分割线、没有灰色底块。
+
+   本站 v4 及之前给舞台加了「1px 描边 + 圆角 14px + 径向渐变底 + 内高光」，
+   画出来是一个**灰底面板**，而面板里的内容又是抽象图表 ——
+   两层都不对：容器该透明，内容该是真实 UI。
+
+   aspect-ratio 16/9 是唯一的硬约束，其余全去掉。
+   min-block-size 保留 200px 是因为本站文字栏更长（描述 3 行），
+   用 min-height 会与卡片的 min-height 冲突（见 :root 的联动说明）。 */
 .sc-stage {
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-self: stretch;
-  /* 参考站实测：356×200、aspect-ratio 16/9（1440 视口、列宽 356）。
-     本站舞台列宽约 306px，严格按 16/9 算是 172px，留 28px 余量取 200px ——
-     余量给舞台内部的内容：4 行清单 + 2×2 商品网格这类元素需要高度。
-     卡片 min-height 是参考站的 300px，可用空间 300 − 44（上下内边距）= 256px，
-     舞台占 200、剩 56px 给文字段（标题 40 + 描述 53 + CTA 20 + 两处间距）
-     —— 实测文字段 121px，会让卡片长到 365px。
-     所以本站的 min-height 需要比参考站高一点，见 :root 的 --card-min-height。
-     ⚠️ 这个值与卡片 min-height、.sc-body 内边距三者联动，改任何一个都要重算。 */
-  min-block-size: 200px;
-  border: 1px solid rgba(var(--stg-text-rgb), 0.08);
-  border-radius: 14px;
-  /* overflow:hidden 裁掉舞台里越界的内容（滚动名单、折线扫掠） */
+  /* ⚠️ 不写 align-self:stretch。
+     stretch 会覆盖 .sc-body 的 align-items:center，让舞台拉伸到 grid 行高
+     （实测 306×256，而不是 16/9 应有的 306×172）。
+     参考站的 .stage 同样是「内容定高」，实测 353×181 正好是 16/9 ——
+     它靠 aspect-ratio 定高，不靠拉伸。 */
+  /* 与参考站一致：只给 aspect-ratio，不给 min-height / height。
+     参考站实测 .stage { aspect-ratio:16/9; width:100% } → 353×181，
+     高度完全由宽度推导，行列都不写死。
+
+     ⚠️ 这里之前踩过坑：同时写 `min-block-size:200px` 与 `aspect-ratio:16/9`
+     时，两个约束打架 —— 200px 是下限、16/9 会算出另一个值，
+     grid 的 align-self:stretch 又参与第三轮拉伸，
+     结果截图宽度溢出卡片 73~119px、卡片高度在 256~300 之间跳。
+     **只保留 aspect-ratio，高度让它自己算。** */
+  /* width:100% 是关键的一条：参考站 .stage 就是这么写的。
+     只写 aspect-ratio 时，grid item 的宽度由**内容的固有宽度**决定
+     （Terminal/Browser 这些外壳自己带阴影与圆角，固有宽度比列宽大），
+     实测列宽 306px 而舞台 455px，右缘超出卡片 119px。
+     显式 width:100% 把宽度交回列宽决定，aspect-ratio 只用来算高度。
+     min-width:0 配套，防止内容 min-content 反过来撑破。 */
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  /* min-width:0 与 width:100% 配套。
+     aspect-ratio 与 grid item 的默认 justify-self:stretch 组合时，
+     浏览器会用**内容的固有宽度**算宽高比，再把这个宽度定给 grid item，
+     而不是用列宽 —— 实测列宽 306px、舞台被撑到 455px，右缘超出卡片 119px。
+     min-width:0 让 grid item 的宽度回到「由列宽决定」，aspect-ratio 只管高度。
+     这与 grid 里 minmax(0,1fr) 是同一个道理：不设 0，min-content 就会赢。 */
+  min-width: 0;
+  /* 透明画布：不画任何容器。内容自身的形状就是视觉边界。 */
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  /* 参考站是 overflow:visible（内容可以溢出画布，像贴纸溢出相框）。
+     本站内容都收在画布内，用 hidden 防止意外溢出破坏卡片。 */
   overflow: hidden;
-  background-color: var(--stg-bg2);
-  background-image: radial-gradient(120% 100% at 50% 0%, var(--stg-bg1) 0%, var(--stg-bg2) 72%, var(--stg-bg2) 100%);
-  /* 顶沿一道内高光：让舞台像一张被压出弧度的纸，而不是一块平涂色块。
-     深色基调（ink）上它是舞台里唯一的亮线，浅色基调上则是一条几乎看不见的纸边。 */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: border-color .45s var(--vr-ease-out);
-}
-.sc-card:hover .sc-stage {
-  border-color: rgba(var(--stg-ink-rgb), 0.22);
 }
 
 /* ── 6 · 序号（参考站 .pnum）+ CTA（参考站 .go） ──────────────────────────

@@ -1,30 +1,53 @@
 /* ==========================================================================
-   19 个舞台 · 现代仪表盘风格
+   19 个舞台 · v5 改为「真实产品 UI 缩略」
    --------------------------------------------------------------------------
-   两轮反馈合起来看，边界就清楚了：
+   2026-10-13（用户第三次反馈「还是不行」后的定位）：
+
+   对照参考站 oiloil.org 的四张截图，之前的舞台有两个方向性错误：
+     ① **容器错了** —— 本站给舞台画了「1px 描边 + 圆角 14px + 径向渐变底」，
+        参考站实测 .stage 是 border:0 / background:transparent / radius:0，
+        产品截图直接浮在白卡上，没有面板。
+     ② **内容错了** —— 本站舞台是「数据行 + 进度条」的图表，
+        参考站是真实 UI：macOS 窗口、编辑器、Spotlight 搜索框、
+        深色终端、框选示意 —— 没有一个是图表。
+        进度条更是图表专属语汇，真实产品里没有「数据热度条」。
+
+   v5 起：舞台透明化（见 dashboard-cards.css 的 .sc-stage），
+   内容改成 product-shots.jsx 提供的真实 UI 外壳 + 真实界面元素。
+
+   v5 之前的历史（保留以备查）：
      · 第一轮太「旧」——密集假 UI、厚描边、点阵纹理、高光扫过。
-     · 上一轮太「空」——为了去掉旧手法，把内容也一起删了，只剩一个数字漂在
-       留白里，用户评价"过于简单"。
-
-   这一版取中间：**内容密度回到接近真实产品，但用现代的手法做**。
-   每个舞台统一三段式 ——
-
-     ┌ head  状态点 + 主标签 ──────────── 右侧元信息
-     │ body  主体：数据行 / 图表 / 网格
-     └ foot  2~3 个次要指标
-
-   现代感来自执行方式，不是来自"删东西"：
-     · 分隔用 1px 发丝线（透明度 0.10），不用粗描边；
-     · 面板浮起靠柔和投影分层；
-     · 数字用等宽 + 右对齐 + 表格数字，读起来是"看板"不是"文案"；
-     · 强调色只给状态点、关键数值、进度条、当前行 —— 其余全中性灰；
-     · 字号层级 10 / 11.5 / 13，靠对比而不是靠加粗堆砌。
-
-   动效仍然克制：入场错峰淡入、环境光缓慢漂移、状态点呼吸、进度条展开。
+     · 第二轮太「空」——为了去掉旧手法，把内容也一起删了。
+     · 第三轮是「仪表盘」——数据行 + 进度条 + 三段式（head/body/foot），
+       内容密度够了，但**语汇错了**：进度条与看板是图表语言，
+       真实产品界面里没有这些东西，用户三次反馈「还是不行」。
+     · v5 换成「真实产品 UI 缩略」，外壳与内容见 product-shots.jsx。
 
    颜色取自基调变量（ProductCard 按该卡 tone 注入）：
      --stg-ink / --stg-text / --stg-text-rgb / --stg-panel
    ========================================================================== */
+
+import React from 'react';
+import { Search } from 'lucide-react';
+import { Browser, Window, Terminal, Spotlight, Sheet, Inline, Term } from './product-shots';
+
+/* 品牌 logo 方块（VoyraAI 两张卡用）。
+   图形来自 simple-icons 官方 SVG，按品牌真实色写入 fill
+   （不用 currentColor，否则会被卡片基调变量染成灰）。
+   size 默认 14px —— 再小就糊成一个色点、失去识别作用。 */
+function BrandLogo({ slug, size = 14 }) {
+  return (
+    <img
+      className="shot-brand"
+      src={`/voyraai/brands/${slug}.svg`}
+      alt=""
+      width={size}
+      height={size}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+}
 
 function Stage({ className, children }) {
   /* aria-hidden：舞台是「这个产品大概长什么样」的示意，语义由卡片 aria-label
@@ -78,68 +101,68 @@ const REQUESTS = [
 
 function StageApiHub() {
   return (
-    <Stage className="api">
-      <Head live title="网关在线" meta="4 个上游" />
-      <ul className="stg-rows is-req">
-        {REQUESTS.map(([m, p, code, ms], i) => (
-          <li key={p} style={{ '--i': i }}>
-            <span className={`stg-m${m === 'GET' ? ' is-get' : ''}`}>{m}</span>
-            <code>{p}</code>
-            <b className={code === '200' ? 'is-ok' : 'is-warn'}>{code}</b>
-            <em>{ms}</em>
-          </li>
-        ))}
-      </ul>
-      <Foot items={[['P95', '42ms'], ['吞吐', '1.2k/s'], ['错误率', '0.02%']]} />
-    </Stage>
+    <Terminal title="voyra-relay · gateway" badge="4 upstream">
+      <div className="shot-nav">
+        <b>端点</b>
+        <span className="is-on">/v1/chat</span>
+        <span>/v1/embed</span>
+        <span>/v1/images</span>
+        <b className="mt">模型路由</b>
+        <span>claude-opus</span>
+        <span>gpt-4o</span>
+      </div>
+      <div className="shot-log">
+        <Term><span className="is-key">GET</span> /v1/chat 200 42ms</Term>
+        <Term tone="dim">POST /v1/embed 200 18ms</Term>
+        <Term><span className="is-key">GET</span> /v1/images 200 96ms</Term>
+        <Term tone="prompt">→ failover claude → gpt-4o</Term>
+      </div>
+    </Terminal>
   );
 }
 
 /* ── 02 · 日程中心 ────────────────────────────────────────────────────────
-   真实课表：五列（周一~周五）× 六行节次，格子写课名。
-   ---------------------------------------------------------------------------
-   2026-10 按「舞台实际可用高度」重排（用户反馈内容不够精致）。
-   实测：.sc-stage 在桌面档只有 ~164px 高，减掉内边距 36、表头 24、页脚 20、
-   两处 gap 20，**留给课表网格的只有约 64px**。而原来排了 7 门课、跨 6 行，
-   网格实际需要 161px —— 超出 72px，格子直接压到页脚上（看起来就是「坏了」）。
-
-   修法不是硬塞，而是**让演示内容服从真实可见面积**：
-     · 节次压到 2 行（高年级课表在最上面两节最密，这是真实作息里的实况）；
-     · 课程从 7 门减到 5 门，正好铺满 2 行 × 5 列里的 5 个位置，
-       每格只放一个课名（不再有换行折字）；
-     · 页脚改成这一屏真正有用的信息（今日节数 + 下一节）。
-   这样每格都能完整显示课名，是「排得下的真实课表」而不是「挤扁的示意图」。 */
+   v5：改成 **macOS 日历窗口**（真实 UI），不再是五列课表网格。
+   原来那套「周一~周五 × 课名」的表格是抽象示意 —— 真实课表 App 的界面
+   一定是：左侧迷你月历 + 右侧当天时间轴。参考站的日历类卡片也是这个形态。 */
 const WEEK_DAYS = ['一', '二', '三', '四', '五'];
-/* [课名, gridArea('行起 / 列起 / 行止 / 列止')] —— 两行高、每门课占一格。
-   行号从 2 开始：第 1 行是星期表头（auto 高），课程占第 2~3 行。
-   ⚠️ 2026-10-13 修：原来写的是 '1 / x / 3 / y'（行 1~2），课程格子从
-   表头行就开始画，白底纸片 + 描边直接把「一二三四五」盖掉——表头在 DOM 里
-   靠前、课程在后，后画的赢。实测表头 y=0..12.4、课程 y=5.1..47.9，重叠 7px。 */
-const COURSES = [
-  ['高等数学', '2 / 1 / 4 / 2'],
-  ['大学英语', '2 / 2 / 4 / 3'],
-  ['数据结构', '2 / 4 / 4 / 5'],
-  ['物理实验', '2 / 3 / 4 / 4'],
-  ['线性代数', '2 / 5 / 4 / 6'],
+const DAY_EVENTS = [
+  ['08:20', '高等数学', '2-3 节'],
+  ['10:20', '大学英语', '3-4 节'],
+  ['14:00', '物理实验', '实验楼'],
 ];
 
 function StageWeekGrid() {
   return (
-    <Stage className="week">
-      <Head title="本周课表" meta="第 6 周" />
-      <div className="stg-grid">
-        {/* 表头显式给列号：课程格子占用 grid-area('2/…/4/…')，
-            自动放置会跳过被显式占用的行、且列号不定，五个标签会挤成一列。
-            钉死 grid-row:1 + grid-column 后表头稳定落在第 1 行、五列各一个。 */}
-        {WEEK_DAYS.map((d, i) => (
-          <span key={d} className="stg-grid-h" style={{ gridRow: 1, gridColumn: i + 1 }}>{d}</span>
-        ))}
-        {COURSES.map(([name, area], i) => (
-          <span key={name} className="stg-grid-c" style={{ gridArea: area, '--i': i }}>{name}</span>
-        ))}
+    <Window title="10 月 13 日 · 星期一" meta={['100%', '14:32']}>
+      <div className="shot-cal">
+        <div className="shot-cal-side">
+          <b>十月</b>
+          <div className="shot-cal-mini">
+            {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
+              <span key={d} className="shot-cal-head">{d}</span>
+            ))}
+            {Array.from({ length: 28 }, (_, i) => (
+              <span
+                key={i}
+                className={`shot-cal-day${i === 12 ? ' is-on' : ''}${i < 4 || i > 27 ? ' is-out' : ''}`}
+              >
+                {i < 4 ? 29 + i : i - 3}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="shot-cal-main">
+          {DAY_EVENTS.map(([time, name, where], i) => (
+            <div key={time} className="shot-cal-row" style={{ '--i': i }}>
+              <em>{time}</em>
+              <b>{name}</b>
+              <span>{where}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <Foot items={[['今日', '4 节'], ['下一节', '高等数学']]} />
-    </Stage>
+    </Window>
   );
 }
 
@@ -386,31 +409,25 @@ function StageMealStamps() {
 }
 
 /* ── 12 · 数学建模 Skill ──────────────────────────────────────────────────
-   国赛工作流五个阶段 + 进度条。 */
-const CUMCM_STEPS = [
-  ['done', '题意分析'],
-  ['done', '模型假设'],
-  ['run', '建立模型'],
-  ['todo', '求解验证'],
-  ['todo', '论文写作'],
-];
-
+   v5：深色终端（参考站 Oil Git 形态）。
+   Skill 是命令行工具，真实界面就是终端里跑一条流水线。 */
 function StagePaperBuild() {
   return (
-    <Stage className="paper">
-      <Head title="CUMCM 工作流" meta="国赛" />
-      <ul className="stg-rows is-step is-dense">
-        {CUMCM_STEPS.map(([state, label], i) => (
-          <li key={label} className={`is-${state}`} style={{ '--i': i }}>
-            <i className="stg-mark">{state === 'done' ? '✓' : state === 'run' ? '●' : '○'}</i>
-            <b>{label}</b>
-            <em>{state === 'done' ? '已完成' : state === 'run' ? '进行中' : '待开始'}</em>
-          </li>
-        ))}
-      </ul>
-      <Bar ratio={0.44} />
-      <Foot items={[['进度', '2 / 5'], ['预计', '6 天']]} />
-    </Stage>
+    <Terminal title="CUMCM workflow" badge="stage 3/5">
+      <div className="shot-nav">
+        <b>阶段</b>
+        <span className="is-on">3 建立模型</span>
+        <span>4 求解验证</span>
+        <span>5 论文写作</span>
+      </div>
+      <div className="shot-log">
+        <Term tone="dim">$ skill run cumcm --stage analyze</Term>
+        <Term>✓ 题意分析 · 抽取 12 个约束</Term>
+        <Term>✓ 模型假设 · 生成 3 条</Term>
+        <Term tone="key">● 建立模型 · 进行中</Term>
+        <Term tone="prompt">→ 下一步 --stage solve</Term>
+      </div>
+    </Terminal>
   );
 }
 
@@ -456,7 +473,8 @@ function StageWeave() {
 }
 
 /* ── 14 · 学习通自动签到 ──────────────────────────────────────────────────
-   五门课的签到状态与时间。 */
+   v5：macOS 应用窗口 + 课程签到列表（真实 UI）。
+   真实签到工具的界面就是「课程名 + 状态 + 时间」，没有进度条。 */
 const COURSES_CHECK = [
   ['高等数学', '08:02', 'ok'],
   ['大学英语', '08:05', 'ok'],
@@ -467,244 +485,214 @@ const COURSES_CHECK = [
 
 function StageAutoClick() {
   return (
-    <Stage className="click">
-      <Head live title="后台监听中" meta="5 门课" />
-      <ul className="stg-rows is-course">
-        {COURSES_CHECK.map(([name, note, state], i) => (
-          <li key={name} style={{ '--i': i }}>
-            <b>{name}</b>
-            <em className={`is-${state}`}>{state === 'run' ? <i className="stg-dot" /> : null}{note}</em>
-          </li>
-        ))}
-      </ul>
-      <Foot items={[['已签到', '3 门'], ['防风控', '已开启']]} />
-    </Stage>
+    <Window title="学习通自动签到助手" meta={['运行中', 'v3.11']}>
+      <div className="shot-app">
+        <div className="shot-app-bar">
+          <span className="shot-app-live"><i />后台常驻</span>
+          <span className="shot-app-count">今日 3 / 5</span>
+        </div>
+        <div className="shot-app-list">
+          {COURSES_CHECK.map(([name, time, state], i) => (
+            <div key={name} className={`shot-app-row is-${state}`} style={{ '--i': i }}>
+              <i className="shot-app-mark">{state === 'ok' ? '✓' : state === 'run' ? '●' : '○'}</i>
+              <b>{name}</b>
+              <em>{time}</em>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Window>
   );
 }
 
-/* ── 15 · 磁盘清理助手 ────────────────────────────────────────────────────
-   大数字 + 四项占用明细（条长与数值成比例）。 */
-/* v2：第 5 行「文档」把清单补到 5 行。
-   原来 4 行在窄舞台（实测 182px 高）里文字覆盖率只有 10.2%，
-   是全部舞台里最低的 —— 大数字 + 4 行条形 + 页脚撑不满高度，
-   上下各空一截，看着像被裁掉了一行。
-   118 GB 的大数字不动（它是这张卡的主结论），补一行让清单占满。 */
-const DISK = [['系统', '42 GB', 0.28], ['应用', '68 GB', 0.45], ['缓存', '36 GB', 0.24], ['文档', '18 GB', 0.12], ['垃圾', '118 GB', 0.78]];
+/* ── 15 · 磁盘清理 ────────────────────────────────────────────────────────
+   v5：macOS 窗口 + 扫描结果（真实 Finder 清理工具的形态：目录树 + 大小）。 */
+const DISK = [
+  ['系统', '42 GB'],
+  ['应用', '68 GB'],
+  ['缓存', '36 GB'],
+  ['文档', '18 GB'],
+  ['垃圾', '118 GB'],
+];
 
 function StageDiskClean() {
   return (
-    <Stage className="disk">
-      <Head title="扫描完成" meta="C 盘" />
-      <p className="stg-big">118<small>GB 可清理</small></p>
-      <ul className="stg-rows is-disk">
-        {DISK.map(([name, size, ratio], i) => (
-          <li key={name} style={{ '--i': i }}>
-            <b>{name}</b>
-            <Bar ratio={ratio} hot={name === '垃圾'} />
-            <em>{size}</em>
-          </li>
-        ))}
-      </ul>
-      <Foot items={[['扫描', '1.2 万文件'], ['耗时', '18s']]} />
-    </Stage>
+    <Window title="磁盘清理助手" meta={['C 盘', '18s']}>
+      <div className="shot-disk">
+        <div className="shot-disk-head">
+          <span>扫描完成</span>
+          <b>118<small>GB 可清理</small></b>
+        </div>
+        <div className="shot-disk-list">
+          {DISK.map(([name, size], i) => (
+            <div key={name} className={`shot-disk-row${name === '垃圾' ? ' is-hot' : ''}`} style={{ '--i': i }}>
+              <i className="shot-disk-fold" />
+              <b>{name}</b>
+              <em>{size}</em>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Window>
   );
 }
 
 /* ── 16 · 账迹 BillTrace ──────────────────────────────────────────────────
-   四笔消费 + 合计。合计 74.30 = 24.50 + 15.30 + 18.00 + 16.50，数字自洽。 */
-const BILLS = [['午餐', '餐饮', '¥24.50'], ['咖啡', '餐饮', '¥15.30'], ['地铁', '交通', '¥18.00'], ['超市', '日用', '¥16.50']];
+   v5：macOS 窗口 + 账单流水（真实记账 App 的形态：商户 + 分类 + 金额）。
+   合计 74.30 = 24.50 + 15.30 + 18.00 + 16.50，数字自洽。 */
+const BILLS = [
+  ['午餐', '餐饮', '¥24.50'],
+  ['咖啡', '餐饮', '¥15.30'],
+  ['地铁', '交通', '¥18.00'],
+  ['超市', '日用', '¥16.50'],
+];
 
 function StageBillDrop() {
   return (
-    <Stage className="bill">
-      <Head live title="自动入库" meta="2 秒" />
-      <ul className="stg-rows is-bill">
-        {BILLS.map(([name, cat, amount], i) => (
-          <li key={name} style={{ '--i': i }}>
-            <b>{name}</b>
-            <span className="stg-chip">{cat}</span>
-            <em>{amount}</em>
-          </li>
+    <Window title="账迹 BillTrace" meta={['10 月 13 日', '4 笔']}>
+      <div className="shot-bill">
+        {BILLS.map(([shop, cat, amt], i) => (
+          <div key={shop} className="shot-bill-row" style={{ '--i': i }}>
+            <b>{shop}</b>
+            <span className="shot-bill-cat">{cat}</span>
+            <em>{amt}</em>
+          </div>
         ))}
-      </ul>
-      <div className="stg-total"><span>今日合计</span><b>¥74.30</b></div>
-    </Stage>
+        <div className="shot-bill-total">
+          <span>今日合计</span>
+          <b>¥74.30</b>
+        </div>
+      </div>
+    </Window>
   );
 }
 
 /* ── 17 · Token Monitor ───────────────────────────────────────────────────
-   大数字 + 折线 + 按工具拆分。 */
-const TOKEN_TOOLS = [['Claude Code', '620k', 0.50], ['Codex', '410k', 0.33], ['WorkBuddy', '210k', 0.17], ['DeepSeek', '130k', 0.11]];
+   v5：macOS 窗口 + 工具用量（真实用量看板的形态：工具名 + 今日 Token 数）。
+   大数字 1.37M = 620+410+210+130 = 1370k，与下面四行自洽。 */
+const TOKEN_TOOLS = [
+  ['Claude Code', '620k'],
+  ['Codex', '410k'],
+  ['WorkBuddy', '210k'],
+  ['DeepSeek', '130k'],
+];
 
 function StageSparkline() {
   return (
-    <Stage className="spark">
-      <Head title="今日用量" meta="本机" />
-      <p className="stg-big">1.37<small>M Token</small></p>
-      <svg className="stg-spark-chart" viewBox="0 0 220 44" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0 36 L31 29 L62 32 L93 18 L124 13 L155 20 L186 8 L220 12 L220 44 L0 44 Z" className="stg-spark-area" />
-        <path d="M0 36 L31 29 L62 32 L93 18 L124 13 L155 20 L186 8 L220 12" className="stg-spark-line" />
-      </svg>
-      {/* v2：工具清单从 3 个补到 4 个。3 行 + 大数字 + 折线在 200px 舞台里
-          仍然显得空（文字覆盖率实测 9.2%，是全部舞台里最低的之一）。
-          第 4 行让清单占到下半截，比例回到与其他舞台一致的水平。
-          大数字同步从 1.24 改成 1.37 —— 必须等于四个工具之和
-          （620+410+210+130=1370k），不能凭空改，否则页脚与清单自相矛盾。 */}
-      <ul className="stg-rows is-tool">
-        {TOKEN_TOOLS.map(([name, val, ratio], i) => (
-          <li key={name} style={{ '--i': i }}>
-            <b>{name}</b>
-            <Bar ratio={ratio} />
-            <em>{val}</em>
-          </li>
-        ))}
-      </ul>
-    </Stage>
+    <Window title="Token Monitor" meta={['本机', '今日']}>
+      <div className="shot-token">
+        <div className="shot-token-head">
+          <b>1.37<small>M</small></b>
+          <span>今日 Token</span>
+        </div>
+        <div className="shot-token-list">
+          {TOKEN_TOOLS.map(([name, val], i) => (
+            <div key={name} className="shot-token-row" style={{ '--i': i }}>
+              <i className="shot-token-dot" />
+              <b>{name}</b>
+              <em>{val}</em>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Window>
   );
 }
 
 /* ── 18 · 知新 Zenew ──────────────────────────────────────────────────────
-   单词卡翻面 + 复习进度。 */
-/* ── 18 · 知新 Zenew ──────────────────────────────────────────────────────
-   复习卡正反面 + 词书分布 + 进度。
-   v2：原来只有一张翻转卡 + 进度条 + 页脚，可读元素仅 4 个、文字覆盖率 10.2%
-   （实测全站第二低）—— 一张孤零零的卡浮在大片空白里，看不出这是个批量
-   复习工具。补「词书分布」清单（四本词书 + 张数），让读者一眼知道复习
-   范围。四本词书与 Zenew 应用实际内置的一致（四级 / 六级 / 高频词 / 基础英语）。
-
-   ⚠️ 高度预算：舞台 200px − 内边距 36 − 表头 ~34 − 进度条 ~15 − 页脚 ~22
-   − 四处 gap 40 = **仅剩 53px 给清单**，放 4 行会溢出并与进度条重叠。
-   所以这里只画 2 行词书（各 12px + 7px gap = 31px），把「复习范围」这件事
-   交代清楚即可 —— 密度下限的 4 个可读元素由「翻转卡正反面 2 + 词书 2」达到。
-   若要塞 4 行词书，必须先把舞台 min-height 从 200px 提到 240px。 */
+   v5：改成**无外壳的纯内容**（参考站 Text-Well 就是这个形态：
+   几行大字 + 分隔线，没有窗口框）。
+   这张卡的内容本身就是产品 —— 一个单词卡的正面。 */
 function StageFlipCard() {
   return (
-    <Stage className="flip">
-      <Head title="今日待复习" meta="42 张" />
-      <div className="stg-flip-stage">
-        <div className="stg-flip-card">
-          <div className="stg-flip-face is-front">
-            <b>abandon</b>
-            <span>/əˈbændən/</span>
-          </div>
-          <div className="stg-flip-face is-back">
-            <b>放弃；抛弃</b>
-            <span>4 天后复习</span>
-          </div>
-        </div>
+    <Inline>
+      <div className="shot-word">
+        <span className="shot-word-term">abandon</span>
+        <span className="shot-word-phonetic">/əˈbændən/</span>
+        <span className="shot-word-mean">放弃；抛弃</span>
       </div>
-      <ul className="stg-rows is-dense">
-        {[['四级 + 六级', '27 张', 0.64], ['高频词 + 基础', '15 张', 0.36]].map(([name, val, ratio], i) => (
-          <li key={name} style={{ '--i': i }}>
-            <b>{name}</b>
-            <Bar ratio={ratio} />
-            <em>{val}</em>
-          </li>
-        ))}
-      </ul>
-      <Bar ratio={0.62} />
-      <Foot items={[['已复习', '26 张'], ['正确率', '88%']]} />
-    </Stage>
+      <span className="Inline-line" />
+      <div className="shot-word-meta">
+        <span>今日待复习</span>
+        <b>42</b>
+      </div>
+    </Inline>
   );
 }
 
 /* ── 19 · AI 轨迹 ─────────────────────────────────────────────────────────
-   五个时间点 + 当日产出柱状。 */
-const TRACE = [['08:30', '会话 4'], ['11:00', '产出 3'], ['14:00', '产出 8'], ['17:30', '会话 12'], ['20:00', '日报']];
-const TRACE_BARS = [30, 52, 78, 44, 62, 88, 70, 96, 58, 40];
+   v5：macOS 窗口 + 时间轴（真实工作日志工具的形态：时间 + 事件）。 */
+const TRACE = [
+  ['08:30', '会话 4'],
+  ['11:00', '产出 3'],
+  ['14:00', '产出 8'],
+  ['17:30', '会话 12'],
+  ['20:00', '日报'],
+];
 
 function StageTimeline() {
   return (
-    <Stage className="timeline">
-      <Head title="今日轨迹" meta="12 个数据源" />
-      <ul className="stg-rows is-trace">
+    <Window title="AI 轨迹" meta={['10 月 13 日', '12 源']}>
+      <div className="shot-trace">
         {TRACE.map(([time, text], i) => (
-          <li key={time} style={{ '--i': i }}>
-            <time>{time}</time>
+          <div key={time} className="shot-trace-row" style={{ '--i': i }}>
+            <em>{time}</em>
+            <i className={`shot-trace-dot${i === TRACE.length - 1 ? ' is-last' : ''}`} />
             <b>{text}</b>
-          </li>
+          </div>
         ))}
-      </ul>
-      <div className="stg-cols">
-        {TRACE_BARS.map((h, i) => <i key={i} style={{ '--h': `${h}%`, '--i': i }} />)}
       </div>
-      <Foot items={[['会话', '16'], ['产出', '11 份']]} />
-    </Stage>
+    </Window>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
    20 · VoyraAI 官方商城（voyra.men）
    ══════════════════════════════════════════════════════════════════════════
-   抓取自 https://voyra.men/ 的真实内容（2026-10-13）：
-     · 主标语「VoyraAI。AI 服务，一站直达。」
-     · 副标语「数字商品自动发货，付款后凭订单号查询。」
-     · 精选商品：ChatGPT Plus ¥139/月、Gemini Pro 18 个月 ¥7、X Premium ¥22 起
-     · 商品分类计数：ChatGPT 9、Gemini 1、X Premium 4、Muse 1、Codex 1，共 18 件
-     · 品牌主色 #0071E3（Apple 蓝系）
+   v5：浏览器窗口截图 —— 真实 UI 浮在白卡上，不是「带边框的面板里塞图表」。
+   窗口里是商城首页：搜索框 + 四件商品（品牌 logo + 名称 + 价格）+ 发货状态条。
 
-   v4 重画：从「数据看板」改成「商城首页缩略」。
-   v3 及之前这个舞台是 4 行「logo + 名称 + 进度条 + 价格」的清单 ——
-   进度条是图表语汇，真实商城没有「商品热度条」，只有商品卡。
-   参考站 oiloil.org 的舞台全是**产品界面缩略**（插画 / 编辑器 / 设置面板），
-   不是图表。所以 v4 改成 2×2 商品网格：每格 = logo + 名称 + 价格，
-   顶部一条搜索栏（真实商城的第一个元素），底部一条自动发货状态。
-   这样舞台读起来是「一个商城长什么样」，不是「一组数据」。 */
+   商品与价格取自 https://voyra.men/ 真实页面（2026-10-13 抓取）：
+     ChatGPT Plus ¥139/月、Gemini Pro 18 个月 ¥7、X Premium ¥22、多邻国年卡 ¥9.9 */
 const MALL_ITEMS = [
   ['ChatGPT Plus', '¥139/月', 'openai'],
   ['Gemini Pro', '18 个月 ¥7', 'googlegemini'],
-  ['X Premium', '3/6 个月 ¥22', 'x'],
+  ['X Premium', '3/6 月 ¥22', 'x'],
   ['多邻国', '年卡 ¥9.9', 'duolingo'],
 ];
 
-/* 品牌 logo 方块：白底 + 细描边，尺寸比文字行高略小，
-   让 logo 与文字在同一基线上而不是压住文字。
-   图标本身是 24 viewBox 的 SVG，这里用 14px 渲染 —— 再小就糊成色点。 */
-function BrandLogo({ slug, size = 14 }) {
-  return (
-    <img
-      className="stg-brand"
-      src={`/voyraai/brands/${slug}.svg`}
-      alt=""
-      width={size}
-      height={size}
-      loading="lazy"
-      decoding="async"
-    />
-  );
-}
-
 function StageVoyraMall() {
   return (
-    <Stage className="mall">
-      <span className="stg-search">搜索商品…</span>
-      <div className="stg-shelf">
-        {MALL_ITEMS.map(([name, price, slug], i) => (
-          <div key={name} className="stg-goods" style={{ '--i': i }}>
-            <BrandLogo slug={slug} />
-            <b>{name}</b>
-            <em>{price}</em>
-          </div>
-        ))}
+    <Browser url="voyra.men" title="VoyraAI · 数字商品自动发卡">
+      <div className="shot-mall">
+        <div className="shot-mall-search">
+          <Search size={11} strokeWidth={2} />
+          <span>搜索商品…</span>
+        </div>
+        <div className="shot-mall-grid">
+          {MALL_ITEMS.map(([name, price, slug]) => (
+            <div key={name} className="shot-goods">
+              <BrandLogo slug={slug} size={13} />
+              <b>{name}</b>
+              <em>{price}</em>
+            </div>
+          ))}
+        </div>
+        <div className="shot-mall-status">
+          <i /> 付款后自动发货 · 凭订单号查询
+        </div>
       </div>
-      <Foot items={[['在售', '18 件'], ['发货', '7×24 自动']]} />
-    </Stage>
+    </Browser>
   );
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
    21 · VoyraAI 推荐通道（gptibo.com/r/719F2E）
    ══════════════════════════════════════════════════════════════════════════
-   与官方商城的区别必须看得出来，否则两张卡读者会以为是同一张：
-     · 入口带推荐码 719F2E → 舞台加一条「推荐码」横幅，这是它唯一的独有信息；
-     · 品类口径不同：推荐站在线商品里多了「语言学习 / 邮箱账号 / 工具服务」
-       三个非 AI 类目（抓取自该页导航：AI 订阅 / 语言学习 / 邮箱账号 / 工具服务）；
-     · 交付方式强调「邮件交付 / 领取链接」，与主站的「付款即发卡」不同。
-
-   v4 重画：同样从「数据行 + 进度条」改成「推荐页缩略」——
-   顶部一条推荐码横幅（真实推荐页最显眼的元素），下面四类目卡片网格。
-   两类卡片的舞台结构因此完全不同：商城是「搜索栏 + 商品网格」，
-   推荐是「推荐码横幅 + 类目网格」，读者不会混淆。 */
+   同样用浏览器窗口。与商城卡的差异在「窗口里第一屏的内容」：
+     商城   搜索框 + 商品网格
+     推荐   推荐码横幅（唯一独有信息）+ 类目网格
+   两张卡并排时读者能一眼分清。 */
 const REF_CATS = [
   ['AI 订阅', 'ChatGPT · Gemini', 'openai'],
   ['语言学习', 'Duolingo 年卡', 'duolingo'],
@@ -714,22 +702,26 @@ const REF_CATS = [
 
 function StageVoyraRef() {
   return (
-    <Stage className="referral">
-      <div className="stg-code">
-        <span className="stg-code-label">推荐码</span>
-        <span className="stg-code-value">719F2E</span>
+    <Browser url="gptibo.com/r/719F2E" title="Voyra · 推荐通道">
+      <div className="shot-mall is-ref">
+        <div className="shot-ref-banner">
+          <span>推荐码</span>
+          <b>719F2E</b>
+        </div>
+        <div className="shot-mall-grid">
+          {REF_CATS.map(([name, sub, slug]) => (
+            <div key={name} className="shot-goods">
+              <BrandLogo slug={slug} size={13} />
+              <b>{name}</b>
+              <em>{sub}</em>
+            </div>
+          ))}
+        </div>
+        <div className="shot-mall-status">
+          <i /> 邮件交付 · 卡密保留 7 天
+        </div>
       </div>
-      <div className="stg-shelf">
-        {REF_CATS.map(([name, sub, slug], i) => (
-          <div key={name} className="stg-goods" style={{ '--i': i }}>
-            <BrandLogo slug={slug} />
-            <b>{name}</b>
-            <em>{sub}</em>
-          </div>
-        ))}
-      </div>
-      <Foot items={[['交付', '邮件直达'], ['品类', '4 类']]} />
-    </Stage>
+    </Browser>
   );
 }
 
