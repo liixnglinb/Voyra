@@ -10,13 +10,34 @@
    颜色取自基调变量：--stg-ink / --stg-text / --stg-text-rgb / --stg-panel
    ========================================================================== */
 
+/* ══════════════════════════════════════════════════════════════════════════
+   2026-10 精致化（用户反馈「内容不够精致、配色不够好看」）
+   --------------------------------------------------------------------------
+   对照参考站 oiloil.org 的演示面板逐项找差距，落成下面三条原则：
+
+   ① **内边距加大**：14px 16px → 18px 20px。
+      参考站 .pcard 的 padding 是 22px 26px，演示面板在卡内还有自己的留白。
+      14px 的边距让表头、数据行贴到舞台边缘，观感是「塞满了」而不是「排好了」。
+      留白是精致感的第一来源，这一条比任何装饰都有效。
+
+   ② **分隔线改发丝级 + 加内高光**：透明度 0.10 → 0.07，
+      并给表头/页脚各加一条 1px 的浅色内高光。
+      原来是纯灰线压在灰底上，显得脏；参考站的分隔都是「一道亮线 + 一道暗线」
+      的双层做法，看起来像纸被压出的折痕而不是画上去的线。
+
+   ③ **数据行/格子改用「纸片」而不是「色块」**：
+      色块（纯色矩形）是线框图的语汇；纸片是「白底 + 极淡描边 + 极淡投影」，
+      看起来像真的 UI 元素浮在面板上。参考站的每个 demo 元素都是后者的做法。
+      —— 这一条是本次改动里观感提升最大的一处。
+   ══════════════════════════════════════════════════════════════════════════ */
+
 .stg {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 18px 20px;
   overflow: hidden;
   color: var(--stg-text);
   line-height: 1.35;
@@ -28,14 +49,17 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   min-width: 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(var(--stg-text-rgb), 0.10);
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(var(--stg-text-rgb), 0.07);
+  /* 折痕效果：暗线的下一行补一道极淡亮线，模拟纸被压出的凹槽。
+     深色基调（ink）上只保留亮线，否则会糊成一片。 */
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 .stg-head b {
   overflow: hidden;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 650;
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
@@ -44,8 +68,9 @@
 .stg-head em {
   flex: 0 0 auto;
   margin-left: auto;
-  font: 500 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 500 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   font-style: normal;
+  letter-spacing: 0.04em;
   color: rgba(var(--stg-text-rgb), 0.55);
 }
 
@@ -54,13 +79,13 @@
   flex: 0 0 auto;
   align-items: center;
   gap: 14px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(var(--stg-text-rgb), 0.10);
+  padding-top: 10px;
+  border-top: 1px solid rgba(var(--stg-text-rgb), 0.07);
   font-size: 11px;
   color: rgba(var(--stg-text-rgb), 0.55);
 }
 .stg-foot b {
-  font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 650 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--stg-text);
 }
 
@@ -76,7 +101,8 @@
   max-height: 210px;
   grid-template-columns: minmax(0, 1fr);
   align-content: space-evenly;
-  gap: 5px;
+  /* 5 → 7：数据行之间多一点呼吸，是精致感里最便宜的一笔 */
+  gap: 7px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -86,7 +112,7 @@
   align-items: center;
   gap: 8px;
   font-size: 11px;
-  animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
+  animation: stgRise .5s cubic-bezier(.19, 1, .22, 1) backwards;
   animation-delay: calc(var(--i, 0) * .06s);
 }
 .stg-rows b {
@@ -149,14 +175,19 @@
 
 .stg-chip {
   flex: 0 0 auto;
-  padding: 2px 6px;
-  border-radius: 5px;
-  background: rgba(var(--stg-ink-rgb), 0.10);
-  font-size: 11px;
-  color: rgba(var(--stg-text-rgb), 0.72);
+  padding: 3px 7px;
+  border-radius: 6px;
+  /* 纸片化的分类标签：白底 + 细描边，而不是一块平涂灰。
+     与 .stg-grid-c 同一套材质，整块舞台的语汇才统一。 */
+  background: var(--stg-panel);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.10);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  font-size: 10.5px;
+  font-weight: 550;
+  color: rgba(var(--stg-text-rgb), 0.78);
 }
-.stg-up { flex: 0 0 auto; font: 650 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-ink); }
-.stg-down { flex: 0 0 auto; font: 650 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.45); }
+.stg-up { flex: 0 0 auto; font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-ink); }
+.stg-down { flex: 0 0 auto; font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.45); }
 
 /* 进度条：细、圆角、填充用强调色 */
 .stg-bar {
@@ -166,7 +197,10 @@
   width: 62px;
   height: 5px;
   border-radius: 99px;
-  background: rgba(var(--stg-ink-rgb), 0.14);
+  /* 轨道压深一档（0.14 → 0.10）并补一道内阴影：
+     浅色基调上原本的轨道几乎看不见，进度条像悬空的色块。 */
+  background: rgba(var(--stg-ink-rgb), 0.10);
+  box-shadow: inset 0 1px 1px rgba(20, 18, 14, 0.06);
   overflow: hidden;
 }
 .stg-bar i {
@@ -203,17 +237,27 @@
 .stg--api .is-warn { flex: 0 0 auto; font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.45); }
 .stg--api .is-req em { width: 30px; justify-content: flex-end; color: rgba(var(--stg-text-rgb), 0.6); }
 
-/* ── 02 · 日程中心：五列课表 ────────────────────────────────────────────── */
+/* ── 02 · 日程中心：五列课表 ──────────────────────────────────────────────
+   舞台可用高度只有约 64px（见 stages.jsx 里 StageWeekGrid 的注释），
+   所以网格定为「表头 1 行 + 课程 2 行」，两行均分剩余空间。
+
+   坑：课程格子用显式 grid-area（'1 / 1 / 3 / 2'），行号是绝对行号，
+   而表头是自动放置的 —— 自动放置会跳过被显式占用的行，把星期标签
+   排到第 3 行去（实测：课名在上、「一二三四五」挤在最右边一列）。
+   表头必须**同时**钉住行列：grid-row:1 只钉行，列仍是自动，
+   五个标签会全挤进第 1 列。所以用 grid-auto-flow:column 让自动放置
+   沿行方向排，或者更直接地给每个表头显式列号 —— 这里用后者，
+   在 JSX 里写内联 grid-column（见 stages.jsx）。 */
 .stg--week .stg-grid {
   display: grid;
   flex: 1 1 auto;
   min-height: 0;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  /* 行高 15 → 17px：格子跨两行，装得下 11px 中文而不挤。课程数据用到 2~5 行，
-     表头单独占第 1 行（auto）。 */
-  grid-template-rows: auto repeat(5, 17px);
-  gap: 4px;
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+  gap: 5px;
 }
+/* 表头固定在第 1 行；列号由 JSX 的内联 grid-column 指定 */
+.stg--week .stg-grid-h { grid-row: 1; }
 .stg-grid-h {
   /* 星期标记：9px/50% 太淡太小，中文单字在 10.5px 下才立得住 */
   font: 600 10.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -223,17 +267,27 @@
 .stg-grid-c {
   display: grid;
   place-items: center;
-  padding: 1px 2px;
+  padding: 2px 4px;
   overflow: hidden;
-  border-radius: 6px;
-  /* 靠底色区分有课/空档。原先每格左侧还有一道 2px 强调色竖线，
-     六个格子六道线只是重复的边框（每格已有底色），去掉后分布照样一眼可读。 */
-  background: rgba(var(--stg-ink-rgb), 0.16);
-  /* 8.5px 的中文课名在真机上糊成一团，11px 是中文标签的下限 */
+  border-radius: 7px;
+  /* 「纸片」而不是「色块」：白底 + 极淡描边 + 1px 内高光。
+     原来的 rgba(ink,0.16) 是一块平涂灰，六个格子连成一片脏灰；
+     改成纸片后，格子之间有呼吸、有边界，像真的课表卡片。
+     深色基调下这条内高光会变成一条突兀的白边，因此由基调变量控制 —— 
+     .sc-card 的 ink 基调把 --stg-panel 设成深灰，这里跟随即可。 */
+  background: var(--stg-panel);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.10);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 1px 2px rgba(20, 18, 14, 0.04);
+  color: var(--stg-text);
+  /* 11px 的中文课名是这个尺寸下的下限，再小就糊 */
   font-size: 11px;
+  font-weight: 550;
   line-height: 1.15;
   text-align: center;
-  animation: stgRise .45s cubic-bezier(.16, 1, .3, 1) backwards;
+  /* 每格只放一个课名（4 字），两行高的格子正好排得下，不会折字。
+     keep-all 是保险：万一将来换成更长的课名，也不会从词中间断开。 */
+  word-break: keep-all;
+  animation: stgRise .45s cubic-bezier(.19, 1, .22, 1) backwards;
   animation-delay: calc(var(--i, 0) * .05s);
 }
 

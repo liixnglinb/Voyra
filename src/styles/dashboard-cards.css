@@ -1289,15 +1289,22 @@ body{
 
 .vr-home .vr-about-panel {
   display: grid;
-  gap: 72px;
+  /* 72 → 40（2026-10 用户反馈「中间那么大的空隙」）。
+     原来 intro 自己 padding-bottom:56 + 分隔线 + 网格 gap 72，
+     分隔线到「经历」区头实测空出 153px（56 + 72 + 区头上边距），
+     而区头下面到第一张卡只有 24px —— 一松一紧，眼睛看到的就是「一段大空白」。
+     现在把「分隔线以下的间距」交给一个变量统一控制，见下。 */
+  gap: 0;
 }
 
 /* ── 自述区 ───────────────────────────────────────────────────────────────
-   与参考站 .me-intro 同构：kicker 等宽小字 → 自述 → 标签组，底部一条分隔线。 */
+   与参考站 .me-intro 同构：kicker 等宽小字 → 自述 → 标签组，底部一条分隔线。
+   间距按「同一套节奏」重排：kicker→正文 18、正文→标签 24、标签→分隔线 32、
+   分隔线→区头 = .vr-experience 的 margin-top。 */
 .vr-home .vr-about-intro {
   position: relative;
   z-index: 1;
-  padding: 10px 0 56px;
+  padding: 10px 0 32px;
   border-bottom: 1px solid var(--vr-line, rgba(27, 27, 27, .11));
 }
 .vr-home .vr-about-intro > span {
@@ -1341,10 +1348,14 @@ body{
 
 /* ── 经历区 ───────────────────────────────────────────────────────────────
    区头与参考站 .me-section-head 同款：左侧等宽小标签走墨色，
-   右侧一句结论走灰。 */
+   右侧一句结论走灰。
+   margin-top 36：分隔线到「经历 / EXPERIENCE」这一行。
+   与上面的 padding-bottom:32 合起来是 68px 的分隔带 —— 参考站实测 .experience
+   margin-top 72，量级一致，但本站不再额外叠加网格 gap，所以视觉上紧了一档。 */
 .vr-home .vr-experience {
   position: relative;
   z-index: 1;
+  margin-top: 36px;
 }
 .vr-home .vr-experience-label,
 .vr-home .vr-contact-head {
@@ -1561,6 +1572,23 @@ body{
   border-radius: 12px;
   background: #FAF9F6;
   color: #A48830;
+}
+/* ── 修掉「图标跑偏」（2026-10 用户反馈）────────────────────────────────────
+   症状：.vr-contact-icon 是 44×44 的居中网格，但里面的 svg 被推到最右边 ——
+        实测 insetL 23px / insetR 1px（左 23、右 1，明显贴右）。
+   根因：一条**遗留规则**（Dashboard.jsx 内联样式里的
+         `.vr-contact-row svg:last-child{justify-self:end; …}`）用 :last-child
+         来选中「行尾那个箭头」。但改造后行内结构变成
+         编号 · 图标 · 文案 · 右侧值 · 箭头，而**图标 svg 也是它父元素的
+         last-child**（.vr-contact-icon 里只有这一个孩子）——
+         于是那条规则同时命中了图标，把 justify-self:end 也套了上去。
+   修法：不去动那条遗留规则（它还负责箭头），而是把图标的 svg 显式拉回居中。
+         选择器写足到 `.vr-contact-icon > svg`，特异性高于 `svg:last-child`，
+         且源码序在后，稳赢。 */
+.vr-home .vr-contact-icon > svg {
+  justify-self: center;
+  align-self: center;
+  transform: none;
 }
 .vr-home .vr-contact-copy {
   display: grid;
