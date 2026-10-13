@@ -96,12 +96,21 @@
    会被拉到 30px 行距，看着散。 */
 .stg-rows {
   display: grid;
+  /* v2 第三版：flex 回到 1 1 auto，但 align-content 改 start。
+     前面两版各错一半：
+       ① flex:1 1 auto + space-evenly → 行被均分摊开，少量行之间腾出大洞；
+       ② flex:0 1 auto + 舞台 justify-content:center → 内容总高超出舞台时
+          flex-shrink 把清单压扁，行被裁掉（磁盘清理只剩「系统」一行）。
+     正确做法是**让行组拉伸填满、把多余空间归给列表内部**，
+     但用 align-content:start 而不是 space-evenly ——
+     行贴在一起（像一张表），多余空间落在列表底部（像一张表下面的留白）。
+     表格感本身就是这批舞台的语汇：行距均匀、底部有块安静的空白，
+     比 space-evenly 那种「每行之间都空一点」更像真实 UI。 */
   flex: 1 1 auto;
   min-height: 0;
   max-height: 210px;
   grid-template-columns: minmax(0, 1fr);
-  align-content: space-evenly;
-  /* 5 → 7：数据行之间多一点呼吸，是精致感里最便宜的一笔 */
+  align-content: start;
   gap: 7px;
   margin: 0;
   padding: 0;
@@ -479,7 +488,10 @@
   align-items: baseline;
   gap: 4px;
   margin: 0;
-  font: 750 24px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* v2：24px → 21px。这个大数字与下方清单共用舞台的纵向预算，
+     21px 仍是最醒目的那一层（比清单里的 11px 行大一倍），
+     却能省出 3px 给第 5 行明细 —— 此前 5 行只显示得下 1 行。 */
+  font: 750 21px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   letter-spacing: -0.03em;
   color: var(--stg-ink);
   transform-origin: left center;
@@ -489,6 +501,18 @@
 .stg--disk .is-disk b { flex: 0 0 28px; }
 .stg--disk .is-disk .stg-bar { width: auto; }
 .stg--disk .is-disk em { flex: 0 0 46px; justify-content: flex-end; color: rgba(var(--stg-text-rgb), 0.7); }
+/* v2：给「行多且行内带进度条」的舞台（磁盘 5 行、Token 4 行）单独收紧行距。
+   这两类行的实际高度不是 11px 而是约 15px（Bar 5px + 行内对齐余量），
+   4 行 ≈ 60px、5 行 ≈ 75px。加上大数字 21 + 折线 28 + 表头 34 + 页脚 22
+   + 内边距 36 + 四处 gap 40，总高超出 200px 舞台 25~55px，
+   表现是最后 1~4 行被舞台 overflow:hidden 裁掉 ——
+   看起来像「数据只有 2 个工具」而不是排版溢出。
+
+   修法是压缩行距而不是加高舞台：舞台高度是整卡节奏的一部分
+   （min-height:200px 与参考站的 180px 同量级），
+   为一张卡单独撑高会让同行的两张卡高度不齐，反而更难看。 */
+.stg--disk .is-disk,
+.stg--spark .is-tool { gap: 4px; }
 
 /* ── 16 · 账迹：明细 + 合计 ────────────────────────────────────────────── */
 .stg-total {
@@ -503,7 +527,13 @@
 .stg-total b { font: 750 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -0.02em; color: var(--stg-ink); }
 
 /* ── 17 · Token Monitor：数字 + 折线 + 拆分 ────────────────────────────── */
-.stg-spark-chart { display: block; flex: 0 0 auto; width: 100%; height: 40px; }
+/* 高度预算（实测：舞台 200px − 内边距 36 − 表头 34 − gap 30 − 清单 4×15+3×7
+   = 21. 剩给折线图 + 大数字的空间约 69px）。
+   v2：40px → 28px、大数字 24px → 21px，两者合计省下 15px，
+   刚好让第 4 行工具（DeepSeek）完整显示。此前它被裁在舞台底边外，
+   看起来像「只列了 3 个工具」—— 而清单下方还有页脚位置没内容，
+   读者会以为是数据缺失而不是排版溢出。 */
+.stg-spark-chart { display: block; flex: 0 0 auto; width: 100%; height: 28px; }
 .stg-spark-area { fill: rgba(var(--stg-ink-rgb), 0.12); }
 .stg-spark-line {
   fill: none;

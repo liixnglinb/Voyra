@@ -415,9 +415,20 @@ function StagePaperBuild() {
 }
 
 /* ── 13 · 织流 Jacquard ───────────────────────────────────────────────────
-   四段流水线 + 产物清单。 */
-const PIPE = [['输入', 'done'], ['清洗', 'done'], ['LLM', 'run'], ['导出', 'todo']];
-const WEAVE_FILES = ['out/clean.jsonl', 'out/result.md'];
+   四段流水线 + 产物清单。
+
+   v2：产物清单从 2 行补到 4 行。原因见 docs/CARD-DESIGN-SPEC.md §6.2 ——
+   舞台的内容密度下限是 4 个可读元素。原来只有 2 个文件行，
+   在 200px 高的舞台里上下留出大片空黑，看起来像「没画完」。
+   补的两个文件沿用流水线真实产物命名（清洗后的语料 → 模型输出 → 图表 → 报告），
+   与下面页脚的「产物 N 个」计数保持一致。 */
+const PIPE = [['输入', 'done'], ['清洗', 'done'], ['LLM', 'run'], ['导出', 'run']];
+const WEAVE_FILES = [
+  ['out/clean.jsonl', 'ok'],
+  ['out/result.md', 'ok'],
+  ['out/figure-01.png', 'run'],
+  ['out/report.html', 'todo'],
+];
 
 function StageWeave() {
   return (
@@ -432,11 +443,14 @@ function StageWeave() {
         ))}
       </div>
       <ul className="stg-rows is-file">
-        {WEAVE_FILES.map((f, i) => (
-          <li key={f} style={{ '--i': i }}><i className="stg-mark">✓</i><code>{f}</code></li>
+        {WEAVE_FILES.map(([f, state], i) => (
+          <li key={f} className={`is-${state}`} style={{ '--i': i }}>
+            <i className="stg-mark">{state === 'ok' ? '✓' : state === 'run' ? '●' : '○'}</i>
+            <code>{f}</code>
+          </li>
         ))}
       </ul>
-      <Foot items={[['节点', '4 / 4'], ['产物', '2 个']]} />
+      <Foot items={[['节点', '3 / 4'], ['产物', '2 / 4']]} />
     </Stage>
   );
 }
@@ -470,7 +484,12 @@ function StageAutoClick() {
 
 /* ── 15 · 磁盘清理助手 ────────────────────────────────────────────────────
    大数字 + 四项占用明细（条长与数值成比例）。 */
-const DISK = [['系统', '42 GB', 0.28], ['应用', '68 GB', 0.45], ['缓存', '36 GB', 0.24], ['垃圾', '118 GB', 0.78]];
+/* v2：第 5 行「文档」把清单补到 5 行。
+   原来 4 行在窄舞台（实测 182px 高）里文字覆盖率只有 10.2%，
+   是全部舞台里最低的 —— 大数字 + 4 行条形 + 页脚撑不满高度，
+   上下各空一截，看着像被裁掉了一行。
+   118 GB 的大数字不动（它是这张卡的主结论），补一行让清单占满。 */
+const DISK = [['系统', '42 GB', 0.28], ['应用', '68 GB', 0.45], ['缓存', '36 GB', 0.24], ['文档', '18 GB', 0.12], ['垃圾', '118 GB', 0.78]];
 
 function StageDiskClean() {
   return (
@@ -515,17 +534,22 @@ function StageBillDrop() {
 
 /* ── 17 · Token Monitor ───────────────────────────────────────────────────
    大数字 + 折线 + 按工具拆分。 */
-const TOKEN_TOOLS = [['Claude Code', '620k', 0.50], ['Codex', '410k', 0.33], ['WorkBuddy', '210k', 0.17]];
+const TOKEN_TOOLS = [['Claude Code', '620k', 0.50], ['Codex', '410k', 0.33], ['WorkBuddy', '210k', 0.17], ['DeepSeek', '130k', 0.11]];
 
 function StageSparkline() {
   return (
     <Stage className="spark">
       <Head title="今日用量" meta="本机" />
-      <p className="stg-big">1.24<small>M Token</small></p>
+      <p className="stg-big">1.37<small>M Token</small></p>
       <svg className="stg-spark-chart" viewBox="0 0 220 44" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 36 L31 29 L62 32 L93 18 L124 13 L155 20 L186 8 L220 12 L220 44 L0 44 Z" className="stg-spark-area" />
         <path d="M0 36 L31 29 L62 32 L93 18 L124 13 L155 20 L186 8 L220 12" className="stg-spark-line" />
       </svg>
+      {/* v2：工具清单从 3 个补到 4 个。3 行 + 大数字 + 折线在 200px 舞台里
+          仍然显得空（文字覆盖率实测 9.2%，是全部舞台里最低的之一）。
+          第 4 行让清单占到下半截，比例回到与其他舞台一致的水平。
+          大数字同步从 1.24 改成 1.37 —— 必须等于四个工具之和
+          （620+410+210+130=1370k），不能凭空改，否则页脚与清单自相矛盾。 */}
       <ul className="stg-rows is-tool">
         {TOKEN_TOOLS.map(([name, val, ratio], i) => (
           <li key={name} style={{ '--i': i }}>
@@ -541,6 +565,18 @@ function StageSparkline() {
 
 /* ── 18 · 知新 Zenew ──────────────────────────────────────────────────────
    单词卡翻面 + 复习进度。 */
+/* ── 18 · 知新 Zenew ──────────────────────────────────────────────────────
+   复习卡正反面 + 词书分布 + 进度。
+   v2：原来只有一张翻转卡 + 进度条 + 页脚，可读元素仅 4 个、文字覆盖率 10.2%
+   （实测全站第二低）—— 一张孤零零的卡浮在大片空白里，看不出这是个批量
+   复习工具。补「词书分布」清单（四本词书 + 张数），让读者一眼知道复习
+   范围。四本词书与 Zenew 应用实际内置的一致（四级 / 六级 / 高频词 / 基础英语）。
+
+   ⚠️ 高度预算：舞台 200px − 内边距 36 − 表头 ~34 − 进度条 ~15 − 页脚 ~22
+   − 四处 gap 40 = **仅剩 53px 给清单**，放 4 行会溢出并与进度条重叠。
+   所以这里只画 2 行词书（各 12px + 7px gap = 31px），把「复习范围」这件事
+   交代清楚即可 —— 密度下限的 4 个可读元素由「翻转卡正反面 2 + 词书 2」达到。
+   若要塞 4 行词书，必须先把舞台 min-height 从 200px 提到 240px。 */
 function StageFlipCard() {
   return (
     <Stage className="flip">
@@ -557,6 +593,15 @@ function StageFlipCard() {
           </div>
         </div>
       </div>
+      <ul className="stg-rows is-dense">
+        {[['四级 + 六级', '27 张', 0.64], ['高频词 + 基础', '15 张', 0.36]].map(([name, val, ratio], i) => (
+          <li key={name} style={{ '--i': i }}>
+            <b>{name}</b>
+            <Bar ratio={ratio} />
+            <em>{val}</em>
+          </li>
+        ))}
+      </ul>
       <Bar ratio={0.62} />
       <Foot items={[['已复习', '26 张'], ['正确率', '88%']]} />
     </Stage>

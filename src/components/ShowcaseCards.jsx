@@ -66,12 +66,17 @@ const TONES = {
      像一块从别的产品搬来的石墨板。 */
   ink: {
     accent: '#8A6D1F', accentInk: '#634E16',
-    stgInk: '#FFFFFF', stgText: '#FFFFFF', stgPanel: '#33312E', stgBg1: '#1F1D1B', stgBg2: '#141311',
+    /* 2026-10-13（v2）：底色从 #141311 提到 #1F1E1C，面板从 #33312E 提到 #3A3835。
+       原来的纯黑舞台贴在米白卡上像「一张黑卡叠一张白卡」，对比过硬、边界生硬。
+       提亮后仍是四基调里最重的一档，但和纸面卡壳的关系变成「深色面板浮在白纸上」
+       而不是「两个不相干的块贴在一起」。 */
+    stgInk: '#FFFFFF', stgText: '#FFFFFF', stgPanel: '#3A3835', stgBg1: '#242220', stgBg2: '#1F1E1C',
   },
-  /* 金：暖米色舞台 + 金调描边，站内金家族。这一档就是全站的基准色温。 */
+  /* 金：暖米色舞台 + 金调描边，站内金家族。这一档就是全站的基准色温。
+     v2 同样把 bg1 压低一档（原 #F2E8D2 偏亮，与卡壳白底几乎同色、失去面板感）。 */
   gold: {
     accent: '#8A6D1F', accentInk: '#634E16',
-    stgInk: '#8A6D1F', stgText: '#6B5417', stgPanel: '#FFFCF3', stgBg1: '#F2E8D2', stgBg2: '#FFFFFF',
+    stgInk: '#8A6D1F', stgText: '#6B5417', stgPanel: '#FFFCF3', stgBg1: '#F2E7CC', stgBg2: '#FBF6EA',
   },
   /* 蓝：整页唯一的冷色。底色是"降过饱和的冷灰蓝"而不是天蓝 —— 天蓝（原 #E6EEFC）
      在米色页面上是一块会跳出来的补色，压得整页发花；降饱和后它仍是冷的那一档，
@@ -152,11 +157,14 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
   /* 描边序号只收纯数字。之前是从 no 字段切 '/' 前段推导，结果
      'SKILL / CUMCM WORKFLOW' 渲染出 192px 宽的空心单词、
      'APP 01 / …' 渲染出 255px 宽的「APP 01」，在 361px 的卡上被右缘裁断。
-     现在由数据显式给 seq，取不到数字就不渲染。 */
-  const seq = /^\d{1,2}$/.test(card.seq ?? '') ? card.seq : null;
-  /* 眉标取自 no 字段的「类目词」段（'01 / 接口网关' → '接口网关'）。
-     no 拆成两段：左侧短码走强调色、右侧类目词走灰，补回杂志刊头的层级。 */
+     现在由数据显式给 seq，取不到数字就不渲染。
+     2026-10-13（v2）：v1 用 42px 空心描边数字钉在左下角占一整格，
+     信息价值为零却和 CTA 争视觉重心 —— 序号信息眉标里已经有了（'01 / 接口网关'），
+     属于重复表达。现在彻底删掉这一元素，把左下角让给 Meta 行。 */
   const [noCode, noLabel] = String(card.no ?? '').split('/').map((part) => part.trim());
+  /* v2 新增：Meta 行三标签。缺 meta 的卡不渲染这一行（不写占位符，
+     空标签比没有标签更难看）。 */
+  const meta = Array.isArray(card.meta) ? card.meta.filter(Boolean).slice(0, 3) : [];
   /* 版式字段保留在数据里但不再驱动渲染（参考站没有版式变体）。
      类名照旧带上 layout-<x>，只是 CSS 里已无对应规则 —— 这样数据契约不破，
      日后想恢复某种版式也能从 DOM 上一眼看到原值。 */
@@ -180,8 +188,8 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
           aria-hidden：纯装饰；它盖在卡面之上但不拦截指针（pointer-events:none）。 */}
       <span className="sc-spotlight" aria-hidden="true" />
       <div className="sc-body">
-        {/* 眉标 / 文案 / 页脚三段各占一行，舞台独占一列跨满三行（见 .sc-body
-            的 grid-template-areas）。这样舞台高度自动等于文字段总高，
+        {/* v2 结构：眉标 / 文案 / 页脚三段各占一行，舞台独占一列跨满三行
+            （见 .sc-body 的 grid-template-areas）。这样舞台高度自动等于文字段总高，
             不必给舞台写死高度，两张卡也自然等高。 */}
         <span className="sc-eyebrow">
           {noLabel ? (<><b>{noCode}</b>{noLabel}</>) : null}
@@ -197,6 +205,14 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
             <h3 className="sc-title">{card.name}</h3>
           </div>
           <p className="sc-desc" title={card.desc}>{desc}</p>
+          {/* Meta 行：平台 · 形态 · 状态。放在描述与 CTA 之间 ——
+              视觉上紧跟描述（同一段「说明」），又与 CTA 之间留足 22px，
+              避免两行小字粘在一起。 */}
+          {meta.length ? (
+            <ul className="sc-meta">
+              {meta.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          ) : null}
         </div>
 
         <div className="sc-stage">
@@ -208,9 +224,6 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
             {card.cta} <ArrowUpRight size={15} />
           </span>
         </div>
-        {/* 序号绝对定位在卡片左下角（参考站 .pnum 的做法），因此放在 .sc-body
-            之外 —— 它不参与网格，永远不会把 CTA 挤走。 */}
-        {seq ? <span className="sc-seq" aria-hidden="true">{seq}</span> : null}
       </div>
     </a>
   );
