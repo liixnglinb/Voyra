@@ -110,6 +110,51 @@ export const SHOWCASE_CARDS = [
        键和值互为同义词，等于什么都没演示。 */
     stage: { kind: "week-grid" },
   },
+  /* ══════════════ 产品 · 自营服务 ══════════════
+     2026-10-13 用户指定新增。两个入口指向同一套服务（VoyraAI 数字商品自动发卡），
+     但对读者是两件事，所以给两张卡、两个独立入口：
+       mall     官方商城主站，读者自助下单
+       referral 带推荐码的通道，走邀请关系下单
+     文案与舞台内容全部取自两站真实页面（Playwright 抓取，非臆造）：
+       · 主标语「VoyraAI。AI 服务，一站直达。」
+       · 副标语「数字商品自动发货，付款后凭订单号查询。」
+       · 精选商品 ChatGPT Plus ¥139 / Gemini Pro 18 个月 ¥7 / X Premium ¥22 起
+       · 在售 18 件，分 9 个类目，推荐站另有语言学习 / 邮箱账号 / 工具服务三档
+       · 推荐码 719F2E
+     tone 都用 blue：品牌主色是 #0071E3，蓝色基调与它同族，
+     在四色调里也正好是唯一的冷色档，读者扫一眼就知道这是外部服务。 */
+  {
+    id: 'voyraai-mall',
+    no: '03 / 数字服务',
+    name: 'VoyraAI 商城',
+    desc: 'AI 订阅与数字商品自动发货，付款后凭订单号查询与取货。',
+    meta: ['Web', '自助下单', '18 件在售'],
+    cta: '进入商城',
+    href: 'https://voyra.men/',
+    external: true,
+    logo: '/voyraai/logo.jpg',
+    family: 'core',
+    tone: 'blue',
+    layout: 'copy',
+    Icon: 'Store',
+    stage: { kind: "mall" },
+  },
+  {
+    id: 'voyraai-ref',
+    no: '04 / 推荐通道',
+    name: 'VoyraAI 推荐',
+    desc: '同一套商品服务的推荐入口，AI 订阅、语言学习与邮箱账号一并取货。',
+    meta: ['Web', '推荐码通道', '邮件交付'],
+    cta: '获取推荐',
+    href: 'https://gptibo.com/r/719F2E',
+    external: true,
+    logo: '/voyraai/logo.jpg',
+    family: 'core',
+    tone: 'blue',
+    layout: 'stage',
+    Icon: 'Ticket',
+    stage: { kind: "referral" },
+  },
 
   /* ══════════════ 产品 · AI 智能 ══════════════ */
   {
@@ -429,7 +474,7 @@ export const SHOWCASE_GROUPS = {
   /* 产品区只留前两张（2026-10 用户要求：产品里除第一、第二个卡片外全部下架）。
      其余 9 条数据刻意留在 SHOWCASE_CARDS 里 —— 它们对应的站内页面与独立仓库都还在，
      下架的只是首页橱窗位。要重新上架，把 id 加回这一行即可，不必恢复数据。 */
-  products: ['api', 'timetable'],
+  products: ['api', 'timetable', 'voyraai-mall', 'voyraai-ref'],
   skills: ['mathmodel'],
   /* 应用区去掉织流 Jacquard（modelflow）与知新 Zenew（zenew）——
      2026-10-13 用户截图指认这两张要撤下。处理方式与产品区一致：

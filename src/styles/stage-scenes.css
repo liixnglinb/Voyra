@@ -476,6 +476,91 @@
 .stg-pipe .is-todo b { color: rgba(var(--stg-text-rgb), 0.55); }
 .stg--weave .is-file code { flex: 1 1 auto; min-width: 0; }
 
+/* ── 20 · VoyraAI 商城：商品货架 + 下单流水 ─────────────────────────────────
+   .stg-flow 与 .stg-pipe 是同一套视觉语言（纸片方块 + 连接线 + 状态反色），
+   复用它的定义而不是复制一份 —— 织流那张卡的流水线已经验证过这套观感，
+   两处同源改动只需要维护一处。
+
+   区别只有一个：商城这三步全是「已完成」态（流程是既定的，
+   不像织流有 running/todo），所以只保留 .is-done 的基础样式即可。 */
+.stg-flow { display: flex; flex: 0 0 auto; flex-wrap: nowrap; align-items: center; }
+.stg-flow span {
+  display: flex;
+  align-items: center;
+  animation: stgRise .5s cubic-bezier(.19, 1, .22, 1) backwards;
+  animation-delay: calc(var(--i, 0) * .08s);
+}
+.stg-flow b {
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.14);
+  background: var(--stg-panel);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 1px 2px rgba(16, 16, 16, .05);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--stg-text);
+  white-space: nowrap;
+}
+/* 连接线用箭头端点而非纯横线：读起来是「流向下一步」而不是「分隔」。 */
+.stg-flow u {
+  position: relative;
+  display: block;
+  width: 14px;
+  height: 1px;
+  background: rgba(var(--stg-ink-rgb), 0.30);
+}
+.stg-flow u::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 4px;
+  height: 4px;
+  border-top: 1px solid rgba(var(--stg-ink-rgb), 0.45);
+  border-right: 1px solid rgba(var(--stg-ink-rgb), 0.45);
+  transform: rotate(45deg);
+}
+/* 商品行：名称左、条形中、价格右 —— 与 Token / 磁盘两张卡同一套三栏，
+   读者扫过去不用重新学一遍怎么读这个舞台。 */
+.stg--mall .is-mall b { flex: 1 1 auto; min-width: 0; }
+.stg--mall .is-mall .stg-bar { width: auto; flex: 0 1 56px; }
+.stg--mall .is-mall em { flex: 0 0 auto; color: var(--stg-text); }
+
+/* ── 21 · VoyraAI 推荐通道：四类目 + 推荐码条 ─────────────────────────────── */
+.stg--referral .is-ref b { flex: 0 0 auto; }
+.stg--referral .is-ref .stg-bar { flex: 0 1 48px; width: auto; }
+.stg--referral .is-ref em {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  color: rgba(var(--stg-text-rgb), 0.62);
+  font-family: inherit;
+  font-weight: 500;
+}
+
+/* 推荐码条：整张卡唯一「可以照着输」的信息，所以给它一点存在感 ——
+   等宽、大字、强调色描边，但不做成按钮（它是代码不是动作）。 */
+.stg-code {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border: 1px dashed rgba(var(--stg-ink-rgb), 0.32);
+  border-radius: 7px;
+  background: var(--stg-panel);
+}
+.stg-code-label {
+  font: 500 9.5px/1 inherit;
+  letter-spacing: .08em;
+  color: rgba(var(--stg-text-rgb), 0.55);
+}
+.stg-code-value {
+  font: 700 15px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .1em;
+  color: var(--stg-ink);
+}
+
 /* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
 .stg--click .is-course em.is-ok { color: var(--stg-ink); }
 .stg--click .is-course em.is-run { color: rgba(var(--stg-text-rgb), 0.7); }
@@ -634,6 +719,15 @@
     border: 1px solid CanvasText;
     background: Canvas;
   }
+  /* 2026-10-13：商城流水方块与推荐码条是新增的两种「有底色的容器」，
+     在 forced-colors 下颜色被系统接管，必须显式补边框，否则只剩一行文字、
+     容器消失（与 .sc-card 的 box-shadow 描边同一类问题）。 */
+  .stg-flow b, .stg-code {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+  .stg-flow u, .stg-flow u::after { background: CanvasText; border-color: CanvasText; }
+  .stg-code-value, .stg-code-label { color: CanvasText; }
 }
 
 /* ── 窄屏：整体收一档 ───────────────────────────────────────────────────── */

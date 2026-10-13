@@ -633,6 +633,92 @@ function StageTimeline() {
   );
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   20 · VoyraAI 官方商城（voyra.men）
+   ══════════════════════════════════════════════════════════════════════════
+   抓取自 https://voyra.men/ 的真实内容（2026-10-13）：
+     · 主标语「VoyraAI。AI 服务，一站直达。」
+     · 副标语「数字商品自动发货，付款后凭订单号查询。」
+     · 精选商品：ChatGPT Plus ¥139/月、Gemini Pro 18 个月 ¥7、X Premium ¥22 起
+     · 商品分类计数：ChatGPT 9、Gemini 1、X Premium 4、Muse 1、Codex 1，共 18 件
+     · 品牌主色 #0071E3（Apple 蓝系）
+
+   舞台画的是**商品货架 + 自动发货流水**：
+     上半是三件精选商品（带价格），下半是自动发货的三步流水，
+     页脚给出「18 件商品」与「7×24 自动发货」两个站点级事实。
+   内容密度 6 个可读元素，满足 docs/CARD-DESIGN-SPEC.md §6.2 的下限。 */
+const MALL_ITEMS = [
+  ['ChatGPT Plus', '¥139', 0.86],
+  ['Gemini Pro 18 个月', '¥7', 0.31],
+  ['X Premium 3 / 6 个月', '¥22', 0.52],
+  ['多邻国年卡', '¥9.9', 0.18],
+];
+
+function StageVoyraMall() {
+  return (
+    <Stage className="mall">
+      <Head live title="自动发货" meta="在线" />
+      <ul className="stg-rows is-mall">
+        {MALL_ITEMS.map(([name, price, ratio], i) => (
+          <li key={name} style={{ '--i': i }}>
+            <b>{name}</b>
+            <Bar ratio={ratio} />
+            <em>{price}</em>
+          </li>
+        ))}
+      </ul>
+      <div className="stg-flow">
+        {['下单', '支付', '发货'].map((s, i) => (
+          <span key={s} className="is-done" style={{ '--i': i }}>
+            {i > 0 ? <u /> : null}
+            <b>{s}</b>
+          </span>
+        ))}
+      </div>
+      <Foot items={[['在售', '18 件'], ['发货', '7×24']]} />
+    </Stage>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   21 · VoyraAI 推荐通道（gptibo.com/r/719F2E）
+   ══════════════════════════════════════════════════════════════════════════
+   与官方商城的区别必须看得出来，否则两张卡读者会以为是同一张：
+     · 入口带推荐码 719F2E → 舞台加一条「推荐码」条，这是它唯一的独有信息；
+     · 品类口径不同：推荐站在线商品里多了「语言学习 / 邮箱账号 / 工具服务」
+       三个非 AI 类目（抓取自该页导航：AI 订阅 / 语言学习 / 邮箱账号 / 工具服务）；
+     · 交付方式强调「邮件交付 / 领取链接」，与主站的「付款即发卡」不同。
+
+   舞台画的是**四类目分发 + 推荐码条**，密度 7 个可读元素。 */
+const REF_CATS = [
+  ['AI 订阅', 'ChatGPT · Gemini', 0.92],
+  ['语言学习', 'Duolingo 年卡', 0.44],
+  ['邮箱账号', '美区 Gmail', 0.31],
+  ['工具服务', '会员与代充', 0.58],
+];
+
+function StageVoyraRef() {
+  return (
+    <Stage className="referral">
+      <Head title="推荐通道" meta="719F2E" />
+      <ul className="stg-rows is-ref">
+        {REF_CATS.map(([name, sub, ratio], i) => (
+          <li key={name} style={{ '--i': i }}>
+            <b>{name}</b>
+            <Bar ratio={ratio} />
+            <em>{sub}</em>
+          </li>
+        ))}
+      </ul>
+      <div className="stg-code">
+        <span className="stg-code-label">推荐码</span>
+        <span className="stg-code-value">719F2E</span>
+      </div>
+      <Foot items={[['交付', '邮件直达'], ['品类', '4 类']]} />
+    </Stage>
+  );
+}
+
 export const STAGES = {
   'api-hub': StageApiHub,
   'week-grid': StageWeekGrid,
@@ -653,4 +739,6 @@ export const STAGES = {
   sparkline: StageSparkline,
   'flip-card': StageFlipCard,
   timeline: StageTimeline,
+  mall: StageVoyraMall,
+  referral: StageVoyraRef,
 };
