@@ -36,6 +36,13 @@
   inset: 0;
   display: flex;
   flex-direction: column;
+  /* v3：补 justify-content:center。
+     .stg-rows 改成 flex:0 1 auto 后，四段内容按各自高度抱团，
+     总高通常小于舞台（如商城卡 198px 内容 vs 200px 舞台，差得少；
+     但 Zenew 那种只有 2 行的就会差出 60px+）。
+     center 让这 60px 平分到上下各 30px，而不是全堆在底部
+     —— 上下对称的留白是呼吸，单侧留白是事故。 */
+  justify-content: center;
   gap: 10px;
   padding: 18px 20px;
   overflow: hidden;
@@ -96,17 +103,14 @@
    会被拉到 30px 行距，看着散。 */
 .stg-rows {
   display: grid;
-  /* v2 第三版：flex 回到 1 1 auto，但 align-content 改 start。
-     前面两版各错一半：
-       ① flex:1 1 auto + space-evenly → 行被均分摊开，少量行之间腾出大洞；
-       ② flex:0 1 auto + 舞台 justify-content:center → 内容总高超出舞台时
-          flex-shrink 把清单压扁，行被裁掉（磁盘清理只剩「系统」一行）。
-     正确做法是**让行组拉伸填满、把多余空间归给列表内部**，
-     但用 align-content:start 而不是 space-evenly ——
-     行贴在一起（像一张表），多余空间落在列表底部（像一张表下面的留白）。
-     表格感本身就是这批舞台的语汇：行距均匀、底部有块安静的空白，
-     比 space-evenly 那种「每行之间都空一点」更像真实 UI。 */
-  flex: 1 1 auto;
+  /* v3：flex 从 1 1 auto 改成 0 1 auto。
+     1 1 auto 会让行组**拉伸**填满舞台剩余空间：VoyraAI 商城那张卡
+     实测 4 行商品被拉到 55px（自身只需 45px），多出的 10px 把
+     flow 与 foot 一路推到 154px 处，而舞台可见高度只有 198px
+     —— 页脚被 overflow:hidden 裁掉，只剩「在售 18 件」露一半。
+     改成 0 1 auto 后行组按内容高度抱团，剩余空间留给 .stg 的
+     justify-content 分配，四段各自待在自己的位置上。 */
+  flex: 0 1 auto;
   min-height: 0;
   max-height: 210px;
   grid-template-columns: minmax(0, 1fr);
@@ -521,8 +525,22 @@
   border-right: 1px solid rgba(var(--stg-ink-rgb), 0.45);
   transform: rotate(45deg);
 }
-/* 商品行：名称左、条形中、价格右 —— 与 Token / 磁盘两张卡同一套三栏，
-   读者扫过去不用重新学一遍怎么读这个舞台。 */
+/* 商品行：品牌 logo + 名称左、条形中、价格右 —— 与 Token / 磁盘两张卡同一套三栏，
+   读者扫过去不用重新学一遍怎么读这个舞台。
+
+   ⚠️ logo 必须放在最前且 flex:0 0 auto：
+   排在 <b> 后面时，名称会被 logo 挤成两行（实测「ChatGPT Plus」
+   在 14px logo + 窄栏下折行），整行高度从 15px 涨到 28px，
+   四行就把舞台底部顶出 40px。 */
+.stg--mall .is-mall .stg-brand,
+.stg--referral .is-ref .stg-brand {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  /* 14px 是中文标签的可读下限（docs/CARD-DESIGN-SPEC.md §6.4），
+     品牌 logo 再小就糊成一个色点、失去识别作用。 */
+}
 .stg--mall .is-mall b { flex: 1 1 auto; min-width: 0; }
 .stg--mall .is-mall .stg-bar { width: auto; flex: 0 1 56px; }
 .stg--mall .is-mall em { flex: 0 0 auto; color: var(--stg-text); }

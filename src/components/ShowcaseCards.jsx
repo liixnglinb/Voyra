@@ -168,6 +168,10 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
   /* v2 新增：Meta 行三标签。缺 meta 的卡不渲染这一行（不写占位符，
      空标签比没有标签更难看）。 */
   const meta = Array.isArray(card.meta) ? card.meta.filter(Boolean).slice(0, 3) : [];
+  /* v3 新增：品牌带。只有声明了 brands 的卡才渲染（目前仅 VoyraAI 两张），
+     其它卡不出现这条横带 —— 它不是通用装饰，是「售卖范围」的索引。
+     数据里写 slug 与品牌名，路径在这里统一拼，避免每张卡写全 URL。 */
+  const brands = Array.isArray(card.brands) ? card.brands : null;
   /* 版式字段保留在数据里但不再驱动渲染（参考站没有版式变体）。
      类名照旧带上 layout-<x>，只是 CSS 里已无对应规则 —— 这样数据契约不破，
      日后想恢复某种版式也能从 DOM 上一眼看到原值。 */
@@ -190,6 +194,34 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
           不会在 pointermove 上触发强制布局）。
           aria-hidden：纯装饰；它盖在卡面之上但不拦截指针（pointer-events:none）。 */}
       <span className="sc-spotlight" aria-hidden="true" />
+      {/* ── 品牌带（v3 新增）─────────────────────────────────────────────────
+         用户 2026-10-13 要求「上面最好有我售卖的那些东西的图标」。
+         放在 .sc-body 之外、卡片最顶端横跨全宽 —— 它是一个**横带**，
+         不是两栏布局里的某一栏，放进 grid 会和文字栏抢列宽。
+
+         为什么放顶部而不是塞进舞台：舞台是「产品长什么样」的演示，
+         品牌带是「我卖哪些牌子」的索引，两件事层级不同。
+         读者扫到卡片上半部就知道卖什么，不用读完描述再去看演示。
+
+         顺序即优先级：ChatGPT / Gemini / X Premium 是站内精选前三，
+         与舞台前三行一一对应；Claude / 多邻国 / Gmail 是品类补位。
+         aria-hidden：品牌识别由 aria-label 承担，读屏器念一串 logo 是噪音。 */}
+      {brands ? (
+        <div className="sc-brandstrip" aria-hidden="true">
+          {brands.map((b) => (
+            <img
+              key={b.slug}
+              className="sc-brandstrip-logo"
+              src={`/voyraai/brands/${b.slug}.svg`}
+              alt=""
+              width="22"
+              height="22"
+              loading="lazy"
+              decoding="async"
+            />
+          ))}
+        </div>
+      ) : null}
       <div className="sc-body">
         {/* v2 结构：眉标 / 文案 / 页脚三段各占一行，舞台独占一列跨满三行
             （见 .sc-body 的 grid-template-areas）。这样舞台高度自动等于文字段总高，

@@ -133,6 +133,18 @@ export const SHOWCASE_CARDS = [
     href: 'https://voyra.men/',
     external: true,
     logo: '/voyraai/logo.jpg',
+    /* v3 品牌带：卖什么，一眼看到，不用读完描述再去演示里找牌子。
+       顺序即优先级 —— 前三个与舞台前三行一一对应，后三个补品类。
+       slug 对应 public/voyraai/brands/<slug>.svg（simple-icons 官方图形 +
+       品牌真实色）。 */
+    brands: [
+      { slug: 'openai', name: 'ChatGPT' },
+      { slug: 'googlegemini', name: 'Gemini' },
+      { slug: 'x', name: 'X Premium' },
+      { slug: 'duolingo', name: 'Duolingo' },
+      { slug: 'anthropic', name: 'Claude' },
+      { slug: 'gmail', name: 'Gmail' },
+    ],
     family: 'core',
     tone: 'blue',
     layout: 'copy',
@@ -149,6 +161,16 @@ export const SHOWCASE_CARDS = [
     href: 'https://gptibo.com/r/719F2E',
     external: true,
     logo: '/voyraai/logo.jpg',
+    /* 同一套品牌带 —— 两站卖的是同一批牌子，带的内容必须一致，
+       差异只体现在舞台（推荐通道独有推荐码条与四类目口径）。 */
+    brands: [
+      { slug: 'openai', name: 'ChatGPT' },
+      { slug: 'googlegemini', name: 'Gemini' },
+      { slug: 'x', name: 'X Premium' },
+      { slug: 'duolingo', name: 'Duolingo' },
+      { slug: 'anthropic', name: 'Claude' },
+      { slug: 'gmail', name: 'Gmail' },
+    ],
     family: 'core',
     tone: 'blue',
     layout: 'stage',

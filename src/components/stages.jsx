@@ -644,23 +644,46 @@ function StageTimeline() {
      · 品牌主色 #0071E3（Apple 蓝系）
 
    舞台画的是**商品货架 + 自动发货流水**：
-     上半是三件精选商品（带价格），下半是自动发货的三步流水，
+     上半是四件精选商品（带真实品牌 logo 与价格），下半是自动发货的三步流水，
      页脚给出「18 件商品」与「7×24 自动发货」两个站点级事实。
-   内容密度 6 个可读元素，满足 docs/CARD-DESIGN-SPEC.md §6.2 的下限。 */
+
+   v3（2026-10-13）：每行前面加品牌 logo。用户要求「卡片不能局限于文字」——
+   纯文字的「ChatGPT Plus ¥139」是一行价签，加了 logo 才是**货架上的商品**：
+   读者先认出牌子，再看价格，顺序和真实购物一样。
+   logo 从 simple-icons 取官方图形，按品牌真实色写入 SVG 的 fill
+   （不用 currentColor，避免被卡片基调变量染成灰）。 */
 const MALL_ITEMS = [
-  ['ChatGPT Plus', '¥139', 0.86],
-  ['Gemini Pro 18 个月', '¥7', 0.31],
-  ['X Premium 3 / 6 个月', '¥22', 0.52],
-  ['多邻国年卡', '¥9.9', 0.18],
+  ['ChatGPT Plus', '¥139', 0.86, 'openai'],
+  ['Gemini Pro 18 个月', '¥7', 0.31, 'googlegemini'],
+  ['X Premium 3 / 6 个月', '¥22', 0.52, 'x'],
+  ['多邻国年卡', '¥9.9', 0.18, 'duolingo'],
 ];
+
+/* 品牌 logo 方块：白底 + 细描边，尺寸比文字行高略小，
+   让 logo 与文字在同一基线上而不是压住文字。
+   图标本身是 24 viewBox 的 SVG，这里用 14px 渲染 —— 再小就糊成色点。 */
+function BrandLogo({ slug, size = 14 }) {
+  return (
+    <img
+      className="stg-brand"
+      src={`/voyraai/brands/${slug}.svg`}
+      alt=""
+      width={size}
+      height={size}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+}
 
 function StageVoyraMall() {
   return (
     <Stage className="mall">
       <Head live title="自动发货" meta="在线" />
       <ul className="stg-rows is-mall">
-        {MALL_ITEMS.map(([name, price, ratio], i) => (
+        {MALL_ITEMS.map(([name, price, ratio, slug], i) => (
           <li key={name} style={{ '--i': i }}>
+            <BrandLogo slug={slug} />
             <b>{name}</b>
             <Bar ratio={ratio} />
             <em>{price}</em>
@@ -691,10 +714,10 @@ function StageVoyraMall() {
 
    舞台画的是**四类目分发 + 推荐码条**，密度 7 个可读元素。 */
 const REF_CATS = [
-  ['AI 订阅', 'ChatGPT · Gemini', 0.92],
-  ['语言学习', 'Duolingo 年卡', 0.44],
-  ['邮箱账号', '美区 Gmail', 0.31],
-  ['工具服务', '会员与代充', 0.58],
+  ['AI 订阅', 'ChatGPT · Gemini', 0.92, 'openai'],
+  ['语言学习', 'Duolingo 年卡', 0.44, 'duolingo'],
+  ['邮箱账号', '美区 Gmail', 0.31, 'gmail'],
+  ['工具服务', 'Claude 会员', 0.58, 'anthropic'],
 ];
 
 function StageVoyraRef() {
@@ -702,8 +725,9 @@ function StageVoyraRef() {
     <Stage className="referral">
       <Head title="推荐通道" meta="719F2E" />
       <ul className="stg-rows is-ref">
-        {REF_CATS.map(([name, sub, ratio], i) => (
+        {REF_CATS.map(([name, sub, ratio, slug], i) => (
           <li key={name} style={{ '--i': i }}>
+            <BrandLogo slug={slug} />
             <b>{name}</b>
             <Bar ratio={ratio} />
             <em>{sub}</em>
