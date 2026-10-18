@@ -1794,3 +1794,255 @@ body{
   .vr-home .vr-panel :is(a, button).vr-contact-row:hover { transform: none !important; }
   .vr-home .vr-panel .vr-experience-card:hover .vr-experience-icon { transform: none !important; }
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+ * OILOIL.ORG (IMAGE_1) SHOWCASE CARD & FLOATING MINI-CARD REDESIGN
+ * 保持首页 Hero 与全局丝滑滚动动画不变，将展示大卡片与内部小卡片重构为
+ * oiloil.org 风格：纯净白底圆角大卡 + 奇偶左右交替分栏 + 悬浮微倾立体小卡
+ * ══════════════════════════════════════════════════════════════════════════ */
+
+.vr-panel .vr-product-list,
+.vr-panel .vr-app-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.sc-card {
+  min-height: 304px;
+  background: #FFFFFF !important;
+  border: 1px solid #EAEAEA !important;
+  border-radius: 22px !important;
+  box-shadow:
+    0 1px 2px rgba(17, 17, 17, 0.03),
+    0 18px 40px -16px rgba(17, 17, 17, 0.065) !important;
+  padding: 0 !important;
+}
+
+.sc-card::before {
+  background: radial-gradient(
+    560px circle at var(--spot-x, 82%) var(--spot-y, 24%),
+    rgba(var(--p-rgb), 0.075),
+    rgba(255, 224, 138, 0.08) 38%,
+    transparent 70%
+  ) !important;
+  opacity: 0.85 !important;
+}
+
+.sc-card:hover {
+  --lift: -5px;
+  border-color: rgba(var(--p-rgb), 0.34) !important;
+  box-shadow:
+    0 2px 6px rgba(17, 17, 17, 0.04),
+    0 28px 60px -18px rgba(17, 17, 17, 0.12),
+    0 14px 32px -16px rgba(var(--p-rgb), 0.16) !important;
+}
+
+.sc-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr) !important;
+  align-items: center;
+  gap: 36px !important;
+  padding: 28px 34px !important;
+}
+
+/* 偶数行：左侧悬浮小卡片舞台，右侧标题与文案（完全贴合参考图1交替节奏） */
+.sc-roll-wrap:nth-child(even) .sc-body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) !important;
+}
+.sc-roll-wrap:nth-child(even) .sc-stage {
+  order: 1 !important;
+}
+.sc-roll-wrap:nth-child(even) .sc-copy {
+  order: 2 !important;
+}
+.sc-roll-wrap:nth-child(even) .sc-seq {
+  left: auto !important;
+  right: 32px !important;
+}
+
+/* 左侧/右侧主文案区优化：贴合参考图1的图标+粗体标题+荧光笔底色+描边序号 */
+.sc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.sc-brand {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: rgba(var(--p-rgb), 0.08);
+  border: 1px solid rgba(var(--p-rgb), 0.16);
+  box-shadow: 0 4px 12px -4px rgba(var(--p-rgb), 0.18);
+}
+
+.sc-title {
+  font-size: clamp(23px, 2.35vw, 30px);
+  font-weight: 850;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+  background-image: linear-gradient(120deg, rgba(255, 224, 138, 0.85), rgba(var(--p-rgb), 0.16));
+  background-position: 0 82%;
+  background-repeat: no-repeat;
+  background-size: 0% 38%;
+  transition: background-size 0.55s var(--vr-ease-out);
+}
+
+.sc-card:hover .sc-title {
+  background-size: 100% 38%;
+}
+
+.sc-desc {
+  margin: 12px 0 0;
+  color: #5F646B;
+  font-size: 14.5px;
+  line-height: 1.72;
+  max-width: 42ch;
+}
+
+.sc-foot {
+  margin-top: 16px;
+}
+
+.sc-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #F7F7F5;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  color: #161616;
+  font-size: 13px;
+  font-weight: 650;
+  transition:
+    background 0.3s var(--vr-ease-out),
+    color 0.3s var(--vr-ease-out),
+    border-color 0.3s var(--vr-ease-out),
+    transform 0.3s var(--vr-spring);
+}
+
+.sc-card:hover .sc-cta {
+  background: var(--p-accent, #161616);
+  border-color: var(--p-accent, #161616);
+  color: #FFFFFF;
+  transform: translateX(3px);
+}
+
+.sc-seq {
+  position: absolute;
+  left: 32px;
+  bottom: 18px;
+  font-size: 42px;
+  font-weight: 850;
+  color: transparent;
+  -webkit-text-stroke: 1.35px rgba(17, 17, 17, 0.13);
+  transition: transform 0.55s var(--vr-ease-out), -webkit-text-stroke-color 0.35s ease;
+}
+
+.sc-card:hover .sc-seq {
+  transform: translateY(-4px);
+  -webkit-text-stroke-color: rgba(var(--p-rgb), 0.32);
+}
+
+/* ══════════════ 内部悬浮小卡片舞台 (.sc-stage) ══════════════ */
+.sc-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9.4;
+  padding: 6px;
+  border-radius: 18px;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(var(--p-rgb), 0.09) 0%,
+    rgba(var(--p-rgb), 0.025) 58%,
+    transparent 76%
+  );
+  perspective: 1100px;
+}
+
+/* 舞台内所有小卡片壳体（Window / Browser / Terminal / Spotlight / Sheet / Inline / .stg）
+ * 统一呈现参考图1中精致的微倾立体悬浮小卡片质感 */
+.sc-stage > .Window,
+.sc-stage > .Browser,
+.sc-stage > .Terminal,
+.sc-stage > .Spotlight,
+.sc-stage > .Sheet,
+.sc-stage > .Inline,
+.sc-stage > .stg {
+  border-radius: 14px !important;
+  box-shadow:
+    0 16px 34px -12px rgba(17, 17, 17, 0.16),
+    0 4px 12px -3px rgba(17, 17, 17, 0.06),
+    0 0 0 1px rgba(17, 17, 17, 0.07) !important;
+  transform:
+    translate3d(var(--par-x, 0px), var(--par-y, 0px), 0)
+    rotate(-1.15deg)
+    scale(0.985);
+  transition:
+    transform 0.55s var(--vr-spring),
+    box-shadow 0.5s var(--vr-ease-out) !important;
+}
+
+.sc-roll-wrap:nth-child(even) .sc-stage > .Window,
+.sc-roll-wrap:nth-child(even) .sc-stage > .Browser,
+.sc-roll-wrap:nth-child(even) .sc-stage > .Terminal,
+.sc-roll-wrap:nth-child(even) .sc-stage > .Spotlight,
+.sc-roll-wrap:nth-child(even) .sc-stage > .Sheet,
+.sc-roll-wrap:nth-child(even) .sc-stage > .Inline,
+.sc-roll-wrap:nth-child(even) .sc-stage > .stg {
+  transform:
+    translate3d(var(--par-x, 0px), var(--par-y, 0px), 0)
+    rotate(1.15deg)
+    scale(0.985);
+}
+
+.sc-card:hover .sc-stage > .Window,
+.sc-card:hover .sc-stage > .Browser,
+.sc-card:hover .sc-stage > .Terminal,
+.sc-card:hover .sc-stage > .Spotlight,
+.sc-card:hover .sc-stage > .Sheet,
+.sc-card:hover .sc-stage > .Inline,
+.sc-card:hover .sc-stage > .stg {
+  transform:
+    translate3d(var(--par-x, 0px), calc(var(--par-y, 0px) - 4px), 0)
+    rotate(0deg)
+    scale(1.015) !important;
+  box-shadow:
+    0 24px 48px -14px rgba(17, 17, 17, 0.22),
+    0 10px 24px -8px rgba(var(--p-rgb), 0.20),
+    0 0 0 1px rgba(var(--p-rgb), 0.24) !important;
+}
+
+/* 移动端自适应回落单列 */
+@media (max-width: 860px) {
+  .sc-body,
+  .sc-roll-wrap:nth-child(even) .sc-body {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 18px !important;
+    padding: 20px 18px 22px !important;
+  }
+  .sc-stage,
+  .sc-roll-wrap:nth-child(even) .sc-stage {
+    order: 1 !important;
+  }
+  .sc-copy,
+  .sc-roll-wrap:nth-child(even) .sc-copy {
+    order: 2 !important;
+  }
+  .sc-seq,
+  .sc-roll-wrap:nth-child(even) .sc-seq {
+    left: auto !important;
+    right: 20px !important;
+    bottom: 14px !important;
+    font-size: 32px !important;
+  }
+}
+
+
+/* 渠道名不换行：新联系数据标签较长（如「谷歌邮箱 (Gmail)」），24px 粗体在窄栏
+   会出现单字孤行；nowrap 后由弹性布局自然分配宽度，实测无溢出。 */
+.vr-home .vr-panel .vr-contact-row strong { white-space: nowrap; }

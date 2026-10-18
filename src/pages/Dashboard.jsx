@@ -5,6 +5,7 @@ import {
   Activity, ArrowUpRight, Bot, CalendarRange, Check, ChevronDown, ClipboardCheck, Code2, Dices, Film, Github,
   Globe, HardDrive, LayoutGrid, Lightbulb, ListTree, Receipt, Shapes,
   NotebookPen, BookOpen, Route, Sparkles, Star,
+  Mail, Send, Twitter,
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
@@ -102,62 +103,45 @@ function preloadHeroLayer(src) {
    每条都能在站内找到对应入口，读者读完知道这里有什么、怎么做的。 */
 const EXPERIENCES = [
   {
-    state: '在线工具',
-    name: '云端工具站',
-    desc: '日程中心、提示词库、思维导图、组件图鉴、饮食打卡等在线工具，登录后多端同步。',
-    meta: '9 个在线入口',
-    Icon: NotebookPen,
-  },
-  {
-    state: '桌面软件',
-    name: '本地应用',
-    desc: '织流、学习通签到、磁盘清理、账迹、Token Monitor、知新与 AI 轨迹，覆盖 Windows 与 Android。',
-    meta: '7 款软件',
-    Icon: LayoutGrid,
-  },
-  {
-    state: '技术栈',
-    name: '构建方式',
-    desc: 'React 18 + Vite 构建前端，Cloudflare Pages 托管与自动部署，Bmob 负责账号与云端数据。',
-    meta: '开源可查',
-    Icon: Globe,
-  },
-];
-
-/* 「交流」的三条渠道。同样按用户要求重做：旧版只有「编号 + 名称 + 值」三列，
-   看完不知道点进去会得到什么。现在每条补齐了眉标 / 说明 / 备注，
-   与参考站的咨询卡同构（编号 · 眉标 · 标题 · 说明 · 备注 · 箭头）。 */
-const CONTACTS = [
-  {
     no: '01',
-    label: 'GitHub',
-    eyebrow: 'OPEN SOURCE / 开源代码',
-    summary: '站内工具与桌面软件的源码都在这一个账号下，欢迎提 Issue。',
-    meta: '公开仓库 · 持续更新',
-    value: '@liixnglinb',
-    href: 'https://github.com/liixnglinb',
-    Icon: Github,
+    state: '产品矩阵 / CLOUD & AI INFRA',
+    name: 'AI 网关与自营数字服务',
+    desc: '构建 Voyra Relay API 统一大模型网关（集中管理 OpenAI / Claude / Gemini 路由与成本），打造「日程中心」课表日历二合一工作台，并运营 VoyraAI 官方商城与 719F2E 推荐通道（数字商品 24h 自动发卡、凭单号秒查）。',
+    meta: '4 大核心产品 · 24H 在线',
+    Icon: Bot,
   },
   {
     no: '02',
-    label: 'Email',
-    eyebrow: 'MAIL / 邮件联系',
-    summary: '合作、问题反馈，或者只是想聊聊，都发这个地址。',
-    meta: '点击复制 · 域名邮箱',
-    value: 'hello@lxlrwxs.top',
-    copy: true,
-    Icon: Sparkles,
+    state: '技能工程 / AGENT WORKFLOW',
+    name: '数学建模国赛十阶段 Skill',
+    desc: '围绕全国大学生数学建模竞赛（CUMCM）研发标准化智能体流水线，串联「题意 → 假设 → 变量 → 建模 → 求解 → 检验 → 评价 → 图表 → 论文 → 提交」十个核心阶段，实现从问题拆解到 LaTeX 论文产出的工程化闭环。',
+    meta: '10 阶段闭环 · GitHub 开源',
+    Icon: Route,
   },
   {
     no: '03',
-    label: '网站',
-    eyebrow: 'SITE / 本站地址',
-    summary: 'Voyra 的正式地址，在线工具与软件下载都从这里进。',
-    meta: '收藏这一个就够',
-    value: 'lxlrwxs.top',
-    href: 'https://lxlrwxs.top',
-    Icon: Globe,
+    state: '原生软件 / LOCAL-FIRST APPS',
+    name: 'Windows 与 Android 本机效率矩阵',
+    desc: '坚持「本机优先、数据零上传、全程零打扰」：研发学习通自动签到助手（后台常驻监听普通/位置/二维码签到）、磁盘清理助手（目录级扫描预览清理）、账迹 BillTrace（Android 付款 2 秒自动入库记账）、Token Monitor（81+ 源 AI 用量看板）与 AI 轨迹（12 数据源会话日报与趋势观测）。',
+    meta: '5+ 原生软件 · 零云端上传',
+    Icon: LayoutGrid,
   },
+  {
+    no: '04',
+    state: '技术底座 / FULL-STACK CRAFT',
+    name: '全栈工程体系与极客审美',
+    desc: '前端采用 React 18 + Vite 模块化架构并部署于 Cloudflare Pages 边缘网络；桌面与移动端深度整合 CLI 编排、系统级通知监听、防风控守护与 FSRS 记忆调度算法，将高频真实痛点打磨成开箱即用的趁手工具。',
+    meta: 'React 18 · Cloudflare · CLI',
+    Icon: Code2,
+  },
+];
+
+const CONTACTS = [
+  { id: 'qqmail', label: 'QQ 邮箱', value: 'lixingli1024@qq.com', copy: true, Icon: Mail },
+  { id: 'gmail', label: '谷歌邮箱 (Gmail)', value: 'lixingli986@gmail.com', copy: true, Icon: Mail },
+  { id: 'telegram', label: 'Telegram 电报', value: '@lixinglirwxs', href: 'https://t.me/lixinglirwxs', Icon: Send },
+  { id: 'x', label: 'X (Twitter)', value: '@Voyravdmb', href: 'https://x.com/Voyravdmb', Icon: Twitter },
+  { id: 'github', label: 'GitHub', value: 'github.com/liixnglinb', href: 'https://github.com/liixnglinb', Icon: Github },
 ];
 
 const TABS = [['products', '产品'], ['skills', 'Skills'], ['apps', '应用'], ['me', '关于我'], ['contact', '交流']];
@@ -1014,7 +998,7 @@ function AboutPanel() {
     <section className="vr-about-intro"><span>SHUAI SHUAI / VOYRA</span><p>个人开发者，把灵感、工具和 AI 能力整理成真正能反复使用的产品。</p><div className="vr-tags" aria-label="个人标签">{['VOYRA', 'FRONTEND', 'AI', 'CREATOR', 'CLOUDFLARE', 'BMOB'].map((tag) => <span key={tag}>{tag}</span>)}</div></section>
     <section className="vr-experience" data-reveal><div className="vr-experience-label"><span>经历 / EXPERIENCE</span><b>在做什么</b></div><div className="vr-experience-list">{EXPERIENCES.map((item, index) => {
       const Icon = item.Icon;
-      return <article className="vr-experience-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.2)}s` }} onPointerMove={updateSpotlight} key={item.name}><span className="vr-spotlight" aria-hidden="true" /><span className="vr-experience-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-experience-copy"><span>{item.state}</span><h2>{item.name}</h2><p>{item.desc}</p></div><span className="vr-experience-meta">{item.meta}</span><Icon className="vr-experience-icon" size={30} strokeWidth={1.4} /></article>;
+      return <article className="vr-experience-card vr-card" data-reveal style={{ '--reveal-delay': `${Math.min(index * 0.08, 0.2)}s` }} onPointerMove={updateSpotlight} key={item.name}><span className="vr-spotlight" aria-hidden="true" /><span className="vr-experience-index">{String(index + 1).padStart(2, '0')}</span><div className="vr-experience-copy"><span>{item.state}</span><h2>{item.name}</h2><p>{item.desc}</p></div><span className="vr-experience-meta">{item.meta}</span>{Icon ? <Icon className="vr-experience-icon" size={30} strokeWidth={1.4} /> : null}</article>;
     })}</div></section>
   </div>;
 }
@@ -1027,11 +1011,13 @@ function TabReel({ activeTab }) {
 function ContactPanel() {
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
+  const [copyTarget, setCopyTarget] = useState('');
   const copyTimer = useRef(null);
   useEffect(() => () => clearTimeout(copyTimer.current), []);
   const copyEmail = async (event) => {
     const trigger = event.currentTarget;
-    const email = 'hello@lxlrwxs.top';
+    const email = trigger.dataset.email || 'hello@lxlrwxs.top';
+    setCopyTarget(email);
     let success = false;
     try { await navigator.clipboard.writeText(email); } catch {
       const ta = document.createElement('textarea');
@@ -1058,16 +1044,13 @@ function ContactPanel() {
     const Icon = contact.Icon;
     const reveal = { '--reveal-delay': `${index * 0.08}s` };
     const feedback = contact.copy && copied;
-    /* 每条渠道补齐眉标 / 说明 / 备注，与参考站的咨询卡同构：
-       编号 · 图标 · 眉标+标题 · 说明 · 备注 · 箭头。
-       旧版只有「编号 + 名称 + 值」，读者看不出点进去会得到什么。 */
+    /* 渠道行结构：图标 + 标题 + 右侧值/箭头。眉标(no/eyebrow/summary/meta)
+       为可选字段 —— v5 起 CONTACTS 精简为 label/value/copy/href 四件套，
+       数据不提供时不渲染，避免出现空槽位。 */
     const inner = <React.Fragment>
-      <span className="vr-contact-no" aria-hidden="true">{contact.no}</span>
-      <span className="vr-contact-icon" aria-hidden="true"><Icon size={20} strokeWidth={1.6} /></span>
+      <span className="vr-contact-icon" aria-hidden="true">{Icon ? <Icon size={20} strokeWidth={1.6} /> : null}</span>
       <span className="vr-contact-copy">
-        <span className="vr-contact-eyebrow">{contact.eyebrow}</span>
         <strong>{contact.label}</strong>
-        <span className="vr-contact-summary">{contact.summary}</span>
       </span>
       <span className="vr-contact-side">
         <em>{feedback ? '已复制，可直接粘贴' : contact.meta}</em>
@@ -1076,11 +1059,11 @@ function ContactPanel() {
       {feedback ? <Check className="vr-contact-arrow" size={18} /> : <ArrowUpRight className="vr-contact-arrow" size={18} />}
     </React.Fragment>;
     return contact.copy ? (
-      <button type="button" className="vr-contact-row" data-reveal style={reveal} key={contact.label} onClick={copyEmail} title="点击复制邮箱">{inner}</button>
+      <button type="button" className="vr-contact-row" data-reveal style={reveal} key={contact.label} onClick={copyEmail} title="点击复制邮箱" data-email={contact.value}>{inner}</button>
     ) : (
       <a href={contact.href} className="vr-contact-row" data-reveal style={reveal} key={contact.label} target="_blank" rel="noreferrer">{inner}</a>
     );
-  })}</div><p className="vr-contact-feedback" role="status" aria-live="polite">{copyFailed ? '无法访问剪贴板，请手动复制邮箱：hello@lxlrwxs.top' : copied ? '邮箱已复制，可直接粘贴。' : ''}</p></section>;
+  })}</div><p className="vr-contact-feedback" role="status" aria-live="polite">{copyFailed ? `无法访问剪贴板，请手动复制邮箱：${copyTarget}` : copied ? '邮箱已复制，可直接粘贴。' : ''}</p></section>;
 }
 
 export default function Dashboard() {
