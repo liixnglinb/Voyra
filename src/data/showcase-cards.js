@@ -434,10 +434,11 @@ export const SHOWCASE_CARDS = [
 
 /** 按 Tab 分组，供 Dashboard 直接消费 */
 export const SHOWCASE_GROUPS = {
-  /* 产品区只留前两张（2026-10 用户要求：产品里除第一、第二个卡片外全部下架）。
-     其余 9 条数据刻意留在 SHOWCASE_CARDS 里 —— 它们对应的站内页面与独立仓库都还在，
+  /* 产品区（2026-10 用户要求：产品里除第一、第二、第三个卡片外全部下架）。
+     2026-10 用户再次要求删除第 4 张卡片（voyraai-ref / VoyraAI 推荐）。
+     其余数据条目刻意留在 SHOWCASE_CARDS 里 —— 它们对应的站内页面与独立仓库都还在，
      下架的只是首页橱窗位。要重新上架，把 id 加回这一行即可，不必恢复数据。 */
-  products: ['api', 'timetable', 'voyraai-mall', 'voyraai-ref'],
+  products: ['api', 'timetable', 'voyraai-mall'],
   skills: ['mathmodel'],
   /* 应用区去掉织流 Jacquard（modelflow）与知新 Zenew（zenew）——
      2026-10-13 用户截图指认这两张要撤下。处理方式与产品区一致：
