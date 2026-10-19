@@ -96,6 +96,8 @@ const ACCENT_LINE = 'rgba(164,136,48,.42)';
 
 const WEEKDAY = ['一', '二', '三', '四', '五', '六', '日'];
 const MAX_WEEK = 20;
+/* 周次输入允许清空重输：编辑期存字符串，失焦/提交时再收敛到 1..MAX_WEEK */
+const clampWeek = (v) => Math.max(1, Math.min(MAX_WEEK, parseInt(v, 10) || 1));
 
 /* 连堂节次块（大学课表按此组织，含晚自习）；用户可在「时间设置」中覆盖 time
  * 默认作息：8:20 上课，每小节 45 分钟；1→2 节休 10 分钟，2→3 节休 20 分钟，3→4 节休 5 分钟
@@ -312,7 +314,7 @@ function miniSlotLabel(label) {
 /* 手动添加表单：一门课可以有多个时段，每个时段自己带星期/节次/周次/
    单双周与可选的自定义起止时间 */
 function newPeriod(day = 1, slot = '1-2') {
-  return { day, slot, f: 1, t: 16, type: 'every', customOn: false, customStart: '', customEnd: '' };
+  return { day, slot, f: 1, t: 16, type: 'every', single: false, customOn: false, customStart: '', customEnd: '' };
 }
 function EMPTY_FORM() {
   return { name: '', teacher: '', room: '', color: null, credit: '', note: '', periods: [newPeriod()] };
@@ -822,6 +824,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const htmlFileRef = useRef(null);
   const [toast, setToast] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
+  /* 首次添加课程后问一次「现在是第几周」，据此反推开学周一并开启自动推进 */
+  const [weekAsk, setWeekAsk] = useState(false);
+  const [weekAskVal, setWeekAskVal] = useState('1');
+  const askedWeekRef = useRef(false);
   const [detailOpen, setDetailOpen] = useState(false); // 课程明细默认折叠
   /* 手机端左侧时间轴：默认收起成一条刻度，展开状态记住（在「时间设置」里改过的
      节次时间会即时反映到展开后的刻度上） */
@@ -973,6 +979,28 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     return Math.max(1, Math.min(MAX_WEEK, Math.floor((new Date() - start) / 864e5 / 7) + 1));
   }, [settings.startDate]);
   const currentWeek = settings.overrideWeek != null ? settings.overrideWeek : autoWeek;
+  /* 单节课的「哪一天」：由开学周一 + 周次 + 星期几推出，开学日期未设置时返回空 */
+  /* 由「现在是第几周」反推开学周一：今天往前推 (w-1) 周，再对齐到那一周的周一。
+     写入 startDate 后 autoWeek 会按日期自动推进，单节课也能据此算出具体日期。 */
+  const applyWeekAsk = () => {
+    const w = clampWeek(weekAskVal);
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - (w - 1) * 7);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    persist(null, { ...settings, startDate: iso, overrideWeek: null });
+    setWeekAsk(false);
+    say(`已同步：当前第 ${w} 周`);
+  };
+
+  const dateOfPeriod = (p) => {
+    if (!settings.startDate) return '';
+    const d = new Date(settings.startDate + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return '';
+    d.setDate(d.getDate() + (clampWeek(p.f) - 1) * 7 + (+p.day - 1));
+    return `${d.getMonth() + 1}月${d.getDate()}日（周${WEEKDAY[+p.day - 1]}）`;
+  };
 
   /* 手机上「第 X 周」显示到页头去（课表卡自己的工具栏整条让位给网格）。
      必须放在 currentWeek 之后 —— 放前面会在渲染期撞上 TDZ。 */
@@ -1037,7 +1065,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const addOne = () => {
     if (!form.name.trim()) { say('请填写课程名称'); return; }
     const periods = form.periods.map((p) => {
-      const one = { day: +p.day, slot: p.slot, f: +p.f, t: +p.t, type: p.type };
+      const f = clampWeek(p.f);
+      const one = { day: +p.day, slot: p.slot, f, t: p.single ? f : clampWeek(p.t), type: p.single ? 'every' : p.type };
       if (p.customOn && p.customStart && p.customEnd) one.customTime = { start: p.customStart, end: p.customEnd };
       return one;
     });
@@ -1053,6 +1082,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     /* 保留节次与周次这类每次都要重填的设置，清掉课程自身的字段 */
     setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
     say(periods.length > 1 ? `已添加课程（${periods.length} 个时段）` : '已添加课程');
+    /* 首次添加后问一次当前周次：没有开学日期时「第 X 周」只能手动指定，
+       问完即可按日期自动推进（只问一次，取消也不再打扰）。 */
+    if (!settings.startDate && settings.overrideWeek == null && !askedWeekRef.current) {
+      askedWeekRef.current = true;
+      setWeekAskVal(String(currentWeek || 1));
+      setWeekAsk(true);
+    }
   };
   const remove = (id) => { persist(courses.filter((c) => c.id !== id), null); say('已删除'); };
   const clearAll = () => { persist([], null); say('已清空课表'); };
@@ -1142,7 +1178,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const xlsActions = (<>
     <button className="cs-btn" onClick={() => xlsFileRef.current && xlsFileRef.current.click()} disabled={xlsBusy} style={xlsBusy ? { opacity: .6, cursor: 'wait' } : undefined}>
       {xlsBusy ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <FileSpreadsheet size={15} />}
-      {xlsBusy ? '解析中…' : '导入 Excel(.xls/.xlsx)'}
+      {xlsBusy ? '解析中…' : '导入 Excel'}
     </button>
     <button className="cs-btn" onClick={copyTemplate}>
       {copied ? <Check size={15} style={{ color: ACCENT }} /> : <Copy size={15} />}
@@ -1162,10 +1198,21 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-h .sp { flex:1; }
         .cs-row { display:flex;gap:8px;flex-wrap:wrap;align-items:center; }
         .cs-row .sp { flex:1 1 auto; min-width:0; }
+        /* 导入卡底部动作：三个按钮并排靠左，不各自占行 */
+        .cs-actions { display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-start; }
         /* 时段列表：一門課多段时，每段是一个带描边的小块，段与段之间不粘连 */
         .cs-period { border:1px solid rgba(20,24,33,.1); border-radius:10px; padding:10px 12px; margin-top:10px; background:rgba(255,255,255,.6); }
         .cs-period-head { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
         .cs-period-head b { font-size:13px;color:#212529; }
+        /* 时段表单：两列网格，长字段（周次 / 自定义时间）整行 */
+        .cs-period-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px; }
+        .cs-period-grid > .cs-f-full { grid-column:1 / -1; }
+        .cs-weeks { display:flex;align-items:center;gap:6px;flex-wrap:wrap; }
+        .cs-wk { width:64px;text-align:center;font-variant-numeric:tabular-nums; }
+        .cs-wk-unit { font-size:12.5px;color:#6c757d;font-weight:600; }
+        .cs-hint { margin:6px 0 0;font-size:12px;color:#6c757d; }
+        .cs-toggle { border:1px solid rgba(20,24,33,.12);background:#fff;color:#495057;border-radius:9px;font-size:13px;font-weight:600;padding:8px 12px;min-height:44px;text-align:center;cursor:pointer; }
+        .cs-toggle.is-on { border-color:${ACCENT_LINE};background:${ACCENT_SOFT};color:${ACCENT};font-weight:750; }
         /* 颜色：6 个站点配色 + 一个「跟随课名」，选中给一圈金色 */
         .cs-colors { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
         .cs-color-auto { border:1px solid rgba(20,24,33,.14);border-radius:99px;background:#fff;padding:6px 12px;font-size:12px;color:#555;min-height:36px; }
@@ -1177,6 +1224,12 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-btn.primary { background:${ACCENT};border-color:${ACCENT};color:#fff; }
         .cs-btn.primary:hover { opacity:.92; }
         .cs-btn.danger:hover { border-color:rgba(239,68,68,.4);color:#EF4444; }
+        /* 导入方式页签：选中态用金色淡底 + 金色描边（原 primary 深底在小屏上像个黑块），
+           并且固定尺寸、不加阴影与缩放 —— 只靠颜色区分当前页签 */
+        /* 外壳 index.css 有一条针对 .cs-btn 的 !important 按钮兜底（background / color），
+           会把这里的选中态一起压掉 —— 必须带 !important 才盖得住 */
+        .cs-modes .cs-mode { background:#fff !important;color:#495057 !important;border-color:rgba(20,24,33,.12); }
+        .cs-modes .cs-mode.is-on { background:${ACCENT_SOFT} !important;border-color:${ACCENT_LINE} !important;color:${ACCENT} !important;font-weight:750;box-shadow:none !important;transform:none !important; }
         .cs-chip { display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:600;background:${ACCENT_SOFT};color:${ACCENT}; }
         .cs-today { display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:#555; }
         .cs-today b { color:#1b1b1b;font-weight:750;font-variant-numeric:tabular-nums; }
@@ -1215,6 +1268,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-cell.night { background:linear-gradient(180deg, rgba(99,102,241,.07), rgba(99,102,241,.03));border-style:dashed;border-color:rgba(99,102,241,.3); }
         .cs-empty { text-align:center;padding:26px 0;color:#adb5bd;font-size:13px; }
         .cs-list-row { display:flex;align-items:center;gap:12px;border-top:1px solid rgba(20,24,33,.07);padding:10px 4px;flex-wrap:wrap; }
+        .cs-list-main { flex:1 1 auto;min-width:0; }
+        .cs-list-meta { display:flex;flex-wrap:wrap;gap:8px;min-width:0; }
+        .cs-list-del { flex:0 0 auto; }
+        .cs-weeknum { text-align:center;font-variant-numeric:tabular-nums;font-weight:700; }
         .cs-tag { display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:#3D424C;background:#F1F3F5;border-radius:7px;padding:4px 10px;letter-spacing:.01em; }
         .cs-tag.night { color:#5F3DC4;background:#F1EEFF; }
         .cs-review { border:1px dashed ${ACCENT_LINE};border-radius:10px;background:${ACCENT_SOFT};padding:10px 12px;margin-top:10px; }
@@ -1314,14 +1371,14 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           .shub-drawer-body .cs-h > .ico { display:none; }
           .shub-drawer-body .cs-h > h3 { flex:1 1 100%; }
           .shub-drawer-body .cs-h > .sp { display:none; }
-          .shub-drawer-body .cs-h > .cs-btn { flex:1 1 calc(50% - 5px); justify-content:center; }
+          .shub-drawer-body .cs-h > .cs-btn { flex:1 1 calc(50% - 5px); justify-content:center; min-height:44px; text-align:center; line-height:1.3; }
           .shub-drawer-body .cs-modes { display:grid;grid-template-columns:repeat(4,minmax(0,1fr)); }
           .shub-drawer-body .cs-modes .cs-btn { justify-content:center;padding:0 4px;font-size:var(--fs-meta); }
-          .shub-drawer-body .cs-weekrow { display:grid;grid-template-columns:repeat(6,minmax(0,1fr)); }
-          .shub-drawer-body .cs-weekrow > *:nth-child(-n+3) { grid-column:span 2; }
-          .shub-drawer-body .cs-weekrow > *:nth-child(n+4) { grid-column:span 3; }
+          /* 三列网格：第一行 上一周 / 周数 / 下一周，第二行 周次设置 / 时间设置 / 清空课表 */
+          .shub-drawer-body .cs-weekrow { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px; }
           .shub-drawer-body .cs-weekrow > .cs-btn,
           .shub-drawer-body .cs-weekrow > .cs-input { width:100%;justify-content:center; }
+          .shub-drawer-body .cs-weekrow > .cs-weeknum { text-align:center; }
           .shub-drawer-body .cs-forminfo > .cs-field,
           .shub-drawer-body .cs-period > .cs-row > .cs-field { flex:1 1 calc(50% - 4px);min-width:0; }
           .shub-drawer-body .cs-forminfo > .cs-f-full { flex:1 1 100%; }
@@ -1363,10 +1420,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           /* 明细行：课程名独占一行，其余标签紧凑成串排在下面。
              外壳给 .cs-tag 也兜了 44px 拇指高，但它是 span 不是按钮，
              44px 只会把一行撑成五段 —— 收到真实文字高度，触控下限由行尾那颗删除按钮保证。 */
-          .cs-list-row { padding:9px 2px; gap:8px; }
-          .cs-page .cs-list-row > div:first-child { flex:1 1 100% !important; }
-          .cs-page .cs-list-row > div:first-child > div { line-height:1.3; }
-          .cs-page .cs-list-row > div:first-child > .cs-tag { margin-top:3px !important; }
+          /* 明细行：名称块占左，删除按钮钉右上，元信息（周/节次/时间/教室/老师）整行排在下面 */
+          .cs-list-row { padding:10px 2px; gap:6px 8px; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; }
+          .cs-list-main { grid-column:1; }
+          .cs-list-main > div { line-height:1.3; }
+          .cs-list-main > .cs-tag { margin-top:3px !important; }
+          .cs-list-meta { grid-column:1 / -1; display:flex; flex-wrap:wrap; gap:6px; }
+          .cs-list-del { grid-column:2; grid-row:1; align-self:start; }
           .cs-page .cs-list-row .cs-tag { min-height:0; padding:3px 8px; font-size:var(--fs-meta); line-height:1.4; }
           /* 表单标签：窄列里最容易竖排堆砌的一处 */
           .cs-page label.cs-l { margin-bottom:2px; line-height:1.3; }
@@ -1385,6 +1445,12 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           .cs-page .tp-btn { min-width:0; padding:7px 8px; }
           /* 导入：粘贴框 6 行 → 3 行（仍可拖拽改高），说明文字回到辅助字号 */
           .cs-page textarea.cs-input { height:78px; min-height:78px; line-height:1.5 !important; }
+          /* 格子颜色：外壳把按钮兜在 44px 触控下限，7 个色点一行放不下（74+6×44+36=374 > 336）。
+             改成四列网格 → 4+3 均衡两行，不再出现「最后一个小圆点单独掉下去」的溢出观感 */
+          .cs-colors { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px 6px; justify-items:center; }
+          .cs-color-auto { width:100%; }
+          .cs-actions { flex-wrap:nowrap; }
+          .cs-actions > .cs-btn { flex:0 0 auto; padding:8px 10px; font-size:var(--fs-meta); white-space:nowrap; }
           .tool-content .cs-page .cs-card p { font-size:var(--fs-meta) !important; line-height:1.55 !important; }
           /* 滚轮选择器：一格 36px 在手机上按不准，抬到 44px 拇指下限，
              列高/留白同步换算（88 = (220-44)/2），与 TimeWheel 里的 ITEM/PAD 一一对应 */
@@ -1434,10 +1500,11 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           <div className="sp" />
           <div className="cs-row cs-weekrow">
             <button className="cs-btn" onClick={() => goWeek(-1)}><ChevronLeft size={15} />上一周</button>
-            <input type="number" min={1} max={MAX_WEEK} value={currentWeek} onChange={(e) => setWeekInput(e.target.value)} className="cs-input no-spin" style={{ width: 68 }} />
+            <input type="number" min={1} max={MAX_WEEK} value={currentWeek} onChange={(e) => setWeekInput(e.target.value)} className="cs-input no-spin cs-weeknum" inputMode="numeric" aria-label="当前周次" />
             <button className="cs-btn" onClick={() => goWeek(1)}>下一周<ChevronRight size={15} /></button>
             <button className="cs-btn" onClick={() => setShowSettings((v) => !v)}><RefreshCw size={14} />周次设置</button>
             <button className="cs-btn" onClick={() => setShowTimeSettings((v) => !v)}><Clock size={14} />时间设置</button>
+            {isMobile && <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>}
           </div>
         </div>
         {showSettings && (
@@ -1504,12 +1571,6 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             <p style={{ margin: '8px 0 0', width: '100%', fontSize: 12, color: '#6c757d' }}>
               点按时间即可弹出滚轮选择（小时 / 每 5 分钟），课表、明细与手动添加会同步更新；恢复默认使用标准大学作息。
             </p>
-          </div>
-        )}
-        {/* 手机上课表卡自己的工具栏没了，清空课表搬到这里，仍是原按钮原逻辑 */}
-        {isMobile && (
-          <div className="cs-row" style={{ marginTop: 12 }}>
-            <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>
           </div>
         )}
       </div>
@@ -1633,7 +1694,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             const segCount = coursePeriods(c).length;
             return (
               <div key={`${c.id}-${p.slot}-${p.day}`} className="cs-list-row">
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="cs-list-main">
                   <div style={{ fontSize: 14.5, fontWeight: 750, color: '#212529', letterSpacing: '.02em' }}>
                     {c.name}
                     {c.credit ? <span className="cs-tag" style={{ marginLeft: 6, fontWeight: 600 }}>{c.credit} 学分</span> : null}
@@ -1643,12 +1704,14 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                   </span>
                   {c.note && <span className="cs-tag" style={{ marginTop: 5, display: 'inline-flex' }}>{c.note}</span>}
                 </div>
-                <span className="cs-tag"><CalendarDays size={12} />周{WEEKDAY[p.day - 1]}</span>
-                <span className={`cs-tag${meta.night ? ' night' : ''}`}><Clock size={12} />{meta.label}</span>
-                <span className="cs-tag"><Clock size={12} />{meta.time}</span>
-                {c.room && <span className="cs-tag"><MapPin size={12} />{c.room}</span>}
-                <span className="cs-tag"><User size={12} />{c.teacher || '未填老师'}</span>
-                <button className="cs-btn danger" onClick={() => remove(c.id)}><Trash2 size={14} />{segCount > 1 ? '删除整门' : '删除'}</button>
+                <div className="cs-list-meta">
+                  <span className="cs-tag"><CalendarDays size={12} />周{WEEKDAY[p.day - 1]}</span>
+                  <span className={`cs-tag${meta.night ? ' night' : ''}`}><Clock size={12} />{meta.label}</span>
+                  <span className="cs-tag"><Clock size={12} />{meta.time}</span>
+                  {c.room && <span className="cs-tag"><MapPin size={12} />{c.room}</span>}
+                  <span className="cs-tag"><User size={12} />{c.teacher || '未填老师'}</span>
+                </div>
+                <button className="cs-btn danger cs-list-del" onClick={() => remove(c.id)}><Trash2 size={14} />{segCount > 1 ? '删除整门' : '删除'}</button>
               </div>
             );
           })
@@ -1669,7 +1732,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         {/* 四种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
         <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
           {[['file', '从文件'], ['share', '分享口令'], ['html', '教务网页'], ['backup', '备份']].map(([k, label]) => (
-            <button key={k} type="button" className={`cs-btn${importMode === k ? ' primary' : ''}`}
+            <button key={k} type="button" className={`cs-btn cs-mode${importMode === k ? ' is-on' : ''}`}
+              aria-pressed={importMode === k}
               onClick={() => { setImportMode(k); setParsed([]); }}>{label}</button>
           ))}
         </div>
@@ -1721,7 +1785,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             <input ref={backupFileRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={onBackupFile} />
           </div>
         </>)}
-        <div className="cs-row" style={{ marginTop: 10 }}>
+        <div className="cs-row cs-actions" style={{ marginTop: 10 }}>
           {importMode === 'file' && (<>
             <button className="cs-btn primary" onClick={reparse}><Wand2 size={14} />识别并预览</button>
             <button className="cs-btn" onClick={() => { setImportText(''); setParsed([]); }}>清空</button>
@@ -1764,7 +1828,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           <div className="cs-field"><label className="cs-l">教室</label><input className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="博学楼501（可留空）" /></div>
           <div className="cs-field"><label className="cs-l">学分（可留空）</label><input className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="3" /></div>
           <div className="cs-field cs-f-full" style={{ flex: '1 1 260px', minWidth: 0 }}><label className="cs-l">备注（可留空）</label><input className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
-          <div className="cs-field cs-f-full" style={{ flex: '0 0 auto' }}>
+          <div className="cs-field cs-f-full">
             <label className="cs-l">格子颜色</label>
             <div className="cs-colors">
               <button type="button" className={`cs-color-auto${form.color === null ? ' is-on' : ''}`}
@@ -1793,25 +1857,44 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                 <button type="button" className="cs-btn danger" onClick={() => setForm((f) => ({ ...f, periods: f.periods.filter((_, i) => i !== pi) }))}>删除</button>
               )}
             </div>
-            <div className="cs-row">
-              <div className="cs-field"><label className="cs-l">星期</label>
+            <div className="cs-period-grid">
+              <div className="cs-field"><label className="cs-l">星期几</label>
                 <select className="cs-input" value={p.day} onChange={(e) => setPeriod(pi, { day: +e.target.value })}>
                   {WEEKDAY.map((w, i) => <option key={w} value={i + 1}>周{w}</option>)}
                 </select></div>
-              <div className="cs-field"><label className="cs-l">节次（连堂块）</label>
+              <div className="cs-field"><label className="cs-l">第几节</label>
                 <select className="cs-input" value={p.slot} onChange={(e) => setPeriod(pi, { slot: e.target.value })}>
-                  {DEFAULT_SLOTS.map((s) => <option key={s.key} value={s.key}>{timeSlots[s.key].label}（{timeSlots[s.key].time}）{s.night ? '晚自习' : ''}</option>)}
+                  {DEFAULT_SLOTS.map((s) => <option key={s.key} value={s.key}>{s.label}{s.night ? '（晚自习）' : ''}</option>)}
                 </select></div>
-              <div className="cs-field"><label className="cs-l">周次</label>
-                <div className="cs-row">
-                  <input type="number" className="cs-input" style={{ width: 64 }} value={p.f} onChange={(e) => setPeriod(pi, { f: Math.max(1, +e.target.value || 1) })} />周~
-                  <input type="number" className="cs-input" style={{ width: 64 }} value={p.t} onChange={(e) => setPeriod(pi, { t: Math.max(1, +e.target.value || 1) })} />周
-                </div></div>
+              <div className="cs-field cs-f-full"><label className="cs-l">周次</label>
+                <div className="cs-weeks">
+                  <span className="cs-wk-unit">第</span>
+                  <input type="number" inputMode="numeric" className="cs-input cs-wk" value={p.f} aria-label="起始周"
+                    onChange={(e) => setPeriod(pi, { f: e.target.value })}
+                    onBlur={() => setPeriod(pi, p.single ? { f: clampWeek(p.f), t: clampWeek(p.f) } : { f: clampWeek(p.f) })} />
+                  {p.single
+                    ? <span className="cs-wk-unit">周 · 只上一次</span>
+                    : (<>
+                        <span className="cs-wk-unit">周 ~ 第</span>
+                        <input type="number" inputMode="numeric" className="cs-input cs-wk" value={p.t} aria-label="结束周"
+                          onChange={(e) => setPeriod(pi, { t: e.target.value })}
+                          onBlur={() => setPeriod(pi, { t: clampWeek(p.t) })} />
+                        <span className="cs-wk-unit">周</span>
+                      </>)}
+                </div>
+                {p.single && settings.startDate && <p className="cs-hint">对应 {dateOfPeriod(p)}</p>}
+              </div>
               <div className="cs-field"><label className="cs-l">单双周</label>
-                <select className="cs-input" value={p.type} onChange={(e) => setPeriod(pi, { type: e.target.value })}>
+                <select className="cs-input" value={p.single ? 'every' : p.type} disabled={p.single} onChange={(e) => setPeriod(pi, { type: e.target.value })}>
                   <option value="every">每周</option><option value="odd">单周</option><option value="even">双周</option>
                 </select></div>
-              <div className="cs-field" style={{ flexBasis: '100%' }}>
+              <div className="cs-field"><label className="cs-l">课程类型</label>
+                <button type="button" className={`cs-toggle${p.single ? ' is-on' : ''}`} aria-pressed={p.single}
+                  onClick={() => setPeriod(pi, p.single ? { single: false } : { single: true, t: p.f })}>
+                  {p.single ? '单节课' : '连续多周'}
+                </button>
+              </div>
+              <div className="cs-field cs-f-full">
                 <label className="cs-l" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <input type="checkbox" checked={p.customOn} onChange={(e) => setPeriod(pi, { customOn: e.target.checked })} />
                   这一段用自定义时间（默认跟随上方「时间设置」）
@@ -1833,6 +1916,24 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </div>
       </div>
       </MobileSection>
+
+      {/* 首次添加课程后：确认当前周次 → 反推开学周一，之后按日期自动推进 */}
+      {isMobile && (
+        <MobileBox open={weekAsk} onClose={() => setWeekAsk(false)} icon={<CalendarDays size={16} />}
+          title="现在是第几周？" label="设置当前周次"
+          sub="只需设置一次：之后按日期自动推进，单节课也会据此算出具体日期。"
+          actions={<>
+            <button type="button" className="cs-btn" onClick={() => setWeekAsk(false)}>稍后再说</button>
+            <button type="button" className="cs-btn primary" onClick={applyWeekAsk}>确定</button>
+          </>}>
+          <div className="cs-field">
+            <label className="cs-l">当前是第几周（1-{MAX_WEEK}）</label>
+            <input type="number" min={1} max={MAX_WEEK} inputMode="numeric" className="cs-input" value={weekAskVal}
+              onChange={(e) => setWeekAskVal(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') applyWeekAsk(); }} />
+          </div>
+        </MobileBox>
+      )}
 
       {toast && <div className="cs-toast">{toast}</div>}
     </div>
