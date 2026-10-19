@@ -12,6 +12,7 @@ const LearningHub = lazy(() => import('./pages/LearningHub'))
 const MindMap = lazy(() => import('./pages/MindMap'))
 const BabyCare = lazy(() => import('./pages/BabyCare'))
 const ScheduleHub = lazy(() => import('./pages/ScheduleHub'))
+const HealthLog = lazy(() => import('./pages/HealthLog'))
 const SkillHub = lazy(() => import('./pages/SkillHub'))
 const UIKit = lazy(() => import('./pages/UIKit'))
 const AgentSkills = lazy(() => import('./pages/AgentSkills'))
@@ -51,6 +52,7 @@ function App() {
                 <Route path="/learning" element={<LearningHub />} />
                 <Route path="/baby-care" element={<AuthGate><Suspense fallback={<RouteLoader variant="baby" />}><BabyCare /></Suspense></AuthGate>} />
                 <Route path="/timetable" element={<AuthGate><Suspense fallback={<RouteLoader variant="timetable" />}><ScheduleHub /></Suspense></AuthGate>} />
+                <Route path="/health" element={<AuthGate><Suspense fallback={<RouteLoader variant="timetable" />}><HealthLog /></Suspense></AuthGate>} />
                 <Route path="/schedule" element={<Navigate to="/timetable?tab=courses" replace />} />
                 <Route path="/planner" element={<Navigate to="/timetable?tab=planner" replace />} />
                 <Route path="/agents" element={<Suspense fallback={<RouteLoader variant="agents" />}><AgentSkills /></Suspense>} />

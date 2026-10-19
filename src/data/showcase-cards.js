@@ -120,6 +120,25 @@ export const SHOWCASE_CARDS = [
     stage: { kind: "mall" },
   },
   {
+    id: 'health',
+    seq: '04',
+    no: '04 / 健康记录',
+    name: '血压记录',
+    desc: '大压、小压与心率每日监测合一，测量时间与趋势一站管理。',
+    cta: '打开记录',
+    href: '/health',
+    family: 'core',
+    tone: 'gold',
+    layout: 'stage',
+    Icon: 'HeartPulse',
+    /* 站内工具页（SPA 路由 /health，ProductCard 会拼成 #/health），不是外链。
+       舞台取设计稿（voyra_health.html）门户卡里那块 macOS 缩略窗：三色点 +
+       最新一次 118/76 mmHg、心率 72 bpm、三条近期小记录 —— 与真实记录页同源。
+       tone 用金：在架产品卡 api=ink/copy · timetable=paper/stage ·
+       voyraai-mall=blue/copy，gold/stage 与前三个两两不同。 */
+    stage: { kind: "bp-log" },
+  },
+  {
     id: 'voyraai-ref',
     seq: '04',
     no: '04 / 推荐通道',
@@ -435,10 +454,10 @@ export const SHOWCASE_CARDS = [
 /** 按 Tab 分组，供 Dashboard 直接消费 */
 export const SHOWCASE_GROUPS = {
   /* 产品区（2026-10 用户要求：产品里除第一、第二、第三个卡片外全部下架）。
-     2026-10 用户再次要求删除第 4 张卡片（voyraai-ref / VoyraAI 推荐）。
+     2026-10-19 新增第 4 张：health 血压记录（站内 /health 工具页，需登录）。
      其余数据条目刻意留在 SHOWCASE_CARDS 里 —— 它们对应的站内页面与独立仓库都还在，
      下架的只是首页橱窗位。要重新上架，把 id 加回这一行即可，不必恢复数据。 */
-  products: ['api', 'timetable', 'voyraai-mall'],
+  products: ['api', 'timetable', 'voyraai-mall', 'health'],
   skills: ['mathmodel'],
   /* 应用区去掉织流 Jacquard（modelflow）与知新 Zenew（zenew）——
      2026-10-13 用户截图指认这两张要撤下。处理方式与产品区一致：

@@ -816,3 +816,34 @@
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(11%, 9%, 0) scale(1.14); }
 }
+
+/* ── 04 · 血压记录 macOS 缩略窗（2026-10-19） ────────────────────────────
+   复刻设计稿门户卡内嵌窗：Window 外壳内，左「最新一次」右三条小记录。
+   文字色全部对白底 >= 4.5:1（#6c6a64 ~= 5.3:1 / #1D4ED8 ~= 7.6:1 / #BE123C ~= 6.5:1）。 */
+.bp-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  gap: 12px;
+  height: 100%;
+  padding: 12px 14px;
+}
+.bp-latest { display: flex; flex-direction: column; gap: 3px; justify-content: center; min-width: 0; }
+.bp-cap { font-size: 10px; color: #6c6a64; font-weight: 600; }
+.bp-bp { font-size: 20px; font-weight: 800; color: #1F1D1A; letter-spacing: -.01em; line-height: 1.1; }
+.bp-hr { font-size: 11px; font-weight: 700; color: #BE123C; }
+.bp-pp { font-size: 10px; font-weight: 650; color: #6c6a64; }
+.bp-rows { display: flex; flex-direction: column; gap: 5px; justify-content: center; min-width: 0; }
+.bp-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid rgba(27, 27, 27, .08);
+  border-radius: 6px;
+  padding: 4px 7px;
+  box-shadow: 0 1px 2px rgba(27, 27, 27, .04);
+}
+.bp-t { font-style: normal; font-size: 9.5px; font-weight: 750; color: #1D4ED8; }
+.bp-v { font-size: 10px; font-weight: 750; color: #1F1D1A; }
+.bp-row em { margin-left: auto; font-style: normal; font-size: 9.5px; color: #6c6a64; white-space: nowrap; }

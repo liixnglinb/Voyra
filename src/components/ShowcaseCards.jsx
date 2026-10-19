@@ -3,8 +3,9 @@ import {
   ArrowUpRight, Globe, CalendarRange, Film, Lightbulb, Shapes,
   Sparkles, Bot, Route, Milk, Dices, ClipboardCheck, Star, Workflow,
   /* Store / Ticket：2026-10-13 新增的 VoyraAI 商城与推荐通道用。
-     两张卡都带 logo，图标只在外链 logo 加载失败时兜底。 */
-  Store, Ticket,
+     两张卡都带 logo，图标只在外链 logo 加载失败时兜底。
+     HeartPulse：2026-10-19 血压记录卡（第 4 张产品卡）。 */
+  Store, Ticket, HeartPulse,
 } from 'lucide-react';
 import { SHOWCASE_CARDS, SHOWCASE_GROUPS, CARD_BY_ID } from '../data/showcase-cards';
 import { STAGES } from './stages';
@@ -30,7 +31,7 @@ import { toHashUrl } from '../lib/hash-url';
    将来那份数据若要迁到 worker / 静态生成，不用改。 */
 const ICONS = {
   Globe, CalendarRange, Film, Lightbulb, Shapes, Sparkles, Bot,
-  Route, Milk, Dices, ClipboardCheck, Star, Workflow, Store, Ticket,
+  Route, Milk, Dices, ClipboardCheck, Star, Workflow, Store, Ticket, HeartPulse,
 };
 
 /** 数据里的 Icon 字段（字符串）→ lucide 组件；缺图标时回落到卡片族默认图形。 */

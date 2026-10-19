@@ -725,6 +725,41 @@ function StageVoyraRef() {
   );
 }
 
+/* ── 04 · 血压记录（2026-10-19） ───────────────────────────────────────────
+   复刻设计稿（voyra_health.html）门户卡内嵌的 macOS 缩略窗：三色点 + 最新一次
+   118/76 mmHg、心率 72 bpm、脉压差，右侧三条近期小记录。
+   数值与真实记录页（/health）同源，不是抽象图形。
+   v5 约定：外壳（Window）直接当舞台根，内层类名另起 bp-，不复用根类名。 */
+const BP_ROWS = [
+  ['08:00', '118/76', 72, '晨起'],
+  ['21:30', '121/78', 75, '晚间'],
+  ['08:15', '115/74', 68, '晨起'],
+];
+
+function StageBpLog() {
+  return (
+    <Window title="血压记录" meta={['10月19日 · 血压监测', '达标 7/7']}>
+      <div className="bp-body">
+        <div className="bp-latest">
+          <span className="bp-cap">今日测量</span>
+          <b className="bp-bp">118/76</b>
+          <span className="bp-hr">♥ 72 bpm</span>
+          <span className="bp-pp">脉压差 42 mmHg</span>
+        </div>
+        <div className="bp-rows">
+          {BP_ROWS.map(([t, bp, hr, tag]) => (
+            <div className="bp-row" key={t}>
+              <i className="bp-t">{t}</i>
+              <b className="bp-v">{bp}</b>
+              <em>{hr} bpm · {tag}</em>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Window>
+  );
+}
+
 export const STAGES = {
   'api-hub': StageApiHub,
   'week-grid': StageWeekGrid,
@@ -747,4 +782,5 @@ export const STAGES = {
   timeline: StageTimeline,
   mall: StageVoyraMall,
   referral: StageVoyraRef,
+  'bp-log': StageBpLog,
 };
