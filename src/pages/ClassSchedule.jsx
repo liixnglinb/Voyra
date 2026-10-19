@@ -804,7 +804,7 @@ export function useIsMobile() {
   return mobile;
 }
 
-export default function ClassSchedule({ stats = null, active = true, drawerPanel = null, drawerHost = null, onWeekLabel = null }) {
+export default function ClassSchedule({ stats = null, active = true, drawerPanel = null, drawerHost = null, onWeekLabel = null, onClosePanel = null }) {
   const { guard, authed } = useAuth();
   const CLOUD_KEY = 'schedule-classes-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const [courses, setCourses] = useState([]);
@@ -1081,7 +1081,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     persist([...courses, c], null);
     /* 保留节次与周次这类每次都要重填的设置，清掉课程自身的字段 */
     setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
-    say(periods.length > 1 ? `已添加课程（${periods.length} 个时段）` : '已添加课程');
+    say(`已添加「${c.name}」${periods.length > 1 ? `（${periods.length} 个时段）` : ''}`);
+    /* 手机端：添加成功后收起抽屉回到课表视图（桌面端本来就是内联表单，
+       onClosePanel 为空操作）。toast 的 z-index 已抬到抽屉之上，收抽屉途中也能看见。 */
+    if (onClosePanel) onClosePanel();
     /* 首次添加后问一次当前周次：没有开学日期时「第 X 周」只能手动指定，
        问完即可按日期自动推进（只问一次，取消也不再打扰）。 */
     if (!settings.startDate && settings.overrideWeek == null && !askedWeekRef.current) {
@@ -1211,8 +1214,12 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-wk { width:64px;text-align:center;font-variant-numeric:tabular-nums; }
         .cs-wk-unit { font-size:12.5px;color:#6c757d;font-weight:600; }
         .cs-hint { margin:6px 0 0;font-size:12px;color:#6c757d; }
-        .cs-toggle { border:1px solid rgba(20,24,33,.12);background:#fff;color:#495057;border-radius:9px;font-size:13px;font-weight:600;padding:8px 12px;min-height:44px;text-align:center;cursor:pointer; }
-        .cs-toggle.is-on { border-color:${ACCENT_LINE};background:${ACCENT_SOFT};color:${ACCENT};font-weight:750; }
+        /* 课程类型：「连续多周 / 单节课」分段控件 —— 两个选项始终摊开可见。
+           旧实现是一个写着「连续多周」的开关，点一下才变成「单节课」，
+           用户根本看不出还能选「只上一次」。 */
+        .cs-seg { display:grid;grid-template-columns:1fr 1fr;gap:6px; }
+        .cs-seg > button { border:1px solid rgba(20,24,33,.12);background:#fff;color:#495057;border-radius:9px;font-size:12.5px;font-weight:600;padding:8px 4px;min-height:44px;text-align:center;cursor:pointer;transition:all .15s ease; }
+        .cs-seg > button.is-on { border-color:${ACCENT_LINE};background:${ACCENT_SOFT};color:${ACCENT};font-weight:750; }
         /* 颜色：6 个站点配色 + 一个「跟随课名」，选中给一圈金色 */
         .cs-colors { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
         .cs-color-auto { border:1px solid rgba(20,24,33,.14);border-radius:99px;background:#fff;padding:6px 12px;font-size:12px;color:#555;min-height:36px; }
@@ -1223,6 +1230,18 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-btn:hover { border-color:${ACCENT_LINE};color:${ACCENT}; }
         .cs-btn.primary { background:${ACCENT};border-color:${ACCENT};color:#fff; }
         .cs-btn.primary:hover { opacity:.92; }
+        /* 主按钮 = 站内金。壳层 Layout 有一条 .tool-content :is(...cs-btn.primary...)：
+           background:#1b1b1b !important，把整页主按钮刷成黑块、radius 压成 6px；
+           这里用更高特异性（.tool-content .cs-btn.cs-btn.primary = 4 个类 > 壳层 3 个类）
+           把金色盖回去。只动 .cs-btn，其他工具页的 primary 不受影响。 */
+        .tool-content .cs-btn.cs-btn.primary { background:${ACCENT} !important;border-color:${ACCENT} !important;color:#fff !important;border-radius:9px !important;box-shadow:0 1px 3px rgba(120,95,30,.22) !important;font-weight:700; }
+        .tool-content .cs-btn.cs-btn.primary:hover:not(:disabled) { background:#8A6D1F !important;border-color:#8A6D1F !important;box-shadow:0 2px 8px -2px rgba(120,95,30,.35) !important; }
+        .tool-content .cs-btn.cs-btn.primary:disabled { opacity:.5;cursor:not-allowed; }
+        /* 弹框底部的 primary（portal 到 body，吃不到 .tool-content 壳层规则，
+           但 MobileBox 自己的 mbox-foot 兜底也把它描成了 #1b1b1b 黑块）：
+           4 个类比 3 个类高，无需 !important。 */
+        .mbox-foot .cs-btn.cs-btn.primary { background:${ACCENT};border-color:${ACCENT};color:#fff;border-radius:10px; }
+        .mbox-foot .cs-btn.cs-btn.primary:hover { filter:brightness(.94); }
         .cs-btn.danger:hover { border-color:rgba(239,68,68,.4);color:#EF4444; }
         /* 导入方式页签：选中态用金色淡底 + 金色描边（原 primary 深底在小屏上像个黑块），
            并且固定尺寸、不加阴影与缩放 —— 只靠颜色区分当前页签 */
@@ -1276,7 +1295,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .cs-tag.night { color:#5F3DC4;background:#F1EEFF; }
         .cs-review { border:1px dashed ${ACCENT_LINE};border-radius:10px;background:${ACCENT_SOFT};padding:10px 12px;margin-top:10px; }
         .cs-review-item { display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 10px;margin:4px 4px 0 0;font-size:12px; }
-        .cs-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12.5px;z-index:99; }
+        .cs-toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#212529;color:#fff;padding:9px 16px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.02em;z-index:1450;box-shadow:0 8px 24px -8px rgba(16,18,24,.4); }
         @media (max-width:767px) {
           /* 外壳的通用卡片规则实测是 .tool-content :is([class*="card"]…):not([class*="grid"])
              共 3 条类选择器 + !important（手机上落到 12px），原来这条 .tool-content .cs-card
@@ -1888,11 +1907,14 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                 <select className="cs-input" value={p.single ? 'every' : p.type} disabled={p.single} onChange={(e) => setPeriod(pi, { type: e.target.value })}>
                   <option value="every">每周</option><option value="odd">单周</option><option value="even">双周</option>
                 </select></div>
-              <div className="cs-field"><label className="cs-l">课程类型</label>
-                <button type="button" className={`cs-toggle${p.single ? ' is-on' : ''}`} aria-pressed={p.single}
-                  onClick={() => setPeriod(pi, p.single ? { single: false } : { single: true, t: p.f })}>
-                  {p.single ? '单节课' : '连续多周'}
-                </button>
+              <div className="cs-field cs-f-full"><label className="cs-l">课程类型</label>
+                <div className="cs-seg">
+                  <button type="button" className={!p.single ? 'is-on' : ''} aria-pressed={!p.single}
+                    onClick={() => setPeriod(pi, { single: false })}>连续多周</button>
+                  <button type="button" className={p.single ? 'is-on' : ''} aria-pressed={p.single}
+                    onClick={() => setPeriod(pi, { single: true })}>单节课</button>
+                </div>
+                {p.single && <p className="cs-hint">只排一周：上方「周次」用起始周那一次，结束周忽略；单双周不适用</p>}
               </div>
               <div className="cs-field cs-f-full">
                 <label className="cs-l" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

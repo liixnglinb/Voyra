@@ -380,7 +380,7 @@ export default function ScheduleHub() {
     <div className="shub-panel">
       <div hidden={tab !== 'courses'}>
         <ClassSchedule stats={stats} active={tab === 'courses'}
-          drawerPanel={panel} drawerHost={drawerHost} onWeekLabel={setWeekLabel} />
+          drawerPanel={panel} drawerHost={drawerHost} onWeekLabel={setWeekLabel} onClosePanel={() => setPanel(null)} />
       </div>
       <div hidden={tab !== 'planner'}>
         <Planner active={tab === 'planner'} drawerPanel={panel} drawerHost={drawerHost} />
