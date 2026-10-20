@@ -466,7 +466,7 @@ export default function HealthLog({ active = true }) {
                   <div className="hp-step">
                     <button type="button" className="hp-step-btn" aria-label="大压减 2" onClick={() => step('sys', -2, 60, 240)}><Minus size={14} /></button>
                     <input ref={sysRef} className="hp-num" type="number" min="60" max="240" inputMode="numeric" value={form.sys}
-                      aria-label="大压数值" onChange={(e) => setForm((f) => ({ ...f, sys: e.target.value }))} />
+                      aria-label="大压数值" onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, sys: e.target.value }))} />
                     <button type="button" className="hp-step-btn" aria-label="大压加 2" onClick={() => step('sys', 2, 60, 240)}><Plus size={14} /></button>
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export default function HealthLog({ active = true }) {
                   <div className="hp-step">
                     <button type="button" className="hp-step-btn" aria-label="小压减 2" onClick={() => step('dia', -2, 40, 160)}><Minus size={14} /></button>
                     <input ref={diaRef} className="hp-num" type="number" min="40" max="160" inputMode="numeric" value={form.dia}
-                      aria-label="小压数值" onChange={(e) => setForm((f) => ({ ...f, dia: e.target.value }))} />
+                      aria-label="小压数值" onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, dia: e.target.value }))} />
                     <button type="button" className="hp-step-btn" aria-label="小压加 2" onClick={() => step('dia', 2, 40, 160)}><Plus size={14} /></button>
                   </div>
                 </div>
@@ -487,7 +487,7 @@ export default function HealthLog({ active = true }) {
                   <div className="hp-step">
                     <button type="button" className="hp-step-btn" aria-label="心率减 1" onClick={() => step('hr', -1, 35, 220)}><Minus size={14} /></button>
                     <input ref={hrRef} className="hp-num" type="number" min="35" max="220" inputMode="numeric" value={form.hr}
-                      aria-label="心率数值" onChange={(e) => setForm((f) => ({ ...f, hr: e.target.value }))} />
+                      aria-label="心率数值" onFocus={(e) => e.target.select()} onChange={(e) => setForm((f) => ({ ...f, hr: e.target.value }))} />
                     <button type="button" className="hp-step-btn" aria-label="心率加 1" onClick={() => step('hr', 1, 35, 220)}><Plus size={14} /></button>
                   </div>
                 </div>
@@ -732,6 +732,10 @@ export default function HealthLog({ active = true }) {
         .hp-step-btn:active { transform: scale(.92); }
         .hp-num { flex: 1 1 auto; min-width: 0; width: 100%; text-align: center; font-size: 20px; font-weight: 800; color: #212529; border: 0; background: transparent; outline: none; font-family: inherit; }
         .hp-num::-webkit-inner-spin-button, .hp-num::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        /* 步进按钮宽度：壳层 Layout 有 .tool-content button { min-width:44px !important }，
+          两个按钮合计 88px，把 157px 字段里的数字框挤到只剩 57px —— 手机上根本没法输入。
+          用 (0,2,1) > (0,1,1) 的特异性把宽度压回 36px（高度仍 44，拇指下限不丢）。 */
+        .tool-content button.hp-step-btn { min-width: 36px !important; width: 36px; }
         .hp-input { width: 100%; box-sizing: border-box; background: #fff; border: 1px solid rgba(20,24,33,.14); border-radius: 9px; padding: 8px 10px; font-size: 12px; font-weight: 650; color: #212529; outline: none; font-family: inherit; }
         .hp-input:focus { border-color: ${ACCENT}; }
         .hp-f-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
@@ -810,6 +814,13 @@ export default function HealthLog({ active = true }) {
           .hp-metric { padding: 10px; border-radius: 14px; }
           .hp-metric-val { font-size: 27px; }
           .hp-fgrid-57 { grid-template-columns: 1fr; }
+        }
+        /* 手机上数字字段独占一行：2 列布局里数字框只有 ~57-66px，打字不可用；
+           单行后数字框 230px+，配合聚焦全选，「点一下 → 直接输」才是可用的录入流 */
+        @media (max-width: 767px) {
+          .hp-fgrid { grid-template-columns: 1fr; }
+          .hp-fgrid-57 { grid-template-columns: 1fr; }
+          .hp-num { font-size: 22px; }
         }
       `}</style>
     </div>
