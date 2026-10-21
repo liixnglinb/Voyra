@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Lock, UserRound, X, LogOut, ShieldCheck } from 'lucide-react';
 import { createAvatar } from '@dicebear/core';
 import * as pixelArt from '@dicebear/pixel-art';
@@ -204,110 +205,148 @@ export default function AuthGate({ children, variant = 'light' }) {
         }
 
         /* ===== 弹窗遮罩（亮底虚化，极简风） ===== */
-        .ag-overlay {
-          position: fixed; inset: 0; z-index: 900;
+        /* ===== 登录弹窗（agm-* 独立命名空间） =====
+           之前这套类名是 ag-card-* / ag-note-item，被外壳 Layout 的
+           [class*="card"]、[class*="note-item"] 兜底规则命中，标题、副标题、
+           说明项全被套上卡片边框 —— 换命名空间 + portal 到 body 双重隔离。 */
+        .agm-overlay {
+          position: fixed; inset: 0; z-index: 1400;
           display: flex; align-items: center; justify-content: center;
-          background: rgba(250, 250, 248, .62);
+          padding: 16px;
+          background: rgba(250, 250, 248, .66);
           backdrop-filter: blur(14px) saturate(1.05); -webkit-backdrop-filter: blur(14px) saturate(1.05);
-          animation: ag-fade .18s ease both; padding: 20px;
+          animation: agm-fade .18s ease both;
         }
-        @keyframes ag-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes agm-fade { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes agm-in { from { opacity: 0; transform: translateY(10px) scale(.985) } to { opacity: 1; transform: none } }
 
-        /* ===== 登录卡片 ===== */
-        .ag-card {
+        .agm-card {
           position: relative;
-          width: 100%; max-width: 392px;
+          width: 100%; max-width: 372px;
+          max-height: calc(100dvh - 32px);
+          display: flex; flex-direction: column;
           background: #fff;
-          border: 1px solid rgba(27,27,27,.16);
-          border-radius: 10px;
-          box-shadow: 0 24px 60px -22px rgba(27,27,27,.35);
-          animation: ag-in .24s cubic-bezier(.16,1,.3,1) both;
+          border: 1px solid rgba(27, 27, 27, .1);
+          border-radius: 18px;
+          box-shadow: 0 24px 60px -28px rgba(27, 27, 27, .4);
+          animation: agm-in .22s cubic-bezier(.16, 1, .3, 1) both;
           overflow: hidden;
         }
-        .ag-card::before {
-          content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-          background: linear-gradient(90deg, #1b1b1b 55%, #ffe08a 55%);
-        }
-        @keyframes ag-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
-        .ag-card-head {
-          display: flex; align-items: flex-start; justify-content: space-between;
-          padding: 22px 22px 0;
+        .agm-head {
+          flex: 0 0 auto;
+          display: flex; align-items: flex-start; gap: 10px;
+          padding: 18px 16px 12px 18px;
         }
-        .ag-brand { display: flex; align-items: center; gap: 9px; }
-        .ag-brand-dot { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid #A48830; flex-shrink: 0; }
-        .ag-card-title { font-size: 17px; font-weight: 760; color: #1b1b1b; letter-spacing: -.02em; }
-        .ag-card-sub { font-size: 10px; color: #9c9c9c; margin-top: 4px; letter-spacing: .06em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-        .ag-close {
-          border: 0; background: transparent; cursor: pointer; color: #9c9c9c; padding: 4px;
-          border-radius: 6px; transition: background .15s ease, color .15s ease;
+        .agm-head-main { flex: 1 1 auto; min-width: 0; }
+        .agm-dot {
+          display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+          border: 1.5px solid #A48830; margin-right: 8px; vertical-align: 2px;
         }
-        .ag-close:hover { background: rgba(27,27,27,.06); color: #1b1b1b; }
+        .agm-title { display: inline; font-size: 18px; font-weight: 760; color: #1b1b1b; letter-spacing: -.02em; }
+        .agm-sub {
+          margin-top: 4px;
+          font-size: 9.5px; letter-spacing: .14em; color: #a8a8a8;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .agm-x {
+          flex: none; width: 32px; height: 32px; margin: -4px -4px 0 0;
+          display: grid; place-items: center;
+          border: 0; border-radius: 9px; background: transparent;
+          color: #9c9c9c; cursor: pointer;
+          transition: background .15s ease, color .15s ease;
+        }
+        .agm-x:hover { background: rgba(27, 27, 27, .06); color: #1b1b1b; }
 
-        .ag-card-body { padding: 18px 22px 20px; }
-        .ag-field { margin-bottom: 13px; }
-        .ag-field label {
-          display: flex; align-items: baseline; gap: 7px;
-          font-size: 11px; color: #666; margin-bottom: 7px; font-weight: 700;
+        .agm-body {
+          flex: 1 1 auto; min-height: 0; overflow-y: auto;
+          padding: 2px 18px 18px;
+          -webkit-overflow-scrolling: touch;
         }
-        .ag-field label em { font-style: normal; font-size: 9px; color: #b0b0b0; letter-spacing: .08em; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-        .ag-input {
-          width: 100%; box-sizing: border-box;
+        .agm-field { margin-bottom: 12px; }
+        .agm-label {
+          display: flex; align-items: baseline; gap: 6px;
+          margin-bottom: 6px;
+          font-size: 12px; font-weight: 700; color: #444;
+        }
+        .agm-label em {
+          font-style: normal; font-size: 9px; color: #b8b8b8; letter-spacing: .1em;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .agm-input {
           display: flex; align-items: center; gap: 9px;
-          border: 1px solid rgba(27,27,27,.16); border-radius: 7px; background: #fff; padding: 0 12px;
+          height: 48px; padding: 0 13px;
+          border: 1px solid rgba(27, 27, 27, .14); border-radius: 11px;
+          background: #fff;
           transition: border-color .16s ease, box-shadow .16s ease;
         }
-        .ag-input:focus-within { border-color: #1b1b1b; }
-        .ag-input svg { color: #b0b0b0; flex-shrink: 0; }
-        .ag-input input {
-          flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
-          padding: 11px 0; font-size: 13.5px; color: #1b1b1b; font-family: inherit;
-          box-shadow: none !important; -webkit-tap-highlight-color: transparent;
+        .agm-input:focus-within { border-color: #A48830; box-shadow: 0 0 0 3px rgba(164, 136, 48, .12); }
+        .agm-input svg { flex: none; color: #b0b0b0; }
+        .agm-input input {
+          flex: 1 1 auto; min-width: 0; height: 100%;
+          border: 0; outline: 0; background: transparent;
+          font-size: 16px; color: #1b1b1b; font-family: inherit;
+          -webkit-appearance: none; appearance: none;
         }
-        .ag-input input:focus { outline: none; box-shadow: none; }
-        .ag-input input::placeholder { color: #c2c2c2; }
+        .agm-input input::placeholder { color: #c2c2c2; font-size: 14px; }
 
-        .ag-btn {
-          width: 100%; margin-top: 16px;
+        .agm-err {
+          margin: 2px 0 10px; padding: 9px 12px; border-radius: 10px;
+          background: #FDF3F3; border: 1px solid #F0C5C7;
+          color: #B3403A; font-size: 12.5px; text-align: center;
+        }
+
+        .agm-submit {
+          width: 100%; height: 48px; margin-top: 4px;
           display: flex; align-items: center; justify-content: center; gap: 7px;
-          padding: 12px; border: 0; border-radius: 8px; cursor: pointer;
+          border: 0; border-radius: 11px; cursor: pointer;
           background: #A48830; color: #fff;
-          font-size: 14px; font-weight: 700; letter-spacing: .02em; font-family: inherit;
-          transition: background .16s ease, opacity .16s ease, transform .16s ease;
+          font-size: 15px; font-weight: 750; letter-spacing: .02em; font-family: inherit;
+          transition: background .16s ease, transform .12s ease, opacity .16s ease;
         }
-        .ag-btn:hover { background: #8E7420; }
-        .ag-btn:active { transform: translateY(1px); }
-        .ag-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .agm-submit:hover { background: #8E7420; }
+        .agm-submit:active { transform: translateY(1px); }
+        .agm-submit:disabled { opacity: .55; cursor: not-allowed; }
 
-        .ag-switch { text-align: center; margin-top: 14px; font-size: 12px; color: #888; }
-        .ag-switch button {
-          border: 0; background: transparent; padding: 0 1px; cursor: pointer;
-          color: #1b1b1b; font-weight: 700; font-size: 12px; font-family: inherit;
+        .agm-switch { margin-top: 12px; text-align: center; font-size: 12.5px; color: #8a8a8a; }
+        .agm-switch button {
+          border: 0; background: transparent; padding: 2px 3px; cursor: pointer;
+          color: #1b1b1b; font-weight: 700; font-size: 12.5px; font-family: inherit;
           text-decoration: underline; text-decoration-color: #ffe08a; text-decoration-thickness: 2.5px; text-underline-offset: 3px;
         }
 
-        .ag-error {
-          margin-top: 11px; padding: 8px 12px; border-radius: 7px;
-          background: #FDF3F3; border: 1px solid #F0C5C7;
-          color: #B3403A; font-size: 12px; text-align: center;
+        .agm-note {
+          margin-top: 16px; padding-top: 14px;
+          border-top: 1px solid rgba(27, 27, 27, .08);
         }
+        .agm-note-h {
+          display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+          font-size: 10px; font-weight: 700; color: #a0a0a0; letter-spacing: .12em;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .agm-note-h svg { color: #A48830; }
+        .agm-note-row { display: flex; gap: 9px; padding: 5px 0; }
+        .agm-note-row + .agm-note-row { border-top: 1px dashed rgba(27, 27, 27, .06); }
+        .agm-no {
+          flex: none; margin-top: 1px;
+          font-size: 9.5px; font-weight: 700; color: #A48830; letter-spacing: .04em;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+        .agm-note-row p { margin: 0; font-size: 11.5px; line-height: 1.62; color: #7a7a7a; }
+        .agm-note-row b { color: #1b1b1b; font-weight: 700; }
 
-        /* ===== 说明区（等宽编号 + 金色标记） ===== */
-        .ag-note { margin-top: 18px; border-top: 1px solid rgba(27,27,27,.09); padding-top: 15px; }
-        .ag-note h4 {
-          margin: 0 0 11px; display: flex; align-items: center; gap: 7px;
-          font-size: 10px; font-weight: 700; color: #9c9c9c; letter-spacing: .12em;
-          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        /* 手机上：贴底更稳、留出安全区，正文可滚 */
+        @media (max-width: 480px) {
+          .agm-overlay { padding: 12px; align-items: flex-end; }
+          .agm-card {
+            max-width: 100%;
+            border-radius: 18px 18px 14px 14px;
+            max-height: calc(100dvh - 24px);
+          }
+          .agm-head { padding: 16px 12px 10px 16px; }
+          .agm-body { padding: 2px 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+          .agm-title { font-size: 17px; }
         }
-        .ag-note h4 svg { color: #A48830; }
-        .ag-note-item { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; }
-        .ag-note-no {
-          flex-shrink: 0; margin-top: 2px;
-          font-size: 10px; font-weight: 700; color: #A48830; letter-spacing: .05em;
-          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        }
-        .ag-note-item p { margin: 0; font-size: 11.5px; line-height: 1.68; color: #666; }
-        .ag-note-item b { color: #1b1b1b; font-weight: 700; }
 
         /* ===== Toast ===== */
         .ag-toast {
@@ -355,66 +394,66 @@ function LoginModal({ onClose, onSuccess }) {
     }
   };
 
-  return (
-    <div className="ag-overlay" onClick={onClose}>
-      <form className="ag-card" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
-        <div className="ag-card-head">
-          <div className="ag-brand">
-            <span className="ag-brand-dot" />
+  return createPortal(
+    <div className="agm-overlay" onClick={onClose}>
+      <form
+        className="agm-card"
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={submit}
+        aria-label={mode === 'login' ? '登录' : '注册并登录'}
+      >
+        <div className="agm-head">
+          <div className="agm-head-main">
             <div>
-              <div className="ag-card-title">{mode === 'login' ? '登录' : '注册并登录'}</div>
-              <div className="ag-card-sub">VOYRA / UNIFIED ACCOUNT</div>
+              <span className="agm-dot" />
+              <span className="agm-title">{mode === 'login' ? '登录' : '注册并登录'}</span>
             </div>
+            <div className="agm-sub">VOYRA / UNIFIED ACCOUNT</div>
           </div>
-          <button type="button" className="ag-close" onClick={onClose} aria-label="关闭"><X size={17} /></button>
+          <button type="button" className="agm-x" onClick={onClose} aria-label="关闭"><X size={17} /></button>
         </div>
 
-        <div className="ag-card-body">
-          <div className="ag-field">
-            <label>账号 <em>ACCOUNT</em></label>
-            <div className="ag-input">
+        <div className="agm-body">
+          <div className="agm-field">
+            <label className="agm-label" htmlFor="agm-user">账号 <em>ACCOUNT</em></label>
+            <div className="agm-input">
               <UserRound size={15} />
-              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="你的账号" autoComplete="username" />
+              <input id="agm-user" value={username} onChange={(e) => setUsername(e.target.value)}
+                placeholder="你的账号" autoComplete="username" enterKeyHint="next" />
             </div>
           </div>
 
-          <div className="ag-field">
-            <label>密码 <em>PASSWORD</em></label>
-            <div className="ag-input">
+          <div className="agm-field">
+            <label className="agm-label" htmlFor="agm-pass">密码 <em>PASSWORD</em></label>
+            <div className="agm-input">
               <Lock size={15} />
-              <input
-                type="password"
-                value={password}
+              <input id="agm-pass" type="password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="至少 6 位密码"
                 autoComplete={mode === 'login' ? 'off' : 'new-password'}
-              />
+                enterKeyHint={mode === 'login' ? 'go' : 'next'} />
             </div>
           </div>
 
           {mode === 'register' && (
-            <div className="ag-field">
-              <label>确认密码 <em>CONFIRM</em></label>
-              <div className="ag-input">
+            <div className="agm-field">
+              <label className="agm-label" htmlFor="agm-confirm">确认密码 <em>CONFIRM</em></label>
+              <div className="agm-input">
                 <Lock size={15} />
-                <input
-                  type="password"
-                  value={confirm}
+                <input id="agm-confirm" type="password" value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="再次输入密码"
-                  autoComplete="new-password"
-                />
+                  placeholder="再次输入密码" autoComplete="new-password" enterKeyHint="go" />
               </div>
             </div>
           )}
 
-          {error && <div className="ag-error">{error}</div>}
+          {error && <div className="agm-err" role="alert">{error}</div>}
 
-          <button type="submit" className="ag-btn" disabled={busy}>
+          <button type="submit" className="agm-submit" disabled={busy}>
             {busy ? '请稍候…' : (mode === 'login' ? '登录' : '注册并登录')}
           </button>
 
-          <div className="ag-switch">
+          <div className="agm-switch">
             {mode === 'login' ? (
               <>还没有账号？<button type="button" onClick={() => { setMode('register'); setError(''); }}>注册一个</button></>
             ) : (
@@ -422,23 +461,24 @@ function LoginModal({ onClose, onSuccess }) {
             )}
           </div>
 
-          <div className="ag-note">
-            <h4><ShieldCheck size={13} /> 登录说明</h4>
-            <div className="ag-note-item">
-              <span className="ag-note-no">01</span>
+          <div className="agm-note">
+            <div className="agm-note-h"><ShieldCheck size={12} />登录说明</div>
+            <div className="agm-note-row">
+              <span className="agm-no">01</span>
               <p>登录后自动同步到<b>日程中心、思维导图、宝宝护理</b>三个工具，登录一次全部可用。</p>
             </div>
-            <div className="ag-note-item">
-              <span className="ag-note-no">02</span>
+            <div className="agm-note-row">
+              <span className="agm-no">02</span>
               <p>超过 <b>{RETENTION_DAYS} 天</b>未登录，你的数据将被<b>自动删除</b>。</p>
             </div>
-            <div className="ag-note-item">
-              <span className="ag-note-no">03</span>
+            <div className="agm-note-row">
+              <span className="agm-no">03</span>
               <p>一次登录有效 <b>{SESSION_DAYS} 天</b>，到期后重新登录即可，数据不会丢失。</p>
             </div>
           </div>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body,
   );
 }
