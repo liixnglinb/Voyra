@@ -1383,18 +1383,29 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     setParsed(list);
     say(`口令里含 ${list.length} 门课程，确认后导入`);
   };
-  const buildShareLink = () => {
+  /* 分享链接：先把口令正文 POST /share 换成 7 位短链（/s/<id>），
+     服务端不可用时自动回退成长链接，功能不受影响 */
+  const buildShareLink = async () => {
     if (!courses.length) return null;
     const code = encodeShareV2(courses, shareDetail);
-    const link = `${location.origin}${location.pathname}#/timetable?share=${encodeURIComponent(code)}`;
     setShareCode(code);
+    let link = `${location.origin}${location.pathname}#/timetable?share=${encodeURIComponent(code)}`;
+    try {
+      const r = await fetch('/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const d = await r.json();
+      if (d && d.ok && d.url) link = d.url;
+    } catch { /* 回退长链 */ }
     setShareLink(link);
     return link;
   };
   const makeShareCode = async () => {
     if (!courses.length) { say('课表还是空的，先导入或添加课程'); return; }
-    const link = buildShareLink();
-    try { await navigator.clipboard.writeText(link); say('分享链接已复制，同学点开就能导入'); } catch { say('已生成分享链接，长按复制'); }
+    const link = await buildShareLink();
+    try { await navigator.clipboard.writeText(link); say('短链接已复制，同学点开就能导入'); } catch { say('已生成分享链接，长按复制'); }
   };
   /* 教务导入：开内网地址 → 12 秒内没收到脚本的 ready 就切外网门户 */
   const eduTimerRef = useRef(null);
@@ -2162,7 +2173,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           </div>
           {shareLink && (
             <div style={{ marginTop: 10 }}>
-              <label className="cs-l">分享链接（发给同学，点开即导入）</label>
+              <label className="cs-l">分享链接（7 位短链，发给同学点开即导入）</label>
               <div className="cs-row">
                 <input className="cs-input" readOnly value={shareLink} onFocus={(e) => e.target.select()}
                   style={{ flex: '1 1 200px', minWidth: 0, fontSize: 12 }} />
