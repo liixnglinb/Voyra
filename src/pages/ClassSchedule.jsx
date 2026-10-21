@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
-  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2, Camera,
+  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2, Camera, LayoutGrid,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
 
@@ -1019,7 +1019,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const askedWeekRef = useRef(false);
   const [detailOpen, setDetailOpen] = useState(false); // 课程明细默认折叠
   const [editingCourseId, setEditingCourseId] = useState(null); // 非空 = 正在编辑该课程
-  const [modal, setModal] = useState(null); // null | week | time | detail | import | add | clear
+  const [modal, setModal] = useState(null); // null | menu | week | time | detail | import | add | clear
+  const [modalBack, setModalBack] = useState(null); // 关闭当前弹窗后要回到的上一级（功能菜单）
   /* 手机端左侧时间轴：默认收起成一条刻度，展开状态记住（在「时间设置」里改过的
      节次时间会即时反映到展开后的刻度上） */
   const [railOpen, setRailOpen] = useState(() => {
@@ -1172,6 +1173,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   }, [settings.startDate]);
   const currentWeek = settings.overrideWeek != null ? settings.overrideWeek : autoWeek;
   /* 单节课的「哪一天」：由开学周一 + 周次 + 星期几推出，开学日期未设置时返回空 */
+  /* 弹窗层级：从功能菜单进入的弹窗，点完成后回到菜单；其余直接关闭 */
+  const openModal = (k, back = null) => { setModalBack(back); setModal(k); };
+  const closeModal = () => { setModal(modalBack); setModalBack(null); };
+
   /* 由「现在是第几周」反推开学周一：今天往前推 (w-1) 周，再对齐到那一周的周一。
      写入 startDate 后 autoWeek 会按日期自动推进，单节课也能据此算出具体日期。 */
   const setWeekTo = (w) => {
@@ -1254,7 +1259,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     if (!parsed.length) { say('未识别到有效课程'); return; }
     persist([...courses, ...parsed], null);
     setImportText(''); setParsed([]); setOcrRaw('');
-    setModal(null); // 先关导入弹窗，周次询问才能单独出现
+    closeModal(); // 先关导入弹窗（从菜单进来的会回到菜单），周次询问才能单独出现
     say(`已导入 ${parsed.length} 门课程`);
     /* 导入后如果还没开学日期，一定问一次当前周次（否则会一直显示第 1 周） */
     if (!settings.startDate) {
@@ -1366,7 +1371,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     setImportMode('share');
     setShareText(code);
     setParsed(list);
-    setModal('import');
+    openModal('import');
     say(`收到 ${list.length} 门课程，确认后点「合并导入」`);
   }, []);
 
@@ -1586,6 +1591,27 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         /* 弹窗里不再重复描边：内容卡退化成纯排版 */
         .mbox-body .cs-card { border:0 !important;box-shadow:none !important;background:transparent !important;padding:0 !important; }
         .mbox-body .cs-empty { padding:18px 0; }
+        /* 手机端：8 按钮工具条整行隐藏（太占地方），入口收进头部「功能」按钮 */
+        .cs-mob-nav, .cs-mob-menu { display:none !important; }
+        @media (max-width:767px) {
+          .cs-weekrow { display:none !important; }
+          .cs-mob-nav, .cs-mob-menu { display:inline-flex !important; }
+          .cs-mob-nav { padding:0 10px; }
+        }
+        /* 功能菜单行 */
+        .cs-menu { display:flex; flex-direction:column; gap:8px; }
+        .cs-menu-row { display:flex; align-items:center; gap:11px; width:100%; padding:11px 12px;
+          border:1px solid rgba(27,27,27,.1); border-radius:12px; background:#fff; cursor:pointer;
+          text-align:left; font-family:inherit; transition:background .12s ease; }
+        .cs-menu-row:active { background:#FAF9F5; }
+        .cs-menu-ico { flex:none; width:34px; height:34px; border-radius:9px; display:grid; place-items:center;
+          background:#F5F1E4; color:#A48830; }
+        .cs-menu-txt { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
+        .cs-menu-txt b { font-size:14px; font-weight:700; color:#1b1b1b; }
+        .cs-menu-txt i { font-style:normal; font-size:11px; color:#9aa0a8; }
+        .cs-menu-row.danger .cs-menu-ico { background:#FDF3F3; color:#B3403A; }
+        .cs-menu-row.danger .cs-menu-txt b { color:#B3403A; }
+        .cs-menu-row > svg { color:#c2c2c2; flex:none; }
         /* 课程类型：「连续多周 / 单节课」分段控件 —— 两个选项始终摊开可见。
            旧实现是一个写着「连续多周」的开关，点一下才变成「单节课」，
            用户根本看不出还能选「只上一次」。 */
@@ -1889,6 +1915,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             </span>
           )}
           <div className="sp" />
+          {/* 手机端：工具条整行隐藏，这里给紧凑翻周 + 功能入口 */}
+          <button type="button" className="cs-btn cs-mob-nav" onClick={() => goWeek(-1)} aria-label="上一周"><ChevronLeft size={15} /></button>
+          <button type="button" className="cs-btn cs-mob-nav" onClick={() => goWeek(1)} aria-label="下一周"><ChevronRight size={15} /></button>
+          <button type="button" className="cs-btn cs-mob-menu" onClick={() => openModal('menu')}><LayoutGrid size={15} />功能</button>
           <div className="cs-row cs-weekrow">
             <button className="cs-btn" onClick={() => goWeek(-1)}><ChevronLeft size={15} />上一周</button>
             <button className="cs-btn" onClick={() => goWeek(1)}>下一周<ChevronRight size={15} /></button>
@@ -1903,7 +1933,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       </div>
 
       {/* 周次设置 */}
-      <Sheet open={modal === 'week'} onClose={() => setModal(null)} icon={<RefreshCw size={16} />}
+      <Sheet open={modal === 'week'} onClose={closeModal} icon={<RefreshCw size={16} />}
         title="周次设置" sub="上下滚动选好现在第几周，之后每周一自动往后跳">
         <div className="cs-field" style={{ marginBottom: 12 }}>
           <label className="cs-l">当前是第几周</label>
@@ -1924,7 +1954,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       </Sheet>
 
       {/* 时间设置 */}
-      <Sheet open={modal === 'time'} onClose={() => setModal(null)} icon={<Clock size={16} />}
+      <Sheet open={modal === 'time'} onClose={closeModal} icon={<Clock size={16} />}
         title="时间设置" sub="点按时间弹出滚轮，改完点完成">
         <div className="cs-row" style={{ alignItems: 'flex-start' }}>
           {DEFAULT_SLOTS.map((s) => {
@@ -1965,13 +1995,35 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       </Sheet>
 
       {/* 清空确认 */}
-      <Sheet open={modal === 'clear'} onClose={() => setModal(null)} icon={<Trash2 size={16} />}
+      <Sheet open={modal === 'clear'} onClose={closeModal} icon={<Trash2 size={16} />}
         title="清空整张课表？" sub="清空后无法撤销"
         actions={<>
-          <button type="button" className="cs-btn" onClick={() => setModal(null)}>返回</button>
-          <button type="button" className="cs-btn danger" onClick={() => { clearAll(); setModal(null); }}>确认清空</button>
+          <button type="button" className="cs-btn" onClick={closeModal}>返回</button>
+          <button type="button" className="cs-btn danger" onClick={() => { clearAll(); closeModal(); }}>确认清空</button>
         </>}>
         <p className="cs-hint">将删除全部 {courses.length} 门课程与周次设置，云端同步的记录也会一起清空。想留底稿可以先在「导入课表 → 备份」里导出。</p>
+      </Sheet>
+
+      {/* 功能菜单（手机端入口） */}
+      <Sheet open={modal === 'menu'} onClose={() => setModal(null)} icon={<LayoutGrid size={16} />}
+        title="课表功能" sub="选择要使用的功能">
+        <div className="cs-menu">
+          {[
+            ['week', '周次设置', '选当前第几周、开学日期', RefreshCw, ''],
+            ['time', '时间设置', '每节课的起止时间', Clock, ''],
+            ['detail', '课程明细', '本周全部课程一览', GraduationCap, ''],
+            ['import', '导入课表', '教务导入 / 图片识别 / 分享链接 / 备份', Upload, ''],
+            ['add', '添加课程', '手动新增或编辑一门课', Plus, ''],
+            ['clear', '清空课表', '删除全部课程（需二次确认）', Trash2, 'danger'],
+          ].map(([k, label, desc, Icon, danger]) => (
+            <button key={k} type="button" className={'cs-menu-row' + (danger ? ' danger' : '')}
+              onClick={() => openModal(k, 'menu')}>
+              <span className="cs-menu-ico"><Icon size={16} /></span>
+              <span className="cs-menu-txt"><b>{label}</b><i>{desc}</i></span>
+              <ChevronRight size={15} />
+            </button>
+          ))}
+        </div>
       </Sheet>
 
       {/* 周网格课表 */}
@@ -2055,7 +2107,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       </div>
 
       {/* 本周课程列表（默认折叠） */}
-      <Sheet open={modal === 'detail'} onClose={() => setModal(null)} icon={<GraduationCap size={16} />}
+      <Sheet open={modal === 'detail'} onClose={closeModal} icon={<GraduationCap size={16} />}
         title={`第 ${currentWeek} 周课程明细`} sub={`共 ${weekCourses.length} 门`}>
         <div className="cs-card" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
         {weekCourses.length === 0 ? (
@@ -2099,7 +2151,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       </Sheet>
 
       {/* 导入 */}
-      <Sheet open={modal === 'import'} onClose={() => setModal(null)} icon={<Upload size={16} />}
+      <Sheet open={modal === 'import'} onClose={closeModal} icon={<Upload size={16} />}
         title="导入课表" sub="教务导入 / 图片识别 / 分享链接 / 备份">
         <div className="cs-card" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
         <div className="cs-row" style={{ marginBottom: 10 }}>
@@ -2236,7 +2288,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       </Sheet>
 
       {/* 手动新增 */}
-      <Sheet open={modal === 'add'} onClose={() => { setModal(null); cancelEdit(); }} icon={<Plus size={16} />}
+      <Sheet open={modal === 'add'} onClose={() => { closeModal(); cancelEdit(); }} icon={<Plus size={16} />}
         title={editingCourseId ? '编辑课程' : '添加课程'} sub="双击课表格子也能直接编辑">
         <div className="cs-card" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
         {/* ── 课程信息 ── */}
