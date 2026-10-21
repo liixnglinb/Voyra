@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   AlertTriangle, CalendarDays, CalendarRange, ChevronDown, ClipboardCheck, Clock,
-  FolderOpen, HelpCircle, ListChecks, Plus, Settings2, Upload, X,
+  FolderOpen, HelpCircle, ListChecks, Plus, Settings2, Trash2, Upload, X,
 } from 'lucide-react';
 import ClassSchedule, { useIsMobile } from './ClassSchedule';
 import Planner from './Planner';
@@ -27,6 +27,7 @@ const PANELS = {
     ['detail', '本周课程明细', ListChecks],
     ['import', '导入课表', Upload],
     ['add', '手动添加课程', Plus],
+    ['clear', '清空课表', Trash2],
   ],
   planner: [
     ['day', '当天安排', CalendarDays],
@@ -199,6 +200,11 @@ export default function ScheduleHub() {
       .shub-page { display:flex; flex-direction:column; gap:18px; }
 
       /* ===== 模式切换（实际渲染于页头「数据服务可用」左侧） ===== */
+      .shub-desk-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+      .shub-desk-head .shub-modes { flex:1 1 auto; }
+      .shub-desk-head .shub-fn { margin-left:auto; margin-right:0; }
+      .shub-desk-head .shub-fn-text { display:inline; }
+      .shub-desk-head .shub-fn-btn { width:auto; padding:0 12px; }
       .shub-modes { display:grid; grid-template-columns:repeat(3,minmax(0,auto)); gap:10px; }
       .shub-mode { display:flex; align-items:center; gap:11px; border:1px solid rgba(27,27,27,.14); border-radius:11px;
         padding:11px 15px; background:rgba(255,255,255,.85); color:#555; cursor:pointer; text-align:left;
@@ -359,19 +365,41 @@ export default function ScheduleHub() {
           </div>
         </div>
       ) : (
-        <div className="shub-modes" role="tablist" aria-label="日程中心视图">
-          {TABS.map(([id, label, desc, Icon]) => (
-            <button
-              key={id}
-              type="button"
-              aria-pressed={tab === id}
-              className={`shub-mode${tab === id ? ' is-active' : ''}`}
-              onClick={() => changeTab(id)}
-            >
-              <Icon size={19} strokeWidth={1.8} />
-              <span className="shub-mode-copy"><b>{label}</b><i>{desc}</i></span>
+        <div className="shub-desk-head">
+          <div className="shub-modes" role="tablist" aria-label="日程中心视图">
+            {TABS.map(([id, label, desc, Icon]) => (
+              <button
+                key={id}
+                type="button"
+                aria-pressed={tab === id}
+                className={`shub-mode${tab === id ? ' is-active' : ''}`}
+                onClick={() => changeTab(id)}
+              >
+                <Icon size={19} strokeWidth={1.8} />
+                <span className="shub-mode-copy"><b>{label}</b><i>{desc}</i></span>
+              </button>
+            ))}
+          </div>
+          <div className="shub-fn" ref={fnRef}>
+            <button type="button" className={`shub-fn-btn${fnOpen ? ' is-open' : ''}`}
+              aria-haspopup="true" aria-expanded={fnOpen} aria-label="功能" onClick={() => setFnOpen((v) => !v)}>
+              <Settings2 size={16} strokeWidth={1.9} /><span className="shub-fn-text">功能</span>
             </button>
-          ))}
+            {fnOpen && (
+              <div className="shub-pick-menu shub-fn-menu" role="menu" aria-label="本页功能">
+                {(PANELS[tab] || []).map(([id, label, Icon]) => (
+                  <button key={id} type="button" role="menuitem" className="shub-pick-opt"
+                    onClick={() => { setPanel(id); setFnOpen(false); }}>
+                    <Icon size={16} strokeWidth={1.9} />{label}
+                  </button>
+                ))}
+                <button type="button" role="menuitem" className="shub-pick-opt shub-fn-guide"
+                  onClick={() => { setFnOpen(false); setPanel(null); goStep(0); }}>
+                  <HelpCircle size={16} strokeWidth={1.9} />重看引导
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       ),
       slotEl
@@ -390,7 +418,7 @@ export default function ScheduleHub() {
       </div>
     </div>
 
-    {isMobile && panel && (
+    {isMobile && panel && tab !== 'courses' && (
       <>
         <div className="shub-scrim" onClick={() => setPanel(null)} />
         <div className="shub-drawer" role="dialog" aria-modal="true" aria-label={panelTitle || '功能'}>

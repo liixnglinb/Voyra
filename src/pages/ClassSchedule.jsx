@@ -24,12 +24,16 @@ export function MobileSection({ mobile, host, id, panel, children }) {
    - actions 传两个按钮（取消 / 保存），它们自动等分底部一行
    - 手机以外不渲染（桌面各页保留原有内联表单） */
 export function MobileBox({ open, onClose, icon, title, sub, actions, children, label }) {
+  /* Esc 监听只在 open 变化时挂/卸；onClose 走 ref，
+     避免每次渲染重挂监听造成的「事件窗口」丢失（实测：切弹窗后第一次 Esc 会丢） */
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
   useEffect(() => {
     if (!open) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e) => { if (e.key === 'Escape') onCloseRef.current(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open]);
   if (!open) return null;
   return createPortal(
     <div className="mbox-scrim" onClick={onClose}>
@@ -1019,7 +1023,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const askedWeekRef = useRef(false);
   const [detailOpen, setDetailOpen] = useState(false); // 课程明细默认折叠
   const [editingCourseId, setEditingCourseId] = useState(null); // 非空 = 正在编辑该课程
-  const [modal, setModal] = useState(null); // null | menu | week | time | detail | import | add | clear
+  const [modal, setModal] = useState(null); // null | week | time | detail | import | add | clear
   const [modalBack, setModalBack] = useState(null); // 关闭当前弹窗后要回到的上一级（功能菜单）
   /* 手机端左侧时间轴：默认收起成一条刻度，展开状态记住（在「时间设置」里改过的
      节次时间会即时反映到展开后的刻度上） */
@@ -1175,7 +1179,16 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   /* 单节课的「哪一天」：由开学周一 + 周次 + 星期几推出，开学日期未设置时返回空 */
   /* 弹窗层级：从功能菜单进入的弹窗，点完成后回到菜单；其余直接关闭 */
   const openModal = (k, back = null) => { setModalBack(back); setModal(k); };
-  const closeModal = () => { setModal(modalBack); setModalBack(null); };
+  const closeModal = () => { setModal(modalBack); setModalBack(null); if (onClosePanel) onClosePanel(); };
+
+  /* 页头「功能」菜单（ScheduleHub）点选的面板 id → 打开对应居中弹窗。
+     week/detail/import/add/clear 与菜单项一一对应；未知 id 忽略。 */
+  useEffect(() => {
+    if (!drawerPanel) return;
+    if (['week', 'detail', 'import', 'add', 'clear'].includes(drawerPanel)) {
+      openModal(drawerPanel);
+    }
+  }, [drawerPanel]);
 
   /* 由「现在是第几周」反推开学周一：今天往前推 (w-1) 周，再对齐到那一周的周一。
      写入 startDate 后 autoWeek 会按日期自动推进，单节课也能据此算出具体日期。 */
@@ -1591,27 +1604,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         /* 弹窗里不再重复描边：内容卡退化成纯排版 */
         .mbox-body .cs-card { border:0 !important;box-shadow:none !important;background:transparent !important;padding:0 !important; }
         .mbox-body .cs-empty { padding:18px 0; }
-        /* 手机端：8 按钮工具条整行隐藏（太占地方），入口收进头部「功能」按钮 */
-        .cs-mob-nav, .cs-mob-menu { display:none !important; }
-        @media (max-width:767px) {
-          .cs-weekrow { display:none !important; }
-          .cs-mob-nav, .cs-mob-menu { display:inline-flex !important; }
-          .cs-mob-nav { padding:0 10px; }
-        }
-        /* 功能菜单行 */
-        .cs-menu { display:flex; flex-direction:column; gap:8px; }
-        .cs-menu-row { display:flex; align-items:center; gap:11px; width:100%; padding:11px 12px;
-          border:1px solid rgba(27,27,27,.1); border-radius:12px; background:#fff; cursor:pointer;
-          text-align:left; font-family:inherit; transition:background .12s ease; }
-        .cs-menu-row:active { background:#FAF9F5; }
-        .cs-menu-ico { flex:none; width:34px; height:34px; border-radius:9px; display:grid; place-items:center;
-          background:#F5F1E4; color:#A48830; }
-        .cs-menu-txt { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; gap:1px; }
-        .cs-menu-txt b { font-size:14px; font-weight:700; color:#1b1b1b; }
-        .cs-menu-txt i { font-style:normal; font-size:11px; color:#9aa0a8; }
-        .cs-menu-row.danger .cs-menu-ico { background:#FDF3F3; color:#B3403A; }
-        .cs-menu-row.danger .cs-menu-txt b { color:#B3403A; }
-        .cs-menu-row > svg { color:#c2c2c2; flex:none; }
+        /* 翻周小按钮（紧凑，桌面/手机通用） */
+        .cs-nav { padding:0 10px; }
         /* 课程类型：「连续多周 / 单节课」分段控件 —— 两个选项始终摊开可见。
            旧实现是一个写着「连续多周」的开关，点一下才变成「单节课」，
            用户根本看不出还能选「只上一次」。 */
@@ -1915,26 +1909,19 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             </span>
           )}
           <div className="sp" />
-          {/* 手机端：工具条整行隐藏，这里给紧凑翻周 + 功能入口 */}
-          <button type="button" className="cs-btn cs-mob-nav" onClick={() => goWeek(-1)} aria-label="上一周"><ChevronLeft size={15} /></button>
-          <button type="button" className="cs-btn cs-mob-nav" onClick={() => goWeek(1)} aria-label="下一周"><ChevronRight size={15} /></button>
-          <button type="button" className="cs-btn cs-mob-menu" onClick={() => openModal('menu')}><LayoutGrid size={15} />功能</button>
-          <div className="cs-row cs-weekrow">
-            <button className="cs-btn" onClick={() => goWeek(-1)}><ChevronLeft size={15} />上一周</button>
-            <button className="cs-btn" onClick={() => goWeek(1)}>下一周<ChevronRight size={15} /></button>
-            <button className="cs-btn" onClick={() => setModal('week')}><RefreshCw size={14} />周次设置</button>
-            <button className="cs-btn" onClick={() => setModal('time')}><Clock size={14} />时间设置</button>
-            <button className="cs-btn" onClick={() => setModal('detail')}><GraduationCap size={14} />课程明细</button>
-            <button className="cs-btn" onClick={() => setModal('import')}><Upload size={14} />导入课表</button>
-            <button className="cs-btn" onClick={() => { setEditingCourseId(null); setForm(EMPTY_FORM()); setModal('add'); }}><Plus size={14} />添加课程</button>
-            <button className="cs-btn danger" onClick={() => setModal('clear')}><Trash2 size={14} />清空课表</button>
-          </div>
+          {/* 翻周是常驻浏览控件；设置/导入/明细/添加/清空的入口全部在页头「功能」菜单里 */}
+          <button type="button" className="cs-btn cs-nav" onClick={() => goWeek(-1)} aria-label="上一周"><ChevronLeft size={15} /></button>
+          <button type="button" className="cs-btn cs-nav" onClick={() => goWeek(1)} aria-label="下一周"><ChevronRight size={15} /></button>
         </div>
       </div>
 
       {/* 周次设置 */}
       <Sheet open={modal === 'week'} onClose={closeModal} icon={<RefreshCw size={16} />}
-        title="周次设置" sub="上下滚动选好现在第几周，之后每周一自动往后跳">
+        title="周次设置" sub="上下滚动选好现在第几周，之后每周一自动往后跳"
+        actions={<>
+          <button type="button" className="cs-btn" onClick={() => openModal('time')}>时间设置</button>
+          <button type="button" className="cs-btn primary" onClick={closeModal}>完成</button>
+        </>}>
         <div className="cs-field" style={{ marginBottom: 12 }}>
           <label className="cs-l">当前是第几周</label>
           <WeekWheel value={currentWeek} onChange={(w) => { setWeekTo(w); say(`已设为第 ${w} 周，之后按日期自动更新`); }} />
@@ -2004,27 +1991,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         <p className="cs-hint">将删除全部 {courses.length} 门课程与周次设置，云端同步的记录也会一起清空。想留底稿可以先在「导入课表 → 备份」里导出。</p>
       </Sheet>
 
-      {/* 功能菜单（手机端入口） */}
-      <Sheet open={modal === 'menu'} onClose={() => setModal(null)} icon={<LayoutGrid size={16} />}
-        title="课表功能" sub="选择要使用的功能">
-        <div className="cs-menu">
-          {[
-            ['week', '周次设置', '选当前第几周、开学日期', RefreshCw, ''],
-            ['time', '时间设置', '每节课的起止时间', Clock, ''],
-            ['detail', '课程明细', '本周全部课程一览', GraduationCap, ''],
-            ['import', '导入课表', '教务导入 / 图片识别 / 分享链接 / 备份', Upload, ''],
-            ['add', '添加课程', '手动新增或编辑一门课', Plus, ''],
-            ['clear', '清空课表', '删除全部课程（需二次确认）', Trash2, 'danger'],
-          ].map(([k, label, desc, Icon, danger]) => (
-            <button key={k} type="button" className={'cs-menu-row' + (danger ? ' danger' : '')}
-              onClick={() => openModal(k, 'menu')}>
-              <span className="cs-menu-ico"><Icon size={16} /></span>
-              <span className="cs-menu-txt"><b>{label}</b><i>{desc}</i></span>
-              <ChevronRight size={15} />
-            </button>
-          ))}
-        </div>
-      </Sheet>
+
 
       {/* 周网格课表 */}
       <div className="cs-card" ref={gridCardRef} style={{ '--cs-row-h': rowH ? `${rowH}px` : undefined }}>
