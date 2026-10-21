@@ -337,7 +337,7 @@ function parseOcrGrid(items) {
     const notes = [];
     sorted.slice(1).forEach((b) => {
       const t = b.text.replace(/\s+/g, ' ').trim();
-      if (!room && /(楼|室|教室|馆|中心|\d{3,4}|[A-Z]\d{2,4})/.test(t) && t.length <= 20) room = t;
+      if (!room && /(楼|室|教室|馆|场|中心|苑|区|\d{3,4}|[A-Z]\d{2,4})/.test(t) && t.length <= 20) room = t;
       else if (!teacher && /(老师|教授|讲师|teacher)/.test(t) && t.length <= 20) teacher = t;
       else if (!teacher && /^[\u4e00-\u9fa5·]{2,4}$/.test(t)) teacher = t;
       else notes.push(t);
