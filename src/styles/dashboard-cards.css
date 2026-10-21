@@ -949,6 +949,7 @@ body{
   --p-ink: #000000;
 
   --stg-ink: #1A1A1A;
+  --stg-ink-rgb: 26, 26, 26;
   --stg-text: #1A1A1A;
   --stg-text-rgb: 26, 26, 26;
   --stg-panel: #FFFFFF;
@@ -1863,7 +1864,25 @@ body{
   right: 32px !important;
 }
 
-/* 左侧/右侧主文案区优化：贴合参考图1的图标+粗体标题+荧光笔底色+描边序号 */
+/* 左侧/右侧主文案区优化：眉标 + 图标 + 粗体标题 + 荧光笔底色 + 描边序号 */
+.sc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+  font: 600 11.5px/1.2 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: 0.06em;
+  color: var(--sc-text-dim, #666B70);
+}
+
+.sc-eyebrow-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--p-accent, #8A6D1F);
+  flex: 0 0 auto;
+}
+
 .sc-title-row {
   display: flex;
   align-items: center;
@@ -1880,10 +1899,11 @@ body{
 }
 
 .sc-title {
-  font-size: clamp(23px, 2.35vw, 30px);
-  font-weight: 850;
-  letter-spacing: -0.025em;
-  line-height: 1.18;
+  font-size: clamp(24px, 2.4vw, 31px);
+  font-weight: 800;
+  letter-spacing: -0.024em;
+  line-height: 1.15;
+  color: var(--sc-text-main, #1A1A1A);
   background-image: linear-gradient(120deg, rgba(255, 224, 138, 0.85), rgba(var(--p-rgb), 0.16));
   background-position: 0 82%;
   background-repeat: no-repeat;
@@ -1896,15 +1916,17 @@ body{
 }
 
 .sc-desc {
-  margin: 12px 0 0;
-  color: #5F646B;
+  margin: 11px 0 0;
+  color: #5A5F66;
   font-size: 14.5px;
+  font-weight: 450;
+  letter-spacing: 0.005em;
   line-height: 1.72;
   max-width: 42ch;
 }
 
 .sc-foot {
-  margin-top: 16px;
+  margin-top: 15px;
 }
 
 .sc-cta {
@@ -1917,7 +1939,9 @@ body{
   border: 1px solid rgba(17, 17, 17, 0.08);
   color: #161616;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
   transition:
     background 0.3s var(--vr-ease-out),
     color 0.3s var(--vr-ease-out),
@@ -1962,6 +1986,7 @@ body{
     transparent 76%
   );
   perspective: 1100px;
+  overflow: hidden;
 }
 
 /* 舞台内所有小卡片壳体（Window / Browser / Terminal / Spotlight / Sheet / Inline / .stg）

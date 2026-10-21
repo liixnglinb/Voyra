@@ -1,5 +1,5 @@
 /**
- * 首页 19 张产品卡的数据源（方案 A · 统一产品名片卡）
+ * 首页 19+ 张产品卡的数据源（方案 A · 统一产品名片卡）
  *
  * 为什么要数据化
  * ---------------------------------------------------------------------------
@@ -7,51 +7,27 @@
  *         （dashboard-cards.css 1606 行）。每张卡的标题、描述、标签、CTA 都硬编码在
  *         自己的 JSX 里，新增或调整一张卡要在三个地方同步（组件 / 样式 / Dashboard）。
  *
- * 改造后：19 条数据 + 1 个 ProductCard 组件 + 4 套 stage 模板。
- *         骨架（编号 / 图标 / 标题 / 描述 / CTA）完全共用。
- *
- * 四个 stage 模板
- * ---------------------------------------------------------------------------
- *   icon-tile     大图标 + 主题色光晕 + 三行「左标签右值」。表达「这是一个产品」。
- *   flow-nodes    圆点连成流程线，节点两行（名称 + 注解）。表达「一件事分几步」。
- *   badge-cluster 顶栏 + 最多 3 行键值徽章。表达「一份清单 / 榜单 / 统计」。
- *   metric-panel  顶栏 + 一个大数字 + 三行细分项。表达「当前运行状态」。
+ * 改造后：数据驱动 + 1 个 ProductCard 组件 + 舞台组件从 card.stage 字段读取真实产品数据。
+ *         骨架（眉标 / 图标 / 标题 / 描述 / 序号 / CTA）完全共用。
  *
  * 差异化：tone（四色基调）× layout（三种版式）
  * ---------------------------------------------------------------------------
- * 上一版给 19 张卡各配了一个色相（蓝/靛/紫/琥珀/青/金/…），结果是整页
- * 「黑字 + 黄标签 + 白卡 + 一堆蓝紫」的杂色拼盘，用户评价"太丑了"。
- *
  * 本版把配色收敛到站内既有的四个颜色 —— 黑 / 金 / 白 / 蓝 —— 并改用
- * 两个维度组合出差异，而不是靠 19 个色相：
+ * 两个维度组合出差异，而不是靠色相数量：
  *
  *   tone（舞台与强调色的基调，4 种）
- *     ink    墨：舞台反色成黑底白线，卡片强调色走金。19 张里最"重"的一档。
- *     gold   金：暖米色舞台 + 金调描边，站内金 #8A6D1F 家族。
+ *     ink    墨：舞台反色成黑底白线，卡片强调色走金。最"重"的一档。
+ *     gold   金：暖米色舞台 + 金调描边，站内金 #8A6D1F / #A48830 家族。
  *     blue   蓝：淡蓝舞台 + 蓝调描边，整页唯一的冷色。
  *     paper  纸：近白舞台 + 黑细线，最克制的一档，像技术图纸。
  *
- *   layout（卡内三段式的排布，3 种）
+ *   layout（卡内排布，3 种）
  *     copy   文字在上、舞台在下（默认，信息优先）
  *     stage  舞台在上、文字在下（演示优先，舞台更高）
  *     bleed  舞台出血贴满卡片上半部，文字压在下方留白区（海报感）
  *
- * 4 × 3 = 12 种组合，19 张卡按 Tab 分组后**组内组合两两不同**：
- *   产品 11 张占 11 种，应用 7 张占 7 种，Skills 1 张。
- * 加上 19 个各不相同的舞台画面，"每一张卡的样子都不一样"由此成立 ——
- * 靠的是版式与画面，而不是色相数量。
- *
  * 对比度（scripts/check-palette.mjs 可复核）：四个基调的强调色在白底上
- * 全部 ≥ 4.5:1；ink 基调的舞台是黑底白线，白线对黑底对比度更高。
- *
- * family 字段保留，仍只剩一个作用：resolveIcon 的图标兜底。
- *
- * seq：底部页脚里的空心序号，只收 1-2 位纯数字
- * ---------------------------------------------------------------------------
- * 之前是从 no 切 '/' 前段推导，于是 'SKILL / 建模流程' 画出 192px 宽的空心
- * 单词、'APP 01 / …' 画出 255px 宽的「APP 01」，在 361px 的卡上被右缘裁断。
- * 现在显式写死，不给数字就不画。
- *
+ * 全部 ≥ 4.5:1；舞台内文字 --stg-text 全部 ≥ 4.5:1，图形描边 --stg-ink ≥ 3:1。
  */
 
 export const SHOWCASE_CARDS = [
@@ -69,10 +45,22 @@ export const SHOWCASE_CARDS = [
     tone: 'ink',
     layout: 'copy',
     Icon: 'Globe',
-    /* 原来 status / metricLabel / 首行值三处是英文大写（RELAY CLUSTER ACTIVE、
-       AVG LATENCY、Smart Failover），和其余 18 张卡的中文口吻不一致。
-       单位也从数字里拆出来：'42ms' 整串塞进 34px 重体，单位被迫和数字一样大。 */
-    stage: { kind: "api-hub" },
+    stage: {
+      kind: 'api-hub',
+      title: 'voyra-relay · gateway',
+      badge: '4 通道在线',
+      kicker: '延迟监控',
+      focus: '42',
+      unit: 'ms',
+      note: '平均响应 · 自动容灾',
+      routes: ['/v1/chat', '/v1/embed', 'claude-opus', 'gpt-4o'],
+      requests: [
+        ['POST', '/v1/chat', '200', '42ms'],
+        ['POST', '/v1/embed', '200', '18ms'],
+        ['GET', '/v1/models', '200', '6ms'],
+        ['AUTO', 'claude→4o', 'OK', '切换'],
+      ],
+    },
   },
   {
     id: 'timetable',
@@ -86,23 +74,24 @@ export const SHOWCASE_CARDS = [
     tone: 'paper',
     layout: 'stage',
     Icon: 'CalendarRange',
-    /* 原来三行是「周视图 | 课程表」「日程 | 日历」「规划 | 待办」——
-       键和值互为同义词，等于什么都没演示。 */
-    stage: { kind: "week-grid" },
+    stage: {
+      kind: 'week-grid',
+      title: '10 月 13 日 · 星期一',
+      meta: ['第 8 周', '今日 3 节'],
+      kicker: '第 8 教学周',
+      focus: '03',
+      unit: '节今日课程',
+      note: '课程表 · 日历 · 作业',
+      days: ['一', '二', '三', '四', '五'],
+      activeDay: 0,
+      events: [
+        ['08:20', '高等数学', '2-3 节'],
+        ['10:20', '大学英语', '3-4 节'],
+        ['14:00', '物理实验', '实验楼'],
+      ],
+    },
   },
-  /* ══════════════ 产品 · 自营服务 ══════════════
-     2026-10-13 用户指定新增。两个入口指向同一套服务（VoyraAI 数字商品自动发卡），
-     但对读者是两件事，所以给两张卡、两个独立入口：
-       mall     官方商城主站，读者自助下单
-       referral 带推荐码的通道，走邀请关系下单
-     文案与舞台内容全部取自两站真实页面（Playwright 抓取，非臆造）：
-       · 主标语「VoyraAI。AI 服务，一站直达。」
-       · 副标语「数字商品自动发货，付款后凭订单号查询。」
-       · 精选商品 ChatGPT Plus ¥139 / Gemini Pro 18 个月 ¥7 / X Premium ¥22 起
-       · 在售 18 件，分 9 个类目，推荐站另有语言学习 / 邮箱账号 / 工具服务三档
-       · 推荐码 719F2E
-     tone 都用 blue：品牌主色是 #0071E3，蓝色基调与它同族，
-     在四色调里也正好是唯一的冷色档，读者扫一眼就知道这是外部服务。 */
+  /* ══════════════ 产品 · 自营服务 ══════════════ */
   {
     id: 'voyraai-mall',
     seq: '03',
@@ -117,7 +106,23 @@ export const SHOWCASE_CARDS = [
     tone: 'blue',
     layout: 'copy',
     Icon: 'Store',
-    stage: { kind: "mall" },
+    stage: {
+      kind: 'mall',
+      url: 'voyra.men',
+      title: 'VoyraAI · 数字商品自动发卡',
+      kicker: '自动发卡商城',
+      focus: '18',
+      unit: '件在售',
+      note: '自动发货 · 凭单号查',
+      searchPlaceholder: '搜索订阅…',
+      status: '自动发货 · 凭单号查',
+      items: [
+        ['ChatGPT', '¥139', 'openai'],
+        ['Gemini', '18月 ¥7', 'googlegemini'],
+        ['X 会员', '¥22 起', 'x'],
+        ['多邻国', '¥9.9/年', 'duolingo'],
+      ],
+    },
   },
   {
     id: 'health',
@@ -131,12 +136,21 @@ export const SHOWCASE_CARDS = [
     tone: 'gold',
     layout: 'stage',
     Icon: 'HeartPulse',
-    /* 站内工具页（SPA 路由 /health，ProductCard 会拼成 #/health），不是外链。
-       舞台取设计稿（voyra_health.html）门户卡里那块 macOS 缩略窗：三色点 +
-       最新一次 118/76 mmHg、心率 72 bpm、三条近期小记录 —— 与真实记录页同源。
-       tone 用金：在架产品卡 api=ink/copy · timetable=paper/stage ·
-       voyraai-mall=blue/copy，gold/stage 与前三个两两不同。 */
-    stage: { kind: "bp-log" },
+    stage: {
+      kind: 'bp-log',
+      title: '血压记录',
+      meta: ['10月19日 · 血压监测', '达标 7/7'],
+      kicker: '今日测量 · 理想',
+      focus: '118/76',
+      unit: 'mmHg',
+      hr: '♥ 72 bpm',
+      pp: '脉压差 42 mmHg',
+      rows: [
+        ['08:00', '118/76', 72, '晨起'],
+        ['21:30', '121/78', 75, '晚间'],
+        ['08:15', '115/74', 68, '晨起'],
+      ],
+    },
   },
   {
     id: 'voyraai-ref',
@@ -152,7 +166,20 @@ export const SHOWCASE_CARDS = [
     tone: 'blue',
     layout: 'stage',
     Icon: 'Ticket',
-    stage: { kind: "referral" },
+    stage: {
+      kind: 'referral',
+      url: 'gptibo.com/r/719F2E',
+      title: 'Voyra · 推荐通道',
+      codeLabel: '推荐码',
+      code: '719F2E',
+      status: '邮件交付 · 卡密保留 7 天',
+      categories: [
+        ['AI 订阅', 'ChatGPT · Gemini', 'openai'],
+        ['语言学习', 'Duolingo 年卡', 'duolingo'],
+        ['邮箱账号', '美区 Gmail', 'gmail'],
+        ['工具服务', 'Claude 会员', 'anthropic'],
+      ],
+    },
   },
 
   /* ══════════════ 产品 · AI 智能 ══════════════ */
@@ -168,10 +195,19 @@ export const SHOWCASE_CARDS = [
     tone: 'blue',
     layout: 'bleed',
     Icon: 'Film',
-    /* 原来 4 行：实测末行超出 stage 底边 2.3px，被 overflow:hidden 切掉下边框。
-       而且 182 / 124 / 98 这些数没写单位，读者不知道是分数还是秒 ——
-       标题改成「同题得分对比」把量纲说清，没有引入新数字。 */
-    stage: { kind: "score-race" },
+    stage: {
+      kind: 'score-race',
+      title: '同题得分',
+      meta: '16 个模型',
+      scores: [
+        ['GPT-4o', 94, 3],
+        ['Claude 3.5', 91, 3],
+        ['Gemini 1.5', 88, -2],
+        ['文心一言', 76, 4],
+        ['Qwen 2.5', 72, 1],
+      ],
+      foot: [['最高', '94'], ['均分', '84']],
+    },
   },
   {
     id: 'prompts',
@@ -185,9 +221,17 @@ export const SHOWCASE_CARDS = [
     tone: 'gold',
     layout: 'copy',
     Icon: 'Lightbulb',
-    /* 原标题「提问 → 审查 → 执行」和下面三个节点标签逐字重复，
-       同一句话在 150px 高的小盒子里写了两遍。 */
-    stage: { kind: "typewriter" },
+    stage: {
+      kind: 'typewriter',
+      search: '搜索提示词…',
+      prompts: [
+        ['周报生成器', '写作', '128'],
+        ['代码审查员', '代码', '96'],
+        ['中英互译', '翻译', '74'],
+        ['会议纪要', '总结', '61'],
+      ],
+      foot: [['收录', '62 条'], ['本周新增', '5']],
+    },
   },
   {
     id: 'uikit',
@@ -201,7 +245,19 @@ export const SHOWCASE_CARDS = [
     tone: 'ink',
     layout: 'stage',
     Icon: 'Shapes',
-    stage: { kind: "component-bench" },
+    stage: {
+      kind: 'component-bench',
+      title: '组件图鉴',
+      meta: '62 个',
+      components: [
+        ['button', '按钮'],
+        ['switch', '开关'],
+        ['input', '输入框'],
+        ['tag', '标签'],
+        ['slider', '滑块'],
+        ['check', '勾选'],
+      ],
+    },
   },
   {
     id: 'skills',
@@ -215,9 +271,19 @@ export const SHOWCASE_CARDS = [
     tone: 'gold',
     layout: 'bleed',
     Icon: 'Sparkles',
-    /* 原标题「本周上升」与右侧徽章「每日刷新」是两个互相矛盾的时间口径，
-       而描述写的是"星数排行每天自动刷新"。以描述为准。 */
-    stage: { kind: "podium" },
+    stage: {
+      kind: 'podium',
+      title: '星数排行',
+      meta: '每日刷新',
+      repos: [
+        ['anthropics/skills', '12.4k', '+328'],
+        ['modelcontextprotocol', '9.8k', '+215'],
+        ['obra/superpowers', '7.1k', '+180'],
+        ['vercel/ai', '6.3k', '+142'],
+        ['openai/openai-node', '5.2k', '+96'],
+      ],
+      foot: [['收录', '184 个'], ['更新', '每天']],
+    },
   },
   {
     id: 'agents',
@@ -231,7 +297,18 @@ export const SHOWCASE_CARDS = [
     tone: 'blue',
     layout: 'copy',
     Icon: 'Bot',
-    stage: { kind: "dispatch" },
+    stage: {
+      kind: 'dispatch',
+      title: '整理竞品资料',
+      meta: '运行中',
+      steps: [
+        ['done', '检索', 'web_search', '2.1s'],
+        ['done', '分析', 'code_interpreter', '5.4s'],
+        ['run', '交付', 'writing', '进行中'],
+        ['todo', '归档', '—', '待开始'],
+      ],
+      foot: [['已用', '7.5s'], ['工具', '3 个']],
+    },
   },
   {
     id: 'mindmap',
@@ -245,7 +322,14 @@ export const SHOWCASE_CARDS = [
     tone: 'paper',
     layout: 'bleed',
     Icon: 'Route',
-    stage: { kind: "radial-tree" },
+    stage: {
+      kind: 'radial-tree',
+      title: '思维导图',
+      meta: '52 个节点',
+      root: 'Voyra',
+      nodes: [['内容', 12], ['产品', 19], ['迭代', 7], ['资料', 9], ['灵感', 5]],
+      foot: [['层级', '3 层'], ['已展开', '全部']],
+    },
   },
 
   /* ══════════════ 产品 · 生活记录 ══════════════ */
@@ -261,7 +345,19 @@ export const SHOWCASE_CARDS = [
     tone: 'gold',
     layout: 'stage',
     Icon: 'Milk',
-    stage: { kind: "day-arc" },
+    stage: {
+      kind: 'day-arc',
+      title: '今日护理',
+      meta: '10月7日',
+      kpis: [['02', '喂养'], ['03', '睡眠'], ['01', '护理']],
+      logs: [
+        ['07:20', '配方奶 120ml'],
+        ['09:40', '小睡 1h20m'],
+        ['13:10', '换尿布'],
+        ['15:30', '辅食 半碗'],
+      ],
+      foot: [['睡眠', '3h20m'], ['距下次', '1h10m']],
+    },
   },
 
   /* ══════════════ 产品 · 实用工具 ══════════════ */
@@ -277,8 +373,14 @@ export const SHOWCASE_CARDS = [
     tone: 'ink',
     layout: 'bleed',
     Icon: 'Dices',
-    /* 原标题「花名册 → 抽取」又是节点名的复述。 */
-    stage: { kind: "slot-roll" },
+    stage: {
+      kind: 'slot-roll',
+      title: '花名册 42 人',
+      meta: '已抽取 3',
+      roster: ['张伟', '李娜', '王芳', '刘洋', '陈静'],
+      picked: ['王芳', '张伟', '陈静'],
+      foot: [['本轮', '3 / 42'], ['避免重复', '已开启']],
+    },
   },
 
   /* ══════════════ 产品 · 生活记录（饮食打卡） ══════════════ */
@@ -294,20 +396,27 @@ export const SHOWCASE_CARDS = [
     tone: 'blue',
     layout: 'stage',
     Icon: 'ClipboardCheck',
-    stage: { kind: "meal-stamps" },
+    stage: {
+      kind: 'meal-stamps',
+      title: '今日打卡',
+      meta: '2 / 3 餐',
+      meals: [
+        ['on', '早餐', '07:30'],
+        ['on', '午餐', '12:10'],
+        ['off', '晚餐', '待打卡'],
+      ],
+      waterRatio: 0.75,
+      waterText: '6/8',
+      foot: [['力量训练', '已完成'], ['连续', '12 天']],
+    },
   },
 
   /* ══════════════ Skills ══════════════ */
   {
     id: 'mathmodel',
-    /* seq 原来是 '12' —— 那是 19 张卡**全局连续编号**的产物（产品 01–11、
-       Skills 12、应用再从头 01–07）。产品区收到 2 张之后，Skills 单独一个 Tab
-       却挂着 12，看着像漏了 10 张卡。改成组内编号 '01'，与产品 / 应用一致。 */
     seq: '01',
     no: 'SKILL / 建模流程',
     name: '数学建模 Skill',
-    /* 原文写"十阶段工作流"，但 stage 只画得出 4 个节点，同一张卡上自相矛盾。
-       去掉具体阶段数，改成描述能兑现的范围。 */
     desc: '国赛（CUMCM）数学建模工作流，从题意到提交一条流水线。',
     cta: '打开 Skill 仓库',
     href: 'https://github.com/liixnglinb/Mathmodel-skill',
@@ -316,7 +425,22 @@ export const SHOWCASE_CARDS = [
     tone: 'gold',
     layout: 'copy',
     Icon: 'Star',
-    stage: { kind: "paper-build" },
+    stage: {
+      kind: 'paper-build',
+      title: 'CUMCM workflow',
+      badge: 'stage 3/5',
+      kicker: '国赛十阶段闭环',
+      focus: '3 / 5',
+      unit: '建立模型',
+      note: '题意 → 建模 → 论文',
+      stages: ['3 建立模型', '4 求解验证', '5 论文写作'],
+      logs: [
+        ['dim', '$ cumcm --stage model'],
+        ['ok', '✓ 题意分析 · 12 项约束'],
+        ['ok', '✓ 模型假设 · 3 条假设'],
+        ['key', '● 建立模型 · 规划求解中'],
+      ],
+    },
   },
 
   /* ══════════════ 应用 ══════════════ */
@@ -325,95 +449,144 @@ export const SHOWCASE_CARDS = [
     seq: '01',
     no: 'APP 01 / 建模流水线',
     name: '织流 Jacquard',
-    /* 原描述 37 字，在 303px 窄栏里折成 3 行，把 stage 顶掉 22px。 */
     desc: '本地智能体流水线工作台，流程可编辑，产物实时落盘。',
     cta: '下载软件',
     href: '/modelflow/',
-    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
-       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
     staticPage: true,
     logo: '/modelflow/logo-256.png',
     family: 'ai',
     tone: 'ink',
     layout: 'copy',
     Icon: 'Workflow',
-    /* glyph 原来是 HardDrive —— 那是磁盘清理助手的图标，复制过来的，
-       和「智能体流水线」没有关系。 */
-    stage: { kind: "weave" },
+    stage: {
+      kind: 'weave',
+      title: '本地流水线',
+      meta: '运行中',
+      pipe: [['输入', 'done'], ['清洗', 'done'], ['LLM', 'run'], ['导出', 'run']],
+      files: [
+        ['out/clean.jsonl', 'ok'],
+        ['out/result.md', 'ok'],
+        ['out/figure-01.png', 'run'],
+        ['out/report.html', 'todo'],
+      ],
+      foot: [['节点', '3 / 4'], ['产物', '2 / 4']],
+    },
   },
   {
     id: 'checkin',
-    seq: '02',
+    seq: '01',
     no: 'APP 01 / 签到自动化',
     name: '学习通自动签到助手',
     desc: '常驻后台自动监听课程签到，支持普通、位置、二维码。',
     cta: '下载软件',
     href: '/checkin/',
-    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
-       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
     staticPage: true,
     logo: '/checkin/favicon.png',
     family: 'tool',
     tone: 'blue',
     layout: 'stage',
-    /* 原标题「监听中」与右侧徽章「后台常驻」是同一件事说两遍。 */
-    stage: { kind: "auto-click" },
+    stage: {
+      kind: 'auto-click',
+      title: '学习通自动签到助手',
+      meta: ['运行中', 'v3.13'],
+      kicker: '后台常驻监听',
+      focus: '3 / 5',
+      unit: '今日已签',
+      note: '普通 · 位置 · 二维码',
+      courses: [
+        ['高等数学', '08:02 · 普通', 'ok'],
+        ['大学英语', '08:05 · 位置', 'ok'],
+        ['线性代数', '10:20 · 扫码', 'ok'],
+        ['数据结构', '后台监听中', 'run'],
+      ],
+    },
   },
   {
     id: 'toolbox',
-    seq: '03',
+    seq: '02',
     no: 'APP 02 / 磁盘清理',
     name: '磁盘清理助手',
     desc: '磁盘扫描、分类与目录分析一站完成，预览后再确认清理。',
     cta: '下载软件',
     href: '/local-toolbox/',
-    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
-       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
     staticPage: true,
     logo: '/local-toolbox/favicon.png',
     family: 'tool',
     tone: 'paper',
     layout: 'bleed',
-    /* metricLabel 原来是「GB 可用 / 256」—— 单位塞在标签里，和左边 34px 的
-       「118」对不上。单位交给 metricUnit 承担。 */
-    stage: { kind: "junk-shrink" },
+    stage: {
+      kind: 'junk-shrink',
+      title: '磁盘清理助手',
+      meta: ['C 盘', 'v0.7.0'],
+      kicker: '扫描完成',
+      focus: '118',
+      unit: 'GB 可清理',
+      note: '回收站 · 75 条百科',
+      items: [
+        ['软件缓存', '42 GB', 'hot'],
+        ['大文件项', '38 GB', ''],
+        ['构建临时', '24 GB', ''],
+        ['重复文件', '14 GB', ''],
+      ],
+    },
   },
   {
     id: 'billtrace',
-    seq: '04',
+    seq: '03',
     no: 'APP 03 / 自动记账',
     name: '账迹 BillTrace',
     desc: '付款后 2 秒自动入库，双引擎采集，数据只存本机不上传。',
     cta: '下载 APK',
     href: '/billtrace/',
-    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
-       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
     staticPage: true,
     logo: '/billtrace/icon-512.png',
     family: 'life',
     tone: 'gold',
     layout: 'copy',
-    /* 原来三行的值不是同一个量纲：第一行「已捕获」是状态，后两行是金额。
-       「自动入库」本来就是这张卡要讲的事，挪进标题；三行统一成金额，
-       合计 39.80 由下面两笔相加得到，没有引入新数字。 */
-    stage: { kind: "banner-drop" },
+    stage: {
+      kind: 'banner-drop',
+      title: '账迹 BillTrace',
+      meta: ['10 月 13 日', '2s 入库'],
+      kicker: '今日自动入库',
+      focus: '¥39.80',
+      unit: '2 笔',
+      note: '双引擎 · 只存本机',
+      bills: [
+        ['午餐', '餐饮', '¥24.50'],
+        ['咖啡', '餐饮', '¥15.30'],
+        ['支付通知', '监听', '2s 入库'],
+        ['本机账本', '隐私', '零上传'],
+      ],
+    },
   },
   {
     id: 'token',
-    seq: '05',
+    seq: '04',
     no: 'APP 04 / 用量统计',
     name: 'Token Monitor',
     desc: '本机 AI 编程工具用量看板，Token、请求与缓存一目了然。',
     cta: '下载软件',
     href: '/token-monitor/',
-    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
-       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
     staticPage: true,
     logo: '/token-monitor/favicon.png',
     family: 'ai',
     tone: 'ink',
     layout: 'stage',
-    stage: { kind: "sparkline" },
+    stage: {
+      kind: 'sparkline',
+      title: 'Token Monitor',
+      meta: ['本机', '今日'],
+      kicker: '今日 Token',
+      focus: '1.37',
+      unit: 'M',
+      note: '缓存 68% · 本地计价',
+      tools: [
+        ['Claude Code', '620k'],
+        ['Codex', '410k'],
+        ['WorkBuddy', '210k'],
+        ['DeepSeek', '130k'],
+      ],
+    },
   },
   {
     id: 'zenew',
@@ -423,47 +596,55 @@ export const SHOWCASE_CARDS = [
     desc: '四本词书 + 教材 PDF 导入，AI 生成卡片，FSRS 排复习。',
     cta: '下载软件',
     href: '/zenew/',
-    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
-       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
     staticPage: true,
     logo: '/zenew/icon.png',
     family: 'learn',
     tone: 'blue',
     layout: 'bleed',
-    stage: { kind: "flip-card" },
+    stage: {
+      kind: 'flip-card',
+      term: 'abandon',
+      phonetic: '/əˈbændən/',
+      mean: '放弃；抛弃',
+      metaLabel: '今日待复习',
+      metaValue: '42',
+    },
   },
   {
     id: 'chronicle',
-    seq: '07',
+    seq: '05',
     no: 'APP 05 / 工作观测',
     name: 'AI 轨迹',
     desc: '本机解析 12 个数据源，把会话与产出整理成日报和趋势。',
     cta: '下载软件',
     href: '/ai-chronicle/',
-    /* 独立静态落地页（public/<slug>/index.html），不是 SPA 路由 ——
-       链接要用真实路径，加了 # 会被 HashRouter 当成未知路由重定向回首页。 */
     staticPage: true,
     logo: '/ai-chronicle/icon.png',
     family: 'tool',
     tone: 'gold',
     layout: 'stage',
-    stage: { kind: "timeline" },
+    stage: {
+      kind: 'timeline',
+      title: 'AI 轨迹',
+      meta: ['10 月 13 日', '12 源'],
+      kicker: '本机工作观测',
+      focus: '会话 12',
+      unit: '今日汇总',
+      note: '12 个数据源 · 每日日报',
+      trace: [
+        ['08:30', '会话 4 · Claude'],
+        ['11:00', '产出 3 · 代码提交'],
+        ['14:00', '产出 8 · Codex'],
+        ['17:30', '会话 12 · 日报'],
+      ],
+    },
   },
 ];
 
-/** 按 Tab 分组，供 Dashboard 直接消费 */
+/** 按 Tab 分组，供 Dashboard 直接消费（禁止改动 SHOWCASE_GROUPS 的成员与顺序） */
 export const SHOWCASE_GROUPS = {
-  /* 产品区（2026-10 用户要求：产品里除第一、第二、第三个卡片外全部下架）。
-     2026-10-19 新增第 4 张：health 血压记录（站内 /health 工具页，需登录）。
-     其余数据条目刻意留在 SHOWCASE_CARDS 里 —— 它们对应的站内页面与独立仓库都还在，
-     下架的只是首页橱窗位。要重新上架，把 id 加回这一行即可，不必恢复数据。 */
   products: ['api', 'timetable', 'voyraai-mall', 'health'],
   skills: ['mathmodel'],
-  /* 应用区去掉织流 Jacquard（modelflow）与知新 Zenew（zenew）——
-     2026-10-13 用户截图指认这两张要撤下。处理方式与产品区一致：
-     **只从橱窗分组里移除 id，数据条目、静态落地页（public/<slug>/index.html）、
-     独立 GitHub 仓库、GitHub Releases 全部保留**，不影响任何分发链路。
-     要恢复上架，把 id 加回这一行即可。 */
   apps: ['checkin', 'toolbox', 'billtrace', 'token', 'chronicle'],
 };
 

@@ -1,57 +1,38 @@
 /* ==========================================================================
-   19 个舞台 · 现代仪表盘风格
+   19 个舞台 · 现代仪表盘与真实 UI 缩略（v5 舞台小卡片动效 + 四色体系统一）
    --------------------------------------------------------------------------
-   两轮反馈的中间地带：**内容密度接近真实产品，执行手法保持现代**。
-
-   统一三段式：head（状态 + 标签 + 元信息）/ body（数据行、图表、网格）/ foot（次要指标）
-   分隔一律用 1px 发丝线（透明度 0.10），不用粗描边；面板浮起靠柔和投影。
-   数字等宽右对齐，读起来是"看板"；强调色只给状态点、关键值、进度条、当前行。
-
-   颜色取自基调变量：--stg-ink / --stg-text / --stg-text-rgb / --stg-panel
+   核心原则（严格对齐 AI-PROMPT.md）：
+     1. 舞台原则：「一个焦点（大数字/关键词）+ 一行小注 + 干净几何」。
+     2. 动效（重点：舞台内左侧焦点小卡片 + 右侧明细小卡片）：
+        · 入场：opacity 0→1 + translateY(8px→0)，错峰 75ms（60–90ms 区间），
+          采用 backwards 填充模式，入场结束后立即释放 transform，绝不锁死悬停。
+        · 悬停：translateY(-2px) + 阴影加深（左侧焦点小卡片叠加 1.02 缩放），
+          180ms ease（150–200ms 区间）。
+        · 环境动效：内层 .stg-ambient-float 6.8s（6–8s 区间）缓慢漂浮，幅度 2.5px（≤3px）。
+        · 铁律：只动 transform 和 opacity；prefers-reduced-motion 全量关闭并显式写回终态。
+     3. 统一四色体系（ink / gold / blue / paper）：
+        · 严格使用 --stg-ink / --stg-ink-rgb（图形描边 ≥3:1）、
+          --stg-text / --stg-text-rgb（舞台文字 ≥4.5:1）、
+          --stg-panel / --stg-bg1 / --stg-bg2（舞台面板与底色）。
+        · 彻底清除紫 / 绿 / 红 / 橙等第五种色相。
    ========================================================================== */
-
-/* ══════════════════════════════════════════════════════════════════════════
-   2026-10 精致化（用户反馈「内容不够精致、配色不够好看」）
-   --------------------------------------------------------------------------
-   对照参考站 oiloil.org 的演示面板逐项找差距，落成下面三条原则：
-
-   ① **内边距加大**：14px 16px → 18px 20px。
-      参考站 .pcard 的 padding 是 22px 26px，演示面板在卡内还有自己的留白。
-      14px 的边距让表头、数据行贴到舞台边缘，观感是「塞满了」而不是「排好了」。
-      留白是精致感的第一来源，这一条比任何装饰都有效。
-
-   ② **分隔线改发丝级 + 加内高光**：透明度 0.10 → 0.07，
-      并给表头/页脚各加一条 1px 的浅色内高光。
-      原来是纯灰线压在灰底上，显得脏；参考站的分隔都是「一道亮线 + 一道暗线」
-      的双层做法，看起来像纸被压出的折痕而不是画上去的线。
-
-   ③ **数据行/格子改用「纸片」而不是「色块」**：
-      色块（纯色矩形）是线框图的语汇；纸片是「白底 + 极淡描边 + 极淡投影」，
-      看起来像真的 UI 元素浮在面板上。参考站的每个 demo 元素都是后者的做法。
-      —— 这一条是本次改动里观感提升最大的一处。
-   ══════════════════════════════════════════════════════════════════════════ */
 
 .stg {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  /* v3：补 justify-content:center。
-     .stg-rows 改成 flex:0 1 auto 后，四段内容按各自高度抱团，
-     总高通常小于舞台（如商城卡 198px 内容 vs 200px 舞台，差得少；
-     但 Zenew 那种只有 2 行的就会差出 60px+）。
-     center 让这 60px 平分到上下各 30px，而不是全堆在底部
-     —— 上下对称的留白是呼吸，单侧留白是事故。 */
   justify-content: center;
   gap: 10px;
   padding: 18px 20px;
   overflow: hidden;
+  background: linear-gradient(180deg, var(--stg-bg1), var(--stg-bg2));
   color: var(--stg-text);
   line-height: 1.35;
   pointer-events: none;
 }
 
-/* ── 三段式骨架 ─────────────────────────────────────────────────────────── */
+/* ── 三段式骨架（兼容非激活旧卡） ───────────────────────────────────────── */
 .stg-head {
   display: flex;
   flex: 0 0 auto;
@@ -59,26 +40,25 @@
   gap: 8px;
   min-width: 0;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(var(--stg-text-rgb), 0.07);
-  /* 折痕效果：暗线的下一行补一道极淡亮线，模拟纸被压出的凹槽。
-     深色基调（ink）上只保留亮线，否则会糊成一片。 */
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+  border-bottom: 1px solid rgba(var(--stg-ink-rgb), 0.14);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 .stg-head b {
   overflow: hidden;
   font-size: 12px;
   font-weight: 650;
   letter-spacing: -0.01em;
+  color: var(--stg-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .stg-head em {
   flex: 0 0 auto;
   margin-left: auto;
-  font: 500 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 600 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   font-style: normal;
   letter-spacing: 0.04em;
-  color: rgba(var(--stg-text-rgb), 0.55);
+  color: var(--stg-text);
 }
 
 .stg-foot {
@@ -87,35 +67,23 @@
   align-items: center;
   gap: 14px;
   padding-top: 10px;
-  border-top: 1px solid rgba(var(--stg-text-rgb), 0.07);
+  border-top: 1px solid rgba(var(--stg-ink-rgb), 0.14);
   font-size: 11px;
-  color: rgba(var(--stg-text-rgb), 0.55);
+  color: var(--stg-text);
 }
 .stg-foot b {
-  font: 650 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--stg-text);
 }
 
-/* 主体：吃满剩余高度；内容少时均摊行距，多时按自然高度排。
-   grid-template-columns 必须显式写 minmax(0,1fr)：隐式的 auto 列会按内容宽度
-   收缩，整张表变成 58px 宽的一条，横向溢出舞台（踩过）。
-   max-height 是刹车 —— 不限高的话 4 行列表在 bleed 版式的高舞台上
-   会被拉到 30px 行距，看着散。 */
 .stg-rows {
   display: grid;
-  /* v3：flex 从 1 1 auto 改成 0 1 auto。
-     1 1 auto 会让行组**拉伸**填满舞台剩余空间：VoyraAI 商城那张卡
-     实测 4 行商品被拉到 55px（自身只需 45px），多出的 10px 把
-     flow 与 foot 一路推到 154px 处，而舞台可见高度只有 198px
-     —— 页脚被 overflow:hidden 裁掉，只剩「在售 18 件」露一半。
-     改成 0 1 auto 后行组按内容高度抱团，剩余空间留给 .stg 的
-     justify-content 分配，四段各自待在自己的位置上。 */
   flex: 0 1 auto;
   min-height: 0;
   max-height: 210px;
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
-  gap: 7px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -124,15 +92,21 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 4px 8px;
+  border-radius: 7px;
+  background: var(--stg-panel);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.16);
   font-size: 11px;
-  animation: stgRise .5s cubic-bezier(.19, 1, .22, 1) backwards;
-  animation-delay: calc(var(--i, 0) * .06s);
+  color: var(--stg-text);
+  animation: stgMiniIn 0.52s cubic-bezier(.19, 1, .22, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 75ms);
 }
 .stg-rows b {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  font-weight: 600;
+  font-weight: 650;
+  color: var(--stg-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -149,15 +123,15 @@
 .stg-rows code {
   overflow: hidden;
   font: 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: rgba(var(--stg-text-rgb), 0.72);
+  color: var(--stg-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .stg-rows time {
   flex: 0 0 auto;
-  font: 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 600 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   font-variant-numeric: tabular-nums;
-  color: rgba(var(--stg-text-rgb), 0.55);
+  color: var(--stg-text);
 }
 
 /* 小件：状态点 / 状态标记 / 分类标签 / 涨跌 */
@@ -175,34 +149,44 @@
   place-items: center;
   width: 13px;
   height: 13px;
-  border: 1px solid rgba(var(--stg-ink-rgb), 0.35);
+  border: 1px solid var(--stg-ink);
   border-radius: 50%;
   font-size: 7px;
   font-style: normal;
-  color: rgba(var(--stg-text-rgb), 0.45);
+  color: var(--stg-text);
 }
-.is-done > .stg-mark { border-color: var(--stg-ink); background: var(--stg-ink); color: var(--stg-panel); }
-.is-run > .stg-mark { border-color: var(--stg-ink); color: var(--stg-ink); animation: stgBreathe 1.8s ease-in-out infinite; }
-.is-run > b { color: var(--stg-ink); }
-.is-todo > b { color: rgba(var(--stg-text-rgb), 0.6); }
+.is-done > .stg-mark,
+.is-ok > .stg-mark {
+  border-color: var(--stg-ink);
+  background: var(--stg-ink);
+  color: var(--stg-panel);
+}
+.is-run > .stg-mark {
+  border-color: var(--stg-ink);
+  color: var(--stg-text);
+  animation: stgBreathe 1.8s ease-in-out infinite;
+}
+.is-run > b { color: var(--stg-text); }
+.is-todo > b { color: var(--stg-text); }
 
 .stg-chip {
   flex: 0 0 auto;
   padding: 3px 7px;
   border-radius: 6px;
-  /* 纸片化的分类标签：白底 + 细描边，而不是一块平涂灰。
-     与 .stg-grid-c 同一套材质，整块舞台的语汇才统一。 */
   background: var(--stg-panel);
-  border: 1px solid rgba(var(--stg-ink-rgb), 0.10);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.20);
   font-size: 10.5px;
-  font-weight: 550;
-  color: rgba(var(--stg-text-rgb), 0.78);
+  font-weight: 600;
+  color: var(--stg-text);
 }
-.stg-up { flex: 0 0 auto; font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-ink); }
-.stg-down { flex: 0 0 auto; font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.45); }
+.stg-up,
+.stg-down {
+  flex: 0 0 auto;
+  font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--stg-text);
+}
 
-/* 进度条：细、圆角、填充用强调色 */
+/* 进度条：细、圆角、填充用舞台图形描边色 --stg-ink */
 .stg-bar {
   position: relative;
   display: block;
@@ -210,10 +194,7 @@
   width: 62px;
   height: 5px;
   border-radius: 99px;
-  /* 轨道压深一档（0.14 → 0.10）并补一道内阴影：
-     浅色基调上原本的轨道几乎看不见，进度条像悬空的色块。 */
-  background: rgba(var(--stg-ink-rgb), 0.10);
-  box-shadow: inset 0 1px 1px rgba(20, 18, 14, 0.06);
+  background: rgba(var(--stg-ink-rgb), 0.16);
   overflow: hidden;
 }
 .stg-bar i {
@@ -224,104 +205,27 @@
   background: var(--stg-ink);
   transform: scaleX(0);
   transform-origin: left center;
-  /* 必须用 both/forwards：基础样式是 scaleX(0)，用 backwards 的话动画
-     播完就回落到基础值 —— 进度条在终态是空的（踩过）。 */
-  animation: stgBarIn .8s cubic-bezier(.16, 1, .3, 1) both;
-  animation-delay: calc(var(--i, 0) * .06s + .2s);
+  animation: stgBarIn 0.8s cubic-bezier(.16, 1, .3, 1) both;
+  animation-delay: calc(var(--i, 0) * 75ms + 0.16s);
 }
-/* 「通栏」条：.stg 是纵向 flex，撑宽度要用 align-self，写 flex:1 会沿主轴长高 */
 .stg-bar.is-wide { width: auto; align-self: stretch; }
 
-/* ── 01 · API 网关：方法 / 路径 / 状态 / 耗时 ───────────────────────────── */
-.stg--api .is-req code { flex: 1 1 auto; min-width: 0; }
-.stg-m {
-  flex: 0 0 auto;
-  width: 30px;
-  padding: 1px 0;
-  border-radius: 4px;
-  background: var(--stg-ink);
-  color: var(--stg-panel);
-  font: 700 7.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
-  text-align: center;
-  letter-spacing: 0.03em;
-}
-.stg-m.is-get { background: rgba(var(--stg-ink-rgb), 0.16); color: var(--stg-text); }
-.stg--api .is-ok { flex: 0 0 auto; font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-ink); }
-.stg--api .is-warn { flex: 0 0 auto; font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: rgba(var(--stg-text-rgb), 0.45); }
-.stg--api .is-req em { width: 30px; justify-content: flex-end; color: rgba(var(--stg-text-rgb), 0.6); }
-
-/* ── 02 · 日程中心：五列课表 ──────────────────────────────────────────────
-   舞台可用高度只有约 64px（见 stages.jsx 里 StageWeekGrid 的注释），
-   所以网格定为「表头 1 行 + 课程 2 行」，两行均分剩余空间。
-
-   坑：课程格子用显式 grid-area（'1 / 1 / 3 / 2'），行号是绝对行号，
-   而表头是自动放置的 —— 自动放置会跳过被显式占用的行，把星期标签
-   排到第 3 行去（实测：课名在上、「一二三四五」挤在最右边一列）。
-   表头必须**同时**钉住行列：grid-row:1 只钉行，列仍是自动，
-   五个标签会全挤进第 1 列。所以用 grid-auto-flow:column 让自动放置
-   沿行方向排，或者更直接地给每个表头显式列号 —— 这里用后者，
-   在 JSX 里写内联 grid-column（见 stages.jsx）。 */
-.stg--week .stg-grid {
-  display: grid;
-  flex: 1 1 auto;
-  min-height: 0;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
-  gap: 5px;
-}
-/* 表头固定在第 1 行；列号由 JSX 的内联 grid-column 指定 */
-.stg--week .stg-grid-h { grid-row: 1; }
-.stg-grid-h {
-  /* 星期标记：9px/50% 太淡太小，中文单字在 10.5px 下才立得住 */
-  font: 600 10.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: rgba(var(--stg-text-rgb), 0.62);
-  text-align: center;
-}
-.stg-grid-c {
-  display: grid;
-  place-items: center;
-  padding: 2px 4px;
-  overflow: hidden;
-  border-radius: 7px;
-  /* 「纸片」而不是「色块」：白底 + 极淡描边 + 1px 内高光。
-     原来的 rgba(ink,0.16) 是一块平涂灰，六个格子连成一片脏灰；
-     改成纸片后，格子之间有呼吸、有边界，像真的课表卡片。
-     深色基调下这条内高光会变成一条突兀的白边，因此由基调变量控制 —— 
-     .sc-card 的 ink 基调把 --stg-panel 设成深灰，这里跟随即可。 */
-  background: var(--stg-panel);
-  border: 1px solid rgba(var(--stg-ink-rgb), 0.10);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 1px 2px rgba(20, 18, 14, 0.04);
-  color: var(--stg-text);
-  /* 11px 的中文课名是这个尺寸下的下限，再小就糊 */
-  font-size: 11px;
-  font-weight: 550;
-  line-height: 1.15;
-  text-align: center;
-  /* 每格只放一个课名（4 字），两行高的格子正好排得下，不会折字。
-     keep-all 是保险：万一将来换成更长的课名，也不会从词中间断开。 */
-  word-break: keep-all;
-  animation: stgRise .45s cubic-bezier(.19, 1, .22, 1) backwards;
-  animation-delay: calc(var(--i, 0) * .05s);
-}
-
-/* ── 03 · 模型对比：名称 / 条 / 分数 / 涨跌 ─────────────────────────────── */
+/* ── 兼容旧模板舞台细项 ────────────────────────────────────────────────── */
 .stg--race .is-rank b { flex: 0 0 62px; }
 .stg--race .is-rank .stg-bar { flex: 1 1 auto; width: auto; }
-.stg--race .is-rank em { width: 20px; justify-content: flex-end; color: var(--stg-ink); }
+.stg--race .is-rank em { width: 20px; justify-content: flex-end; color: var(--stg-text); }
 
-/* ── 04 · 提示词库 ─────────────────────────────────────────────────────── */
 .stg-search {
   flex: 0 0 auto;
-  padding: 7px 12px;
+  padding: 6px 11px;
   border-radius: 99px;
   background: var(--stg-panel);
-  box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 6px 14px -10px rgba(16, 16, 16, .3);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.18);
   font-size: 11px;
-  color: rgba(var(--stg-text-rgb), 0.5);
+  color: var(--stg-text);
 }
-.stg--type .is-prompt em { color: var(--stg-ink); }
+.stg--type .is-prompt em { color: var(--stg-text); }
 
-/* ── 05 · 组件图鉴：六个组件字形 ───────────────────────────────────────── */
 .stg-bench-grid {
   display: grid;
   flex: 1 1 auto;
@@ -339,23 +243,24 @@
   gap: 6px;
   border-radius: 9px;
   background: var(--stg-panel);
-  box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 8px 16px -12px rgba(16, 16, 16, .34);
-  animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
-  animation-delay: calc(var(--i, 0) * .06s);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.18);
 }
-.stg-bench-t em { font: 500 7.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: rgba(var(--stg-text-rgb), 0.42); }
+.stg-bench-t em {
+  font: 600 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-style: normal;
+  color: var(--stg-text);
+}
 .stg-btn { padding: 3px 9px; border-radius: 99px; background: var(--stg-ink); color: var(--stg-panel); font-size: 11px; font-weight: 600; }
 .stg-switch { position: relative; width: 24px; height: 13px; border-radius: 99px; background: var(--stg-ink); }
 .stg-switch i { position: absolute; top: 2px; left: 13px; width: 9px; height: 9px; border-radius: 50%; background: var(--stg-panel); }
-.stg-input { padding: 2px 7px; border: 1px solid rgba(var(--stg-ink-rgb), 0.3); border-radius: 4px; font-size: 8.5px; color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-tag { padding: 1px 7px; border: 1px solid rgba(var(--stg-ink-rgb), 0.3); border-radius: 99px; font-size: 11px; }
+.stg-input { padding: 2px 7px; border: 1px solid var(--stg-ink); border-radius: 4px; font-size: 8.5px; color: var(--stg-text); }
+.stg-tag { padding: 1px 7px; border: 1px solid var(--stg-ink); border-radius: 99px; font-size: 11px; color: var(--stg-text); }
 .stg-slider { position: relative; display: grid; width: 34px; height: 10px; align-items: center; }
-.stg-slider::before { content: ""; grid-area: 1 / 1; height: 3px; border-radius: 99px; background: rgba(var(--stg-ink-rgb), 0.2); }
+.stg-slider::before { content: ""; grid-area: 1 / 1; height: 3px; border-radius: 99px; background: rgba(var(--stg-ink-rgb), 0.25); }
 .stg-slider i { grid-area: 1 / 1; width: 10px; height: 10px; margin-left: 18px; border-radius: 50%; background: var(--stg-ink); }
 .stg-checkbox { display: grid; place-items: center; width: 15px; height: 15px; border-radius: 4px; background: var(--stg-ink); color: var(--stg-panel); font-size: 9px; }
 
-/* ── 06 · 热榜：名次 / 仓库 / 星数 / 增量 ───────────────────────────────── */
-.stg--podium .is-repo li.is-top { border-radius: 5px; background: rgba(var(--stg-ink-rgb), 0.09); }
+.stg--podium .is-repo li.is-top { background: var(--stg-panel); border-color: var(--stg-ink); }
 .stg-rank {
   flex: 0 0 auto;
   display: grid;
@@ -363,18 +268,17 @@
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: rgba(var(--stg-ink-rgb), 0.13);
+  border: 1px solid var(--stg-ink);
   font: 700 8.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
   font-style: normal;
+  color: var(--stg-text);
 }
 .stg--podium .is-repo li.is-top .stg-rank { background: var(--stg-ink); color: var(--stg-panel); }
 
-/* ── 07 · Agent：步骤 / 工具 / 状态 ────────────────────────────────────── */
 .stg--dispatch .is-step b { flex: 0 0 44px; }
 .stg--dispatch .is-step code { flex: 1 1 auto; min-width: 0; }
-.stg--dispatch .is-step em { color: rgba(var(--stg-text-rgb), 0.55); }
+.stg--dispatch .is-step em { color: var(--stg-text); }
 
-/* ── 08 · 思维导图：根 + 分支 ──────────────────────────────────────────── */
 .stg--tree .stg-tree-map {
   display: grid;
   flex: 1 1 auto;
@@ -385,18 +289,8 @@
   gap: 14px;
 }
 .stg--tree ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
-.stg--tree ul li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards;
-  animation-delay: calc(var(--i, 0) * .07s + .1s);
-}
-.stg--tree ul em {
-  font: 650 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-style: normal;
-  color: rgba(var(--stg-text-rgb), 0.5);
-}
+.stg--tree ul li { display: flex; align-items: center; gap: 8px; }
+.stg--tree ul em { font: 650 9px/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-style: normal; color: var(--stg-text); }
 .stg-node {
   display: inline-flex;
   align-items: center;
@@ -404,14 +298,14 @@
   padding: 4px 10px;
   border-radius: 99px;
   background: var(--stg-panel);
-  box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 6px 14px -10px rgba(16, 16, 16, .32);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.18);
   font-size: 10px;
   font-weight: 600;
+  color: var(--stg-text);
   white-space: nowrap;
 }
 .stg-node.is-lead { background: var(--stg-ink); color: var(--stg-panel); }
 
-/* ── 09 · 宝宝护理：三项统计 + 记录 ────────────────────────────────────── */
 .stg--arc .stg-kpi3 { display: grid; flex: 0 0 auto; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .stg-kpi3 span {
   display: grid;
@@ -419,13 +313,12 @@
   padding: 6px 7px;
   border-radius: 7px;
   background: var(--stg-panel);
-  box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 6px 14px -12px rgba(16, 16, 16, .3);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.18);
   font-size: 11px;
-  color: rgba(var(--stg-text-rgb), 0.6);
+  color: var(--stg-text);
 }
 .stg-kpi3 b { font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-text); }
 
-/* ── 10 · 随机抽人：名单滚动 + 已抽 ────────────────────────────────────── */
 .stg--slot .stg-roll-win {
   flex: 1 1 auto;
   min-height: 0;
@@ -433,7 +326,7 @@
   overflow: hidden;
   border-radius: 9px;
   background: var(--stg-panel);
-  box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 8px 18px -12px rgba(16, 16, 16, .32);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.18);
   -webkit-mask-image: linear-gradient(180deg, transparent, #000 24%, #000 76%, transparent);
   mask-image: linear-gradient(180deg, transparent, #000 24%, #000 76%, transparent);
 }
@@ -446,75 +339,407 @@
   font-size: 15px;
   font-weight: 650;
   letter-spacing: -0.01em;
-  color: rgba(var(--stg-text-rgb), 0.34);
+  color: var(--stg-text);
 }
-.stg-roll li.is-hit { font-size: 19px; font-weight: 800; color: var(--stg-ink); }
+.stg-roll li.is-hit { font-size: 19px; font-weight: 800; color: var(--stg-text); }
 .stg-picked { display: flex; flex: 0 0 auto; flex-wrap: wrap; gap: 5px; }
 
-/* ── 11 · 饮食打卡 ─────────────────────────────────────────────────────── */
-.stg--meal .is-meal em { color: rgba(var(--stg-text-rgb), 0.55); }
-.stg--meal .is-off > b { color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-meter { display: grid; flex: 0 0 auto; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; font-size: 9px; color: rgba(var(--stg-text-rgb), 0.6); }
+.stg--meal .is-meal em { color: var(--stg-text); }
+.stg--meal .is-off > b { color: var(--stg-text); }
+.stg-meter { display: grid; flex: 0 0 auto; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px; font-size: 9.5px; color: var(--stg-text); }
 .stg-meter .stg-bar { width: auto; }
 .stg-meter b { font: 650 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--stg-text); }
 
-/* ── 12 · 数学建模：阶段 + 进度 ────────────────────────────────────────── */
-.stg--paper .is-step em { color: rgba(var(--stg-text-rgb), 0.5); }
-.stg--paper .is-step.is-dense { gap: 4px; }
-.stg--paper > .stg-bar { flex: 0 0 auto; }
-
-/* ── 13 · 织流：流水线 + 产物 ──────────────────────────────────────────── */
 .stg-pipe { display: flex; flex: 0 0 auto; flex-wrap: nowrap; align-items: center; }
-.stg-pipe span { display: flex; align-items: center; animation: stgRise .5s cubic-bezier(.16, 1, .3, 1) backwards; animation-delay: calc(var(--i, 0) * .08s); }
+.stg-pipe span { display: flex; align-items: center; }
 .stg-pipe b {
   padding: 4px 8px;
   border-radius: 6px;
   background: var(--stg-panel);
-  box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 5px 12px -10px rgba(16, 16, 16, .3);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.18);
   font-size: 11px;
   font-weight: 600;
+  color: var(--stg-text);
   white-space: nowrap;
 }
-.stg-pipe u { display: block; width: 10px; height: 1px; background: rgba(var(--stg-ink-rgb), 0.35); }
+.stg-pipe u { display: block; width: 10px; height: 1px; background: var(--stg-ink); }
 .stg-pipe .is-run b { background: var(--stg-ink); color: var(--stg-panel); }
-.stg-pipe .is-todo b { color: rgba(var(--stg-text-rgb), 0.55); }
+.stg-pipe .is-todo b { color: var(--stg-text); }
 .stg--weave .is-file code { flex: 1 1 auto; min-width: 0; }
 
-/* ── 20 · VoyraAI 商城：浏览器窗口里的商城首页 ─────────────────────────────
-   v5：不再用 .stg 的三段式（head/rows/foot），改成「浏览器窗口 + 真实界面」。
-   舞台容器已透明（见 dashboard-cards.css 的 .sc-stage），
-   所以这里的窗口外壳自带圆角与投影，就是视觉边界。 */
-.shot-mall {
+
+/* ══════════════════════════════════════════════════════════════════════════
+   核心升级：10 张橱窗卡片舞台 · 四色体系统一 + 左侧焦点小卡片微动效
+   --------------------------------------------------------------------------
+   注意：Dashboard.jsx 中 product-shots.css 在 stage-scenes.css 之后引入，
+   因此此处统一以 `.sc-card .sc-stage` 前缀提升特异性（≥ 0-3-0），
+   覆盖 product-shots.css 中写死的红/绿/紫/橙与固定白底/黑底，
+   让每个舞台壳体与内部小卡片严格对齐所在卡片的 tone 变量。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1 · 舞台外壳统一对齐 tone 色板（消除第五种色相与不合 tone 的死黑/死白） */
+.sc-card .sc-stage > .Window,
+.sc-card .sc-stage > .Browser,
+.sc-card .sc-stage > .Terminal,
+.sc-card .sc-stage > .Spotlight,
+.sc-card .sc-stage > .Sheet,
+.sc-card .sc-stage > .Inline {
+  background: linear-gradient(165deg, var(--stg-bg1) 0%, var(--stg-bg2) 100%);
+  color: var(--stg-text);
+  border: 0;
+  box-shadow:
+    0 0 0 1px rgba(var(--stg-ink-rgb), 0.18),
+    0 16px 34px -14px rgba(17, 17, 17, 0.16),
+    0 4px 12px -4px rgba(17, 17, 17, 0.06);
+}
+
+.sc-card .sc-stage .Window-bar,
+.sc-card .sc-stage .Browser-bar,
+.sc-card .sc-stage .Terminal-bar {
+  height: 24px;
+  padding: 0 10px;
+  background: rgba(var(--stg-ink-rgb), 0.06);
+  border-bottom: 1px solid rgba(var(--stg-ink-rgb), 0.12);
+  color: var(--stg-text);
+}
+
+/* 顶栏圆点：严禁红/黄/绿三色，统一用当前基调 --stg-ink 阶梯色 */
+.sc-card .sc-stage .Window-dots i:nth-child(1),
+.sc-card .sc-stage .Terminal-bar i {
+  background: var(--stg-ink);
+  opacity: 0.88;
+}
+.sc-card .sc-stage .Window-dots i:nth-child(2) {
+  background: var(--stg-ink);
+  opacity: 0.52;
+}
+.sc-card .sc-stage .Window-dots i:nth-child(3) {
+  background: var(--stg-ink);
+  opacity: 0.26;
+}
+
+.sc-card .sc-stage .Window-title,
+.sc-card .sc-stage .Window-meta,
+.sc-card .sc-stage .Terminal-bar span,
+.sc-card .sc-stage .Terminal-bar em {
+  color: var(--stg-text);
+}
+
+.sc-card .sc-stage .Browser-url {
+  background: var(--stg-panel);
+  box-shadow: inset 0 0 0 1px rgba(var(--stg-ink-rgb), 0.20);
+  color: var(--stg-text);
+}
+
+.sc-card .sc-stage .Terminal-body,
+.sc-card .sc-stage .Window-body,
+.sc-card .sc-stage .Browser-body {
+  background: transparent;
+  color: var(--stg-text);
+}
+
+.sc-card .sc-stage .Terminal-main {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  width: 100%;
   height: 100%;
-  padding: 11px 12px 10px;
+  min-height: 0;
+  padding: 0;
 }
-/* 搜索框：真实商城的第一屏元素 */
-.shot-mall-search {
+
+/* 2 · 舞台双栏网格（左：焦点小卡片 / 右：真实数据明细小卡片） */
+.sc-card .sc-stage .stg-mini-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.22fr);
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 8px 10px;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+.sc-card .sc-stage .stg-mini-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  align-content: stretch;
+}
+
+/* 3 · 舞台内小卡片通用纸片质感 + 克制微动效（入场错峰 + 悬停抬升） */
+.sc-card .sc-stage .stg-mini-card {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-radius: 8px;
+  background: var(--stg-panel);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.16);
+  box-shadow:
+    0 1px 2px rgba(17, 17, 17, 0.04),
+    0 4px 10px -6px rgba(17, 17, 17, 0.08);
+  color: var(--stg-text);
+  overflow: hidden;
+  /* 入场：opacity 0→1 + translateY(8px→0)，错峰 75ms（落在 60–90ms 区间）
+     使用 backwards 填充，入场完成后释放 transform，不锁死悬停位移 */
+  animation: stgMiniIn 0.52s cubic-bezier(.19, 1, .22, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 75ms + 90ms);
+  /* 悬停：180ms ease（落在 150–200ms 区间），只动 transform 与 box-shadow */
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+/* 左侧焦点小卡片：承载「一个大数字/关键词 + 一行小注 + 干净几何」 */
+.sc-card .sc-stage .stg-focus-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7px 8px;
+  border-radius: 9px;
+  background: var(--stg-panel);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.22);
+  box-shadow:
+    0 2px 5px rgba(17, 17, 17, 0.05),
+    0 8px 18px -10px rgba(17, 17, 17, 0.12);
+}
+
+/* 左侧焦点小卡片内层：6.8s（6–8s 区间）缓慢环境呼吸/漂浮，幅度 2.5px（≤3px） */
+.sc-card .sc-stage .stg-ambient-float {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  width: 100%;
+  min-width: 0;
+}
+.vr-card-entry[data-card-visible] .sc-card .sc-stage .stg-ambient-float {
+  animation: stgAmbientFloat 6.8s ease-in-out infinite;
+}
+
+/* 悬停微动效：translateY(-2px) + 阴影轻微加深，左侧焦点卡叠加 1.02 缩放 */
+@media (hover: hover) and (pointer: fine) {
+  .sc-card:hover .sc-stage .stg-mini-card {
+    transform: translateY(-2px);
+    border-color: rgba(var(--stg-ink-rgb), 0.30);
+    box-shadow:
+      0 4px 10px -3px rgba(17, 17, 17, 0.10),
+      0 8px 18px -8px rgba(var(--stg-ink-rgb), 0.18);
+  }
+  .sc-card:hover .sc-stage .stg-focus-card {
+    transform: translateY(-2px) scale(1.02);
+    border-color: rgba(var(--stg-ink-rgb), 0.38);
+    box-shadow:
+      0 6px 14px -4px rgba(17, 17, 17, 0.12),
+      0 12px 24px -10px rgba(var(--stg-ink-rgb), 0.22);
+  }
+}
+
+/* ── 左侧焦点小卡片内部排版（大数字 + 小注 + 标签） ───────────────────── */
+.sc-card .sc-stage .stg-focus-kicker {
+  display: block;
+  font: 650 8.5px/1.2 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: 0.03em;
+  color: var(--stg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-card .sc-stage .stg-focus-metric {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  margin: 1px 0;
+}
+.sc-card .sc-stage .stg-focus-metric b {
+  font: 800 18px/1.05 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--stg-text);
+  white-space: nowrap;
+}
+.sc-card .sc-stage .stg-focus-metric small {
+  font: 650 8.5px/1.1 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--stg-text);
+  white-space: nowrap;
+}
+
+.sc-card .sc-stage .stg-focus-note {
+  display: block;
+  font-size: 8px;
+  font-weight: 550;
+  line-height: 1.25;
+  color: var(--stg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-card .sc-stage .stg-focus-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+.sc-card .sc-stage .stg-focus-tags span {
+  padding: 1.5px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.24);
+  background: rgba(var(--stg-ink-rgb), 0.06);
+  font: 600 7.5px/1.2 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--stg-text);
+  white-space: nowrap;
+}
+.sc-card .sc-stage .stg-focus-tags span.is-on {
+  background: var(--stg-ink);
+  border-color: var(--stg-ink);
+  color: var(--stg-panel);
+}
+
+/* ── 各卡片舞台内部细项（严格使用 --stg-* 变量，对比度全部 ≥4.5:1） ─────── */
+
+/* 01 & 05 · Terminal（Voyra Relay API / 数学建模 Skill） */
+.sc-card .sc-stage .shot-nav {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-log {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 4px;
+  height: 100%;
+  min-height: 0;
+  align-content: stretch;
+}
+.sc-card .sc-stage .shot-log .UI-term {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 0;
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-log .UI-term:last-child::after {
+  display: none;
+}
+.sc-card .sc-stage .stg-term-card {
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 24px;
-  padding: 0 9px;
-  border-radius: 7px;
-  background: #F4F4F5;
-  font-size: 10px;
-  color: #A8A8AE;
+  width: 100%;
+  padding: 3px 7px;
+  font: 550 8.5px/1.2 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--stg-text);
 }
-/* 商品网格 2×2：每格 = 品牌 logo + 名称 + 价格。
-   格子无背景色 —— 真实商品列表的卡片本来就是白底，
-   靠一条极淡的分隔线区分，不是彩色方块。 */
-.shot-mall-grid {
-  display: grid;
+.sc-card .sc-stage .stg-term-card .is-key {
+  flex: 0 0 auto;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--stg-ink);
+  color: var(--stg-panel);
+  font-size: 7.5px;
+  font-weight: 700;
+}
+.sc-card .sc-stage .stg-term-path,
+.sc-card .sc-stage .stg-term-line {
   flex: 1 1 auto;
-  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  color: var(--stg-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sc-card .sc-stage .stg-term-meta {
+  flex: 0 0 auto;
+  font-style: normal;
+  font-weight: 650;
+  color: var(--stg-text);
+  white-space: nowrap;
+}
+
+/* 02 · 日程中心（shot-cal） */
+.sc-card .sc-stage .shot-cal-side {
+  flex: initial;
+  border-right: 0;
+  background: var(--stg-panel);
+  padding: 8px 10px;
+}
+.sc-card .sc-stage .stg-week-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 3px;
+  margin-top: 3px;
+}
+.sc-card .sc-stage .shot-cal-day {
+  aspect-ratio: auto;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.18);
+  font: 650 8px/1 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-cal-day.is-on {
+  background: var(--stg-ink);
+  border-color: var(--stg-ink);
+  color: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-cal-main {
+  padding: 0;
+  gap: 4px;
+}
+.sc-card .sc-stage .shot-cal-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  background: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-cal-row em,
+.sc-card .sc-stage .shot-cal-row b,
+.sc-card .sc-stage .shot-cal-row span {
+  color: var(--stg-text);
+}
+
+/* 03 · VoyraAI 商城（shot-mall） */
+.sc-card .sc-stage .shot-mall {
+  padding: 8px 10px;
+  gap: 8px;
+}
+.sc-card .sc-stage .shot-mall-search {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  background: rgba(var(--stg-ink-rgb), 0.06);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.16);
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-mall-grid {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: 5px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
 }
-.shot-goods {
+.sc-card .sc-stage .shot-goods {
   display: grid;
   grid-template-areas:
     "logo name"
@@ -522,197 +747,288 @@
   grid-template-columns: auto minmax(0, 1fr);
   align-content: center;
   align-items: center;
-  gap: 0 6px;
-  padding: 5px 7px;
-  border-radius: 6px;
-  background: #FAFAFB;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
-  min-width: 0;
-  overflow: hidden;
+  gap: 1px 4px;
+  padding: 4px 5px;
+  background: var(--stg-panel);
+  box-shadow: none;
 }
-.shot-brand { grid-area: logo; align-self: center; width: 13px; height: 13px; }
-.shot-goods b {
+.sc-card .sc-stage .shot-brand {
+  grid-area: logo;
+  align-self: center;
+  width: 13px;
+  height: 13px;
+}
+.sc-card .sc-stage .shot-goods b {
   grid-area: name;
   min-width: 0;
   overflow: hidden;
-  font-size: 9px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  color: #2A2A2E;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--stg-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.shot-goods em {
+.sc-card .sc-stage .shot-goods em {
   grid-area: price;
   min-width: 0;
   overflow: hidden;
-  font: 600 8px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font: 650 8px/1.2 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-style: normal;
-  color: #0071E3;
+  color: var(--stg-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* 底部状态条：绿点 + 一句话说明（真实商城的「自动发货」提示） */
-.shot-mall-status {
+.sc-card .sc-stage .shot-mall-status {
   display: flex;
-  flex: 0 0 auto;
   align-items: center;
   gap: 5px;
-  font-size: 8.5px;
-  color: #8A8A90;
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--stg-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.shot-mall-status i {
+.sc-card .sc-stage .shot-mall-status i {
+  flex: 0 0 auto;
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #28C840;
+  background: var(--stg-ink);
 }
 
-/* ── 21 · VoyraAI 推荐通道：浏览器窗口里的推荐页 ───────────────────────────
-   与商城卡的差异在「第一屏内容」：推荐码横幅（独有信息）+ 类目网格。
-   两张卡并排时读者能一眼分清。 */
-.shot-ref-banner {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
+/* 04 · 血压记录（bp-body）—— 全部收敛回 gold 基调，消除红/蓝外溢色相 */
+.sc-card .sc-stage .bp-body {
+  padding: 8px 10px;
   gap: 8px;
-  height: 30px;
-  padding: 0 11px;
-  border-radius: 7px;
-  background: linear-gradient(100deg, #FFF6D6, #FFFDF6);
-  box-shadow: inset 0 0 0 1px rgba(214, 168, 32, 0.28);
 }
-.shot-ref-banner span {
-  font: 600 9px/1 var(--vr-mono, ui-monospace, Menlo, monospace);
-  letter-spacing: .06em;
-  color: #9A7A16;
+.sc-card .sc-stage .bp-latest {
+  padding: 8px 10px;
 }
-.shot-ref-banner b {
-  font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: .1em;
-  color: #7A5E10;
+.sc-card .sc-stage .bp-cap {
+  font-size: 8.5px;
+  font-weight: 650;
+  color: var(--stg-text);
 }
-.shot-mall.is-ref .shot-goods em { color: #8A8A90; font-family: inherit; font-weight: 500; font-size: 8.5px; }
-
-/* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
-
-/* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
-
-/* ── 14 · 学习通：课程状态 ─────────────────────────────────────────────── */
-.stg--click .is-course em.is-ok { color: var(--stg-ink); }
-.stg--click .is-course em.is-run { color: rgba(var(--stg-text-rgb), 0.7); }
-.stg--click .is-course em.is-todo { color: rgba(var(--stg-text-rgb), 0.42); }
-
-/* ── 15 · 磁盘清理：大数字 + 明细 ──────────────────────────────────────── */
-.stg-big {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: baseline;
+.sc-card .sc-stage .bp-bp {
+  font: 800 18px/1.08 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--stg-text);
+  letter-spacing: -0.02em;
+}
+.sc-card .sc-stage .bp-bp small {
+  font-size: 8.5px;
+  font-weight: 650;
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .bp-hr {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .bp-pp {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .bp-rows {
   gap: 4px;
-  margin: 0;
-  /* v2：24px → 21px。这个大数字与下方清单共用舞台的纵向预算，
-     21px 仍是最醒目的那一层（比清单里的 11px 行大一倍），
-     却能省出 3px 给第 5 行明细 —— 此前 5 行只显示得下 1 行。 */
-  font: 750 21px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: -0.03em;
-  color: var(--stg-ink);
-  transform-origin: left center;
-  transition: transform .5s cubic-bezier(.16, 1, .3, 1);
 }
-.stg-big small { font: 500 9px/1 inherit; letter-spacing: 0; color: rgba(var(--stg-text-rgb), 0.55); }
-.stg--disk .is-disk b { flex: 0 0 28px; }
-.stg--disk .is-disk .stg-bar { width: auto; }
-.stg--disk .is-disk em { flex: 0 0 46px; justify-content: flex-end; color: rgba(var(--stg-text-rgb), 0.7); }
-/* v2：给「行多且行内带进度条」的舞台（磁盘 5 行、Token 4 行）单独收紧行距。
-   这两类行的实际高度不是 11px 而是约 15px（Bar 5px + 行内对齐余量），
-   4 行 ≈ 60px、5 行 ≈ 75px。加上大数字 21 + 折线 28 + 表头 34 + 页脚 22
-   + 内边距 36 + 四处 gap 40，总高超出 200px 舞台 25~55px，
-   表现是最后 1~4 行被舞台 overflow:hidden 裁掉 ——
-   看起来像「数据只有 2 个工具」而不是排版溢出。
-
-   修法是压缩行距而不是加高舞台：舞台高度是整卡节奏的一部分
-   （min-height:200px 与参考站的 180px 同量级），
-   为一张卡单独撑高会让同行的两张卡高度不齐，反而更难看。 */
-.stg--disk .is-disk,
-.stg--spark .is-tool { gap: 4px; }
-
-/* ── 16 · 账迹：明细 + 合计 ────────────────────────────────────────────── */
-.stg-total {
+.sc-card .sc-stage .bp-row {
   display: flex;
-  flex: 0 0 auto;
-  align-items: baseline;
-  justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid rgba(var(--stg-text-rgb), 0.10);
-}
-.stg-total span { font-size: 11px; color: rgba(var(--stg-text-rgb), 0.55); }
-.stg-total b { font: 750 16px/1 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: -0.02em; color: var(--stg-ink); }
-
-/* ── 17 · Token Monitor：数字 + 折线 + 拆分 ────────────────────────────── */
-/* 高度预算（实测：舞台 200px − 内边距 36 − 表头 34 − gap 30 − 清单 4×15+3×7
-   = 21. 剩给折线图 + 大数字的空间约 69px）。
-   v2：40px → 28px、大数字 24px → 21px，两者合计省下 15px，
-   刚好让第 4 行工具（DeepSeek）完整显示。此前它被裁在舞台底边外，
-   看起来像「只列了 3 个工具」—— 而清单下方还有页脚位置没内容，
-   读者会以为是数据缺失而不是排版溢出。 */
-.stg-spark-chart { display: block; flex: 0 0 auto; width: 100%; height: 28px; }
-.stg-spark-area { fill: rgba(var(--stg-ink-rgb), 0.12); }
-.stg-spark-line {
-  fill: none;
-  stroke: var(--stg-ink);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 340;
-  stroke-dashoffset: 340;
-  animation: stgDraw 1.6s cubic-bezier(.16, 1, .3, 1) forwards;
-}
-.stg--spark .is-tool b { flex: 0 0 76px; }
-.stg--spark .is-tool .stg-bar { width: auto; }
-.stg--spark .is-tool em { color: rgba(var(--stg-text-rgb), 0.7); }
-
-/* ── 18 · 知新：单词卡翻面 ─────────────────────────────────────────────── */
-.stg--flip .stg-flip-stage { flex: 1 1 auto; min-height: 0; max-height: 88px; perspective: 760px; }
-.stg-flip-card {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  animation: stgFlip 6.4s cubic-bezier(.45, 0, .25, 1) infinite;
-}
-.stg-flip-face {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-content: center;
-  gap: 5px;
-  border-radius: 11px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
   background: var(--stg-panel);
-  text-align: center;
-  backface-visibility: hidden;
-  box-shadow: 0 1px 2px rgba(16, 16, 16, .05), 0 12px 24px -14px rgba(16, 16, 16, .38);
 }
-.stg-flip-face b { font-size: 15px; font-weight: 750; letter-spacing: -0.02em; }
-.stg-flip-face span { font-size: 11px; color: rgba(var(--stg-text-rgb), 0.6); }
-.stg-flip-face.is-back { transform: rotateY(180deg); background: var(--stg-ink); color: var(--stg-panel); }
-.stg-flip-face.is-back span { color: var(--stg-panel); opacity: .8; }
-.stg--flip > .stg-bar { flex: 0 0 auto; }
-
-/* ── 19 · AI 轨迹：时间点 + 产出柱 ─────────────────────────────────────── */
-.stg-cols { display: flex; flex: 0 0 auto; align-items: flex-end; gap: 3px; height: 26px; }
-.stg-cols i {
-  flex: 1 1 0;
-  height: var(--h, 50%);
-  border-radius: 2px;
-  background: rgba(var(--stg-ink-rgb), 0.22);
-  transform: scaleY(0);
-  transform-origin: bottom center;
-  animation: stgBarIn .7s cubic-bezier(.16, 1, .3, 1) both;
-  animation-delay: calc(var(--i, 0) * .04s + .15s);
+.sc-card .sc-stage .bp-t {
+  font: 700 8.5px/1 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-style: normal;
+  color: var(--stg-text);
 }
-.stg-cols i:nth-child(8) { background: var(--stg-ink); }
+.sc-card .sc-stage .bp-v {
+  font: 750 9.5px/1 var(--vr-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .bp-row em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 8.5px;
+  font-weight: 600;
+  color: var(--stg-text);
+  white-space: nowrap;
+}
 
-/* ── 环境光：一团很淡的基调色高光在舞台里缓慢漂移（"一直有动静"的那层） ── */
+/* 06 · 学习通自动签到助手（shot-app） */
+.sc-card .sc-stage .shot-app {
+  padding: 8px 10px;
+  gap: 8px;
+}
+.sc-card .sc-stage .shot-app-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 10px;
+}
+.sc-card .sc-stage .shot-app-live {
+  color: var(--stg-text);
+  font-weight: 650;
+}
+.sc-card .sc-stage .shot-app-live i {
+  background: var(--stg-ink);
+}
+.sc-card .sc-stage .shot-app-count {
+  color: var(--stg-text);
+  font-weight: 650;
+}
+.sc-card .sc-stage .shot-app-list {
+  gap: 4px;
+  align-content: stretch;
+}
+.sc-card .sc-stage .shot-app-row,
+.sc-card .sc-stage .shot-app-row.is-run {
+  padding: 3px 7px;
+  background: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-app-mark,
+.sc-card .sc-stage .shot-app-row.is-ok .shot-app-mark,
+.sc-card .sc-stage .shot-app-row.is-run .shot-app-mark {
+  background: var(--stg-ink);
+  color: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-app-row b,
+.sc-card .sc-stage .shot-app-row em {
+  color: var(--stg-text);
+}
+
+/* 07 · 磁盘清理助手（shot-disk） */
+.sc-card .sc-stage .shot-disk {
+  padding: 8px 10px;
+  gap: 8px;
+}
+.sc-card .sc-stage .shot-disk-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 10px;
+}
+.sc-card .sc-stage .shot-disk-head span,
+.sc-card .sc-stage .shot-disk-head b,
+.sc-card .sc-stage .shot-disk-head small {
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-disk-list {
+  gap: 4px;
+  align-content: stretch;
+}
+.sc-card .sc-stage .shot-disk-row {
+  padding: 3px 7px;
+  background: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-disk-fold,
+.sc-card .sc-stage .shot-disk-row.is-hot .shot-disk-fold {
+  background: var(--stg-ink);
+  opacity: 0.78;
+}
+.sc-card .sc-stage .shot-disk-row b,
+.sc-card .sc-stage .shot-disk-row em,
+.sc-card .sc-stage .shot-disk-row.is-hot b,
+.sc-card .sc-stage .shot-disk-row.is-hot em {
+  color: var(--stg-text);
+}
+
+/* 08 · 账迹 BillTrace（shot-bill） */
+.sc-card .sc-stage .shot-bill {
+  padding: 8px 10px;
+  gap: 8px;
+}
+.sc-card .sc-stage .shot-bill-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  margin-top: 0;
+  padding: 8px 10px;
+  border-top: 0;
+}
+.sc-card .sc-stage .shot-bill-total span,
+.sc-card .sc-stage .shot-bill-total b {
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-bill-row {
+  align-items: center;
+  padding: 3px 7px;
+  background: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-bill-cat {
+  background: rgba(var(--stg-ink-rgb), 0.10);
+  border: 1px solid rgba(var(--stg-ink-rgb), 0.20);
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-bill-row b,
+.sc-card .sc-stage .shot-bill-row em {
+  color: var(--stg-text);
+}
+
+/* 09 · Token Monitor（shot-token） */
+.sc-card .sc-stage .shot-token {
+  padding: 8px 10px;
+  gap: 8px;
+}
+.sc-card .sc-stage .shot-token-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 10px;
+}
+.sc-card .sc-stage .shot-token-head b,
+.sc-card .sc-stage .shot-token-head small,
+.sc-card .sc-stage .shot-token-head span {
+  color: var(--stg-text);
+}
+.sc-card .sc-stage .shot-token-list {
+  gap: 4px;
+  align-content: stretch;
+}
+.sc-card .sc-stage .shot-token-row {
+  padding: 3px 7px;
+  background: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-token-dot,
+.sc-card .sc-stage .shot-token-row:nth-child(2) .shot-token-dot,
+.sc-card .sc-stage .shot-token-row:nth-child(3) .shot-token-dot,
+.sc-card .sc-stage .shot-token-row:nth-child(4) .shot-token-dot {
+  background: var(--stg-ink);
+}
+.sc-card .sc-stage .shot-token-row b,
+.sc-card .sc-stage .shot-token-row em {
+  color: var(--stg-text);
+}
+
+/* 10 · AI 轨迹（shot-trace） */
+.sc-card .sc-stage .shot-trace {
+  padding: 8px 10px;
+  gap: 8px;
+}
+.sc-card .sc-stage .shot-trace-row {
+  min-height: 0;
+  padding: 3px 7px;
+  background: var(--stg-panel);
+}
+.sc-card .sc-stage .shot-trace-dot {
+  background: var(--stg-ink);
+}
+.sc-card .sc-stage .shot-trace-dot::before {
+  display: none;
+}
+.sc-card .sc-stage .shot-trace-row em,
+.sc-card .sc-stage .shot-trace-row b {
+  color: var(--stg-text);
+}
+
+/* ── 环境光：一团很淡的基调色高光在舞台里缓慢漂移 ─────────────────────── */
 .sc-stage::before {
   content: "";
   position: absolute;
@@ -722,67 +1038,113 @@
   animation: stgDrift 14s ease-in-out infinite;
 }
 
-/* ── 悬停：焦点轻微放大 ────────────────────────────────────────────────── */
-@media (hover: hover) and (pointer: fine) {
-  .sc-card:hover .stg-big { transform: scale(1.03); }
-}
-
-/* ── 门控与降级 ─────────────────────────────────────────────────────────── */
-.vr-card-entry:not([data-card-visible]) .stg,
-.vr-card-entry:not([data-card-visible]) .stg *,
+/* ── 视口外 / 后台门控暂停 ──────────────────────────────────────────────── */
+/* data-card-visible 由 useCardEffects 挂在 [data-voyra-card]（卡片根）上，
+   不能判断在祖先 .vr-card-entry —— 否则永远匹配、动画永久暂停、舞台隐身 */
+.sc-card:not([data-card-visible]) .stg,
+.sc-card:not([data-card-visible]) .stg *,
+.sc-card:not([data-card-visible]) .sc-stage .stg-mini-card,
+.sc-card:not([data-card-visible]) .sc-stage .stg-ambient-float,
 .vr-home[data-page-hidden] .stg,
-.vr-home[data-page-hidden] .stg * {
+.vr-home[data-page-hidden] .stg *,
+.vr-home[data-page-hidden] .sc-stage .stg-mini-card,
+.vr-home[data-page-hidden] .sc-stage .stg-ambient-float {
   animation-play-state: paused !important;
 }
 
+/* ── 减少动态效果（关闭所有动效，并显式写回终态） ──────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  /* 关掉动效，并把「靠动画才出现」的元素写回终态 —— 否则进度条会停在
-     scaleX(0)、柱状停在 scaleY(0)、名单停在初始位，舞台看着是空的。 */
   .stg,
-  .stg * { animation: none !important; }
+  .stg *,
+  .sc-card .sc-stage .stg-mini-card,
+  .sc-card .sc-stage .stg-focus-card,
+  .sc-card .sc-stage .stg-ambient-float {
+    animation: none !important;
+    transition: none !important;
+  }
+  .sc-card .sc-stage .stg-mini-card,
+  .sc-card .sc-stage .stg-focus-card,
+  .sc-card .sc-stage .stg-ambient-float,
+  .sc-card:hover .sc-stage .stg-mini-card,
+  .sc-card:hover .sc-stage .stg-focus-card {
+    opacity: 1 !important;
+    transform: none !important;
+  }
   .stg-bar i,
-  .stg-cols i { transform: none !important; }
-  .stg-spark-line { stroke-dashoffset: 0 !important; }
-  .stg-roll { transform: translateY(-80px) !important; }
-  .stg-flip-card { transform: none !important; }
-  .stg-flip-face.is-back { transform: rotateY(180deg) !important; }
-  .sc-stage::before { animation: none !important; }
-  .sc-card:hover .stg-big { transform: none !important; }
+  .stg-cols i {
+    transform: none !important;
+  }
+  .stg-spark-line {
+    stroke-dashoffset: 0 !important;
+  }
+  .stg-roll {
+    transform: translateY(-80px) !important;
+  }
+  .stg-flip-card {
+    transform: none !important;
+  }
+  .stg-flip-face.is-back {
+    transform: rotateY(180deg) !important;
+  }
+  .sc-stage::before {
+    animation: none !important;
+  }
 }
 
+/* ── 高对比度模式 ──────────────────────────────────────────────────────── */
 @media (forced-colors: active) {
-  .stg-bar, .stg-bar i, .stg-dot, .stg-cols i, .stg-grid-c { background: CanvasText; }
-  .stg-chip, .stg-mark, .stg-node, .stg-search, .stg-bench-t, .stg-kpi3 span, .stg-flip-face {
+  .stg-bar, .stg-bar i, .stg-dot, .stg-cols i, .stg-grid-c {
+    background: CanvasText;
+  }
+  .stg-chip, .stg-mark, .stg-node, .stg-search, .stg-bench-t, .stg-kpi3 span,
+  .stg-flip-face, .sc-card .sc-stage .stg-mini-card {
     border: 1px solid CanvasText;
     background: Canvas;
+    color: CanvasText;
   }
-  /* v4：商品格 .stg-goods 与推荐码条 .stg-code 是两种「有底色的容器」，
-     在 forced-colors 下颜色被系统接管，必须显式补边框，
-     否则只剩一行文字、容器消失（与 .sc-card 的 box-shadow 描边同一类问题）。 */
-  .stg-goods, .stg-code {
-    border: 1px solid CanvasText;
-    background: Canvas;
-  }
-  .stg-code-value, .stg-code-label { color: CanvasText; }
 }
 
-/* ── 窄屏：整体收一档 ───────────────────────────────────────────────────── */
+/* ── 窄屏自适应（≤768px 不溢出、不塌陷） ───────────────────────────────── */
 @media (max-width: 768px) {
   .stg { gap: 7px; padding: 12px 14px; }
   .stg-rows li { font-size: 9.5px; }
-  .stg-big { font-size: 21px; }
-  .stg-bar { width: 54px; }
-  .stg--race .is-rank b { flex: 0 0 54px; }
-  .stg-roll li { height: 36px; font-size: 14px; }
-  .stg-roll li.is-hit { font-size: 17px; }
-  .stg-cols { height: 22px; }
-  .stg-pipe u { width: 6px; }
-  .stg-pipe b { padding: 3px 6px; font-size: 8.5px; }
+  .sc-card .sc-stage .stg-mini-split {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 6px;
+    padding: 6px 8px;
+  }
+  .sc-card .sc-stage .stg-focus-card {
+    padding: 6px 8px;
+  }
+  .sc-card .sc-stage .stg-focus-metric b,
+  .sc-card .sc-stage .bp-bp {
+    font-size: 15px;
+  }
 }
 
-/* ── 关键帧 ─────────────────────────────────────────────────────────────── */
+/* ── 关键帧（仅合成层属性 transform / opacity） ─────────────────────────── */
+@keyframes stgMiniIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes stgAmbientFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+}
+
 @keyframes stgRise {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -792,7 +1154,7 @@
 }
 
 @keyframes stgBreathe {
-  0%, 100% { opacity: .45; transform: scale(.9); }
+  0%, 100% { opacity: 0.45; transform: scale(0.9); }
   50% { opacity: 1; transform: scale(1.12); }
 }
 
@@ -816,34 +1178,3 @@
   0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
   50% { transform: translate3d(11%, 9%, 0) scale(1.14); }
 }
-
-/* ── 04 · 血压记录 macOS 缩略窗（2026-10-19） ────────────────────────────
-   复刻设计稿门户卡内嵌窗：Window 外壳内，左「最新一次」右三条小记录。
-   文字色全部对白底 >= 4.5:1（#6c6a64 ~= 5.3:1 / #1D4ED8 ~= 7.6:1 / #BE123C ~= 6.5:1）。 */
-.bp-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
-  gap: 12px;
-  height: 100%;
-  padding: 12px 14px;
-}
-.bp-latest { display: flex; flex-direction: column; gap: 3px; justify-content: center; min-width: 0; }
-.bp-cap { font-size: 10px; color: #6c6a64; font-weight: 600; }
-.bp-bp { font-size: 20px; font-weight: 800; color: #1F1D1A; letter-spacing: -.01em; line-height: 1.1; }
-.bp-hr { font-size: 11px; font-weight: 700; color: #BE123C; }
-.bp-pp { font-size: 10px; font-weight: 650; color: #6c6a64; }
-.bp-rows { display: flex; flex-direction: column; gap: 5px; justify-content: center; min-width: 0; }
-.bp-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  background: #fff;
-  border: 1px solid rgba(27, 27, 27, .08);
-  border-radius: 6px;
-  padding: 4px 7px;
-  box-shadow: 0 1px 2px rgba(27, 27, 27, .04);
-}
-.bp-t { font-style: normal; font-size: 9.5px; font-weight: 750; color: #1D4ED8; }
-.bp-v { font-size: 10px; font-weight: 750; color: #1F1D1A; }
-.bp-row em { margin-left: auto; font-style: normal; font-size: 9.5px; color: #6c6a64; white-space: nowrap; }
