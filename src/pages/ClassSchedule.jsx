@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
-  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X,
+  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
 
@@ -263,7 +263,62 @@ function encodeShare(courses, withDetail) {
   });
   return SHARE_PREFIX + b64urlEncode(JSON.stringify(slim));
 }
+/* 分享口令 v2：字段用分隔符替代 JSON 键名，体积约为 v1 的一半；
+   格式 VOYRA2: + b64url(课程1|课程2…)，课程 name~color~credit~note~teacher~room~时段
+   时段 day,slotIdx,f,t,typeCode,customTime（slotIdx 对应 DEFAULT_SLOTS 下标）。 */
+const SHARE_V2_PREFIX = 'VOYRA2:';
+const SLOT_KEYS = DEFAULT_SLOTS.map((s) => s.key);
+function escShare(v) { return String(v || '').replace(/[|~;,]/g, (ch) => '%' + ch.charCodeAt(0).toString(16)); }
+function unescShare(v) { return String(v || '').replace(/%(7c|7e|3b|2c)/gi, (_, h) => String.fromCharCode(parseInt(h, 16))); }
+function encodeShareV2(courses, withDetail) {
+  const body = courses.map((c) => {
+    const periods = coursePeriods(c).map((p) => {
+      const si = Math.max(0, SLOT_KEYS.indexOf(p.slot));
+      const ct = p.customTime && p.customTime.start && p.customTime.end ? `${p.customTime.start}-${p.customTime.end}` : '';
+      return [p.day, si, p.f, p.t, TYPE_CODE[p.type] || 0, ct].join(',');
+    }).join(';');
+    return [
+      escShare(c.name),
+      Number.isInteger(c.color) ? c.color : '',
+      escShare(c.credit || ''),
+      escShare(c.note || ''),
+      withDetail ? escShare(c.teacher || '') : '',
+      withDetail ? escShare(c.room || '') : '',
+      periods,
+    ].join('~');
+  }).join('|');
+  return SHARE_V2_PREFIX + b64urlEncode(body);
+}
+function decodeShareV2(text) {
+  const raw = String(text || '').replace(/\s+/g, '');
+  const at = raw.indexOf(SHARE_V2_PREFIX);
+  if (at < 0) return null;
+  try {
+    const body = b64urlDecode(raw.slice(at + SHARE_V2_PREFIX.length));
+    const list = body.split('|').filter(Boolean).map((row, i) => {
+      const [name, color, credit, note, teacher, room, periods] = row.split('~');
+      const c = {
+        id: `share${Date.now().toString(36)}${i}`,
+        name: unescShare(name).trim(),
+        teacher: unescShare(teacher || ''), room: unescShare(room || ''),
+        periods: String(periods || '').split(';').filter(Boolean).map((seg) => {
+          const [day, si, f, t, ty, ct] = seg.split(',');
+          const one = { day: +day, slot: SLOT_KEYS[+si] || '1-2', f: +f || 1, t: +t || 16, type: TYPE_FROM[ty] || 'every' };
+          if (ct && ct.includes('-')) { const [s, e] = ct.split('-'); one.customTime = { start: s, end: e }; }
+          return one;
+        }),
+      };
+      if (color !== '' && Number.isInteger(+color)) c.color = +color;
+      if (credit) c.credit = unescShare(credit);
+      if (note) c.note = unescShare(note);
+      return c;
+    }).filter((c) => c.name && c.periods.length);
+    return list.length ? list : null;
+  } catch { return null; }
+}
 function decodeShare(text) {
+  const v2 = decodeShareV2(text);
+  if (v2) return v2;
   const raw = String(text || '').replace(/\s+/g, '');
   const at = raw.indexOf(SHARE_PREFIX);
   if (at < 0) return null;
@@ -289,22 +344,6 @@ function decodeShare(text) {
     }).filter((c) => c.name && c.periods.length);
   } catch { return null; }
 }
-/* 教务系统「另存为网页」的表格 → 二维数组 → 复用 Excel 那套识别 */
-function htmlToRows(html) {
-  try {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    const tables = Array.from(doc.querySelectorAll('table'));
-    let best = [];
-    tables.forEach((tb) => {
-      const rows = Array.from(tb.querySelectorAll('tr')).map((tr) => Array.from(tr.children)
-        .map((td) => (td.textContent || '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()));
-      const wide = rows.filter((r) => r.length >= 3).length;
-      if (wide > best.filter((r) => r.length >= 3).length) best = rows;
-    });
-    return best;
-  } catch { return []; }
-}
-
 /* 收起状态下左侧时间轴只有 30px 宽，「1-2 节」「晚自习 1」会被挤成两行、参差不齐；
    给它一个短标（1-2 / 晚1）保持单行。展开后与桌面端仍用完整名称。 */
 function miniSlotLabel(label) {
@@ -804,7 +843,7 @@ export function useIsMobile() {
   return mobile;
 }
 
-export default function ClassSchedule({ stats = null, active = true, drawerPanel = null, drawerHost = null, onWeekLabel = null, onClosePanel = null }) {
+export default function ClassSchedule({ stats = null, active = true, drawerPanel = null, drawerHost = null, onWeekLabel = null, onClosePanel = null, onOpenPanel = null }) {
   const { guard, authed } = useAuth();
   const CLOUD_KEY = 'schedule-classes-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const [courses, setCourses] = useState([]);
@@ -815,13 +854,14 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [importText, setImportText] = useState('');
   const [parsed, setParsed] = useState([]);
   const [copied, setCopied] = useState(false);
-  /* 导入方式：文件（文本/Excel）/ 分享口令 / 教务网页 / 备份 */
+  /* 导入方式：文件（文本/Excel）/ 分享链接 / 备份 */
   const [importMode, setImportMode] = useState('file');
   const [shareText, setShareText] = useState('');
+  const [shareLink, setShareLink] = useState('');
+  const [shareCode, setShareCode] = useState('');
   const [shareDetail, setShareDetail] = useState(true);
   const [backupSettings, setBackupSettings] = useState(null);
   const backupFileRef = useRef(null);
-  const htmlFileRef = useRef(null);
   const [toast, setToast] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
   /* 首次添加课程后问一次「现在是第几周」，据此反推开学周一并开启自动推进 */
@@ -829,6 +869,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [weekAskVal, setWeekAskVal] = useState('1');
   const askedWeekRef = useRef(false);
   const [detailOpen, setDetailOpen] = useState(false); // 课程明细默认折叠
+  const [editingCourseId, setEditingCourseId] = useState(null); // 非空 = 正在编辑该课程
   /* 手机端左侧时间轴：默认收起成一条刻度，展开状态记住（在「时间设置」里改过的
      节次时间会即时反映到展开后的刻度上） */
   const [railOpen, setRailOpen] = useState(() => {
@@ -1070,14 +1111,24 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       if (p.customOn && p.customStart && p.customEnd) one.customTime = { start: p.customStart, end: p.customEnd };
       return one;
     });
-    const c = {
-      id: Date.now() + Math.random().toString(36).slice(2, 5),
-      name: form.name.trim(), teacher: form.teacher.trim(), room: form.room.trim(),
-      periods,
+    const fields = {
+      name: form.name.trim(), teacher: form.teacher.trim(), room: form.room.trim(), periods,
     };
-    if (Number.isInteger(form.color)) c.color = form.color;
-    if (String(form.credit).trim()) c.credit = String(form.credit).trim();
-    if (form.note.trim()) c.note = form.note.trim();
+    if (Number.isInteger(form.color)) fields.color = form.color;
+    if (String(form.credit).trim()) fields.credit = String(form.credit).trim();
+    if (form.note.trim()) fields.note = form.note.trim();
+
+    /* 编辑模式：整门替换（时段也一起换），保存后回到课表 */
+    if (editingCourseId) {
+      persist(courses.map((c) => (c.id === editingCourseId ? { ...c, ...fields } : c)), null);
+      setEditingCourseId(null);
+      setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
+      say(`已保存「${fields.name}」`);
+      if (onClosePanel) onClosePanel();
+      return;
+    }
+
+    const c = { id: Date.now() + Math.random().toString(36).slice(2, 5), ...fields };
     persist([...courses, c], null);
     /* 保留节次与周次这类每次都要重填的设置，清掉课程自身的字段 */
     setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
@@ -1093,6 +1144,72 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       setWeekAsk(true);
     }
   };
+
+  /* ── 双击课表格子：有课 → 编辑整门；空格 → 以该格为起点新增 ── */
+  const openForm = () => {
+    if (isMobile) {
+      if (onOpenPanel) onOpenPanel('add');
+    } else if (typeof document !== 'undefined') {
+      const el = document.getElementById('cs-add-card');
+      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+  const editCourse = (c) => {
+    setEditingCourseId(c.id);
+    setForm({
+      name: c.name || '', teacher: c.teacher || '', room: c.room || '',
+      color: Number.isInteger(c.color) ? c.color : null,
+      credit: c.credit ? String(c.credit) : '', note: c.note || '',
+      periods: coursePeriods(c).map((p) => ({
+        day: p.day, slot: p.slot, f: p.f, t: p.t, type: p.type,
+        single: p.f === p.t,
+        customOn: !!(p.customTime && p.customTime.start && p.customTime.end),
+        customStart: (p.customTime && p.customTime.start) || '',
+        customEnd: (p.customTime && p.customTime.end) || '',
+      })),
+    });
+    openForm();
+    say(`正在编辑「${c.name}」`);
+  };
+  const addAtCell = (day, slot) => {
+    setEditingCourseId(null);
+    setForm({ ...EMPTY_FORM(), periods: [newPeriod(day, slot)] });
+    openForm();
+    say(`已定位 周${WEEKDAY[day - 1]} · ${(SLOT_META[slot] || {}).label || slot}，填课程名即可`);
+  };
+  const cancelEdit = () => {
+    setEditingCourseId(null);
+    setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
+    say('已取消编辑');
+  };
+  const deleteEditing = () => {
+    if (!editingCourseId) return;
+    persist(courses.filter((c) => c.id !== editingCourseId), null);
+    setEditingCourseId(null);
+    setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
+    say('已删除这门课');
+    if (onClosePanel) onClosePanel();
+  };
+
+  /* 收到分享链接（#/timetable?share=...）→ 自动解析并预览，手机端直接打开导入抽屉 */
+  const shareAutoRef = useRef(false);
+  useEffect(() => {
+    if (shareAutoRef.current) return;
+    const h = typeof window !== 'undefined' ? window.location.hash : '';
+    const qi = h.indexOf('?');
+    if (qi < 0) return;
+    const code = new URLSearchParams(h.slice(qi + 1)).get('share');
+    if (!code) return;
+    shareAutoRef.current = true;
+    const list = decodeShare(code);
+    if (!list) { say('分享链接解析失败，请让同学重新生成'); return; }
+    setImportMode('share');
+    setShareText(code);
+    setParsed(list);
+    say(`收到 ${list.length} 门课程，确认后点「合并导入」`);
+    if (isMobile && onOpenPanel) onOpenPanel('import');
+  }, []);
+
   const remove = (id) => { persist(courses.filter((c) => c.id !== id), null); say('已删除'); };
   const clearAll = () => { persist([], null); say('已清空课表'); };
   const copyTemplate = async () => {
@@ -1108,9 +1225,11 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   };
   const makeShareCode = async () => {
     if (!courses.length) { say('课表还是空的，先导入或添加课程'); return; }
-    const code = encodeShare(courses, shareDetail);
-    setShareText(code);
-    try { await navigator.clipboard.writeText(code); say('口令已复制，发给同学粘贴即可'); } catch { say('已生成口令，长按文本框复制'); }
+    const code = encodeShareV2(courses, shareDetail);
+    const link = `${location.origin}${location.pathname}#/timetable?share=${encodeURIComponent(code)}`;
+    setShareCode(code);
+    setShareLink(link);
+    try { await navigator.clipboard.writeText(link); say('分享链接已复制，同学点开就能导入'); } catch { say('已生成分享链接，长按复制'); }
   };
   const exportBackup = () => {
     if (!courses.length) { say('课表还是空的，没什么可导出'); return; }
@@ -1134,19 +1253,6 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       setBackupSettings(obj.settings || null);
       say(`备份里有 ${list.length} 门课程，可合并或覆盖`);
     } catch { say('备份文件读不出来，可能已损坏'); }
-  };
-  const onHtmlFile = async (e) => {
-    const file = e.target.files && e.target.files[0];
-    e.target.value = '';
-    if (!file) return;
-    try {
-      const rows = htmlToRows(await file.text());
-      if (!rows.length) { say('这个网页里没找到表格：请在教务系统课表页「另存为网页」再上传'); return; }
-      const list = parseXlsRows(rows);
-      if (!list.length) { say('表格读到了，但没识别出课程：请把网页另存为「仅 HTML」再试一次'); return; }
-      setParsed(list);
-      say(`从网页里识别到 ${list.length} 门课程，确认后导入`);
-    } catch { say('网页解析失败'); }
   };
 
   /* Excel(.xls/.xlsx) 文件解析：SheetJS 按需加载，解析全部 sheet 的行式/表头式课表 */
@@ -1658,7 +1764,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                               '--course-text': theme.text,
                               '--course-room': theme.room,
                             }}
-                            title={`${c.name}${ct}`}
+                            title={`${c.name}${ct} · 双击编辑`}
+                            onDoubleClick={() => editCourse(c)}
                           >
                             {tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}
                             <div className="n">{c.name}</div>
@@ -1669,7 +1776,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                         </td>
                       );
                     }
-                    return <td key={d} className="empty">{tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}{(slot.night && <Moon size={13} style={{ opacity: .4 }} />) || ''}</td>;
+                    return <td key={d} className="empty" title="双击添加课程" onDoubleClick={() => addAtCell(d, slot.key)}>{tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}{(slot.night && <Moon size={13} style={{ opacity: .4 }} />) || ''}</td>;
                   })}
                 </tr>
                 );
@@ -1678,6 +1785,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           </table>
           </div>
         </div>
+        <p className="cs-hint" style={{ marginTop: 8 }}>提示：双击课程格子可编辑该课，双击空格子可直接添加课程。</p>
         {weekCourses.length === 0 && <div className="cs-empty">本周暂无课程，请先导入课表</div>}
       </div>
 
@@ -1748,9 +1856,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           {xlsActions}
           {xlsFileInput}
         </div>
-        {/* 四种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
+        {/* 三种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
         <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
-          {[['file', '从文件'], ['share', '分享口令'], ['html', '教务网页'], ['backup', '备份']].map(([k, label]) => (
+          {[['file', '从文件'], ['share', '分享链接'], ['backup', '备份']].map(([k, label]) => (
             <button key={k} type="button" className={`cs-btn cs-mode${importMode === k ? ' is-on' : ''}`}
               aria-pressed={importMode === k}
               onClick={() => { setImportMode(k); setParsed([]); }}>{label}</button>
@@ -1769,28 +1877,33 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
         {importMode === 'share' && (<>
           <div className="cs-row">
-            <button type="button" className="cs-btn primary" onClick={makeShareCode}>生成我的课表口令</button>
+            <button type="button" className="cs-btn primary" onClick={makeShareCode}><Link2 size={14} />生成分享链接</button>
             <label className="cs-l" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
               <input type="checkbox" checked={shareDetail} onChange={(e) => setShareDetail(e.target.checked)} />含教室与老师
             </label>
           </div>
+          {shareLink && (
+            <div style={{ marginTop: 10 }}>
+              <label className="cs-l">分享链接（发给同学，点开即导入）</label>
+              <div className="cs-row">
+                <input className="cs-input" readOnly value={shareLink} onFocus={(e) => e.target.select()}
+                  style={{ flex: '1 1 200px', minWidth: 0, fontSize: 12 }} />
+                <button type="button" className="cs-btn" onClick={async () => {
+                  try { await navigator.clipboard.writeText(shareLink); say('链接已复制'); } catch { say('复制失败，请手动选中复制'); }
+                }}>复制链接</button>
+              </div>
+              <label className="cs-l" style={{ marginTop: 8 }}>口令文本（备用，同学也可粘贴到下方识别）</label>
+              <textarea readOnly rows={2} value={shareCode} onFocus={(e) => e.target.select()}
+                className="cs-input" style={{ width: '100%', resize: 'vertical', lineHeight: 1.6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 }} />
+            </div>
+          )}
           <textarea
             value={shareText} onChange={(e) => setShareText(e.target.value)} rows={3}
-            placeholder="同学发来的口令粘在这里；也可以点上面的按钮生成自己的口令再发出去"
+            placeholder="同学发来的链接或口令粘在这里"
             className="cs-input" style={{ width: '100%', marginTop: 10, resize: 'vertical', lineHeight: 1.6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12 }}
           />
           <div className="cs-row" style={{ marginTop: 10 }}>
             <button type="button" className="cs-btn" onClick={importShare}><Wand2 size={14} />识别口令</button>
-          </div>
-        </>)}
-
-        {importMode === 'html' && (<>
-          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
-            在教务系统打开课表页 → 浏览器菜单里「另存为网页」→ 把那个 .html 传上来。按「行=节次、列=星期」识别，全程在本机解析，不联网也不上传。
-          </p>
-          <div className="cs-row">
-            <button type="button" className="cs-btn primary" onClick={() => htmlFileRef.current && htmlFileRef.current.click()}>选择网页文件</button>
-            <input ref={htmlFileRef} type="file" accept=".html,.htm,.mht,.mhtml" style={{ display: 'none' }} onChange={onHtmlFile} />
           </div>
         </>)}
 
@@ -1838,8 +1951,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
       {/* 手动新增 */}
       <MobileSection mobile={isMobile} host={drawerHost} id="add" panel={drawerPanel}>
-      <div className="cs-card">
-        <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>手动添加课程</h3></div>
+      <div className="cs-card" id="cs-add-card">
+        <div className="cs-h"><div className="ico"><Plus size={18} /></div><h3>{editingCourseId ? '编辑课程' : '手动添加课程'}</h3></div>
         {/* ── 课程信息 ── */}
         <div className="cs-row cs-forminfo">
           <div className="cs-field cs-f-full"><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
@@ -1934,7 +2047,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         ))}
         <div className="cs-row" style={{ marginTop: 10 }}>
           <button type="button" className="cs-btn" onClick={() => setForm((f) => ({ ...f, periods: [...f.periods, newPeriod()] }))}><Plus size={14} />添加时段</button>
-          <button className="cs-btn primary" onClick={addOne}><Plus size={14} />添加课程</button>
+          <button className="cs-btn primary" onClick={addOne}><Plus size={14} />{editingCourseId ? '保存修改' : '添加课程'}</button>
+          {editingCourseId && <button type="button" className="cs-btn" onClick={cancelEdit}><X size={14} />取消编辑</button>}
+          {editingCourseId && <button type="button" className="cs-btn danger" onClick={deleteEditing}><Trash2 size={14} />删除这门课</button>}
         </div>
       </div>
       </MobileSection>

@@ -44,7 +44,7 @@ const GUIDE_KEY = 'voyra-sched-guide-v1';
 const GUIDE_STEPS = [
   { sel: '.shub-pick-btn', title: '这里切换视图', body: '课程表 / 日历 / 作业看板都收在这个下拉里。' },
   { sel: '.shub-fn-btn', title: '功能都在这个按钮里', body: '周次与时间设置、课程明细、导入课表、添加课程 —— 点开就是，不占课表空间。' },
-  { sel: '.shub-drawer', title: '在这里导入课表', body: '从文件、同学分享的口令，或教务系统另存的网页导入；也能导出备份换设备。全程在本机完成，不上传。', open: 'import' },
+  { sel: '.shub-drawer', title: '在这里导入课表', body: '从文件、同学分享的链接或口令导入；也能导出备份换设备。全程在本机完成，不上传。', open: 'import' },
 ];
 
 /* 断点阈值与主仓库 Layout / index.css 的手机口径（767）一致，
@@ -380,7 +380,7 @@ export default function ScheduleHub() {
     <div className="shub-panel">
       <div hidden={tab !== 'courses'}>
         <ClassSchedule stats={stats} active={tab === 'courses'}
-          drawerPanel={panel} drawerHost={drawerHost} onWeekLabel={setWeekLabel} onClosePanel={() => setPanel(null)} />
+          drawerPanel={panel} drawerHost={drawerHost} onWeekLabel={setWeekLabel} onClosePanel={() => setPanel(null)} onOpenPanel={(id) => setPanel(id)} />
       </div>
       <div hidden={tab !== 'planner'}>
         <Planner active={tab === 'planner'} drawerPanel={panel} drawerHost={drawerHost} />
