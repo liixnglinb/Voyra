@@ -263,6 +263,21 @@ function encodeShare(courses, withDetail) {
   });
   return SHARE_PREFIX + b64urlEncode(JSON.stringify(slim));
 }
+/* ── 教务系统一键导入 ──────────────────────────────────────────────────
+   内网直连失败时自动切外网（学校 VPN 门户）。真正的抓取由浏览器用户脚本完成
+   （public/jsxsd-import.user.js）：它在教务页面里读到课表后跳回本站
+   #/timetable?share=…，本站按分享链接流程自动预览。
+   站内只负责「开页面 + 12 秒内没收到 ready 就切外网 + 状态提示」。 */
+const SCHOOLS = [
+  {
+    id: 'huhst',
+    name: '湖南人文科技学院',
+    intranet: 'http://10.1.1.149/jsxsd/?by=history&from=kkframenew',
+    vpn: 'http://vpn.huhst.edu.cn:9900/http/77726476706e69737468656265737421a1a70fcd6961260728/cas/login?service=http%3A%2F%2Fvpn.huhst.edu.cn%3A9900%2Flogin%3Fcas_login%3Dtrue',
+  },
+];
+const USCRIPT_URL = '/jsxsd-import.user.js';
+
 /* ── 课程表图片识别：OCR 文本块 → 课程 ────────────────────────────────
    后端 /ocr 返回带坐标的文本块；这里按「星期表头 × 节次左列」还原成格子。
    表头或节次列认不出来时返回 null（前端提示改用文本粘贴，绝不硬猜）。 */
@@ -948,6 +963,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [shareText, setShareText] = useState('');
   const [shareLink, setShareLink] = useState('');
   const [ocrBusy, setOcrBusy] = useState(false);
+  const [eduSchool, setEduSchool] = useState(SCHOOLS[0].id);
+  const [eduState, setEduState] = useState(''); // '' | opening | ready | vpn
   const [ocrRaw, setOcrRaw] = useState('');
   const [shareCode, setShareCode] = useState('');
   const [shareDetail, setShareDetail] = useState(true);
@@ -1332,6 +1349,45 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     const link = buildShareLink();
     try { await navigator.clipboard.writeText(link); say('分享链接已复制，同学点开就能导入'); } catch { say('已生成分享链接，长按复制'); }
   };
+  /* 教务导入：开内网地址 → 12 秒内没收到脚本的 ready 就切外网门户 */
+  const eduTimerRef = useRef(null);
+  const eduWinRef = useRef(null);
+  const startEdu = () => {
+    const school = SCHOOLS.find((s) => s.id === eduSchool) || SCHOOLS[0];
+    const win = window.open(school.intranet, '_blank');
+    eduWinRef.current = win;
+    setEduState('opening');
+    say('正在打开校内地址…');
+    clearTimeout(eduTimerRef.current);
+    eduTimerRef.current = setTimeout(() => {
+      setEduState('vpn');
+      try {
+        if (win && !win.closed) win.location.href = school.vpn;
+        else window.open(school.vpn, '_blank');
+      } catch {
+        window.open(school.vpn, '_blank');
+      }
+      say('校内地址加载超时，已跳转到外网入口');
+    }, 12000);
+  };
+
+  /* 用户脚本从教务页面回报状态：ready=内网已连上（取消外网切换） */
+  useEffect(() => {
+    const onMsg = (e) => {
+      const d = e.data;
+      if (!d || d.source !== 'voyra-jsxsd') return;
+      if (d.state === 'ready') {
+        clearTimeout(eduTimerRef.current);
+        setEduState('ready');
+        say('已连上教务系统，登录后会自动带回课表');
+      } else if (d.state === 'parsed') {
+        say('脚本已读取课表，正在返回…');
+      }
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
   /* 图片 → 压缩（长边 1600 / JPEG 0.82）→ /ocr → 文本块 → 还原课表 */
   const compressImage = (file) => new Promise((resolve, reject) => {
     const img = new Image();
@@ -2007,12 +2063,41 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </div>
         {/* 三种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
         <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
-          {[['photo', '图片识别'], ['file', '从文件'], ['share', '分享链接'], ['backup', '备份']].map(([k, label]) => (
+          {[['edu', '教务导入'], ['photo', '图片识别'], ['file', '从文件'], ['share', '分享链接'], ['backup', '备份']].map(([k, label]) => (
             <button key={k} type="button" className={`cs-btn cs-mode${importMode === k ? ' is-on' : ''}`}
               aria-pressed={importMode === k}
               onClick={() => { setImportMode(k); setParsed([]); if (k === 'share') buildShareLink(); }}>{label}</button>
           ))}
         </div>
+
+        {importMode === 'edu' && (<>
+          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
+            先装一次抓取脚本，之后每次只需：选学校 → 登录 → 自动带回课表。
+          </p>
+          <div className="cs-field" style={{ marginBottom: 10 }}>
+            <label className="cs-l">选择学校</label>
+            <select className="cs-input" value={eduSchool} onChange={(e) => setEduSchool(e.target.value)}>
+              {SCHOOLS.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <div className="cs-row">
+            <button type="button" className="cs-btn primary" onClick={startEdu}>
+              <GraduationCap size={15} />开始导入
+            </button>
+            <a className="cs-btn" href={USCRIPT_URL} target="_blank" rel="noopener noreferrer" download>
+              安装抓取脚本
+            </a>
+          </div>
+          {eduState === 'opening' && <p className="cs-hint">正在打开校内地址，12 秒内没响应会自动切到外网门户…</p>}
+          {eduState === 'ready' && <p className="cs-hint">已连上教务系统：请在打开的窗口里登录，进入「我的课表」后会自动带回本页。</p>}
+          {eduState === 'vpn' && <p className="cs-hint">已跳转到外网入口（vpn.huhst.edu.cn）：登录后同样会自动带回课表。</p>}
+          <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: '#FAF9F5', border: '1px solid rgba(20,24,33,.08)', fontSize: 12, lineHeight: 1.7, color: '#6c757d' }}>
+            <b style={{ color: '#495057' }}>第一次使用？</b><br />
+            1. 点「安装抓取脚本」→ 浏览器会提示安装（需先装 Tampermonkey / 篡改猴扩展）；<br />
+            2. 回来点「开始导入」；<br />
+            3. 登录后打开「我的课表」，脚本自动读取并跳回这里，点「合并导入」即可。
+          </div>
+        </>)}
 
         {importMode === 'photo' && (<>
           <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
