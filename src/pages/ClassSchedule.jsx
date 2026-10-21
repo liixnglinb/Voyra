@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
-  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2,
+  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2, Camera,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
 
@@ -263,6 +263,95 @@ function encodeShare(courses, withDetail) {
   });
   return SHARE_PREFIX + b64urlEncode(JSON.stringify(slim));
 }
+/* ── 课程表图片识别：OCR 文本块 → 课程 ────────────────────────────────
+   后端 /ocr 返回带坐标的文本块；这里按「星期表头 × 节次左列」还原成格子。
+   表头或节次列认不出来时返回 null（前端提示改用文本粘贴，绝不硬猜）。 */
+const DAY_HEAD_RE = /^(?:周|星期)([一二三四五六日天])$/;
+const DAY_NUM = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 日: 7, 天: 7 };
+
+function slotFromLabel(text) {
+  const s = String(text || '').replace(/\s+/g, '');
+  if (/\d{1,2}[:：]\d{2}/.test(s)) return null; // 08:20 这类时间不是节次
+  if (/晚/.test(s)) return /2/.test(s) ? '晚自习2' : '晚自习1';
+  const m = s.match(/(\d{1,2})(?:\s*[-~—]\s*(\d{1,2}))?/);
+  if (!m) return null;
+  const a = +m[1];
+  if (a <= 2) return '1-2';
+  if (a <= 4) return '3-4';
+  if (a <= 6) return '5-6';
+  if (a <= 8) return '7-8';
+  return a <= 10 ? '晚自习1' : '晚自习2';
+}
+
+function parseOcrGrid(items) {
+  const blocks = (items || []).filter((b) => b && b.text && (b.conf == null || b.conf > 30));
+  if (blocks.length < 4) return null;
+  const cx = (b) => b.x + b.w / 2;
+  const cy = (b) => b.y + b.h / 2;
+
+  /* 表头：周一 / 星期一（至少 3 个才认为是课表） */
+  const heads = [];
+  blocks.forEach((b) => {
+    const m = DAY_HEAD_RE.exec(String(b.text).replace(/\s+/g, ''));
+    if (m && DAY_NUM[m[1]]) heads.push({ day: DAY_NUM[m[1]], x: cx(b), y: cy(b) });
+  });
+  if (heads.length < 3) return null;
+  heads.sort((a, b) => a.x - b.x);
+  const headY = Math.min(...heads.map((h) => h.y));
+  const leftLimit = Math.min(...heads.map((h) => h.x)) - 20;
+
+  /* 节次行：表头左侧那一列里的 “1-2 / 第1-2节 / 3 / 晚自习1” */
+  const rowYs = new Map();
+  blocks.forEach((b) => {
+    if (cy(b) <= headY - 6 || cx(b) >= leftLimit) return;
+    const slot = slotFromLabel(b.text);
+    if (!slot) return;
+    if (!rowYs.has(slot)) rowYs.set(slot, []);
+    rowYs.get(slot).push(cy(b));
+  });
+  const rows = [...rowYs.entries()]
+    .map(([slot, ys]) => ({ slot, y: ys.reduce((a, v) => a + v, 0) / ys.length }))
+    .sort((a, b) => a.y - b.y);
+  if (rows.length < 2) return null;
+
+  /* 内容块 → 最近表头列 × 最近节次行 */
+  const cells = new Map();
+  blocks.forEach((b) => {
+    if (cy(b) <= headY + 6) return;
+    if (cx(b) < leftLimit) return;
+    const head = heads.reduce((best, h) => (Math.abs(cx(b) - h.x) < Math.abs(cx(b) - best.x) ? h : best), heads[0]);
+    const row = rows.reduce((best, r) => (Math.abs(cy(b) - r.y) < Math.abs(cy(b) - best.y) ? r : best), rows[0]);
+    const key = `${head.day}|${row.slot}`;
+    if (!cells.has(key)) cells.set(key, []);
+    cells.get(key).push(b);
+  });
+
+  const list = [];
+  cells.forEach((arr, key) => {
+    const [day, slot] = key.split('|');
+    const sorted = arr.sort((a, b) => a.y - b.y || a.x - b.x);
+    const name = sorted[0].text.replace(/\s+/g, ' ').trim();
+    if (!name || name.length > 30) return;
+    let teacher = '';
+    let room = '';
+    const notes = [];
+    sorted.slice(1).forEach((b) => {
+      const t = b.text.replace(/\s+/g, ' ').trim();
+      if (!room && /(楼|室|教室|馆|中心|\d{3,4}|[A-Z]\d{2,4})/.test(t) && t.length <= 20) room = t;
+      else if (!teacher && /(老师|教授|讲师|teacher)/.test(t) && t.length <= 20) teacher = t;
+      else if (!teacher && /^[\u4e00-\u9fa5·]{2,4}$/.test(t)) teacher = t;
+      else notes.push(t);
+    });
+    list.push({
+      id: `ocr${Date.now().toString(36)}${list.length}`,
+      name, teacher, room,
+      note: notes.join(' · ').slice(0, 40),
+      periods: [{ day: +day, slot, f: 1, t: 16, type: 'every' }],
+    });
+  });
+  return list.length ? list : null;
+}
+
 /* 分享口令 v2：字段用分隔符替代 JSON 键名，体积约为 v1 的一半；
    格式 VOYRA2: + b64url(课程1|课程2…)，课程 name~color~credit~note~teacher~room~时段
    时段 day,slotIdx,f,t,typeCode,customTime（slotIdx 对应 DEFAULT_SLOTS 下标）。 */
@@ -858,6 +947,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [importMode, setImportMode] = useState('file');
   const [shareText, setShareText] = useState('');
   const [shareLink, setShareLink] = useState('');
+  const [ocrBusy, setOcrBusy] = useState(false);
+  const [ocrRaw, setOcrRaw] = useState('');
   const [shareCode, setShareCode] = useState('');
   const [shareDetail, setShareDetail] = useState(true);
   const [backupSettings, setBackupSettings] = useState(null);
@@ -880,6 +971,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   }, [railOpen]);
   const [xlsBusy, setXlsBusy] = useState(false);
   const xlsFileRef = useRef(null);
+  const imgFileRef = useRef(null);
   const toastRef = useRef(null);
   const gridCardRef = useRef(null);
   const [rowH, setRowH] = useState(null);
@@ -1098,8 +1190,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const addParsed = () => {
     if (!parsed.length) { say('未识别到有效课程'); return; }
     persist([...courses, ...parsed], null);
-    setImportText(''); setParsed([]);
+    setImportText(''); setParsed([]); setOcrRaw('');
     say(`已导入 ${parsed.length} 门课程`);
+    askWeekOnce();
   };
   /* 表单里某个时段的局部更新 / 增删 */
   const setPeriod = (idx, patch) => setForm((f) => ({ ...f, periods: f.periods.map((p, i) => (i === idx ? { ...p, ...patch } : p)) }));
@@ -1136,13 +1229,16 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     /* 手机端：添加成功后收起抽屉回到课表视图（桌面端本来就是内联表单，
        onClosePanel 为空操作）。toast 的 z-index 已抬到抽屉之上，收抽屉途中也能看见。 */
     if (onClosePanel) onClosePanel();
-    /* 首次添加后问一次当前周次：没有开学日期时「第 X 周」只能手动指定，
-       问完即可按日期自动推进（只问一次，取消也不再打扰）。 */
-    if (!settings.startDate && settings.overrideWeek == null && !askedWeekRef.current) {
-      askedWeekRef.current = true;
-      setWeekAskVal(String(currentWeek || 1));
-      setWeekAsk(true);
-    }
+    askWeekOnce();
+  };
+
+  /* 首次拿到课表（手加或导入）后问一次当前周次：写入开学周一后 autoWeek 按日期自动推进。
+     只问一次，取消也不再打扰。 */
+  const askWeekOnce = () => {
+    if (settings.startDate || settings.overrideWeek != null || askedWeekRef.current) return;
+    askedWeekRef.current = true;
+    setWeekAskVal(String(currentWeek || 1));
+    setWeekAsk(true);
   };
 
   /* ── 双击课表格子：有课 → 编辑整门；空格 → 以该格为起点新增 ── */
@@ -1223,14 +1319,66 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     setParsed(list);
     say(`口令里含 ${list.length} 门课程，确认后导入`);
   };
-  const makeShareCode = async () => {
-    if (!courses.length) { say('课表还是空的，先导入或添加课程'); return; }
+  const buildShareLink = () => {
+    if (!courses.length) return null;
     const code = encodeShareV2(courses, shareDetail);
     const link = `${location.origin}${location.pathname}#/timetable?share=${encodeURIComponent(code)}`;
     setShareCode(code);
     setShareLink(link);
+    return link;
+  };
+  const makeShareCode = async () => {
+    if (!courses.length) { say('课表还是空的，先导入或添加课程'); return; }
+    const link = buildShareLink();
     try { await navigator.clipboard.writeText(link); say('分享链接已复制，同学点开就能导入'); } catch { say('已生成分享链接，长按复制'); }
   };
+  /* 图片 → 压缩（长边 1600 / JPEG 0.82）→ /ocr → 文本块 → 还原课表 */
+  const compressImage = (file) => new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 1600;
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.82).split(',')[1]);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('图片读取失败，换一张试试')); };
+    img.src = url;
+  });
+  const onImageFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    setOcrBusy(true); setOcrRaw(''); setParsed([]);
+    try {
+      const image = await compressImage(file);
+      const resp = await fetch('/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image }),
+      });
+      const data = await resp.json();
+      if (!data.ok) { say(data.message || '图片识别失败，请改用文本粘贴'); return; }
+      setOcrRaw(data.items.map((i) => i.text).join('\n'));
+      const list = parseOcrGrid(data.items);
+      if (!list) { say('没认出课表结构：可点「改用文本」粘贴识别出的文字'); return; }
+      setParsed(list);
+      say(`识别到 ${list.length} 门课，核对预览后导入`);
+    } catch (err) {
+      say(err && err.message ? err.message : '图片识别失败，请改用文本粘贴');
+    } finally {
+      setOcrBusy(false);
+    }
+  };
+
   const exportBackup = () => {
     if (!courses.length) { say('课表还是空的，没什么可导出'); return; }
     const data = JSON.stringify({ app: BACKUP_APP, v: 1, at: new Date().toISOString(), courses, settings });
@@ -1627,6 +1775,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             <button className="cs-btn" onClick={() => goWeek(-1)}><ChevronLeft size={15} />上一周</button>
             <input type="number" min={1} max={MAX_WEEK} value={currentWeek} onChange={(e) => setWeekInput(e.target.value)} className="cs-input no-spin cs-weeknum" inputMode="numeric" aria-label="当前周次" />
             <button className="cs-btn" onClick={() => goWeek(1)}>下一周<ChevronRight size={15} /></button>
+            {settings.overrideWeek != null && <button className="cs-btn" onClick={() => { persist(null, { ...settings, overrideWeek: null }); say('已回到本周，之后按日期自动更新'); }}><RefreshCw size={14} />回到本周</button>}
             <button className="cs-btn" onClick={() => setShowSettings((v) => !v)}><RefreshCw size={14} />周次设置</button>
             <button className="cs-btn" onClick={() => setShowTimeSettings((v) => !v)}><Clock size={14} />时间设置</button>
             {isMobile && <button className="cs-btn danger" onClick={clearAll}><Trash2 size={14} />清空课表</button>}
@@ -1858,14 +2007,43 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </div>
         {/* 三种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
         <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
-          {[['file', '从文件'], ['share', '分享链接'], ['backup', '备份']].map(([k, label]) => (
+          {[['photo', '图片识别'], ['file', '从文件'], ['share', '分享链接'], ['backup', '备份']].map(([k, label]) => (
             <button key={k} type="button" className={`cs-btn cs-mode${importMode === k ? ' is-on' : ''}`}
               aria-pressed={importMode === k}
-              onClick={() => { setImportMode(k); setParsed([]); }}>{label}</button>
+              onClick={() => { setImportMode(k); setParsed([]); if (k === 'share') buildShareLink(); }}>{label}</button>
           ))}
         </div>
 
+        {importMode === 'photo' && (<>
+          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
+            上传课表截图（教务系统或学校 App 的课表页都行），自动按「星期 × 节次」还原成课程；识别结果先进预览，核对后可改。
+          </p>
+          <div className="cs-row">
+            <button type="button" className="cs-btn primary" disabled={ocrBusy}
+              onClick={() => imgFileRef.current && imgFileRef.current.click()}>
+              {ocrBusy ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <Camera size={15} />}
+              {ocrBusy ? '识别中…' : '选择图片 / 拍照'}
+            </button>
+            <input ref={imgFileRef} type="file" accept="image/*" capture="environment"
+              style={{ display: 'none' }} onChange={onImageFile} />
+            {ocrRaw && (
+              <button type="button" className="cs-btn" onClick={() => { setImportText(ocrRaw); setImportMode('file'); }}>
+                识别不准？改用文本
+              </button>
+            )}
+          </div>
+          {ocrRaw && (
+            <textarea readOnly rows={4} value={ocrRaw} className="cs-input"
+              style={{ width: '100%', marginTop: 10, resize: 'vertical', lineHeight: 1.6, fontSize: 12 }}
+              onFocus={(e) => e.target.select()} />
+          )}
+        </>)}
+
         {importMode === 'file' && (
+        <>
+        <p style={{ margin: '0 0 8px', fontSize: 12.5, color: '#6c757d' }}>
+          手机浏览器不能直接跳到微信 / QQ 里选文件：先在聊天里把文件「用其他应用打开 → 保存到文件」，或从系统文件选择器的「微信 / QQ」目录里选。
+        </p>
         <textarea
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
@@ -1873,6 +2051,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           placeholder={'粘贴课程文本，例如：\n【高等数学】\n课程：高等数学\n星期：周一\n节次：1-2节\n周次：1-16周\n老师：龙承星副教授\n教室：博学楼501\n\n【晚自习】\n星期：周二\n节次：晚自习1'}
           className="cs-input" style={{ width: '100%', resize: 'vertical', lineHeight: 1.6 }}
         />
+        </>
         )}
 
         {importMode === 'share' && (<>
