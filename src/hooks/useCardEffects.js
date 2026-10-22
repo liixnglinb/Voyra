@@ -153,7 +153,7 @@ export default function useCardEffects(rootRef, dependency) {
                 target.toggleAttribute('data-card-visible', isIntersecting),
               );
             },
-            { root: root.parentElement, rootMargin: '80px' },
+            { root: null, rootMargin: '80px' },
           )
         : null;
 
@@ -163,6 +163,7 @@ export default function useCardEffects(rootRef, dependency) {
     });
 
     const onVisibility = () => root.toggleAttribute('data-page-hidden', document.hidden);
+    onVisibility();
 
     root.addEventListener('pointermove', onMove, { passive: true });
     root.addEventListener('pointerout', onOut, { passive: true });

@@ -9,6 +9,8 @@
     "dev": "vite",
     "prebuild": "node build-tools/build-mindmap.mjs",
     "build": "vite build",
+    "build:downloads": "node build-tools/build-download-pages.mjs",
+    "test:downloads": "node build-tools/verify-download-pages.mjs",
     "prepreview": "node build-tools/build-mindmap.mjs",
     "preview": "vite preview",
     "test:ui": "node --test scripts/ui-design-system.test.mjs",

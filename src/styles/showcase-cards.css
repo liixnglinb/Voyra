@@ -1,0 +1,202 @@
+/* Replace the artwork and palette inside the original card layout.
+   Dimensions, spacing, breakpoints and alternating columns belong to dashboard-cards.css. */
+.sc-card.sc-illustrated {
+  background: var(--sc-surface, #fff) !important;
+  border-color: rgba(var(--p-rgb), .16) !important;
+}
+.sc-illustrated .sc-stage { background: var(--art-canvas); }
+.sc-illustrated .sc-stage::before { content: none; }
+.sc-illustrated .sc-cta {
+  color: var(--p-ink);
+  background: var(--art-canvas);
+  border-color: rgba(var(--p-rgb), .16);
+}
+.sc-illustrated > .sc-seq { -webkit-text-stroke-color: rgba(var(--p-rgb), .24); }
+.sc-art-label {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  z-index: 1;
+  color: var(--art-ink);
+  font: 500 7px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .1em;
+  pointer-events: none;
+}
+.sc-illustration {
+  position: absolute;
+  inset: 6px;
+  display: block;
+  width: calc(100% - 12px);
+  height: calc(100% - 12px);
+  overflow: visible;
+  transform: translate3d(calc(var(--par-x, 0px) * .5), calc(var(--par-y, 0px) * .5), 0);
+  transition: transform .4s var(--vr-ease-out), scale .4s var(--vr-ease-out);
+}
+.sc-illustration text { font-family: Inter, ui-sans-serif, system-ui, "Microsoft YaHei", sans-serif; }
+
+/* Individual transforms preserve the SVG's authored rotations and pointer parallax. */
+.sc-art-main { animation: sc-art-float 5.6s ease-in-out infinite; }
+.sc-art-pop { animation: sc-art-float 6.4s -2s ease-in-out infinite reverse; }
+.sc-art-spark {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-sparkle 3.8s var(--spark-delay, 0s) ease-in-out infinite;
+}
+.sc-api-route { stroke-dasharray: 5 10; animation: sc-route-flow 3s linear infinite; }
+.sc-api-packet { opacity: 0; }
+.sc-api-packet-in { animation: sc-packet-in 3.2s ease-in-out infinite; }
+.sc-api-packet-out { animation: sc-packet-out 3.2s 1.25s ease-in-out infinite; }
+.sc-calendar-block {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: sc-calendar-plan 5s calc(var(--step) * .35s) ease-in-out infinite;
+}
+.sc-subscription-card { animation: sc-subscription-float 5.4s ease-in-out infinite; }
+.sc-subscription-card-second { animation-delay: -2.7s; }
+.sc-mall-star, .sc-health-heart {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-heartbeat 2.4s ease-in-out infinite;
+}
+.sc-health-heart { animation-duration: 1.8s; }
+.sc-health-wave { stroke-dasharray: 1; animation: sc-wave-draw 4.2s linear infinite; }
+.sc-model-curve, .sc-token-line { stroke-dasharray: 1; animation: sc-curve-draw 5.8s ease-in-out infinite; }
+.sc-model-solution, .sc-listening-dot, .sc-token-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-status-pulse 2.8s ease-in-out infinite;
+}
+.sc-check-tick { stroke-dasharray: 1; animation: sc-tick-draw 6s calc(var(--step) * .5s) ease-in-out infinite; }
+.sc-check-cursor {
+  transform-box: fill-box;
+  transform-origin: 15% 15%;
+  animation: sc-cursor-tap 6s ease-in-out infinite;
+}
+.sc-clean-broom {
+  transform-box: fill-box;
+  transform-origin: 50% 15%;
+  animation: sc-broom-sweep 3.6s ease-in-out infinite;
+}
+.sc-bill-row { animation: sc-row-arrive 5.8s calc(var(--step) * .6s) ease-in-out infinite; }
+.sc-receipt { animation: sc-receipt-arrive 5.8s ease-in-out infinite; }
+.sc-bill-coin {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sc-coin-turn 5.8s ease-in-out infinite;
+}
+.sc-token-ring { animation: sc-ring-fill 5.8s ease-in-out infinite; }
+.sc-timeline-step { animation: sc-row-arrive 6.6s calc(var(--step) * .75s) ease-in-out infinite; }
+.sc-code-caret { animation: sc-caret-blink 1.4s steps(1, end) infinite; }
+
+/* useCardEffects owns visibility, including hidden tabs and the backgrounded page. */
+.sc-illustration * { animation-play-state: paused; }
+.sc-card[data-card-visible] .sc-illustration * { animation-play-state: running; }
+.sc-card:not([data-card-visible]) .sc-illustration *,
+.vr-home[data-page-hidden] .sc-illustration * { animation-play-state: paused; }
+
+@keyframes sc-art-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}
+@keyframes sc-sparkle {
+  0%, 100% { scale: .75; opacity: .4; }
+  50% { scale: 1.12; opacity: 1; }
+}
+@keyframes sc-route-flow { to { stroke-dashoffset: -45; } }
+@keyframes sc-packet-in {
+  0%, 12% { translate: 0 0; opacity: 0; }
+  20% { opacity: 1; }
+  64% { translate: 91px 55px; opacity: 1; }
+  72%, 100% { translate: 91px 55px; opacity: 0; }
+}
+@keyframes sc-packet-out {
+  0%, 12% { translate: 0 0; opacity: 0; }
+  20% { opacity: 1; }
+  64% { translate: 98px -68px; opacity: 1; }
+  72%, 100% { translate: 98px -68px; opacity: 0; }
+}
+@keyframes sc-calendar-plan {
+  0%, 100% { scale: 1 1; }
+  35% { scale: 1 .75; }
+  60%, 85% { scale: 1 1; }
+}
+@keyframes sc-subscription-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -9px; }
+}
+@keyframes sc-heartbeat {
+  0%, 38%, 100% { scale: 1; }
+  12% { scale: 1.15; }
+  22% { scale: 1.02; }
+  30% { scale: 1.1; }
+}
+@keyframes sc-wave-draw {
+  0%, 8% { stroke-dashoffset: 1; }
+  60%, 77% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -1; }
+}
+@keyframes sc-curve-draw {
+  0%, 8% { stroke-dashoffset: 1; }
+  56%, 88% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -1; }
+}
+@keyframes sc-status-pulse {
+  0%, 100% { scale: 1; opacity: .6; }
+  50% { scale: 1.35; opacity: 1; }
+}
+@keyframes sc-tick-draw {
+  0%, 7% { stroke-dashoffset: 1; opacity: 0; }
+  21%, 80% { stroke-dashoffset: 0; opacity: 1; }
+  95%, 100% { stroke-dashoffset: 1; opacity: 0; }
+}
+@keyframes sc-cursor-tap {
+  0%, 38%, 100% { translate: 0 0; scale: 1; }
+  50%, 65% { translate: -12px -9px; scale: 1; }
+  55%, 60% { translate: -12px -9px; scale: .88; }
+  80% { translate: 0 0; scale: 1; }
+}
+@keyframes sc-broom-sweep {
+  0%, 100% { rotate: -8deg; }
+  35%, 65% { rotate: 8deg; }
+}
+@keyframes sc-row-arrive {
+  0%, 9% { translate: 0 4px; opacity: .35; }
+  28%, 84% { translate: 0 0; opacity: 1; }
+  100% { translate: 0 4px; opacity: .35; }
+}
+@keyframes sc-receipt-arrive {
+  0%, 10% { translate: 0 12px; opacity: .35; }
+  35%, 82% { translate: 0 0; opacity: 1; }
+  100% { translate: 0 12px; opacity: .35; }
+}
+@keyframes sc-coin-turn {
+  0%, 65%, 100% { scale: 1 1; }
+  80% { scale: .45 1; }
+}
+@keyframes sc-ring-fill {
+  0%, 8% { stroke-dashoffset: 68; }
+  56%, 90% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 68; }
+}
+@keyframes sc-caret-blink { 0%, 65% { opacity: 1; } 66%, 100% { opacity: 0; } }
+
+@media (hover: hover) and (pointer: fine) {
+  .sc-illustrated:hover .sc-illustration { scale: 1.025; }
+}
+@media (hover: none), (pointer: coarse) {
+  .sc-illustration { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-card .sc-illustration, .sc-card .sc-illustration * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    translate: none !important;
+    rotate: none !important;
+    scale: none !important;
+  }
+}
+@media (forced-colors: active) {
+  .sc-card.sc-illustrated { border-color: CanvasText !important; }
+  .sc-art-label { color: CanvasText; }
+}

@@ -6,14 +6,13 @@ import {
 } from 'lucide-react';
 import { SHOWCASE_CARDS, SHOWCASE_GROUPS, CARD_BY_ID } from '../data/showcase-cards';
 import { STAGES } from './stages';
+import { CardIllustration } from './CardIllustrations';
+import { CARD_ILLUSTRATIONS } from '../data/card-illustrations';
 import { toHashUrl } from '../lib/hash-url';
 
 /* ==========================================================================
-   首页橱窗卡 · 统一产品名片
-   --------------------------------------------------------------------------
-   骨架（眉标 / 图标 / 标题 / 描述 / 序号 / CTA）完全共用，卡片之间只允许在
-   两个维度上不同 —— 基调（tone）与舞台画面（stage）。
-   配色收敛到黑 / 金 / 白 / 蓝四色体系，不引入第五种色相。
+   首页橱窗卡：共用信息骨架，每个已展示产品拥有专属配色与矢量插画。
+   未展示的历史卡片继续使用既有 tone / STAGES，保持组件接口兼容。
    ========================================================================== */
 
 const ICONS = {
@@ -88,6 +87,23 @@ function toneVars(tone) {
   };
 }
 
+function illustrationVars(theme) {
+  const rgb = parseHex(theme.accent).join(', ');
+  return {
+    '--p-accent': theme.accent,
+    '--p-rgb': rgb,
+    '--p-soft': theme.canvas,
+    '--p-line': `rgba(${rgb}, 0.2)`,
+    '--p-ink': theme.ink,
+    '--sc-surface': theme.soft,
+    '--art-canvas': theme.canvas,
+    '--art-color': theme.color,
+    '--art-light': theme.light,
+    '--art-ink': theme.ink,
+    '--art-soft': theme.soft,
+  };
+}
+
 /**
  * 单张产品卡。
  * @param {object} card      showcase-cards.js 里的一条数据
@@ -107,15 +123,17 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
   const seq = /^\d{1,2}$/.test(card.seq ?? '') ? card.seq : null;
   const layout = card.layout || 'copy';
   const tone = TONES[card.tone] ? card.tone : TONE_FALLBACK;
+  const illustration = CARD_ILLUSTRATIONS[card.id];
 
   return (
     <a
       href={href}
       {...linkProps}
-      className={`sc-card st-${card.family} tone-${tone} layout-${layout}`}
+      className={`sc-card st-${card.family} tone-${tone} layout-${layout}${illustration ? ' sc-illustrated' : ''}`}
       data-voyra-card
+      data-card-id={card.id}
       data-tone={tone}
-      style={toneVars(tone)}
+      style={{ ...toneVars(tone), ...(illustration ? illustrationVars(illustration) : {}) }}
       aria-label={`${card.name}：${card.cta}${card.external ? '（新标签页）' : ''}`}
     >
       <span className="sc-spotlight" aria-hidden="true" />
@@ -143,8 +161,11 @@ export function ProductCard({ card, isMobile = false, shortDesc }) {
           </div>
         </div>
 
-        <div className="sc-stage">
-          {Stage ? <Stage card={card} stage={card.stage} /> : null}
+        <div className="sc-stage" aria-hidden="true">
+          {illustration ? <>
+            <span className="sc-art-label">{illustration.label}</span>
+            <CardIllustration card={card} />
+          </> : Stage ? <Stage card={card} stage={card.stage} /> : null}
         </div>
       </div>
       {seq ? <span className="sc-seq" aria-hidden="true">{seq}</span> : null}

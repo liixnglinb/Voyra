@@ -16,6 +16,7 @@ import { toHashUrl } from '../lib/hash-url';
 import '../styles/dashboard-cards.css';
 import '../styles/stage-scenes.css';
 import '../styles/product-shots.css';
+import '../styles/showcase-cards.css';
 
 const FEATURED = [
   { theme: 'theme-api', to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
