@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
-  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2, Camera, LayoutGrid,
+  MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2, Camera, LayoutGrid, ClipboardCheck,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
 
@@ -223,6 +223,79 @@ const reNight = /晚自习\s*(\d)?/;
 const rePeriod = /(?:第)?\s*(\d{1,2})\s*[-~至到—–]\s*(\d{1,2})\s*节|(?:第)?\s*(\d{1,2})\s*节/;
 const reWeek = /(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~至到—–]\s*(?:第)?\s*(\d{1,2})\s*周|第\s*(\d{1,2})\s*周/;
 const reOddEven = /[（(](单|双)周?[)）]|(单|双)周/;
+/* ── 教务系统课表「复制粘贴」解析 ──────────────────────────────────
+   教务系统的课表是 HTML 表格，在页面里 Ctrl+A → Ctrl+C 复制后，
+   剪贴板文本就是 TSV（制表符分列、换行分行）——不需要任何脚本即可解析。 */
+const CLIP_SLOTS = ['1-2', '3-4', '5-6', '7-8', '晚自习1', '晚自习2'];
+const CLIP_DAYC = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 7, '天': 7 };
+const clipSlotOf = (t) => {
+  t = String(t || '').replace(/\s+/g, '');
+  const s = t.replace(/\d{1,2}[:：]\d{2}(?:[-~—]\d{1,2}[:：]\d{2})?/g, '');
+  if (/晚/.test(s)) return /2/.test(s) ? '晚自习2' : '晚自习1';
+  const cn = /第([一二三四五六七八九十]+)大?节/.exec(s);
+  if (cn) {
+    const CN = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
+    const n = CN[cn[1]] || 0;
+    if (n >= 5) return n === 6 ? '晚自习2' : '晚自习1';
+    const a = n * 2;
+    if (a <= 2) return '1-2'; if (a <= 4) return '3-4'; if (a <= 6) return '5-6'; if (a <= 8) return '7-8';
+    return '晚自习1';
+  }
+  const m = s.match(/(\d{1,2})/);
+  if (!m) return null;
+  const a = +m[1];
+  if (a <= 2) return '1-2'; if (a <= 4) return '3-4'; if (a <= 6) return '5-6'; if (a <= 8) return '7-8';
+  return a <= 10 ? '晚自习1' : '晚自习2';
+};
+function parseClipboardTimetable(text) {
+  const rows = String(text || '').replace(/\r/g, '').split('\n').map((r) => r.split('\t'));
+  let headIdx = -1;
+  const colDay = {};
+  for (let i = 0; i < rows.length; i++) {
+    let n = 0;
+    const map = {};
+    rows[i].forEach((c, ci) => {
+      const m = /(?:周|星期)\s*([一二三四五六日天])/.exec(String(c).replace(/\s+/g, ''));
+      if (m) { map[ci] = CLIP_DAYC[m[1]]; n++; }
+    });
+    if (n >= 3) { headIdx = i; Object.assign(colDay, map); break; }
+  }
+  if (headIdx < 0) return [];
+  const out = [];
+  const roomRe = /(楼|室|教室|馆|场|中心|苑|区|\d{3,4}|[A-Z]\d{2,4})/;
+  for (let ri = headIdx + 1; ri < rows.length; ri++) {
+    const cells = rows[ri];
+    if (!cells.length) continue;
+    const slot = clipSlotOf(cells[0] || '');
+    if (!slot) continue;
+    for (let ci = 1; ci < cells.length; ci++) {
+      const day = colDay[ci];
+      if (!day) continue;
+      const raw = String(cells[ci] || '').split('\n').map((x) => x.trim()).filter(Boolean);
+      if (!raw.length) continue;
+      const name = raw[0];
+      if (clipSlotOf(name) || /^(周|星期)[一二三四五六日天]$/.test(name)) continue;
+      let teacher = '', room = '';
+      const note = [];
+      for (let k = 1; k < raw.length; k++) {
+        const t = raw[k];
+        if (!room && roomRe.test(t) && t.length <= 20) room = t;
+        else if (!teacher && /(?:老师|教授|讲师)/.test(t) && t.length <= 20) teacher = t;
+        else if (!teacher && /^[\u4e00-\u9fa5·]{2,4}$/.test(t)) teacher = t;
+        else note.push(t);
+      }
+      const joined = raw.join('');
+      const type = /\(单\)|（单）/.test(joined) ? 1 : /\(双\)|（双）/.test(joined) ? 2 : 0;
+      out.push({
+        id: `clip-${ri}-${ci}`, name, color: null, credit: '',
+        note: note.join(' · ').slice(0, 40), teacher, room,
+        periods: [{ day, slot, f: 1, t: 16, type, customTime: null }],
+      });
+    }
+  }
+  return out;
+}
+
 /* 老师：抓取姓名+职称完整串；同一行若后面紧跟「教室/地点」，在此处截断 */
 const reTeacher = /(?:授课老师|老师|教师)[:：]\s*([^\n,，;；]+?)(?=\s*(?:教室|地点|上课地点|上课教室|上课地方)[:：]|$)/;
 /* 教室：支持「教室：博学楼501」「上课地点：致远楼A201」等写法 */
@@ -1010,6 +1083,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [ocrBusy, setOcrBusy] = useState(false);
   const [eduSchool, setEduSchool] = useState(SCHOOLS[0].id);
   const [eduState, setEduState] = useState(''); // '' | opening | ready | vpn
+  const [eduClip, setEduClip] = useState(''); // '' | ok | empty | fail
+  const [eduClipBusy, setEduClipBusy] = useState(false);
+  const [eduPasteText, setEduPasteText] = useState('');
   const [ocrRaw, setOcrRaw] = useState('');
   const [shareCode, setShareCode] = useState('');
   const [shareDetail, setShareDetail] = useState(true);
@@ -1208,6 +1284,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     say(`已同步：当前第 ${w} 周`);
   };
 
+
+  /* 周次询问网格：点一下当前的周数，立即应用并关闭 */
+  const applyWeekVal = (w) => {
+    const wk = setWeekTo(w);
+    setWeekAsk(false);
+    say(`已同步：当前第 ${wk} 周`);
+  };
   const dateOfPeriod = (p) => {
     if (!settings.startDate) return '';
     const d = new Date(settings.startDate + 'T00:00:00');
@@ -1447,6 +1530,26 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     }, 12000);
   };
 
+  /* 读取剪贴板 → 解析教务 TSV 课表 → 预览；失败给明确反馈 */
+  const readEduClipboard = async () => {
+    setEduClipBusy(true);
+    try {
+      let text = '';
+      try { text = await navigator.clipboard.readText(); } catch { text = ''; }
+      if (!text.trim()) { setEduClip('empty'); say('剪贴板是空的：先在教务系统课表页复制'); return; }
+      const list = parseClipboardTimetable(text);
+      if (!list.length) { setEduClip('fail'); say('没识别出课程：请确认复制的是课表页内容'); return; }
+      setParsed(list);
+      setEduClip('ok');
+      say(`识别到 ${list.length} 门课程，核对预览后合并导入`);
+    } catch {
+      setEduClip('fail');
+      say('读取剪贴板失败：请在下方文本框手动粘贴');
+    } finally {
+      setEduClipBusy(false);
+    }
+  };
+
   /* 用户脚本从教务页面回报状态：ready=内网已连上（取消外网切换） */
   useEffect(() => {
     const onMsg = (e) => {
@@ -1606,6 +1709,33 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         .mbox-body .cs-empty { padding:18px 0; }
         /* 翻周小按钮（紧凑，桌面/手机通用） */
         .cs-nav { padding:0 10px; }
+        /* 周次询问：大按钮网格，点一下即应用 */
+        .cs-weekgrid { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:8px; }
+        .cs-weekchip { min-height:44px; border:1px solid rgba(27,27,27,.12); border-radius:10px; background:#fff;
+          color:#444; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+          transition:all .12s ease; }
+        .cs-weekchip.is-on { border-color:#A48830; background:#FFF9DF; color:#6B5417; }
+        .cs-weekchip:active { transform:scale(.96); }
+        /* 导入页签：横排等宽一行 */
+        .mbox-body .cs-modes { display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:6px; }
+        .mbox-body .cs-mode { justify-content:center; padding:0 2px; font-size:12px; }
+        /* 教务导入分步反馈 */
+        .cs-edu-steps { margin:10px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:7px; }
+        .cs-edu-steps li { display:flex; gap:8px; align-items:flex-start; font-size:12.5px; line-height:1.6;
+          color:#6c757d; padding:8px 10px; border-radius:10px; background:#FAF9F5; border:1px solid rgba(27,27,27,.06); }
+        .cs-edu-steps li .n { flex:none; font:700 11px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color:#A48830; }
+        .cs-edu-steps li.done { color:#1b1b1b; }
+        .cs-edu-steps li.done .n::after { content:' ✓'; color:#3d8a3d; }
+        .cs-edu-steps li.active { border-color:rgba(164,136,48,.4); background:#FFF9DF; color:#1b1b1b; }
+        .cs-edu-ok { margin:8px 0 0; padding:9px 12px; border-radius:10px; background:#F0F7EE;
+          border:1px solid #BFDCC0; color:#2E6B30; font-size:12.5px; font-weight:650; }
+        /* 添加课程：紧凑双列 */
+        .cs-addform .cs-row { gap:10px; }
+        .cs-addform .cs-field { margin-bottom:0; }
+        .cs-addform .cs-l { margin-bottom:4px; }
+        .cs-addform .cs-period { margin:0; }
+        /* 手机端：周次标题卡整个隐藏（页头已有「第X周」） */
+        @media (max-width:767px) { .cs-weekcard { display:none !important; } }
         /* 课程类型：「连续多周 / 单节课」分段控件 —— 两个选项始终摊开可见。
            旧实现是一个写着「连续多周」的开关，点一下才变成「单节课」，
            用户根本看不出还能选「只上一次」。 */
@@ -1893,8 +2023,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       `}</style>
 
       {/* 顶部：当前周边 + 操作 —— 手机上收进抽屉「周次与时间设置」 */}
-      {/* 顶部工具条：周次 + 全部操作入口（设置/导入/明细/添加/清空都走居中弹窗） */}
-      <div className="cs-card">
+      {/* 周次标题卡：手机端整个隐藏（页头已有「第X周」，底部不再重复） */}
+      <div className="cs-card cs-weekcard">
         <div className="cs-h">
           <div className="ico"><CalendarDays size={18} /></div>
           <h3>第 {currentWeek} 周</h3>
@@ -1926,17 +2056,12 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           <label className="cs-l">当前是第几周</label>
           <WeekWheel value={currentWeek} onChange={(w) => { setWeekTo(w); say(`已设为第 ${w} 周，之后按日期自动更新`); }} />
         </div>
-        <div className="cs-field">
-          <label className="cs-l">学期开学（周一）日期</label>
-          <input type="date" value={settings.startDate} className="cs-input"
-            onChange={(e) => persist(null, { ...settings, startDate: e.target.value, overrideWeek: null })} />
-        </div>
         <p className="cs-hint">
           {settings.overrideWeek != null
             ? '当前为手动指定周次；用上面的滚轮重新选一次即可恢复自动更新。'
             : settings.startDate
-              ? `自动更新：按开学日期推算，本周是第 ${autoWeek} 周。`
-              : '还没设置开学日期，所以一直显示第 1 周。'}
+              ? `自动更新中：已按你选的周数推算开学日期，本周是第 ${autoWeek} 周，以后每周一自动跳。`
+              : '选一次当前周数后即可自动推进。'}
         </p>
       </Sheet>
 
@@ -2119,24 +2244,33 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
       {/* 导入 */}
       <Sheet open={modal === 'import'} onClose={closeModal} icon={<Upload size={16} />}
-        title="导入课表" sub="教务导入 / 图片识别 / 分享链接 / 备份">
+        title="导入课表" sub="五种方式，选一种即可">
         <div className="cs-card" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
-        <div className="cs-row" style={{ marginBottom: 10 }}>
-          {xlsActions}
-          {xlsFileInput}
-        </div>
         {/* 三种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
         <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
-          {[['edu', '教务导入'], ['photo', '图片识别'], ['share', '分享链接'], ['backup', '备份']].map(([k, label]) => (
+          {[['xls', '导入 Excel'], ['edu', '教务导入'], ['photo', '图片识别'], ['share', '分享链接'], ['backup', '备份']].map(([k, label]) => (
             <button key={k} type="button" className={`cs-btn cs-mode${importMode === k ? ' is-on' : ''}`}
               aria-pressed={importMode === k}
               onClick={() => { setImportMode(k); setParsed([]); if (k === 'share') buildShareLink(); }}>{label}</button>
           ))}
         </div>
 
+        {importMode === 'xls' && (<>
+          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
+            选择教务系统或学校模板导出的 Excel 课表文件（.xls / .xlsx），自动解析成课程并预览。
+          </p>
+          <div className="cs-row">
+            <button className="cs-btn primary" onClick={() => xlsFileRef.current && xlsFileRef.current.click()} disabled={xlsBusy} style={xlsBusy ? { opacity: .6, cursor: 'wait' } : undefined}>
+              {xlsBusy ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <FileSpreadsheet size={15} />}
+              {xlsBusy ? '解析中…' : '选择 Excel 文件'}
+            </button>
+            {xlsFileInput}
+          </div>
+        </>)}
+
         {importMode === 'edu' && (<>
           <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
-            先装一次抓取脚本，之后每次只需：选学校 → 登录 → 自动带回课表。
+            不用装任何脚本：打开教务系统 → 登录 → 在课表页<b>全选复制</b> → 回来一键识别。
           </p>
           <div className="cs-field" style={{ marginBottom: 10 }}>
             <label className="cs-l">选择学校</label>
@@ -2146,21 +2280,56 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           </div>
           <div className="cs-row">
             <button type="button" className="cs-btn primary" onClick={startEdu}>
-              <GraduationCap size={15} />开始导入
+              <GraduationCap size={15} />{eduState === '' ? '开始导入' : '重新打开教务系统'}
             </button>
-            <a className="cs-btn" href={USCRIPT_URL} target="_blank" rel="noopener noreferrer" download>
-              安装抓取脚本
-            </a>
           </div>
-          {eduState === 'opening' && <p className="cs-hint">正在打开校内地址，12 秒内没响应会自动切到外网门户…</p>}
-          {eduState === 'ready' && <p className="cs-hint">已连上教务系统：请在打开的窗口里登录，进入「我的课表」后会自动带回本页。</p>}
-          {eduState === 'vpn' && <p className="cs-hint">已跳转到外网入口（vpn.huhst.edu.cn）：登录后同样会自动带回课表。</p>}
-          <div style={{ marginTop: 10, padding: 10, borderRadius: 10, background: '#FAF9F5', border: '1px solid rgba(20,24,33,.08)', fontSize: 12, lineHeight: 1.7, color: '#6c757d' }}>
-            <b style={{ color: '#495057' }}>第一次使用？</b><br />
-            1. 点「安装抓取脚本」→ 浏览器会提示安装（需先装 Tampermonkey / 篡改猴扩展）；<br />
-            2. 回来点「开始导入」；<br />
-            3. 登录后打开「我的课表」，脚本自动读取并跳回这里，点「合并导入」即可。
+          <ol className="cs-edu-steps">
+            <li className={eduState === '' ? '' : 'done'}>
+              <span className="n">1</span>
+              <span>{eduState === ''
+                ? '点「开始导入」：会自动打开校内地址（打不开 12 秒后自动切外网门户）'
+                : '教务系统窗口已打开，请在窗口里登录你的账号'}</span>
+            </li>
+            <li className={eduState === '' ? '' : (eduClip === 'ok' ? 'done' : 'active')}>
+              <span className="n">2</span>
+              <span>登录后打开「我的课表」页面 → <b>全选复制课表</b>（电脑 Ctrl+A → Ctrl+C；手机长按全选 → 复制）</span>
+            </li>
+            <li className={eduClip === 'ok' ? 'done' : (eduState === '' ? '' : 'active')}>
+              <span className="n">3</span>
+              <span>回到这里点下方按钮，自动读取剪贴板并识别课表</span>
+            </li>
+          </ol>
+          <div className="cs-row">
+            <button type="button" className="cs-btn primary" onClick={readEduClipboard} disabled={eduState === '' || eduClipBusy}
+              style={eduState === '' ? { opacity: .5, cursor: 'not-allowed' } : undefined}>
+              {eduClipBusy ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <ClipboardCheck size={15} />}
+              {eduClipBusy ? '识别中…' : '读取剪贴板识别'}
+            </button>
           </div>
+          {eduClip === 'ok' && parsed.length > 0 && (
+            <div className="cs-edu-ok">✓ 识别成功：{parsed.length} 门课程。核对下方预览（可改），点「合并导入」完成。</div>
+          )}
+          {eduClip === 'empty' && <p className="cs-hint" style={{ color: '#B3403A' }}>剪贴板是空的：请先在教务系统课表页复制，再点识别。</p>}
+          {eduClip === 'fail' && <p className="cs-hint" style={{ color: '#B3403A' }}>没识别出课程：请确认复制的是「我的课表」页面内容（含周一到周日表头）。</p>}
+          <textarea
+            value={eduPasteText} onChange={(e) => setEduPasteText(e.target.value)} rows={4}
+            placeholder={'电脑上授权剪贴板失败？在这里手动 Ctrl+V 粘贴，效果一样'}
+            className="cs-input" style={{ width: '100%', resize: 'vertical', lineHeight: 1.6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 }}
+          />
+          {eduPasteText.trim() && (
+            <button type="button" className="cs-btn" onClick={() => {
+              const list = parseClipboardTimetable(eduPasteText);
+              if (!list.length) { setEduClip('fail'); say('没识别出课程：请确认复制的是课表页内容'); return; }
+              setParsed(list); setEduClip('ok'); say(`识别到 ${list.length} 门课程，核对预览后合并导入`);
+            }}>识别粘贴内容</button>
+          )}
+          <details style={{ fontSize: 12, color: '#8a8a8a' }}>
+            <summary style={{ cursor: 'pointer' }}>进阶：安装抓取脚本自动带回（可选，不用装也行）</summary>
+            <div style={{ marginTop: 8 }}>
+              装 Tampermonkey 扩展后点 <a href={USCRIPT_URL} target="_blank" rel="noopener noreferrer" download>安装抓取脚本</a>，
+              以后登录教务系统打开「我的课表」会自动跳回本页导入，全程免复制。
+            </div>
+          </details>
         </>)}
 
         {importMode === 'photo' && (<>
@@ -2257,13 +2426,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       {/* 手动新增 */}
       <Sheet open={modal === 'add'} onClose={() => { closeModal(); cancelEdit(); }} icon={<Plus size={16} />}
         title={editingCourseId ? '编辑课程' : '添加课程'} sub="双击课表格子也能直接编辑">
-        <div className="cs-card" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
-        {/* ── 课程信息 ── */}
+        <div className="cs-card cs-addform" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
+        {/* ── 课程信息（紧凑双列） ── */}
         <div className="cs-row cs-forminfo">
-          <div className="cs-field cs-f-full"><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
-          <div className="cs-field"><label className="cs-l">老师（可含职称）</label><input className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
-          <div className="cs-field"><label className="cs-l">教室</label><input className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="博学楼501（可留空）" /></div>
-          <div className="cs-field"><label className="cs-l">学分（可留空）</label><input className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="3" /></div>
+          <div className="cs-field" style={{ flex: '1.6 1 150px', minWidth: 0 }}><label className="cs-l">课程名称</label><input className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
+          <div className="cs-field" style={{ flex: '1 1 110px', minWidth: 0 }}><label className="cs-l">老师（可含职称）</label><input className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
+          <div className="cs-field" style={{ flex: '1.3 1 130px', minWidth: 0 }}><label className="cs-l">教室</label><input className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="博学楼501（可留空）" /></div>
+          <div className="cs-field" style={{ flex: '0.7 1 70px', minWidth: 0 }}><label className="cs-l">学分</label><input className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="3" /></div>
           <div className="cs-field cs-f-full" style={{ flex: '1 1 260px', minWidth: 0 }}><label className="cs-l">备注（可留空）</label><input className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
           <div className="cs-field cs-f-full">
             <label className="cs-l">格子颜色</label>
@@ -2363,16 +2532,16 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       {(
         <MobileBox open={weekAsk} onClose={() => setWeekAsk(false)} icon={<CalendarDays size={16} />}
           title="现在是第几周？" label="设置当前周次"
-          sub="只需设置一次：之后按日期自动推进，单节课也会据此算出具体日期。"
-          actions={<>
-            <button type="button" className="cs-btn" onClick={() => setWeekAsk(false)}>稍后再说</button>
-            <button type="button" className="cs-btn primary" onClick={applyWeekAsk}>确定</button>
-          </>}>
-          <div className="cs-field">
-            <label className="cs-l">当前是第几周（1-{MAX_WEEK}）</label>
-            <input type="number" min={1} max={MAX_WEEK} inputMode="numeric" className="cs-input" value={weekAskVal}
-              onChange={(e) => setWeekAskVal(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') applyWeekAsk(); }} />
+          sub="点一下今天的周数即可，之后每周一自动往后跳。"
+          actions={<button type="button" className="cs-btn" onClick={() => setWeekAsk(false)}>稍后再说</button>}>
+          <div className="cs-weekgrid">
+            {Array.from({ length: MAX_WEEK }, (_, i) => i + 1).map((w) => (
+              <button key={w} type="button" aria-label={`第 ${w} 周`}
+                className={'cs-weekchip' + (String(w) === String(weekAskVal) ? ' is-on' : '')}
+                onClick={() => applyWeekVal(w)}>
+                第{w}周
+              </button>
+            ))}
           </div>
         </MobileBox>
       )}
