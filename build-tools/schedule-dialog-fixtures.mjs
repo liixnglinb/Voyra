@@ -1,6 +1,7 @@
 // Isolated browser data; no real account or cloud writes are used in UI checks.
-export async function seedSchedulePreview(context) {
-  await context.addInitScript(() => {
+export async function seedSchedulePreview(context, allowedOrigin = null) {
+  await context.addInitScript(allowedOrigin => {
+    if (allowedOrigin && location.origin !== allowedOrigin) return;
     const uid = 'schedule-ui-preview';
     const monday = new Date();
     monday.setHours(0,0,0,0);
@@ -22,5 +23,5 @@ export async function seedSchedulePreview(context) {
       async openExternal() { return null; },
     };
     Object.defineProperty(window, 'electronAPI', { configurable: true, get: () => api, set: () => {} });
-  });
+  }, allowedOrigin);
 }

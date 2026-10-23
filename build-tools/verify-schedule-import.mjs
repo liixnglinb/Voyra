@@ -56,7 +56,7 @@ try{
   if(viewport.width<768)assert.ok(menu.width<=231,'Mobile function menu is compact');
   if(viewport.width===390)await page.screenshot({path:resolve(out,'390-compact-menu.png')});
   await page.getByRole('menuitem').filter({hasText:'本周课程明细'}).click();await layout(page,'detail-close',true);await page.locator('.mbox-x').click();
-  await open(page,'导入课表');await layout(page,'edu-school',true);
+  await open(page,'导入课表');await page.getByRole('button',{name:'无法安装助手？使用手动导入'}).click();await layout(page,'edu-school',true);
   assert.equal(await page.getByRole('link',{name:'打开教务系统',exact:true}).getAttribute('href'),'http://10.1.1.149/jsxsd/');
   await page.getByRole('radio',{name:/校外网络/}).check();
   assert.equal(await page.getByRole('link',{name:'打开教务系统',exact:true}).getAttribute('href'),'http://vpn.huhst.edu.cn:9900/');
@@ -113,11 +113,11 @@ try{
  assert.ok(await legacy.page.evaluate(()=>JSON.parse(localStorage.getItem('ClassScheduleData_legacy-recipient')).settings.startDate));
  report.flows.push('Legacy links without a semester date save first and then guide a first-time recipient to choose the current week');await legacy.context.close();
 
- const edu=await make({width:390,height:844},{uid:'edu-recipient',courses:[mine]});await go(edu.page);await open(edu.page,'导入课表');await edu.page.getByRole('button',{name:'已经复制好课表，直接粘贴',exact:true}).click();
+ const edu=await make({width:390,height:844},{uid:'edu-recipient',courses:[mine]});await go(edu.page);await open(edu.page,'导入课表');await edu.page.getByRole('button',{name:'无法安装助手？使用手动导入'}).click();await edu.page.getByRole('button',{name:'已经复制好课表，直接粘贴',exact:true}).click();
  const text='节次\t周一\t周二\t周三\n1-2\t"概率论\n龙老师\n致远-120\n2-17周（单）"\t\t\n';await edu.page.getByLabel('粘贴教务课表',{exact:true}).fill(text);await edu.page.getByRole('button',{name:'识别粘贴内容',exact:true}).click();await layout(edu.page,'edu-review',true);
  assert.ok((await edu.page.locator('.cs-review').innerText()).includes('2-17周(单周)'));await edu.page.locator('.mbox-foot').getByRole('button',{name:'导入 1 门课程',exact:true}).click();
  const eduSaved=await edu.page.evaluate(()=>JSON.parse(localStorage.getItem('ClassScheduleData_edu-recipient')));assert.equal(eduSaved.courses.length,2);assert.equal(eduSaved.courses[1].teacher,'龙老师');assert.equal(eduSaved.courses[1].periods[0].type,'odd');assert.equal(eduSaved.courses[1].periods[0].t,17);
- await open(edu.page,'导入课表');await edu.page.getByRole('button',{name:'内容不完整？重新复制识别',exact:true}).click();
+ await open(edu.page,'导入课表');await edu.page.getByRole('button',{name:'内容不完整？重新识别',exact:true}).click();
  await edu.page.getByLabel('粘贴教务课表',{exact:true}).evaluate(el=>{
   const data=new DataTransfer();data.setData('text/plain','完整富文本课表');data.setData('text/html','<table><tr><th colspan="2">时间</th><th>周一</th><th>周二</th><th>周三</th></tr><tr><td rowspan="2">上午</td><td>1-2</td><td>大学英语<br>王教授<br>博学楼501<br>1-18周</td><td></td><td></td></tr><tr><td>3-4</td><td></td><td>线性代数<br>张老师<br>致远-101<br>3,5,7周（单）</td><td></td></tr></table>');el.dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:data}));
  });

@@ -11,6 +11,8 @@ import { useAuth } from '../components/AuthGate';
 import { ScheduleStore } from '../lib/schedule-data';
 import { encodeScheduleShare, fetchScheduleShare, mergeReceivedCourses } from '../lib/schedule-share';
 import { parseTabularText, htmlTimetableRows, parseEducationRows } from '../lib/education-import';
+import EducationAssistant, { finishEducationImport, clearEducationImport } from '../components/EducationAssistant';
+import { validJobId } from '../lib/education-automation';
 import '../styles/schedule-dialogs.css';
 
 /* 手机端把课表下方的整块内容搬进页头「功能」按钮打开的底部抽屉：
@@ -315,8 +317,7 @@ function themeOf(course) {
 
 const BACKUP_APP = 'voyra-schedule';
 
-/* 教务导入使用明确的校园网/校外网络选择，并引导复制、识别和保存。
-   已安装的旧抓取脚本仍可通过 VOYRA2 分享格式返回本站预览。 */
+/* 自动助手在用户浏览器检测学校网络；手动导入保留为兼容入口。 */
 const SCHOOLS = [
   {
     id: 'huhst',
@@ -962,6 +963,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [eduNetwork, setEduNetwork] = useState('campus');
   const [eduStep, setEduStep] = useState(1);
   const [eduError, setEduError] = useState('');
+  const [eduManual, setEduManual] = useState(false);
+  const [eduResult, setEduResult] = useState(null);
+  useEffect(() => { setParsed([]); setEduResult(null); }, [storageKey]);
   const [shareDetail, setShareDetail] = useState(true);
   useEffect(() => {
     shareRequestRef.current?.abort(); shareRequestRef.current = null;
@@ -1095,6 +1099,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   /* 弹窗层级：从功能菜单进入的弹窗，点完成后回到菜单；其余直接关闭 */
   const openModal = (k, back = null) => { setModalBack(back); setModal(k); };
   const closeModal = () => { setModal(modalBack); setModalBack(null); if (onClosePanel) onClosePanel(); };
+  useEffect(() => {
+    const id = new URLSearchParams(route.search).get('eduImport');
+    if (validJobId(id)) { setImportMode('edu'); setEduStep(1); setEduManual(false); openModal('import'); }
+  }, [route.search]);
 
   /* 页头「功能」菜单（ScheduleHub）点选的面板 id → 打开对应居中弹窗。
      week/detail/import/add/clear 与菜单项一一对应；未知 id 忽略。 */
@@ -1193,7 +1201,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const addParsed = () => {
     if (!parsed.length) { say('未识别到有效课程'); return; }
     if (!guard()) return;
+    if (eduResult && eduResult.owner !== storageKey) { setParsed([]); setEduResult(null); say('账号已切换，请重新发起教务导入'); return; }
     if (!persist(mergeReceivedCourses(courses, parsed).courses, null)) return;
+    if (importMode === 'edu' && eduResult) { finishEducationImport(eduResult.id); setEduResult(null); navigate('/timetable?tab=courses', { replace: true }); }
     setImportText(''); setParsed([]); setOcrRaw('');
     closeModal(); // 先关导入弹窗（从菜单进来的会回到菜单），周次询问才能单独出现
     say(`已导入 ${parsed.length} 门课程`);
@@ -1375,7 +1385,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   };
   useEffect(() => () => shareRequestRef.current?.abort(), []);
 
-  // Network choice is explicit. No timer can redirect a student's login window.
+  // Manual fallback works in browsers without extension support.
   const selectedSchool = SCHOOLS.find(s => s.id === eduSchool) || SCHOOLS[0];
   const eduAddress = eduNetwork === 'campus' ? selectedSchool.intranet : selectedSchool.vpn;
   const startEdu = () => {
@@ -1384,7 +1394,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const applyEduRows = (plain, rich = '') => {
     const list = parseClipboardTimetable(plain, rich);
     if (!list.length) { setEduError('未识别到课程。请复制含星期表头和节次的完整课表；也可改用 Excel 或图片导入。'); return; }
-    setParsed(list); setEduStep(3); setEduError('');
+    setParsed(list); setEduResult(null); setEduStep(3); setEduError('');
     say('识别到 ' + list.length + ' 门课程，请核对预览后保存');
   };
   const readEduClipboard = async () => {
@@ -2117,7 +2127,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
           {[['xls', 'Excel', FileSpreadsheet], ['edu', '教务导入', GraduationCap], ['photo', '图片识别', Camera], ['share', '分享链接', Link2], ['backup', '备份', Copy]].map(([k, label, Icon]) => (
             <button key={k} type="button" className={`cs-btn cs-mode${importMode === k ? ' is-on' : ''}`}
               aria-pressed={importMode === k}
-              onClick={() => { setImportMode(k); setParsed([]); }}><Icon size={17} /><span>{label}</span></button>
+              onClick={() => { setImportMode(k); setParsed([]); setEduResult(null); }}><Icon size={17} /><span>{label}</span></button>
           ))}
         </div>
 
@@ -2136,7 +2146,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </>)}
 
         {importMode === 'edu' && (<>
-          <nav className="cs-edu-progress" aria-label="教务导入步骤">{['打开教务','复制课表','核对保存'].map((label,index) => <button key={label} type="button" aria-current={eduStep === index + 1 ? 'step' : undefined} disabled={index === 2 && !parsed.length} onClick={() => setEduStep(index + 1)}><b>{index + 1}</b><span>{label}</span></button>)}</nav>
+          {eduStep !== 3 && <EducationAssistant owner={storageKey} guard={guard} onManual={() => { setEduManual(true); setEduStep(1); }} onCourses={(list,info) => { setParsed(list); setEduResult({ ...info, owner: storageKey }); setEduStep(3); setEduError(''); }} />}
+          {(eduManual || eduStep === 3) && <>
+          <nav className="cs-edu-progress" aria-label="教务导入步骤">{(eduResult ? ['选择入口','逐周识别','核对保存'] : ['打开教务','复制课表','核对保存']).map((label,index) => <button key={label} type="button" aria-current={eduStep === index + 1 ? 'step' : undefined} disabled={eduResult ? index !== 2 : index === 2 && !parsed.length} onClick={() => setEduStep(index + 1)}><b>{index + 1}</b><span>{label}</span></button>)}</nav>
           {eduStep === 1 && <div className="cs-edu-guide">
             <h3>先打开你的教务系统</h3><p>登录和选学期都在学校官网完成，本站不收集教务账号或密码。</p>
             <label className="cs-l" htmlFor="cs-edu-school">学校</label><select id="cs-edu-school" className="cs-input" value={eduSchool} onChange={e => setEduSchool(e.target.value)}>{SCHOOLS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
@@ -2153,7 +2165,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
             <button type="button" className="cs-btn cs-edu-open" disabled={!eduPasteText.trim()} onClick={() => applyEduRows(eduPasteText)}>识别粘贴内容</button>
             <div className="cs-row"><button type="button" className="cs-quiet-action" onClick={() => setEduStep(1)}>更换网络入口</button><a className="cs-quiet-action" href={eduAddress} target="_blank" rel="noopener noreferrer">重新打开教务</a><button type="button" className="cs-quiet-action" onClick={() => { setImportMode('xls'); setParsed([]); }}>改用 Excel</button></div>
           </div>}
-          {eduStep === 3 && <div className="cs-edu-guide"><div className="cs-edu-success"><Check size={19}/><div><b>已识别 {parsed.length} 门课程</b><p>核对下方课程、周次和上课地点，确认后保存到自己的账号。原有课程继续保留。</p></div></div><button type="button" className="cs-quiet-action" onClick={() => { setEduStep(2); setParsed([]); }}>内容不完整？重新复制识别</button></div>}
+          {eduStep === 3 && <div className="cs-edu-guide"><div className="cs-edu-success"><Check size={19}/><div><b>已识别 {parsed.length} 门课程</b>{eduResult && <p>{eduResult.semester || '学校课表'}{eduResult.weeks?.length ? ` · 已检查 ${eduResult.weeks.length} 个周次` : ' · 学期课表'}</p>}<p>核对下方课程、周次和上课地点，确认后保存到自己的账号。原有课程继续保留。</p></div></div><button type="button" className="cs-quiet-action" onClick={() => { if (eduResult) clearEducationImport(eduResult.id); setEduStep(eduResult ? 1 : 2); setParsed([]); setEduResult(null); }}>内容不完整？重新识别</button></div>}
+          </>}
           {eduError && <p className="cs-import-error" role="alert">{eduError}</p>}
         </>)}
 

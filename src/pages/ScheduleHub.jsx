@@ -123,7 +123,7 @@ export default function ScheduleHub() {
     if (!isMobile) return undefined;
     try { if (window.localStorage.getItem(GUIDE_KEY) === '1') return undefined; } catch { return undefined; }
     const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
-    if (params.has('share') || params.has('shareId')) return undefined;
+    if (params.has('share') || params.has('shareId') || params.has('eduImport')) return undefined;
     const t = setTimeout(() => setGuide(0), 900);
     return () => clearTimeout(t);
   }, [isMobile]);

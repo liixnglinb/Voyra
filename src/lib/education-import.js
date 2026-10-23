@@ -22,7 +22,12 @@ export function htmlTimetableRows(html,doc=document){
     rows[ri]||=[];let ci=0;
     for(const cell of tr.cells){
       while(rows[ri][ci]!==undefined)ci++;
-      const clone=cell.cloneNode(true);clone.querySelectorAll('script,style,img,iframe').forEach(el=>el.remove());
+      const clone=cell.cloneNode(true);clone.querySelectorAll('script,style,img,iframe,[hidden],[style*="display: none"],[style*="display:none"]').forEach(el=>el.remove());
+      clone.querySelectorAll('hr').forEach(el=>el.replaceWith(doc.createTextNode('\n\n')));
+      clone.querySelectorAll('font[title]').forEach(el=>{
+        if(/教师|老师/.test(el.title))el.prepend(doc.createTextNode('教师：'));
+        else if(/教室|地点/.test(el.title))el.prepend(doc.createTextNode('教室：'));
+      });
       clone.querySelectorAll('br').forEach(el=>el.replaceWith(doc.createTextNode('\n')));
       clone.querySelectorAll('div,p,li').forEach(el=>el.append(doc.createTextNode('\n')));
       const value=clone.textContent.replace(/\u00a0/g,' ').trim();
@@ -41,19 +46,21 @@ export function educationSlot(text){
   const period=value.match(/(?:第)?\s*(\d{1,2})(?:\s*[-—~至,，、]\s*\d{1,2})?\s*(?:节|$|[)）])/);
   return period&&Number(period[1])>=1&&Number(period[1])<=12?slotByNumber(Number(period[1])):null;
 }
-function weekPeriods(text){
+function weekPeriods(text,{week,requireWeeks=false}={}){
+  if(week)return [{f:week,t:week,type:'every'}];
   const value=String(text||'').replace(/\[\s*周\s*\]|\(\s*\[?周\]?\s*\)/g,'周');
   const type=/[（(\[]\s*单(?:周)?\s*[)）\]]|单周/.test(value)?'odd':/[（(\[]\s*双(?:周)?\s*[)）\]]|双周/.test(value)?'even':'every';
   const group=value.match(/(?:第)?\s*(\d{1,2}(?:\s*[-—–~至到,，、]\s*\d{1,2})*)\s*周/);
-  if(!group)return [{f:1,t:16,type}];
+  if(!group){if(requireWeeks)throw Error('部分课程没有周次，请切换到学期课表，或选择具体周次后重试。');return [{f:1,t:16,type}];}
   const result=[];
   for(const part of group[1].split(/[,，、]/)){
     const [f,t=f]=part.split(/[-—–~至到]/).map(v=>Number(v.trim()));
     if(f>=1&&t<=20&&f<=t)result.push({f,t,type});
   }
+  if(!result.length&&requireWeeks)throw Error('课程周次超出 1–20 周，无法完整导入。');
   return result.length?result:[{f:1,t:16,type}];
 }
-export function parseEducationRows(rows){
+export function parseEducationRows(rows,options={}){
   let header=-1,days=[];
   for(let i=0;i<rows.length;i++){
     const mapped=rows[i].map((cell,col)=>{const day=String(cell).trim().match(/^(?:星期|周)\s*([一二三四五六日天])(?:\s|$)/);return day?{col,day:CN[day[1]]}:null;}).filter(Boolean);
@@ -79,7 +86,7 @@ export function parseEducationRows(rows){
           if(!teacher&&(/老师|教授|讲师|助教/.test(item)||/^[\u4e00-\u9fa5·]{2,5}$/.test(item))){teacher=item;continue;}
           note.push(item);
         }
-        const periods=weekPeriods(block).map(weeks=>({day,slot,...weeks}));
+        const periods=weekPeriods(block,options).map(weeks=>({day,slot,...weeks}));
         const signature=JSON.stringify({name,teacher,room,periods});if(seen.has(signature))continue;seen.add(signature);
         courses.push({id:`edu-${i}-${col}-${courses.length}`,name,teacher,room,note:note.join(' · '),periods});
       }
