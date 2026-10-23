@@ -46,7 +46,7 @@ const GUIDE_KEY = 'voyra-sched-guide-v1';
 const GUIDE_STEPS = [
   { sel: '.shub-pick-btn', title: '这里切换视图', body: '课程表 / 日历 / 作业看板都收在这个下拉里。' },
   { sel: '.shub-fn-btn', title: '功能都在这个按钮里', body: '周次与时间设置、课程明细、导入课表、添加课程 —— 点开就是，不占课表空间。' },
-  { sel: '.shub-drawer', title: '在这里导入课表', body: '从文件、同学分享的链接或口令导入；也能导出备份换设备。全程在本机完成，不上传。', open: 'import' },
+  { sel: '.shub-drawer', title: '在这里导入课表', body: '按步骤从教务、Excel、图片或分享链接导入。登录后保存在自己的账号，也能导出备份。', open: 'import' },
 ];
 
 /* 断点阈值与主仓库 Layout / index.css 的手机口径（767）一致，
@@ -122,6 +122,8 @@ export default function ScheduleHub() {
   useEffect(() => {
     if (!isMobile) return undefined;
     try { if (window.localStorage.getItem(GUIDE_KEY) === '1') return undefined; } catch { return undefined; }
+    const params = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    if (params.has('share') || params.has('shareId')) return undefined;
     const t = setTimeout(() => setGuide(0), 900);
     return () => clearTimeout(t);
   }, [isMobile]);

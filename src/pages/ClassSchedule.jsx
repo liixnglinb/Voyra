@@ -1,12 +1,16 @@
 import React, { useState, useEffect, useMemo, useRef, useId } from 'react';
 /* Voyra-schedule 独立仓库 · 同步链路验证标记 v1 */
 import { createPortal } from 'react-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  GraduationCap, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
+  GraduationCap, Download as DownloadIcon, Plus, Trash2, Copy, Check, ChevronLeft, ChevronRight,
   Upload, CalendarDays, User, Clock, CalendarRange, Wand2, RefreshCw, Moon,
   MapPin, ChevronDown, ChevronUp, FileSpreadsheet, Loader2, X, Link2, Camera, LayoutGrid, ClipboardCheck,
 } from 'lucide-react';
 import { useAuth } from '../components/AuthGate';
+import { ScheduleStore } from '../lib/schedule-data';
+import { encodeScheduleShare, fetchScheduleShare, mergeReceivedCourses } from '../lib/schedule-share';
+import { parseTabularText, htmlTimetableRows, parseEducationRows } from '../lib/education-import';
 import '../styles/schedule-dialogs.css';
 
 /* 手机端把课表下方的整块内容搬进页头「功能」按钮打开的底部抽屉：
@@ -250,77 +254,10 @@ const reNight = /晚自习\s*(\d)?/;
 const rePeriod = /(?:第)?\s*(\d{1,2})\s*[-~至到—–]\s*(\d{1,2})\s*节|(?:第)?\s*(\d{1,2})\s*节/;
 const reWeek = /(?:第)?\s*(\d{1,2})\s*(?:周)?\s*[-~至到—–]\s*(?:第)?\s*(\d{1,2})\s*周|第\s*(\d{1,2})\s*周/;
 const reOddEven = /[（(](单|双)周?[)）]|(单|双)周/;
-/* ── 教务系统课表「复制粘贴」解析 ──────────────────────────────────
-   教务系统的课表是 HTML 表格，在页面里 Ctrl+A → Ctrl+C 复制后，
-   剪贴板文本就是 TSV（制表符分列、换行分行）——不需要任何脚本即可解析。 */
-const CLIP_SLOTS = ['1-2', '3-4', '5-6', '7-8', '晚自习1', '晚自习2'];
-const CLIP_DAYC = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '日': 7, '天': 7 };
-const clipSlotOf = (t) => {
-  t = String(t || '').replace(/\s+/g, '');
-  const s = t.replace(/\d{1,2}[:：]\d{2}(?:[-~—]\d{1,2}[:：]\d{2})?/g, '');
-  if (/晚/.test(s)) return /2/.test(s) ? '晚自习2' : '晚自习1';
-  const cn = /第([一二三四五六七八九十]+)大?节/.exec(s);
-  if (cn) {
-    const CN = { '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10 };
-    const n = CN[cn[1]] || 0;
-    if (n >= 5) return n === 6 ? '晚自习2' : '晚自习1';
-    const a = n * 2;
-    if (a <= 2) return '1-2'; if (a <= 4) return '3-4'; if (a <= 6) return '5-6'; if (a <= 8) return '7-8';
-    return '晚自习1';
-  }
-  const m = s.match(/(\d{1,2})/);
-  if (!m) return null;
-  const a = +m[1];
-  if (a <= 2) return '1-2'; if (a <= 4) return '3-4'; if (a <= 6) return '5-6'; if (a <= 8) return '7-8';
-  return a <= 10 ? '晚自习1' : '晚自习2';
-};
-function parseClipboardTimetable(text) {
-  const rows = String(text || '').replace(/\r/g, '').split('\n').map((r) => r.split('\t'));
-  let headIdx = -1;
-  const colDay = {};
-  for (let i = 0; i < rows.length; i++) {
-    let n = 0;
-    const map = {};
-    rows[i].forEach((c, ci) => {
-      const m = /(?:周|星期)\s*([一二三四五六日天])/.exec(String(c).replace(/\s+/g, ''));
-      if (m) { map[ci] = CLIP_DAYC[m[1]]; n++; }
-    });
-    if (n >= 3) { headIdx = i; Object.assign(colDay, map); break; }
-  }
-  if (headIdx < 0) return [];
-  const out = [];
-  const roomRe = /(楼|室|教室|馆|场|中心|苑|区|\d{3,4}|[A-Z]\d{2,4})/;
-  for (let ri = headIdx + 1; ri < rows.length; ri++) {
-    const cells = rows[ri];
-    if (!cells.length) continue;
-    const slot = clipSlotOf(cells[0] || '');
-    if (!slot) continue;
-    for (let ci = 1; ci < cells.length; ci++) {
-      const day = colDay[ci];
-      if (!day) continue;
-      const raw = String(cells[ci] || '').split('\n').map((x) => x.trim()).filter(Boolean);
-      if (!raw.length) continue;
-      const name = raw[0];
-      if (clipSlotOf(name) || /^(周|星期)[一二三四五六日天]$/.test(name)) continue;
-      let teacher = '', room = '';
-      const note = [];
-      for (let k = 1; k < raw.length; k++) {
-        const t = raw[k];
-        if (!room && roomRe.test(t) && t.length <= 20) room = t;
-        else if (!teacher && /(?:老师|教授|讲师)/.test(t) && t.length <= 20) teacher = t;
-        else if (!teacher && /^[\u4e00-\u9fa5·]{2,4}$/.test(t)) teacher = t;
-        else note.push(t);
-      }
-      const joined = raw.join('');
-      const type = /\(单\)|（单）/.test(joined) ? 1 : /\(双\)|（双）/.test(joined) ? 2 : 0;
-      out.push({
-        id: `clip-${ri}-${ci}`, name, color: null, credit: '',
-        note: note.join(' · ').slice(0, 40), teacher, room,
-        periods: [{ day, slot, f: 1, t: 16, type, customTime: null }],
-      });
-    }
-  }
-  return out;
+function parseClipboardTimetable(text, html = '') {
+  const rows = html ? htmlTimetableRows(html) : parseTabularText(text);
+  const courses = parseEducationRows(rows);
+  return courses.length ? courses : parseXlsRows(rows);
 }
 
 /* 老师：抓取姓名+职称完整串；同一行若后面紧跟「教室/地点」，在此处截断 */
@@ -376,54 +313,18 @@ function themeOf(course) {
   return picked || courseTheme(course?.name);
 }
 
-/* ── 分享口令 / 备份 ─────────────────────────────────────────────────
-   口令：把整张课表压成一段可粘贴的短文本（VOYRA1: + base64url），纯前端、
-   不经服务器。勾选「含教室/老师」时把这两项一起带走，否则只带课名与时段。
-   备份：整份 courses + settings 的 JSON，用于换设备/换浏览器时搬课表。 */
-const SHARE_PREFIX = 'VOYRA1:';
 const BACKUP_APP = 'voyra-schedule';
-function b64urlEncode(str) {
-  const bytes = new TextEncoder().encode(str);
-  let bin = '';
-  bytes.forEach((b) => { bin += String.fromCharCode(b); });
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-function b64urlDecode(s) {
-  const bin = atob(s.replace(/-/g, '+').replace(/_/g, '/'));
-  return new TextDecoder().decode(Uint8Array.from(bin, (ch) => ch.charCodeAt(0)));
-}
-const TYPE_CODE = { every: 0, odd: 1, even: 2 };
-const TYPE_FROM = ['every', 'odd', 'even'];
-function encodeShare(courses, withDetail) {
-  const slim = courses.map((c) => {
-    const row = {
-      /* 时段用数组压体积：[星期, 节次, 起始周, 结束周, 单双周, 自定义起止] */
-      p: coursePeriods(c).map((p) => [p.day, p.slot, p.f, p.t, TYPE_CODE[p.type] || 0,
-        p.customTime && p.customTime.start && p.customTime.end ? `${p.customTime.start}-${p.customTime.end}` : '']),
-    };
-    row.n = c.name;
-    if (withDetail) { row.t = c.teacher || ''; row.r = c.room || ''; }
-    if (Number.isInteger(c.color)) row.c = c.color;
-    if (c.credit) row.k = c.credit;
-    if (c.note) row.o = c.note;
-    return row;
-  });
-  return SHARE_PREFIX + b64urlEncode(JSON.stringify(slim));
-}
-/* ── 教务系统一键导入 ──────────────────────────────────────────────────
-   内网直连失败时自动切外网（学校 VPN 门户）。真正的抓取由浏览器用户脚本完成
-   （public/jsxsd-import.user.js）：它在教务页面里读到课表后跳回本站
-   #/timetable?share=…，本站按分享链接流程自动预览。
-   站内只负责「开页面 + 12 秒内没收到 ready 就切外网 + 状态提示」。 */
+
+/* 教务导入使用明确的校园网/校外网络选择，并引导复制、识别和保存。
+   已安装的旧抓取脚本仍可通过 VOYRA2 分享格式返回本站预览。 */
 const SCHOOLS = [
   {
     id: 'huhst',
     name: '湖南人文科技学院',
-    intranet: 'http://10.1.1.149/jsxsd/?by=history&from=kkframenew',
-    vpn: 'http://vpn.huhst.edu.cn:9900/http/77726476706e69737468656265737421a1a70fcd6961260728/cas/login?service=http%3A%2F%2Fvpn.huhst.edu.cn%3A9900%2Flogin%3Fcas_login%3Dtrue',
+    intranet: 'http://10.1.1.149/jsxsd/',
+    vpn: 'http://vpn.huhst.edu.cn:9900/',
   },
 ];
-const USCRIPT_URL = '/jsxsd-import.user.js';
 
 /* ── 课程表图片识别：OCR 文本块 → 课程 ────────────────────────────────
    后端 /ocr 返回带坐标的文本块；这里按「星期表头 × 节次左列」还原成格子。
@@ -514,87 +415,6 @@ function parseOcrGrid(items) {
   return list.length ? list : null;
 }
 
-/* 分享口令 v2：字段用分隔符替代 JSON 键名，体积约为 v1 的一半；
-   格式 VOYRA2: + b64url(课程1|课程2…)，课程 name~color~credit~note~teacher~room~时段
-   时段 day,slotIdx,f,t,typeCode,customTime（slotIdx 对应 DEFAULT_SLOTS 下标）。 */
-const SHARE_V2_PREFIX = 'VOYRA2:';
-const SLOT_KEYS = DEFAULT_SLOTS.map((s) => s.key);
-function escShare(v) { return String(v || '').replace(/[|~;,]/g, (ch) => '%' + ch.charCodeAt(0).toString(16)); }
-function unescShare(v) { return String(v || '').replace(/%(7c|7e|3b|2c)/gi, (_, h) => String.fromCharCode(parseInt(h, 16))); }
-function encodeShareV2(courses, withDetail) {
-  const body = courses.map((c) => {
-    const periods = coursePeriods(c).map((p) => {
-      const si = Math.max(0, SLOT_KEYS.indexOf(p.slot));
-      const ct = p.customTime && p.customTime.start && p.customTime.end ? `${p.customTime.start}-${p.customTime.end}` : '';
-      return [p.day, si, p.f, p.t, TYPE_CODE[p.type] || 0, ct].join(',');
-    }).join(';');
-    return [
-      escShare(c.name),
-      Number.isInteger(c.color) ? c.color : '',
-      escShare(c.credit || ''),
-      escShare(c.note || ''),
-      withDetail ? escShare(c.teacher || '') : '',
-      withDetail ? escShare(c.room || '') : '',
-      periods,
-    ].join('~');
-  }).join('|');
-  return SHARE_V2_PREFIX + b64urlEncode(body);
-}
-function decodeShareV2(text) {
-  const raw = String(text || '').replace(/\s+/g, '');
-  const at = raw.indexOf(SHARE_V2_PREFIX);
-  if (at < 0) return null;
-  try {
-    const body = b64urlDecode(raw.slice(at + SHARE_V2_PREFIX.length));
-    const list = body.split('|').filter(Boolean).map((row, i) => {
-      const [name, color, credit, note, teacher, room, periods] = row.split('~');
-      const c = {
-        id: `share${Date.now().toString(36)}${i}`,
-        name: unescShare(name).trim(),
-        teacher: unescShare(teacher || ''), room: unescShare(room || ''),
-        periods: String(periods || '').split(';').filter(Boolean).map((seg) => {
-          const [day, si, f, t, ty, ct] = seg.split(',');
-          const one = { day: +day, slot: SLOT_KEYS[+si] || '1-2', f: +f || 1, t: +t || 16, type: TYPE_FROM[ty] || 'every' };
-          if (ct && ct.includes('-')) { const [s, e] = ct.split('-'); one.customTime = { start: s, end: e }; }
-          return one;
-        }),
-      };
-      if (color !== '' && Number.isInteger(+color)) c.color = +color;
-      if (credit) c.credit = unescShare(credit);
-      if (note) c.note = unescShare(note);
-      return c;
-    }).filter((c) => c.name && c.periods.length);
-    return list.length ? list : null;
-  } catch { return null; }
-}
-function decodeShare(text) {
-  const v2 = decodeShareV2(text);
-  if (v2) return v2;
-  const raw = String(text || '').replace(/\s+/g, '');
-  const at = raw.indexOf(SHARE_PREFIX);
-  if (at < 0) return null;
-  try {
-    const list = JSON.parse(b64urlDecode(raw.slice(at + SHARE_PREFIX.length)));
-    if (!Array.isArray(list) || !list.length) return null;
-    return list.filter((o) => o && o.n).map((o, i) => {
-      const c = {
-        id: `share${Date.now().toString(36)}${i}`,
-        name: String(o.n).trim(),
-        teacher: o.t || '', room: o.r || '',
-        periods: (o.p || []).filter((p) => Array.isArray(p) && p.length >= 4)
-          .map(([day, slot, f, t, ty, ct]) => {
-            const one = { day: +day, slot: String(slot), f: +f || 1, t: +t || 16, type: TYPE_FROM[ty] || 'every' };
-            if (ct && ct.includes('-')) { const [s, e] = ct.split('-'); one.customTime = { start: s, end: e }; }
-            return one;
-          }),
-      };
-      if (Number.isInteger(o.c)) c.color = o.c;
-      if (o.k) c.credit = String(o.k);
-      if (o.o) c.note = String(o.o);
-      return c;
-    }).filter((c) => c.name && c.periods.length);
-  } catch { return null; }
-}
 /* 收起状态下左侧时间轴只有 30px 宽，「1-2 节」「晚自习 1」会被挤成两行、参差不齐；
    给它一个短标（1-2 / 晚1）保持单行。展开后与桌面端仍用完整名称。 */
 function miniSlotLabel(label) {
@@ -904,7 +724,7 @@ function detectXlsGridHeader(row) {
   const dayIdxs = [];
   row.forEach((raw, idx) => {
     const s = xlsCell(raw);
-    const d = s.match(/^星期?([一二三四五六日天])$/);
+    const d = s.match(/^(?:周|星期)\s*([一二三四五六日天])$/);
     if (d) dayIdxs.push({ idx, day: XLS_WEEK[d[1]] });
   });
   if (dayIdxs.length < 3) return null;
@@ -1095,10 +915,28 @@ export function useIsMobile() {
 }
 
 export default function ClassSchedule({ stats = null, active = true, drawerPanel = null, drawerHost = null, onWeekLabel = null, onClosePanel = null, onOpenPanel = null }) {
-  const { guard, authed } = useAuth();
+  const { guard, authed, username } = useAuth();
+  const route = useLocation(), navigate = useNavigate();
   const CLOUD_KEY = 'schedule-classes-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
-  const [courses, setCourses] = useState([]);
-  const [settings, setSettings] = useState({ startDate: '', overrideWeek: null, timeSlots: null });
+  const storageKey = LS_READ();
+  const scheduleStore = useMemo(() => new ScheduleStore({ storage: localStorage, key: storageKey,
+    isCurrent: () => LS_READ() === storageKey,
+    cloud: authed ? {
+      async load() { if (!window.electronAPI?.loadData) throw Error('云端暂时不可用'); return window.electronAPI.loadData(CLOUD_KEY); },
+      async save(value) { if (!window.electronAPI?.saveData) throw Error('云端暂时不可用'); return window.electronAPI.saveData(CLOUD_KEY, value); },
+    } : null,
+  }), [storageKey, authed]);
+  const [scheduleSnapshot, setScheduleSnapshot] = useState(() => ({ owner: scheduleStore, ...scheduleStore.snapshot() }));
+  const currentSnapshot = scheduleSnapshot.owner === scheduleStore ? scheduleSnapshot : scheduleStore.snapshot();
+  const courses = useMemo(() => currentSnapshot.payload.courses.map(normalizeCourse), [currentSnapshot.payload.courses]);
+  const settings = currentSnapshot.payload.settings;
+  useEffect(() => {
+    const update = snapshot => setScheduleSnapshot({ owner: scheduleStore, ...snapshot });
+    update(scheduleStore.snapshot());
+    const off = scheduleStore.subscribe(update), online = () => scheduleStore.sync();
+    scheduleStore.sync(); window.addEventListener('online', online);
+    return () => { off(); window.removeEventListener('online', online); };
+  }, [scheduleStore]);
   const [timeEdit, setTimeEdit] = useState(null); // { key, side: 's'|'e' } 正在滚动编辑的时段
   const [importText, setImportText] = useState('');
   const [parsed, setParsed] = useState([]);
@@ -1109,13 +947,27 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const [shareLink, setShareLink] = useState('');
   const [ocrBusy, setOcrBusy] = useState(false);
   const [eduSchool, setEduSchool] = useState(SCHOOLS[0].id);
-  const [eduState, setEduState] = useState(''); // '' | opening | ready | vpn
-  const [eduClip, setEduClip] = useState(''); // '' | ok | empty | fail
   const [eduClipBusy, setEduClipBusy] = useState(false);
   const [eduPasteText, setEduPasteText] = useState('');
   const [ocrRaw, setOcrRaw] = useState('');
-  const [shareCode, setShareCode] = useState('');
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareError, setShareError] = useState('');
+  const shareCacheRef = useRef(new Map());
+  const shareRequestRef = useRef(null);
+  const shareBusyRef = useRef(false);
+  const [received, setReceived] = useState(null);
+  const [resumeClaim, setResumeClaim] = useState(false);
+  const claimingRef = useRef(false);
+  const [claimBusy, setClaimBusy] = useState(false);
+  const [eduNetwork, setEduNetwork] = useState('campus');
+  const [eduStep, setEduStep] = useState(1);
+  const [eduError, setEduError] = useState('');
   const [shareDetail, setShareDetail] = useState(true);
+  useEffect(() => {
+    shareRequestRef.current?.abort(); shareRequestRef.current = null;
+    shareBusyRef.current = false; shareCacheRef.current.clear();
+    setShareLink(''); setShareBusy(false); setShareError('');
+  }, [storageKey]);
   const [backupSettings, setBackupSettings] = useState(null);
   const backupFileRef = useRef(null);
   const [toast, setToast] = useState('');
@@ -1204,52 +1056,12 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
   const say = (msg) => { setToast(msg); clearTimeout(toastRef.current); toastRef.current = setTimeout(() => setToast(''), 1800); };
 
-  useEffect(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
-      if (raw) {
-        const savedCourses = (raw.courses || []).map(normalizeCourse);
-        const savedSettings = raw.settings || { startDate: '', overrideWeek: null, timeSlots: null };
-        setCourses(savedCourses);
-        setSettings(savedSettings);
-        localStorage.setItem(LS_READ(), JSON.stringify({ courses: savedCourses, settings: savedSettings }));
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  /* ===== 云端同步（2026-09-20）：登录后课表上云，跨设备跟随 =====
-     云端有 → 以云端为准覆盖本机；云端无 → 把本机课表首推上云（含 ClassScheduleData_local 旧键一次性迁移） */
-  useEffect(() => {
-    if (!authed) return;
-    let alive = true;
-    (async () => {
-      try {
-        const cloud = await window.electronAPI?.loadData?.(CLOUD_KEY);
-        if (!alive) return;
-        if (cloud && Array.isArray(cloud.courses)) {
-          const savedCourses = (cloud.courses || []).map(normalizeCourse);
-          const savedSettings = cloud.settings || { startDate: '', overrideWeek: null, timeSlots: null };
-          setCourses(savedCourses);
-          setSettings(savedSettings);
-          try { localStorage.setItem(LS_READ(), JSON.stringify({ courses: savedCourses, settings: savedSettings })); } catch { /* ignore */ }
-        } else {
-          const local = JSON.parse(localStorage.getItem(LS_READ()) || 'null');
-          const legacy = JSON.parse(localStorage.getItem('ClassScheduleData_local') || 'null');
-          const first = local || legacy;
-          if (first && Array.isArray(first.courses)) await window.electronAPI?.saveData?.(CLOUD_KEY, first);
-        }
-      } catch { /* ignore */ }
-    })();
-    return () => { alive = false; };
-  }, [authed]);
-
   const persist = (nextCourses, nextSettings) => {
-    if (!guard()) return;
-    const c = (nextCourses ?? courses).map(withPeriods);
-    const s = nextSettings ?? settings;
-    setCourses(c); setSettings(s);
-    try { localStorage.setItem(LS_READ(), JSON.stringify({ courses: c, settings: s })); } catch { /* ignore */ }
-    try { Promise.resolve(window.electronAPI?.saveData?.(CLOUD_KEY, { courses: c, settings: s })).catch(() => {}); } catch { /* ignore */ }
+    if (!guard()) return false;
+    try {
+      scheduleStore.replace(nextCourses == null ? null : nextCourses.map(withPeriods), nextSettings);
+      return true;
+    } catch (error) { say('保存未完成：' + error.message); return false; }
   };
 
   /* 节次时间：默认值 + 用户在「时间设置」中的覆盖（只覆盖 time，label/夜间标志仍用默认） */
@@ -1381,7 +1193,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const addParsed = () => {
     if (!parsed.length) { say('未识别到有效课程'); return; }
     if (!guard()) return;
-    persist([...courses, ...parsed], null);
+    if (!persist(mergeReceivedCourses(courses, parsed).courses, null)) return;
     setImportText(''); setParsed([]); setOcrRaw('');
     closeModal(); // 先关导入弹窗（从菜单进来的会回到菜单），周次询问才能单独出现
     say(`已导入 ${parsed.length} 门课程`);
@@ -1481,24 +1293,48 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     if (onClosePanel) onClosePanel();
   };
 
-  /* 收到分享链接（#/timetable?share=...）→ 自动解析并预览，手机端直接打开导入抽屉 */
-  const shareAutoRef = useRef(false);
+  const incomingParams = new URLSearchParams(route.search);
+  const incomingShare = incomingParams.get('shareId') ? '/s/' + incomingParams.get('shareId') : incomingParams.get('share');
   useEffect(() => {
-    if (shareAutoRef.current) return;
-    const h = typeof window !== 'undefined' ? window.location.hash : '';
-    const qi = h.indexOf('?');
-    if (qi < 0) return;
-    const code = new URLSearchParams(h.slice(qi + 1)).get('share');
-    if (!code) return;
-    shareAutoRef.current = true;
-    const list = decodeShare(code);
-    if (!list) { say('分享链接解析失败，请让同学重新生成'); return; }
-    setImportMode('share');
-    setShareText(code);
-    setParsed(list);
-    openModal('import');
-    say(`收到 ${list.length} 门课程，确认后点「合并导入」`);
-  }, []);
+    if (!incomingShare) return;
+    let cancelled = false;
+    const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 10000);
+    setReceived({ loading: true }); openModal('receive');
+    fetchScheduleShare(incomingShare, { signal: controller.signal }).then(payload => {
+      if (!cancelled) setReceived({ ...payload, loading: false });
+    }).catch(error => { if (!cancelled) setReceived({ error: error.name === 'AbortError' ? '读取超时，请稍后重试分享链接。' : error.message }); })
+      .finally(() => clearTimeout(timeout));
+    return () => { cancelled = true; controller.abort(); clearTimeout(timeout); };
+  }, [incomingShare]);
+
+  const claimReceived = async () => {
+    if (!received?.courses?.length || claimingRef.current) return;
+    if (!guard()) { setResumeClaim(true); return; }
+    const owner = storageKey, destination = scheduleStore, receiptFingerprint = received.fingerprint;
+    claimingRef.current = true; setClaimBusy(true); setResumeClaim(false);
+    try {
+      let waitTimer;
+      await Promise.race([destination.sync(), new Promise(resolve => { waitTimer = setTimeout(resolve, 2500); })]);
+      clearTimeout(waitTimer);
+      if (LS_READ() !== owner) throw Error('账号已切换，请重新点击下载。');
+      const merged = mergeReceivedCourses(destination.payload.courses, received.courses);
+      const ownSettings = destination.payload.settings;
+      const useSharedSettings = !destination.payload.courses.length && !ownSettings.startDate && !ownSettings.timeSlots;
+      destination.replace(merged.courses.map(withPeriods), useSharedSettings && received.settings ? { ...ownSettings, ...received.settings } : null);
+      setReceived(value => value?.fingerprint === receiptFingerprint ? ({ ...value, saved: true, added: merged.added, error: '' }) : value);
+      say(merged.added ? '已保存到你的课表，可独立编辑' : '这些课程已在你的课表中');
+    } catch (error) { setReceived(value => value?.fingerprint === receiptFingerprint ? ({ ...value, error: error.message }) : value); }
+    finally { claimingRef.current = false; setClaimBusy(false); }
+  };
+  useEffect(() => {
+    if (authed && resumeClaim && received?.courses && !received.saved) claimReceived();
+  }, [authed, resumeClaim, scheduleStore, received?.fingerprint]);
+  const viewOwnSchedule = () => {
+    setReceived(null); closeModal(); navigate('/timetable?tab=courses', { replace: true });
+    if (!scheduleStore.payload.settings.startDate && scheduleStore.payload.settings.overrideWeek == null) {
+      setWeekAskVal(String(currentWeek || 1)); setWeekAsk(true);
+    }
+  };
 
   const remove = (id) => { persist(courses.filter((c) => c.id !== id), null); say('已删除'); };
   const clearAll = () => { persist([], null); say('已清空课表'); };
@@ -1506,95 +1342,72 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     try { await navigator.clipboard.writeText(IMPORT_TEMPLATE); setCopied(true); setTimeout(() => setCopied(false), 1600); } catch { /* ignore */ }
   };
 
-  /* ── 导入的三种新方式（都在前端完成，不经过服务器） ── */
-  const importShare = () => {
-    const list = decodeShare(shareText);
-    if (!list) { say('这段口令识别不了：请确认从「VOYRA1:」开始整段粘贴'); return; }
-    setParsed(list);
-    say(`口令里含 ${list.length} 门课程，确认后导入`);
+  const importShare = async () => {
+    if (!shareText.trim()) return;
+    const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 10000);
+    setReceived({ loading: true }); openModal('receive');
+    try { const payload = await fetchScheduleShare(shareText, { signal: controller.signal }); setReceived({ ...payload, loading: false }); }
+    catch (error) { setReceived({ error: error.name === 'AbortError' ? '分享链接读取超时，请稍后重试。' : error.message }); }
+    finally { clearTimeout(timer); }
   };
-  /* 分享链接：先把口令正文 POST /share 换成 7 位短链（/s/<id>），
-     服务端不可用时自动回退成长链接，功能不受影响 */
+
+  // Generation is explicit, deduplicated and cached; opening the tab never sends a POST.
   const buildShareLink = async () => {
-    if (!courses.length) return null;
-    const code = encodeShareV2(courses, shareDetail);
-    setShareCode(code);
-    let link = `${location.origin}${location.pathname}#/timetable?share=${encodeURIComponent(code)}`;
+    if (!courses.length || shareBusyRef.current) return null;
+    shareBusyRef.current = true; setShareBusy(true); setShareError('');
+    const controller = new AbortController(); shareRequestRef.current = controller;
+    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
-      const r = await fetch('/share', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      });
-      const d = await r.json();
-      if (d && d.ok && d.url) link = d.url;
-    } catch { /* 回退长链 */ }
-    setShareLink(link);
-    return link;
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      const code = encodeScheduleShare(courses, settings, shareDetail);
+      let link = shareCacheRef.current.get(code);
+      if (!link) {
+        const response = await fetch('/share', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }), signal: controller.signal });
+        const data = await response.json();
+        if (!response.ok || !data.ok || !/^[A-Za-z0-9]{7}$/.test(data.id)) throw Error(data.error === 'too_large' ? '课表内容较多，请改用备份文件分享。' : '短链接服务暂时不可用，请稍后重试。');
+        link = location.origin + '/s/' + data.id;
+        if (shareCacheRef.current.size >= 6) shareCacheRef.current.delete(shareCacheRef.current.keys().next().value);
+        shareCacheRef.current.set(code, link);
+      }
+      setShareLink(link); return link;
+    } catch (error) { if (!controller.signal.aborted || shareRequestRef.current === controller) setShareError(error.name === 'AbortError' ? '生成超时，课表未受影响，请重试。' : error.message); return null; }
+    finally { clearTimeout(timeout); if (shareRequestRef.current === controller) { shareBusyRef.current = false; setShareBusy(false); } }
   };
-  const makeShareCode = async () => {
-    if (!courses.length) { say('课表还是空的，先导入或添加课程'); return; }
-    const link = await buildShareLink();
-    try { await navigator.clipboard.writeText(link); say('短链接已复制，同学点开就能导入'); } catch { say('已生成分享链接，长按复制'); }
-  };
-  /* 教务导入：开内网地址 → 12 秒内没收到脚本的 ready 就切外网门户 */
-  const eduTimerRef = useRef(null);
-  const eduWinRef = useRef(null);
+  useEffect(() => () => shareRequestRef.current?.abort(), []);
+
+  // Network choice is explicit. No timer can redirect a student's login window.
+  const selectedSchool = SCHOOLS.find(s => s.id === eduSchool) || SCHOOLS[0];
+  const eduAddress = eduNetwork === 'campus' ? selectedSchool.intranet : selectedSchool.vpn;
   const startEdu = () => {
-    const school = SCHOOLS.find((s) => s.id === eduSchool) || SCHOOLS[0];
-    const win = window.open(school.intranet, '_blank');
-    eduWinRef.current = win;
-    setEduState('opening');
-    say('正在打开校内地址…');
-    clearTimeout(eduTimerRef.current);
-    eduTimerRef.current = setTimeout(() => {
-      setEduState('vpn');
-      try {
-        if (win && !win.closed) win.location.href = school.vpn;
-        else window.open(school.vpn, '_blank');
-      } catch {
-        window.open(school.vpn, '_blank');
-      }
-      say('校内地址加载超时，已跳转到外网入口');
-    }, 12000);
+    setEduStep(2); setEduError('');
   };
-
-  /* 读取剪贴板 → 解析教务 TSV 课表 → 预览；失败给明确反馈 */
+  const applyEduRows = (plain, rich = '') => {
+    const list = parseClipboardTimetable(plain, rich);
+    if (!list.length) { setEduError('未识别到课程。请复制含星期表头和节次的完整课表；也可改用 Excel 或图片导入。'); return; }
+    setParsed(list); setEduStep(3); setEduError('');
+    say('识别到 ' + list.length + ' 门课程，请核对预览后保存');
+  };
   const readEduClipboard = async () => {
-    setEduClipBusy(true);
+    if (eduClipBusy) return;
+    setEduClipBusy(true); setEduError('');
     try {
-      let text = '';
-      try { text = await navigator.clipboard.readText(); } catch { text = ''; }
-      if (!text.trim()) { setEduClip('empty'); say('剪贴板是空的：先在教务系统课表页复制'); return; }
-      const list = parseClipboardTimetable(text);
-      if (!list.length) { setEduClip('fail'); say('没识别出课程：请确认复制的是课表页内容'); return; }
-      setParsed(list);
-      setEduClip('ok');
-      say(`识别到 ${list.length} 门课程，核对预览后合并导入`);
-    } catch {
-      setEduClip('fail');
-      say('读取剪贴板失败：请在下方文本框手动粘贴');
-    } finally {
-      setEduClipBusy(false);
-    }
+      let plain = '', rich = '';
+      if (navigator.clipboard?.read) {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          if (item.types.includes('text/html')) rich = await (await item.getType('text/html')).text();
+          if (item.types.includes('text/plain')) plain = await (await item.getType('text/plain')).text();
+        }
+      } else if (navigator.clipboard?.readText) plain = await navigator.clipboard.readText();
+      if (!plain.trim() && !rich.trim()) { setEduError('剪贴板没有课表内容，请先复制，或在下方长按粘贴。'); return; }
+      setEduPasteText(plain); applyEduRows(plain, rich);
+    } catch { setEduError('浏览器未允许读取剪贴板，请在下方长按粘贴，再点识别。'); document.getElementById('cs-edu-paste')?.focus(); }
+    finally { setEduClipBusy(false); }
   };
-
-  /* 用户脚本从教务页面回报状态：ready=内网已连上（取消外网切换） */
-  useEffect(() => {
-    const onMsg = (e) => {
-      const d = e.data;
-      if (!d || d.source !== 'voyra-jsxsd') return;
-      if (d.state === 'ready') {
-        clearTimeout(eduTimerRef.current);
-        setEduState('ready');
-        say('已连上教务系统，登录后会自动带回课表');
-      } else if (d.state === 'parsed') {
-        say('脚本已读取课表，正在返回…');
-      }
-    };
-    window.addEventListener('message', onMsg);
-    return () => window.removeEventListener('message', onMsg);
-  }, []);
+  const onEduPaste = event => {
+    const plain = event.clipboardData.getData('text/plain'), rich = event.clipboardData.getData('text/html');
+    if (rich) { event.preventDefault(); setEduPasteText(plain); applyEduRows(plain, rich); }
+  };
 
   /* 图片 → 压缩（长边 1600 / JPEG 0.82）→ /ocr → 文本块 → 还原课表 */
   const compressImage = (file) => new Promise((resolve, reject) => {
@@ -1644,8 +1457,11 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   };
 
   const exportBackup = () => {
-    if (!courses.length) { say('课表还是空的，没什么可导出'); return; }
-    const data = JSON.stringify({ app: BACKUP_APP, v: 1, at: new Date().toISOString(), courses, settings });
+    const raw = localStorage.getItem(storageKey), original = localStorage.getItem(storageKey + '.original-v2'), cloudOriginal = localStorage.getItem(storageKey + '.cloud-original-v2');
+    if (!courses.length && !raw && !original) { say('课表还是空的，没什么可导出'); return; }
+    const parse = value => { try { return JSON.parse(value); } catch { return value; } };
+    const data = JSON.stringify({ app: BACKUP_APP, v: 1, at: new Date().toISOString(), courses, settings,
+      recovery: { original: parse(original || raw), cloudOriginal: parse(cloudOriginal) } });
     const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url; a.download = `voyra-课表备份-${new Date().toISOString().slice(0, 10)}.json`;
@@ -1706,6 +1522,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
   return (
     <div className="cs-page">
+      {currentSnapshot.status === 'error' && <div className="cs-sync-notice" role="status"><span>{scheduleStore.invalid ? '原课表无法读取，原文已保留，请先导出备份。' : '课表已保存在本机，云端暂未同步。'}</span><button type="button" onClick={() => scheduleStore.invalid ? exportBackup() : scheduleStore.sync()}>{scheduleStore.invalid ? '导出备份' : '重试同步'}</button></div>}
       <style>{`
         .cs-page { display:flex; flex-direction:column; gap:18px; }
         .cs-card { background:#fff;border:1px solid rgba(20,24,33,.09);border-radius:14px;box-shadow:0 1px 2px rgba(16,20,30,.04);padding:18px 20px; }
@@ -2282,17 +2099,25 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
       </div>
       </Sheet>
 
+      <Sheet open={modal === 'receive'} onClose={() => { setResumeClaim(false); closeModal(); }} icon={<DownloadIcon size={17}/>} variant="receive" title={received?.saved ? '已加入你的课表' : '接收分享课表'} sub={received?.saved ? '保存后可独立编辑，分享者无法修改你的副本。' : '预览课程后，一次点击保存到自己的账号。'}
+        actions={received?.saved ? <button type="button" className="cs-btn primary" onClick={viewOwnSchedule}>查看我的课表</button> : <><button type="button" className="cs-btn" onClick={() => { setResumeClaim(false); closeModal(); }}>稍后再说</button><button type="button" className="cs-btn primary" onClick={claimReceived} disabled={claimBusy || !received?.courses?.length}>{claimBusy ? <Loader2 className="cs-spinning" size={16}/> : <DownloadIcon size={16}/>} {claimBusy ? '正在保存…' : '下载并保存'}</button></>}>
+        {received?.loading && <div className="cs-receive-state"><Loader2 className="cs-spinning" size={30}/><b>正在读取分享课表…</b></div>}
+        {received?.error && <p className="cs-import-error" role="alert">{received.error}</p>}
+        {received?.saved ? <div className="cs-receive-state"><Check size={35}/><h3>{received.added ? '已保存 ' + received.added + ' 门课程' : '这些课程已经保存过了'}</h3><p>归属账号：{username || '当前登录账号'}</p><p>{currentSnapshot.status === 'synced' ? '云端已同步，可在其他设备登录查看。' : currentSnapshot.status === 'error' ? '本机已保存，云端暂未同步，请重试。' : '本机已保存，正在同步到当前账号…'}</p>{currentSnapshot.status === 'error' && <button className="cs-btn" onClick={() => scheduleStore.sync()}>重试云端同步</button>}</div>
+          : received?.courses && <><div className="cs-receive-summary"><b>{received.courses.length}<span>门课程</span></b><p>{authed ? '将保存到「' + (username || '你的账号') + '」，已有课程继续保留。' : '点击下载后登录，即可自动继续保存到你的账号。'}</p></div><div className="cs-receive-list">{received.courses.map(course => <div key={course.id}><b>{course.name}</b><span>{course.periods.map(p => '周' + WEEKDAY[p.day - 1] + ' · ' + (SLOT_META[p.slot]?.label || p.slot) + ' · ' + p.f + (p.t !== p.f ? '–' + p.t : '') + '周' + (p.type === 'every' ? '' : '（' + INC[p.type] + '）')).join(' / ')}</span>{(course.teacher || course.room) && <small>{[course.teacher,course.room].filter(Boolean).join(' · ')}</small>}</div>)}</div></>}
+      </Sheet>
+
       {/* 导入 */}
       <Sheet open={modal === 'import'} onClose={closeModal} icon={<Upload size={16} />}
         variant="import" title="导入课表" sub="选择导入方式，预览核对后再写入课表。"
-        actions={<><button type="button" className="cs-btn" onClick={closeModal}>关闭</button><button type="button" className="cs-btn primary" onClick={addParsed} disabled={!parsed.length}><Upload size={15} />{parsed.length ? `导入 ${parsed.length} 门课程` : '确认导入'}</button></>}>
+        actions={importMode === 'share' ? <button type="button" className="cs-btn primary" onClick={closeModal}>完成</button> : <><button type="button" className="cs-btn" onClick={closeModal}>关闭</button><button type="button" className="cs-btn primary" onClick={addParsed} disabled={!parsed.length}><Upload size={15} />{parsed.length ? `导入 ${parsed.length} 门课程` : '确认导入'}</button></>}>
         <div className="cs-card" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
         {/* 三种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
         <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
           {[['xls', 'Excel', FileSpreadsheet], ['edu', '教务导入', GraduationCap], ['photo', '图片识别', Camera], ['share', '分享链接', Link2], ['backup', '备份', Copy]].map(([k, label, Icon]) => (
             <button key={k} type="button" className={`cs-btn cs-mode${importMode === k ? ' is-on' : ''}`}
               aria-pressed={importMode === k}
-              onClick={() => { setImportMode(k); setParsed([]); if (k === 'share') buildShareLink(); }}><Icon size={17} /><span>{label}</span></button>
+              onClick={() => { setImportMode(k); setParsed([]); }}><Icon size={17} /><span>{label}</span></button>
           ))}
         </div>
 
@@ -2311,67 +2136,25 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </>)}
 
         {importMode === 'edu' && (<>
-          <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#6c757d' }}>
-            不用装任何脚本：打开教务系统 → 登录 → 在课表页<b>全选复制</b> → 回来一键识别。
-          </p>
-          <div className="cs-field" style={{ marginBottom: 10 }}>
-            <label className="cs-l">选择学校</label>
-            <select className="cs-input" value={eduSchool} onChange={(e) => setEduSchool(e.target.value)}>
-              {SCHOOLS.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-          <div className="cs-row">
-            <button type="button" className="cs-btn primary" onClick={startEdu}>
-              <GraduationCap size={15} />{eduState === '' ? '开始导入' : '重新打开教务系统'}
-            </button>
-          </div>
-          <ol className="cs-edu-steps">
-            <li className={eduState === '' ? '' : 'done'}>
-              <span className="n">1</span>
-              <span>{eduState === ''
-                ? '点「开始导入」：会自动打开校内地址（打不开 12 秒后自动切外网门户）'
-                : '教务系统窗口已打开，请在窗口里登录你的账号'}</span>
-            </li>
-            <li className={eduState === '' ? '' : (eduClip === 'ok' ? 'done' : 'active')}>
-              <span className="n">2</span>
-              <span>登录后打开「我的课表」页面 → <b>全选复制课表</b>（电脑 Ctrl+A → Ctrl+C；手机长按全选 → 复制）</span>
-            </li>
-            <li className={eduClip === 'ok' ? 'done' : (eduState === '' ? '' : 'active')}>
-              <span className="n">3</span>
-              <span>回到这里点下方按钮，自动读取剪贴板并识别课表</span>
-            </li>
-          </ol>
-          <div className="cs-row">
-            <button type="button" className="cs-btn primary" onClick={readEduClipboard} disabled={eduState === '' || eduClipBusy}
-              style={eduState === '' ? { opacity: .5, cursor: 'not-allowed' } : undefined}>
-              {eduClipBusy ? <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} /> : <ClipboardCheck size={15} />}
-              {eduClipBusy ? '识别中…' : '读取剪贴板识别'}
-            </button>
-          </div>
-          {eduClip === 'ok' && parsed.length > 0 && (
-            <div className="cs-edu-ok">✓ 识别成功：{parsed.length} 门课程。核对下方预览（可改），点「合并导入」完成。</div>
-          )}
-          {eduClip === 'empty' && <p className="cs-hint" style={{ color: '#B3403A' }}>剪贴板是空的：请先在教务系统课表页复制，再点识别。</p>}
-          {eduClip === 'fail' && <p className="cs-hint" style={{ color: '#B3403A' }}>没识别出课程：请确认复制的是「我的课表」页面内容（含周一到周日表头）。</p>}
-          <textarea
-            value={eduPasteText} onChange={(e) => setEduPasteText(e.target.value)} rows={4}
-            placeholder={'电脑上授权剪贴板失败？在这里手动 Ctrl+V 粘贴，效果一样'}
-            className="cs-input" style={{ width: '100%', resize: 'vertical', lineHeight: 1.6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 }}
-          />
-          {eduPasteText.trim() && (
-            <button type="button" className="cs-btn" onClick={() => {
-              const list = parseClipboardTimetable(eduPasteText);
-              if (!list.length) { setEduClip('fail'); say('没识别出课程：请确认复制的是课表页内容'); return; }
-              setParsed(list); setEduClip('ok'); say(`识别到 ${list.length} 门课程，核对预览后合并导入`);
-            }}>识别粘贴内容</button>
-          )}
-          <details style={{ fontSize: 12, color: '#8a8a8a' }}>
-            <summary style={{ cursor: 'pointer' }}>进阶：安装抓取脚本自动带回（可选，不用装也行）</summary>
-            <div style={{ marginTop: 8 }}>
-              装 Tampermonkey 扩展后点 <a href={USCRIPT_URL} target="_blank" rel="noopener noreferrer" download>安装抓取脚本</a>，
-              以后登录教务系统打开「我的课表」会自动跳回本页导入，全程免复制。
-            </div>
-          </details>
+          <nav className="cs-edu-progress" aria-label="教务导入步骤">{['打开教务','复制课表','核对保存'].map((label,index) => <button key={label} type="button" aria-current={eduStep === index + 1 ? 'step' : undefined} disabled={index === 2 && !parsed.length} onClick={() => setEduStep(index + 1)}><b>{index + 1}</b><span>{label}</span></button>)}</nav>
+          {eduStep === 1 && <div className="cs-edu-guide">
+            <h3>先打开你的教务系统</h3><p>登录和选学期都在学校官网完成，本站不收集教务账号或密码。</p>
+            <label className="cs-l" htmlFor="cs-edu-school">学校</label><select id="cs-edu-school" className="cs-input" value={eduSchool} onChange={e => setEduSchool(e.target.value)}>{SCHOOLS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select>
+            <fieldset className="cs-edu-network"><legend>当前使用的网络</legend><label><input type="radio" name="edu-network" checked={eduNetwork === 'campus'} onChange={() => setEduNetwork('campus')}/><span><b>校园网</b><small>连接学校 Wi-Fi 或内网</small></span></label><label><input type="radio" name="edu-network" checked={eduNetwork === 'vpn'} onChange={() => setEduNetwork('vpn')}/><span><b>校外网络</b><small>从学校 VPN 门户进入</small></span></label></fieldset>
+            <a className="cs-btn primary cs-edu-open" href={eduAddress} target="_blank" rel="noopener noreferrer" onClick={startEdu}><GraduationCap size={16}/>打开教务系统<ChevronRight size={15}/></a>
+            <button type="button" className="cs-quiet-action" onClick={() => setEduStep(2)}>已经复制好课表，直接粘贴</button>
+            <p className="cs-hint">校内入口打不开时，选择「校外网络」再打开。不会中途跳转或打断登录。</p>
+          </div>}
+          {eduStep === 2 && <div className="cs-edu-guide">
+            <h3>复制课表，再回到这里</h3><ol className="cs-edu-instructions"><li>在教务系统登录，进入「我的课表 / 学期理论课表」。</li><li>选择本学期，复制包含<b>星期、节次、课程、周次</b>的完整表格。</li><li>返回本页读取剪贴板，或在下方长按粘贴。</li></ol>
+            <div className="cs-edu-note">手机无法全选表格时，可从教务系统导出 Excel；也可改用「图片识别」。</div>
+            <button type="button" className="cs-btn primary cs-edu-open" onClick={readEduClipboard} disabled={eduClipBusy}>{eduClipBusy ? <Loader2 className="cs-spinning" size={16}/> : <ClipboardCheck size={16}/>} {eduClipBusy ? '正在识别…' : '读取剪贴板并识别'}</button>
+            <label className="cs-l" htmlFor="cs-edu-paste">或手动粘贴完整课表</label><textarea id="cs-edu-paste" aria-label="粘贴教务课表" className="cs-input" value={eduPasteText} onPaste={onEduPaste} onChange={e => { setEduPasteText(e.target.value); setEduError(''); setParsed([]); }} rows={5} placeholder="长按粘贴，或使用电脑 Ctrl+V / Command+V"/>
+            <button type="button" className="cs-btn cs-edu-open" disabled={!eduPasteText.trim()} onClick={() => applyEduRows(eduPasteText)}>识别粘贴内容</button>
+            <div className="cs-row"><button type="button" className="cs-quiet-action" onClick={() => setEduStep(1)}>更换网络入口</button><a className="cs-quiet-action" href={eduAddress} target="_blank" rel="noopener noreferrer">重新打开教务</a><button type="button" className="cs-quiet-action" onClick={() => { setImportMode('xls'); setParsed([]); }}>改用 Excel</button></div>
+          </div>}
+          {eduStep === 3 && <div className="cs-edu-guide"><div className="cs-edu-success"><Check size={19}/><div><b>已识别 {parsed.length} 门课程</b><p>核对下方课程、周次和上课地点，确认后保存到自己的账号。原有课程继续保留。</p></div></div><button type="button" className="cs-quiet-action" onClick={() => { setEduStep(2); setParsed([]); }}>内容不完整？重新复制识别</button></div>}
+          {eduError && <p className="cs-import-error" role="alert">{eduError}</p>}
         </>)}
 
         {importMode === 'photo' && (<>
@@ -2395,35 +2178,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </>)}
 
         {importMode === 'share' && (<>
-          <div className="cs-row">
-            <button type="button" className="cs-btn primary" onClick={makeShareCode}><Link2 size={14} />生成分享链接</button>
-            <label className="cs-l" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
-              <input type="checkbox" checked={shareDetail} onChange={(e) => setShareDetail(e.target.checked)} />含教室与老师
-            </label>
-          </div>
-          {shareLink && (
-            <div style={{ marginTop: 10 }}>
-              <label className="cs-l">分享链接（7 位短链，发给同学点开即导入）</label>
-              <div className="cs-row">
-                <input className="cs-input" readOnly value={shareLink} onFocus={(e) => e.target.select()}
-                  style={{ flex: '1 1 200px', minWidth: 0, fontSize: 12 }} />
-                <button type="button" className="cs-btn" onClick={async () => {
-                  try { await navigator.clipboard.writeText(shareLink); say('链接已复制'); } catch { say('复制失败，请手动选中复制'); }
-                }}>复制链接</button>
-              </div>
-              <label className="cs-l" style={{ marginTop: 8 }}>口令文本（备用，同学也可粘贴到下方识别）</label>
-              <textarea readOnly rows={2} value={shareCode} onFocus={(e) => e.target.select()}
-                className="cs-input" style={{ width: '100%', resize: 'vertical', lineHeight: 1.6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 11 }} />
-            </div>
-          )}
-          <textarea
-            value={shareText} onChange={(e) => setShareText(e.target.value)} rows={3}
-            placeholder="同学发来的链接或口令粘在这里"
-            className="cs-input" style={{ width: '100%', marginTop: 10, resize: 'vertical', lineHeight: 1.6, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: 12 }}
-          />
-          <div className="cs-row" style={{ marginTop: 10 }}>
-            <button type="button" className="cs-btn" onClick={importShare}><Wand2 size={14} />识别口令</button>
-          </div>
+          <div className="cs-share-heading"><h3>把课表分享给同学</h3><p>生成一个短链接。同学打开后点「下载并保存」，课表自动归入他自己的账号，可独立编辑。</p></div>
+          <label className="cs-share-details"><input type="checkbox" checked={shareDetail} disabled={shareBusy} onChange={e => { setShareDetail(e.target.checked); setShareLink(''); setShareError(''); }}/><span>包含教室与老师</span><small>关闭后只分享课程安排</small></label>
+          <button type="button" className="cs-btn primary cs-share-generate" onClick={buildShareLink} disabled={shareBusy || !courses.length}>{shareBusy ? <Loader2 size={16} className="cs-spinning"/> : <Link2 size={16}/>} {shareBusy ? '正在生成短链接…' : shareLink ? '重新生成分享链接' : '生成分享链接'}</button>
+          {!courses.length && <p className="cs-hint">课表还是空的，添加课程后即可分享。</p>}
+          {shareError && <p className="cs-import-error" role="alert">{shareError}</p>}
+          {shareLink && <div className="cs-share-result" role="status"><label className="cs-l" htmlFor="cs-short-share">分享短链接</label><div className="cs-short-share-row"><input id="cs-short-share" aria-label="分享短链接" className="cs-input" readOnly value={shareLink} onFocus={e => e.target.select()}/><button type="button" className="cs-btn" onClick={async () => { try { await navigator.clipboard.writeText(shareLink); say('短链接已复制'); } catch { document.getElementById('cs-short-share')?.select(); say('请长按链接复制'); } }}><Copy size={15}/>复制链接</button></div><p>对方保存的是独立副本，不会修改你的课表。</p></div>}
+          <details className="cs-share-receive"><summary>已有同学的分享链接？</summary><label className="cs-l" htmlFor="cs-receive-link">粘贴分享链接</label><input id="cs-receive-link" className="cs-input" value={shareText} onChange={e => setShareText(e.target.value)} placeholder="https://lxlrwxs.top/s/…"/><button type="button" className="cs-btn" onClick={importShare} disabled={!shareText.trim()}><Link2 size={15}/>打开并预览</button></details>
         </>)}
 
         {importMode === 'backup' && (<>
@@ -2441,7 +2202,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         <div className="cs-row cs-actions" style={{ marginTop: 10 }}>
           {importMode === 'backup' && backupSettings && (
             <button className="cs-btn danger" onClick={() => {
-              persist(parsed, backupSettings);
+              if (!persist(parsed, backupSettings)) return;
               setParsed([]); setBackupSettings(null);
               say('已用备份覆盖课表');
             }}>覆盖导入（含设置）</button>
@@ -2592,7 +2353,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </MobileBox>
       )}
 
-      {toast && <div className="cs-toast">{toast}</div>}
+      {toast && <div className="cs-toast" role="status" style={{ pointerEvents: 'none' }}>{toast}</div>}
     </div>
   );
 }

@@ -12,6 +12,8 @@
     "build:downloads": "node build-tools/build-download-pages.mjs",
     "test:downloads": "node build-tools/verify-download-pages.mjs",
     "test:schedule": "node build-tools/verify-schedule-dialogs.mjs",
+    "test:schedule:import:data": "node --test build-tools/schedule-import.test.mjs",
+    "test:schedule:import:ui": "node build-tools/verify-schedule-import.mjs",
     "test:health:data": "node --test build-tools/health-records.test.mjs",
     "test:health:ui": "node build-tools/verify-health-log.mjs",
     "prepreview": "node build-tools/build-mindmap.mjs",

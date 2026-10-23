@@ -1,23 +1,23 @@
 // GET /s/:id
-// 分享短链跳转：查 D1 → 302 到 https://<host>/#/timetable?share=<VOYRA2:...>
+// 分享短链跳转：查 D1 → 302 到 /#/timetable?tab=courses&shareId=<short-id>。
 // 找不到时返回一个极简说明页（不跳首页，避免用户以为链接有效）。
 
 export async function onRequestGet({ params, request, env }) {
-  const id = String(params.id || "").replace(/[^A-Za-z0-9]/g, "").slice(0, 16);
+  const id = String(params.id || "");
   const origin = new URL(request.url).origin;
 
-  if (!id) return notFound(origin);
+  if (!/^[A-Za-z0-9]{7}$/.test(id)) return notFound(origin);
   if (!env || !env.DB) return notFound(origin, "分享服务未启用");
 
   let row = null;
   try {
-    row = await env.DB.prepare("SELECT code FROM share_links WHERE id=?").bind(id).first();
+    row = await env.DB.prepare("SELECT code,created_at FROM share_links WHERE id=?").bind(id).first();
   } catch {
     return notFound(origin, "分享服务暂时不可用");
   }
-  if (!row || !row.code) return notFound(origin);
+  if (!row || !row.code || Number(row.created_at)<Math.floor(Date.now()/1000)-180*86400) return notFound(origin);
 
-  const target = `${origin}/#/timetable?share=${encodeURIComponent(row.code)}`;
+  const target = `${origin}/#/timetable?tab=courses&shareId=${encodeURIComponent(id)}`;
   return new Response(null, {
     status: 302,
     headers: {
