@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  AlertTriangle, CalendarDays, CalendarRange, ChevronDown, ClipboardCheck, Clock,
+  AlertTriangle, CalendarDays, CalendarRange, ChevronDown, ChevronRight, ClipboardCheck, Clock,
   FolderOpen, HelpCircle, ListChecks, Plus, Settings2, Trash2, Upload, X,
 } from 'lucide-react';
 import ClassSchedule, { useIsMobile } from './ClassSchedule';
@@ -38,6 +38,7 @@ const PANELS = {
     ['course', '按课程分组', FolderOpen],
   ],
 };
+const PANEL_HINTS = { week: '当前周次、上课与下课时间', detail: '查看课程、老师与教室', import: 'Excel、截图、分享与备份', add: '课程信息与多个上课时段', clear: '清空前请先备份', day: '查看与添加今天的日程', watch: '近期截止与逾期作业', later: '提前安排后续任务', course: '按课程查看全部作业' };
 
 /* 首次进入的 3 步引导：只说清楚「视图在哪切、功能在哪、怎么导入」。
    走完记 localStorage；功能菜单最后留一个「重看引导」的入口。 */
@@ -162,9 +163,31 @@ export default function ScheduleHub() {
   /* 功能菜单：点外部收起；Esc 优先收菜单，菜单没开才收抽屉 */
   useEffect(() => {
     if (!fnOpen) return undefined;
+    const fitMenu = () => {
+      const button = fnRef.current?.querySelector('.shub-fn-btn');
+      const menu = fnRef.current?.querySelector('.shub-fn-menu');
+      if (!button || !menu) return;
+      const viewport = window.visualViewport;
+      const left = viewport?.offsetLeft || 0;
+      const right = left + (viewport?.width || window.innerWidth);
+      const bottom = (viewport?.offsetTop || 0) + (viewport?.height || window.innerHeight);
+      menu.style.maxHeight = `${Math.max(40, bottom - button.getBoundingClientRect().bottom - 24)}px`;
+      menu.style.maxWidth = `${Math.max(40, right - left - 32)}px`;
+      menu.style.translate = '';
+      const bounds = menu.getBoundingClientRect();
+      const shift = bounds.left < left + 16 ? left + 16 - bounds.left : bounds.right > right - 16 ? right - 16 - bounds.right : 0;
+      if (shift) menu.style.translate = `${shift}px 0`;
+    };
+    fitMenu();
     const onDown = (e) => { if (fnRef.current && !fnRef.current.contains(e.target)) setFnOpen(false); };
     document.addEventListener('pointerdown', onDown);
-    return () => document.removeEventListener('pointerdown', onDown);
+    window.addEventListener('resize', fitMenu);
+    window.visualViewport?.addEventListener('resize', fitMenu);
+    return () => {
+      document.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('resize', fitMenu);
+      window.visualViewport?.removeEventListener('resize', fitMenu);
+    };
   }, [fnOpen]);
 
   useEffect(() => {
@@ -351,9 +374,9 @@ export default function ScheduleHub() {
             {fnOpen && (
               <div className="shub-pick-menu shub-fn-menu" role="menu" aria-label="本页功能">
                 {(PANELS[tab] || []).map(([id, label, Icon]) => (
-                  <button key={id} type="button" role="menuitem" className="shub-pick-opt"
+                  <button key={id} type="button" role="menuitem" className="shub-pick-opt" data-danger={id === 'clear' ? '' : undefined}
                     onClick={() => { setPanel(id); setFnOpen(false); }}>
-                    <Icon size={16} strokeWidth={1.9} />{label}
+                    <Icon size={16} strokeWidth={1.9} /><span><b>{label}</b><small>{PANEL_HINTS[id]}</small></span><ChevronRight size={13} className="shub-menu-arrow" />
                   </button>
                 ))}
                 <button type="button" role="menuitem" className="shub-pick-opt shub-fn-guide"
@@ -388,9 +411,9 @@ export default function ScheduleHub() {
             {fnOpen && (
               <div className="shub-pick-menu shub-fn-menu" role="menu" aria-label="本页功能">
                 {(PANELS[tab] || []).map(([id, label, Icon]) => (
-                  <button key={id} type="button" role="menuitem" className="shub-pick-opt"
+                  <button key={id} type="button" role="menuitem" className="shub-pick-opt" data-danger={id === 'clear' ? '' : undefined}
                     onClick={() => { setPanel(id); setFnOpen(false); }}>
-                    <Icon size={16} strokeWidth={1.9} />{label}
+                    <Icon size={16} strokeWidth={1.9} /><span><b>{label}</b><small>{PANEL_HINTS[id]}</small></span><ChevronRight size={13} className="shub-menu-arrow" />
                   </button>
                 ))}
                 <button type="button" role="menuitem" className="shub-pick-opt shub-fn-guide"
