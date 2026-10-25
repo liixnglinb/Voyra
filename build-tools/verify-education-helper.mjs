@@ -74,7 +74,7 @@ async function layout(page,name){
 }
 try{
  for(const viewport of[{width:320,height:568},{width:390,height:844},{width:430,height:932},{width:844,height:390},{width:1440,height:1000}]){
-  const test=await make({viewport,installed:false});await test.page.getByText('首次设置',{exact:true}).waitFor();await test.page.getByRole('button',{name:'安装 / 更新导入助手',exact:true}).click();assert.equal(test.context.pages().length,1);assert.equal(await test.page.getByRole('button',{name:'打开助手安装确认'}).isDisabled(),true);await test.page.getByRole('checkbox',{name:'我已安装并启用脚本管理器'}).check();assert.equal(await test.page.getByRole('button',{name:'打开助手安装确认'}).isEnabled(),true);await layout(test.page,viewport.width+'-install');assert.equal(test.opened.length,0);await test.page.getByRole('button',{name:'无法安装助手？使用手动导入'}).click();await test.page.getByRole('radio',{name:/校外网络/}).check();assert.equal(await test.page.getByRole('link',{name:'打开教务系统',exact:true}).getAttribute('href'),vpn+'/');await test.context.close();
+  const test=await make({viewport,installed:false});await test.page.getByText('首次设置',{exact:true}).waitFor();await test.page.getByRole('button',{name:'安装 / 更新导入助手',exact:true}).click();assert.equal(test.context.pages().length,1);assert.equal(await test.page.locator('.cs-edu-install-help a[download]').getAttribute('href'),'/jsxsd-import.user.js?v=3.0.0');assert.equal(await test.page.getByRole('button',{name:'打开助手安装确认'}).isDisabled(),true);await test.page.getByRole('checkbox',{name:'我已安装并启用脚本管理器'}).check();assert.equal(await test.page.getByRole('button',{name:'打开助手安装确认'}).isEnabled(),true);await layout(test.page,viewport.width+'-install');assert.equal(test.opened.length,0);await test.page.getByRole('button',{name:'无法安装助手？使用手动导入'}).click();await test.page.getByRole('radio',{name:/校外网络/}).check();assert.equal(await test.page.getByRole('link',{name:'打开教务系统',exact:true}).getAttribute('href'),vpn+'/');await test.context.close();
  }
  report.flows.push('Uninstalled helper shows honest setup and mobile fallback; no automatic tab or fake detection');
  const main=await make({failWeek:3});await main.page.getByRole('button',{name:'自动选择入口并开始'}).click();await until(()=>main.getSchool());
@@ -101,7 +101,7 @@ try{
  await automatic.getSchool().getByRole('link',{name:'模拟完成学校登录'}).click();await until(()=>automatic.getJob()?.progress?.week===10);
  assert.ok(automatic.getSchool().url().includes('/jsxsd/xskb/xskb_list.htmlx'));
  await until(async()=>await automatic.page.locator('.cs-edu-week-board>span').count()===20);
- assert.equal(await automatic.page.locator('.cs-edu-week-board>[data-state=done]').count(),9);
+ await until(async()=>await automatic.page.locator('.cs-edu-week-board>[data-state=done]').count()===9);
  assert.equal(await automatic.page.evaluate(()=>JSON.parse(localStorage.getItem('ClassScheduleData_schedule-ui-preview')).courses.length),2);
  await layout(automatic.page,'390-twenty-week-progress');automatic.release();await until(()=>automatic.getJob()?.status==='saved');
  await automatic.page.getByText('课表已自动保存',{exact:true}).waitFor();

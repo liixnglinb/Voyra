@@ -4,6 +4,7 @@ import {EDU_TTL,EDU_VERSION,validJobId} from '../lib/education-automation';
 import {decodeScheduleShare} from '../lib/schedule-share';
 export const EDU_PENDING='voyra.education.pending.v2';
 const COMPLETED='voyra.education.completed.v3';
+const DOWNLOAD_URL='/jsxsd-import.user.js?v='+encodeURIComponent(EDU_VERSION);
 const readJSON=(key,fallback=null)=>{try{return JSON.parse(localStorage.getItem(key)||'null')||fallback;}catch{return fallback;}};
 export function educationCommand(type,id,options={}){document.dispatchEvent(new CustomEvent('voyra-edu:request',{detail:JSON.stringify({...options,type,id})}));}
 export function clearEducationImport(id,type='cancel'){
@@ -66,12 +67,12 @@ export default function EducationAssistant({owner,guard,onCourses,onManual,syncS
   const cancel=()=>{if(pending.current)clearEducationImport(pending.current.id);setJob(null);setError('');received.current='';pending.current=null;};
   const retrySave=()=>{received.current='';setError('');if(pending.current)educationCommand('status',pending.current.id);};
   const install=()=>{
-    if(!managerReady)return;window.open('/jsxsd-import.user.js','_blank','noopener,noreferrer');
+    if(!managerReady)return;window.open(DOWNLOAD_URL,'_blank','noopener,noreferrer');
     setSetupMessage('已打开安装确认页。请点「安装 / 更新」，然后返回这里刷新检测。如果仍看到代码，请展开下方排查。');
   };
   const copyCode=async()=>{
     setCopying(true);const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
-    try{const response=await fetch('/jsxsd-import.user.js',{cache:'no-store',signal:controller.signal}),code=await response.text();if(!response.ok||!code.startsWith('// ==UserScript==')||!code.includes('@version      '+EDU_VERSION))throw Error();await navigator.clipboard.writeText(code);setSetupMessage('助手内容已复制。打开 Tampermonkey → 添加新脚本 → 替换编辑器全部内容 → 保存，再回本站刷新。');}
+    try{const response=await fetch(DOWNLOAD_URL,{cache:'no-store',signal:controller.signal}),code=await response.text();if(!response.ok||!code.startsWith('// ==UserScript==')||!code.includes('@version      '+EDU_VERSION))throw Error();await navigator.clipboard.writeText(code);setSetupMessage('助手内容已复制。打开 Tampermonkey 中的 Voyra 脚本（没有则添加新脚本）→ 替换全部内容 → 保存，再回本站刷新。');}
     catch{setSetupMessage('复制未完成。请下载助手文件，在脚本管理器中导入，然后刷新本站。');}finally{clearTimeout(timer);setCopying(false);}
   };
   const busy=job&&['probing','waiting','scanning','saving'].includes(job.status),step=job?.status==='saved'?4:job?.status==='scanning'||job?.progress?3:job?.status==='waiting'?2:job?.status==='probing'?1:0;
@@ -86,10 +87,10 @@ export default function EducationAssistant({owner,guard,onCourses,onManual,syncS
         <div><b><span>1</span>安装脚本管理器</b><p>先安装并启用 Tampermonkey，它负责在学校网页运行导入助手。</p><a className="cs-btn" href="https://www.tampermonkey.net/" target="_blank" rel="noopener noreferrer"><ExternalLink size={14}/>打开官方下载页</a></div>
         <div><b><span>2</span>允许助手运行</b><p>在扩展的设置中启用「允许运行用户脚本」。如果没有这个开关，按官方说明启用开发者模式，并允许访问本站和学校网页。</p><a href="https://www.tampermonkey.net/faq.php?q=Q209" target="_blank" rel="noopener noreferrer">查看权限设置说明</a><label className="cs-edu-manager-check"><input type="checkbox" checked={managerReady} onChange={e=>setManagerReady(e.target.checked)}/>我已安装并启用脚本管理器</label></div>
         <div><b><span>3</span>安装助手并连接</b><p>打开安装确认窗口，选择「安装 / 更新」。完成后回到这里刷新，即可检测连接。</p><button type="button" className="cs-btn primary" disabled={!managerReady} onClick={install}>打开助手安装确认</button><button type="button" className="cs-btn" onClick={()=>location.reload()}><RefreshCw size={14}/>安装完成，刷新检测</button></div>
-        <details className="cs-edu-install-help"><summary>仍然显示代码，或没有安装窗口？</summary><p>这表示脚本管理器没有接管安装。请先确认已启用管理器与用户脚本权限；也可以复制助手内容，在管理器的「添加新脚本」中替换全部内容后保存。</p><button type="button" className="cs-btn" onClick={copyCode} disabled={copying}>{copying?<Loader2 className="cs-spinning" size={14}/>:<Copy size={14}/>}复制助手内容</button><a className="cs-btn" href="/jsxsd-import.user.js" download="voyra-education-import.user.js"><Download size={14}/>下载助手文件</a></details>
+        <details className="cs-edu-install-help"><summary>仍然显示代码，或没有安装窗口？</summary><p>这表示脚本管理器没有接管安装。请确认管理器与用户脚本权限已启用；也可以复制助手内容，打开管理器中的 Voyra 脚本（没有则新建），替换全部内容后保存。</p><button type="button" className="cs-btn" onClick={copyCode} disabled={copying}>{copying?<Loader2 className="cs-spinning" size={14}/>:<Copy size={14}/>}复制助手内容</button><a className="cs-btn" href={DOWNLOAD_URL} download="voyra-education-import.user.js"><Download size={14}/>下载助手文件</a></details>
         {setupMessage&&<p className="cs-edu-setup-message" role="status">{setupMessage}</p>}
       </div>}
-      <p className="cs-edu-browser-note">请在支持浏览器扩展的浏览器中操作。微信内置浏览器无法运行助手，可使用手动导入，或在电脑导入后同步到手机。</p>
+      <p className="cs-edu-browser-note">请用支持扩展的外部浏览器完成首次安装。可在电脑 Edge / Chrome 中导入，再同步到手机；微信内置浏览器请使用手动导入。</p>
     </>:<>
       {job?.status==='saved'?<div className="cs-edu-complete" role="status"><Check size={24}/><div><b>课表已自动保存</b><p>{job.added?'新增 '+job.added+' 门课程':'相同课程已自动去重'} · {job.weeks?.length?'完整读取 '+job.weeks.length+' 周':'整学期课表'} · 原有课程保留</p><small>{accountName?'保存到「'+accountName+'」 · ':''}{syncStatus==='synced'?'云端已同步':syncStatus==='error'?'本机已保存，云端稍后重试':'已保存在本机，正在后台同步'}</small></div></div>:null}
       {(busy||job?.status==='error'||progress)&&job?.status!=='saved'&&<div className="cs-edu-live" role="status" aria-live="polite">{busy?<Loader2 className="cs-spinning" size={18}/>:<RefreshCw size={18}/>}<div><b>{job.status==='probing'?'正在检测学校入口':job.status==='scanning'?'正在读取每周课程':job.status==='saving'?'正在保存课表':job.status==='error'?'读取已暂停，已完成周次保留':'等待学校登录并定位课表'}</b><p>{job.message}</p>{progress&&<><div className="cs-edu-progress-numbers"><strong>{progress.done} / {progress.total} 周</strong><span>识别 {progress.courseCount||0} 门课程</span></div><progress aria-label="各周课表读取进度" max={progress.total} value={progress.done}/><div className="cs-edu-week-board">{Array.from({length:progress.total},(_,i)=>i+1).map(week=><span key={week} data-state={progress.completed?.includes(week)?'done':week===progress.week?(job.status==='error'?'error':'reading'):'waiting'} title={progress.completed?.includes(week)?(progress.counts?.[week]||0)+' 门课程':'等待检查'}>第{week}周<small>{progress.completed?.includes(week)?(progress.counts?.[week]?'已读取':'无课程'):week===progress.week?(job.status==='error'?'待重试':'读取中'):'等待'}</small></span>)}</div></>}</div></div>}
