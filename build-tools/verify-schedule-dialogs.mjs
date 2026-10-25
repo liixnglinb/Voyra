@@ -5,7 +5,7 @@ import { resolve, sep, extname } from 'node:path';
 import assert from 'node:assert/strict';
 import { seedSchedulePreview } from './schedule-dialog-fixtures.mjs';
 
-const root = resolve('dist'), out = resolve('output/playwright/schedule-dialogs');
+const root = resolve(process.argv[2] || 'dist'), out = resolve('output/playwright/schedule-dialogs');
 await mkdir(out, { recursive: true });
 const csp = (await readFile(resolve(root, '_headers'), 'utf8')).match(/Content-Security-Policy:\s*(.+)/)[1];
 const mime = { '.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.css':'text/css', '.svg':'image/svg+xml', '.png':'image/png', '.webp':'image/webp', '.woff2':'font/woff2', '.ttf':'font/ttf', '.json':'application/json' };
@@ -42,6 +42,7 @@ async function open(page, name) {
   await page.locator('.cs-dialog').waitFor();
 }
 async function layout(page, name, screenshot = false) {
+  await page.waitForFunction(() => { const box=document.querySelector('.cs-dialog')?.getBoundingClientRect(); return box && box.bottom<=innerHeight && box.top>=0; });
   const check = await page.locator('.cs-dialog').evaluate(el => {
     const rect = el.getBoundingClientRect(), body = el.querySelector('.mbox-body'), foot = el.querySelector('.mbox-foot').getBoundingClientRect();
     return { name:el.getAttribute('aria-label'), width:innerWidth, height:innerHeight, left:rect.left, right:rect.right, top:rect.top, bottom:rect.bottom, bodyOverflow:body.scrollWidth - body.clientWidth, footTop:foot.top, footBottom:foot.bottom };
@@ -57,6 +58,8 @@ const saved = page => page.evaluate(() => JSON.parse(localStorage.getItem('Class
 try {
   for (const viewport of viewports) {
     const {context,page} = await makePage(viewport);
+    assert.equal(await page.getByRole('button',{name:'同步课表',exact:true}).count(),0);
+    assert.equal(await page.locator('.cs-sync-bar').count(),0);
     await page.getByRole('button',{name:'功能',exact:true}).click();
     const menu = await page.getByRole('menu',{name:'本页功能'}).boundingBox();
     assert.ok(menu.x >= 0 && menu.x + menu.width <= viewport.width + 1, `${viewport.width}: menu bounds`);
@@ -86,6 +89,9 @@ try {
         }
       }
       if (id === 'add') {
+        assert.equal(await page.getByLabel('教室',{exact:true}).isVisible(),true);
+        assert.equal(await page.getByLabel('老师',{exact:true}).isVisible(),false);
+        await page.locator('.cs-session-editor>summary').click();
         await page.getByRole('button',{name:'周四',exact:true}).click();
         assert.equal(await page.getByRole('button',{name:'周四',exact:true}).getAttribute('aria-pressed'),'true');
         await page.getByRole('checkbox',{name:'这一时段使用自定义时间'}).check();
@@ -97,6 +103,25 @@ try {
       }
       await page.locator('.mbox-x').click();
     }
+    const week=Number((await page.locator('.cs-weekcard h3').textContent()).match(/\d+/)[0]);
+    await page.locator('.cs-grid td.empty[data-day="4"][data-slot="3-4"]').dblclick();
+    await layout(page,'quick-add',[320,390,1440].includes(viewport.width));
+    assert.equal(await page.locator('.cs-session-editor').getAttribute('open'),null);
+    assert.equal(await page.getByLabel('课程名称',{exact:true}).isVisible(),true);
+    assert.equal(await page.getByLabel('教室',{exact:true}).isVisible(),true);
+    await page.getByLabel('课程名称',{exact:true}).fill('这周的临时课程');
+    await page.getByLabel('教室',{exact:true}).fill('博学楼 501');
+    await page.locator('.cs-session-editor>summary').click();
+    assert.equal(await page.getByRole('button',{name:'单节课',exact:true}).getAttribute('aria-pressed'),'true');
+    assert.equal(await page.getByLabel('起始周',{exact:true}).inputValue(),String(week));
+    assert.equal(await page.getByLabel('结束周',{exact:true}).count(),0);
+    assert.equal(await page.getByRole('button',{name:'周四',exact:true}).getAttribute('aria-pressed'),'true');
+    await layout(page,'quick-add-expanded');
+    await page.locator('.mbox-foot').getByRole('button',{name:'添加课程',exact:true}).click();
+    const quick=(await saved(page)).courses.find(c=>c.name==='这周的临时课程');
+    assert.deepEqual(quick.periods[0],{day:4,slot:'3-4',f:week,t:week,type:'every'});
+    await open(page,'周次与时间设置');await page.getByRole('button',{name:`第 ${week+1} 周`,exact:true}).click();await page.locator('.mbox-x').click();
+    assert.equal(await page.locator('.cs-grid .n').filter({hasText:'这周的临时课程'}).count(),0);
     console.log(`${viewport.width}×${viewport.height}: menu, all six dialogs, five import modes and custom time fit`);
     await context.close();
   }
@@ -130,12 +155,20 @@ try {
   report.interactions.push('Week persistence, arrow navigation, time editing, field switching, invalid range and restore defaults');
 
   await open(page,'手动添加课程');
+  await page.locator('.mbox-foot').getByRole('button',{name:'添加课程',exact:true}).click();
+  await page.getByRole('alert').filter({hasText:'先填写课程名称'}).waitFor();
+  assert.equal(await page.getByLabel('课程名称',{exact:true}).evaluate(el=>el===document.activeElement),true);
   await page.getByLabel('课程名称',{exact:true}).fill('手机布局验证课程');
+  await page.locator('.cs-session-editor>summary').click();
   await page.getByRole('button',{name:'周四',exact:true}).click();
   await page.locator('.cs-slot-picker').getByRole('button',{name:/7-8 节/}).click();
   await page.getByRole('button',{name:'单节课',exact:true}).click();
   await page.getByLabel('起始周',{exact:true}).fill('12');
   await page.getByRole('checkbox',{name:'这一时段使用自定义时间'}).check();
+  const beforeInvalid=(await saved(page)).courses.length;
+  await page.locator('.mbox-foot').getByRole('button',{name:'添加课程',exact:true}).click();
+  await page.getByRole('alert').filter({hasText:'请填写完整的自定义时间'}).waitFor();
+  assert.equal((await saved(page)).courses.length,beforeInvalid);
   await page.getByLabel('时段 1 自定义开始时间',{exact:true}).fill('14:05');
   await page.getByLabel('时段 1 自定义结束时间',{exact:true}).fill('15:20');
   await page.locator('.cs-course-extras>summary').click();
@@ -160,8 +193,11 @@ try {
   await open(page,'本周课程明细');
   await page.locator('.cs-course-detail').first().getByRole('button',{name:'编辑课程'}).click();
   await page.getByLabel('课程名称',{exact:true}).fill('高等数学 · 已编辑');
+  await page.locator('.cs-course-extras>summary').click();
+  await page.getByLabel('老师',{exact:true}).fill('');
   await page.locator('.mbox-foot').getByRole('button',{name:'保存修改',exact:true}).click();
   assert.ok((await saved(page)).courses.some(c=>c.name==='高等数学 · 已编辑'));
+  assert.equal((await saved(page)).courses.find(c=>c.name==='高等数学 · 已编辑').teacher,'');
   await open(page,'清空课表');
   const first=page.locator('.mbox-x');
   const last=page.locator('.mbox-foot').getByRole('button',{name:'确认清空'});

@@ -73,7 +73,7 @@ export function MobileBox({ open, onClose, icon, title, sub, actions, children, 
     if (!scoped) return;
     if (event.key === 'Escape') { event.stopPropagation(); onCloseRef.current(); return; }
     if (event.key !== 'Tab') return;
-    const focusable = [...boxRef.current.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')].filter(el => el.getClientRects().length && el.tabIndex >= 0);
+    const focusable = [...boxRef.current.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,a[href],[tabindex="0"]')].filter(el => el.getClientRects().length && el.tabIndex >= 0);
     const first = focusable[0], last = focusable.at(-1);
     if (!first) { event.preventDefault(); return; }
     if (event.shiftKey && (document.activeElement === first || document.activeElement === boxRef.current)) { event.preventDefault(); last.focus(); }
@@ -985,6 +985,9 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const backupFileRef = useRef(null);
   const [toast, setToast] = useState('');
   const [form, setForm] = useState(EMPTY_FORM);
+  const [quickEntry, setQuickEntry] = useState(false);
+  const [formSession, setFormSession] = useState(0);
+  const [formError, setFormError] = useState('');
   /* 首次添加课程后问一次「现在是第几周」，据此反推开学周一并开启自动推进 */
   const [weekAsk, setWeekAsk] = useState(false);
   const [weekAskVal, setWeekAskVal] = useState('1');
@@ -1106,7 +1109,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const currentWeek = settings.overrideWeek != null ? settings.overrideWeek : autoWeek;
   /* 单节课的「哪一天」：由开学周一 + 周次 + 星期几推出，开学日期未设置时返回空 */
   /* 弹窗层级：从功能菜单进入的弹窗，点完成后回到菜单；其余直接关闭 */
-  const openModal = (k, back = null) => { setModalBack(back); setModal(k); };
+  const openModal = (k, back = null) => {
+    if (k === 'add') { setForm(EMPTY_FORM()); setEditingCourseId(null); setQuickEntry(false); setFormError(''); setFormSession(n => n + 1); }
+    setModalBack(back); setModal(k);
+  };
   const closeModal = () => { setModal(modalBack); setModalBack(null); if (onClosePanel) onClosePanel(); };
   useEffect(() => {
     const id = new URLSearchParams(route.search).get('eduImport');
@@ -1228,7 +1234,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   /* 表单里某个时段的局部更新 / 增删 */
   const setPeriod = (idx, patch) => setForm((f) => ({ ...f, periods: f.periods.map((p, i) => (i === idx ? { ...p, ...patch } : p)) }));
   const addOne = () => {
-    if (!form.name.trim()) { say('请填写课程名称'); return; }
+    if (!form.name.trim()) { setFormError('先填写课程名称，再保存这门课。'); document.getElementById('cs-course-name')?.focus(); return; }
+    if (form.periods.some(p => !p.single && clampWeek(p.t) < clampWeek(p.f))) { setFormError('结束周不能早于起始周，请调整上课安排。'); return; }
+    if (form.periods.some(p => p.customOn && (!p.customStart || !p.customEnd || p.customEnd <= p.customStart))) { setFormError('请填写完整的自定义时间，下课时间应晚于上课时间。'); return; }
+    setFormError('');
     if (!guard()) return;
     const periods = form.periods.map((p) => {
       const f = clampWeek(p.f);
@@ -1238,14 +1247,13 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     });
     const fields = {
       name: form.name.trim(), teacher: form.teacher.trim(), room: form.room.trim(), periods,
+      color: Number.isInteger(form.color) ? form.color : null,
+      credit: String(form.credit).trim(), note: form.note.trim(),
     };
-    if (Number.isInteger(form.color)) fields.color = form.color;
-    if (String(form.credit).trim()) fields.credit = String(form.credit).trim();
-    if (form.note.trim()) fields.note = form.note.trim();
 
     /* 编辑模式：整门替换（时段也一起换），保存后回到课表 */
     if (editingCourseId) {
-      persist(courses.map((c) => (c.id === editingCourseId ? { ...c, ...fields } : c)), null);
+      if (!persist(courses.map((c) => (c.id === editingCourseId ? { ...c, ...fields } : c)), null)) return;
       setEditingCourseId(null);
       setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
       say(`已保存「${fields.name}」`);
@@ -1254,7 +1262,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
     }
 
     const c = { id: Date.now() + Math.random().toString(36).slice(2, 5), ...fields };
-    persist([...courses, c], null);
+    if (!persist([...courses, c], null)) return;
     /* 保留节次与周次这类每次都要重填的设置，清掉课程自身的字段 */
     setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
     say(`已添加「${c.name}」${periods.length > 1 ? `（${periods.length} 个时段）` : ''}`);
@@ -1276,6 +1284,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   /* ── 双击课表格子：有课 → 编辑整门；空格 → 以该格为起点新增 ── */
   const openForm = () => setModal('add');
   const editCourse = (c) => {
+    setQuickEntry(false); setFormError(''); setFormSession(n => n + 1);
     setEditingCourseId(c.id);
     setForm({
       name: c.name || '', teacher: c.teacher || '', room: c.room || '',
@@ -1294,22 +1303,22 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   };
   const addAtCell = (day, slot) => {
     setEditingCourseId(null);
-    setForm({ ...EMPTY_FORM(), periods: [newPeriod(day, slot)] });
+    setQuickEntry(true); setFormError(''); setFormSession(n => n + 1);
+    setForm({ ...EMPTY_FORM(), periods: [{ ...newPeriod(day, slot), f: clampWeek(currentWeek), t: clampWeek(currentWeek), single: true }] });
     openForm();
-    say(`已定位 周${WEEKDAY[day - 1]} · ${(SLOT_META[slot] || {}).label || slot}，填课程名即可`);
   };
   const cancelEdit = () => {
+    setQuickEntry(false); setFormError('');
     setEditingCourseId(null);
     setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
-    say('已取消编辑');
   };
   const deleteEditing = () => {
     if (!editingCourseId) return;
-    persist(courses.filter((c) => c.id !== editingCourseId), null);
+    if (!persist(courses.filter((c) => c.id !== editingCourseId), null)) return;
     setEditingCourseId(null);
     setForm((f) => ({ ...EMPTY_FORM(), periods: [newPeriod(f.periods[0].day, f.periods[0].slot)] }));
     say('已删除这门课');
-    if (onClosePanel) onClosePanel();
+    closeModal();
   };
 
   const incomingParams = new URLSearchParams(route.search);
@@ -1540,8 +1549,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   const xlsFileInput = <input ref={xlsFileRef} type="file" accept=".xls,.xlsx" style={{ display: 'none' }} onChange={onXlsFile} />;
 
   return (
-    <div className="cs-page">
-      <section className="cs-sync-bar" aria-label="课表同步状态"><span role="status">{['syncing','saving'].includes(currentSnapshot.status) ? '正在同步课表…' : currentSnapshot.status === 'synced' ? '云端已同步' : currentSnapshot.status === 'error' ? '仅保存在本机 · 需要同步' : authed ? '课表保存在本机' : '登录后可跨设备同步'}{currentSnapshot.status === 'synced' && currentSnapshot.lastSyncedAt > 0 && <small> · {new Date(currentSnapshot.lastSyncedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</small>}</span><button type="button" aria-label="同步课表" disabled={['syncing','saving'].includes(currentSnapshot.status)} onClick={() => !authed || currentSnapshot.errorCode === 'AUTH_REQUIRED' ? openLogin() : scheduleStore.sync()}><RefreshCw size={13} className={['syncing','saving'].includes(currentSnapshot.status) ? 'cs-spinning' : undefined}/><span>{authed ? '同步课表' : '登录同步'}</span></button></section>
+    <div className="cs-page" data-sync-state={currentSnapshot.status}>
       {currentSnapshot.status === 'error' && <aside className="cs-sync-notice" role="status"><span>{scheduleStore.invalid ? '原课表无法读取，原文已保留，请先导出备份。' : currentSnapshot.error || '课表已保存在本机，云端暂未同步。'}</span><button type="button" onClick={() => scheduleStore.invalid ? exportBackup() : currentSnapshot.errorCode === 'AUTH_REQUIRED' ? openLogin() : scheduleStore.sync()}>{scheduleStore.invalid ? '导出备份' : currentSnapshot.errorCode === 'AUTH_REQUIRED' ? '重新登录' : '重试同步'}</button></aside>}
       <style>{`
         .cs-page { display:flex; flex-direction:column; gap:18px; }
@@ -2062,7 +2070,7 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                         </td>
                       );
                     }
-                    return <td key={d} className="empty" title="双击添加课程" onDoubleClick={() => addAtCell(d, slot.key)}>{tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}{(slot.night && <Moon size={13} style={{ opacity: .4 }} />) || ''}</td>;
+                    return <td key={d} className="empty" data-day={d} data-slot={slot.key} title="双击添加课程" onDoubleClick={() => addAtCell(d, slot.key)}>{tagHere && <div className="cs-slot-tag"><b>{slot.label}</b><span>{slot.time}</span></div>}{(slot.night && <Moon size={13} style={{ opacity: .4 }} />) || ''}</td>;
                   })}
                 </tr>
                 );
@@ -2249,26 +2257,26 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
       {/* 手动新增 */}
       <Sheet open={modal === 'add'} onClose={() => { closeModal(); cancelEdit(); }} icon={<Plus size={16} />}
-        variant="add" title={editingCourseId ? '编辑课程' : '添加课程'} sub="先填课程信息，再安排上课日与时间。"
-        actions={<>{editingCourseId && <button type="button" className="cs-btn danger cs-footer-delete" onClick={deleteEditing}><Trash2 size={15} />删除</button>}<button type="button" className="cs-btn" onClick={() => { closeModal(); cancelEdit(); }}>取消</button><button type="button" className="cs-btn primary" onClick={addOne}><Check size={15} />{editingCourseId ? '保存修改' : '添加课程'}</button></>}>
+        variant="add" title={editingCourseId ? '编辑课程' : '添加课程'} sub={quickEntry ? '本周时段已选好，填写名称即可。' : '先填写名称与教室，再安排上课时间。'}
+        actions={<>{editingCourseId && <button type="button" className="cs-btn danger cs-footer-delete" aria-label="删除课程" onClick={deleteEditing}><Trash2 size={16} /><span>删除</span></button>}<button type="button" className="cs-btn cs-add-cancel" onClick={() => { closeModal(); cancelEdit(); }}>取消</button><button type="button" className="cs-btn primary cs-add-save" onClick={addOne}><Check size={16} />{editingCourseId ? '保存修改' : '添加课程'}</button></>}>
         <div className="cs-card cs-addform" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
         <section className="cs-form-basics">
-        <div className="cs-form-section-title"><b>课程信息</b><span>名称为必填项</span></div>
-        {/* ── 课程信息（紧凑双列） ── */}
-        <div className="cs-row cs-forminfo">
-          <div className="cs-field" style={{ flex: '1.6 1 150px', minWidth: 0 }}><label className="cs-l">课程名称</label><input aria-label="课程名称" className="cs-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="高等数学" /></div>
-          <details className="cs-course-extras" open={!!editingCourseId}><summary><span>补充老师、教室等信息</span><small>选填</small><ChevronDown size={14} /></summary><div className="cs-course-extra-fields">
-          <div className="cs-field" style={{ flex: '1 1 110px', minWidth: 0 }}><label className="cs-l">老师（可含职称）</label><input aria-label="老师" className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="龙承星副教授" /></div>
-          <div className="cs-field" style={{ flex: '0.7 1 70px', minWidth: 0 }}><label className="cs-l">学分</label><input aria-label="学分" className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="3" /></div>
-          <div className="cs-field cs-f-full" style={{ flex: '1.3 1 130px', minWidth: 0 }}><label className="cs-l">教室</label><input aria-label="教室" className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="博学楼501（可留空）" /></div>
-          <div className="cs-field cs-f-full" style={{ flex: '1 1 260px', minWidth: 0 }}><label className="cs-l">备注（可留空）</label><input aria-label="备注" className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器 / 每周交作业 / 考试周不排课" /></div>
+        <div className="cs-form-section-title"><b>课程信息</b><span>名称必填 · 其余选填</span></div>
+        <div className="cs-forminfo">
+          <div className="cs-field cs-f-full"><label className="cs-l" htmlFor="cs-course-name">课程名称<span className="cs-required" aria-hidden="true">*</span></label><input id="cs-course-name" aria-label="课程名称" aria-invalid={!!formError && !form.name.trim()} aria-describedby={formError ? 'cs-course-error' : undefined} className="cs-input" value={form.name} onChange={(e) => { setForm({ ...form, name: e.target.value }); setFormError(''); }} placeholder="例如：高等数学" autoComplete="off" enterKeyHint="next" /></div>
+          <div className="cs-field cs-f-full"><label className="cs-l" htmlFor="cs-course-room">教室<span className="cs-label-optional">选填</span></label><div className="cs-room-input"><MapPin size={16} aria-hidden="true"/><input id="cs-course-room" aria-label="教室" className="cs-input" value={form.room} onChange={(e) => setForm({ ...form, room: e.target.value })} placeholder="例如：博学楼 501" autoComplete="off" enterKeyHint="done" /></div></div>
+          {formError && <p id="cs-course-error" className="cs-form-error" role="alert">{formError}</p>}
+          <details className="cs-course-extras" key={formSession}><summary><span>更多课程信息</span><small>老师、备注、配色</small><ChevronDown size={15} /></summary><div className="cs-course-extra-fields">
+          <div className="cs-field"><label className="cs-l" htmlFor="cs-course-teacher">老师</label><input id="cs-course-teacher" aria-label="老师" className="cs-input" value={form.teacher} onChange={(e) => setForm({ ...form, teacher: e.target.value })} placeholder="姓名或职称" /></div>
+          <div className="cs-field"><label className="cs-l" htmlFor="cs-course-credit">学分</label><input id="cs-course-credit" aria-label="学分" className="cs-input" inputMode="decimal" value={form.credit} onChange={(e) => setForm({ ...form, credit: e.target.value })} placeholder="例如：3" /></div>
+          <div className="cs-field cs-f-full"><label className="cs-l" htmlFor="cs-course-note">备注</label><textarea id="cs-course-note" aria-label="备注" className="cs-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="带计算器、作业提醒……" rows={2} /></div>
           <div className="cs-field cs-f-full">
             <label className="cs-l">格子颜色</label>
             <div className="cs-colors">
               <button type="button" className={`cs-color-auto${form.color === null ? ' is-on' : ''}`}
-                onClick={() => setForm({ ...form, color: null })}>跟随课名</button>
+                aria-pressed={form.color === null} onClick={() => setForm({ ...form, color: null })}>跟随课名</button>
               {COURSE_THEMES.map((t, i) => (
-                <button key={i} type="button" aria-label={`配色 ${i + 1}`}
+                <button key={i} type="button" aria-label={`配色 ${i + 1}`} aria-pressed={form.color === i}
                   className={`cs-color-dot${form.color === i ? ' is-on' : ''}`}
                   style={{ background: t.bg, borderColor: t.border }}
                   onClick={() => setForm({ ...form, color: i })} />
@@ -2279,21 +2287,23 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </div>
         </section>
         <section className="cs-form-sessions">
-        <div className="cs-form-section-title"><b>上课安排</b><span>一门课程可添加多个时段</span></div>
+        <div className="cs-form-section-title"><b>上课安排</b><span>{quickEntry ? '已带入所选空白格' : '支持一周多次上课'}</span></div>
         {/* ── 时段：一门课可以挂多段，一周上两次不用建两条 ── */}
         {form.periods.map((p, pi) => (
           <div className="cs-period" key={`p${pi}`}>
             <div className="cs-period-head">
-              <b>时段 {pi + 1}</b>
-              <button type="button" className="cs-btn" onClick={() => setForm((f) => {
+              <b><span>{String(pi + 1).padStart(2,'0')}</span>上课时段</b>
+              <button type="button" className="cs-btn" aria-label={`复制时段 ${pi + 1}`} onClick={() => setForm((f) => {
                 const list = [...f.periods];
                 list.splice(pi + 1, 0, { ...p });
                 return { ...f, periods: list };
-              })}>复制</button>
+              })}><Copy size={13} /><span>复制</span></button>
               {form.periods.length > 1 && (
-                <button type="button" className="cs-btn danger" onClick={() => setForm((f) => ({ ...f, periods: f.periods.filter((_, i) => i !== pi) }))}>删除</button>
+                <button type="button" className="cs-btn danger" aria-label={`删除时段 ${pi + 1}`} onClick={() => setForm((f) => ({ ...f, periods: f.periods.filter((_, i) => i !== pi) }))}><Trash2 size={13}/><span>移除</span></button>
               )}
             </div>
+            <details className="cs-session-editor" key={`${formSession}-${pi}`}>
+              <summary aria-label={`调整时段 ${pi + 1}`}><span className="cs-session-clock"><Clock size={18}/></span><span className="cs-session-overview"><b>周{WEEKDAY[p.day - 1]} · {(SLOT_META[p.slot] || {}).label || p.slot}</b><small>{p.customOn && p.customStart && p.customEnd ? `${p.customStart} – ${p.customEnd}` : timeSlots[p.slot]?.time.replace('-', ' – ')}</small><span>{p.single ? `第 ${clampWeek(p.f)} 周 · 仅这一次` : `第 ${clampWeek(p.f)}–${clampWeek(p.t)} 周 · ${{every:'每周',odd:'单周',even:'双周'}[p.type] || '每周'}`}</span></span><span className="cs-session-change">调整<ChevronDown size={15}/></span></summary>
             <div className="cs-period-grid">
               <div className="cs-field cs-f-full"><label className="cs-l">星期几</label>
                 <div className="cs-day-picker" role="group" aria-label={`时段 ${pi + 1} 上课日`}>
@@ -2308,12 +2318,11 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                   <button type="button" className={!p.single ? 'is-on' : ''} aria-pressed={!p.single}
                     onClick={() => setPeriod(pi, { single: false })}>连续多周</button>
                   <button type="button" className={p.single ? 'is-on' : ''} aria-pressed={p.single}
-                    onClick={() => setPeriod(pi, { single: true })}>单节课</button>
+                    onClick={() => { if (!p.single) setPeriod(pi, { single: true, f: clampWeek(currentWeek), t: clampWeek(currentWeek) }); }}>单节课</button>
                 </div>
-                {p.single && <p className="cs-hint">只排一周：下方「周次」用起始周那一次，结束周忽略；单双周不适用</p>}
               </div>
               <div className="cs-field cs-f-full"><label className="cs-l">周次</label>
-                <div className="cs-weeks">
+                <div className={`cs-weeks${p.single ? ' cs-weeks--single' : ''}`}>
                   <span className="cs-wk-unit">第</span>
                   <input type="number" inputMode="numeric" className="cs-input cs-wk" value={p.f} aria-label="起始周"
                     onChange={(e) => setPeriod(pi, { f: e.target.value })}
@@ -2330,10 +2339,10 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                 </div>
                 {p.single && settings.startDate && <p className="cs-hint">对应 {dateOfPeriod(p)}</p>}
               </div>
-              <div className="cs-field cs-f-full"><label className="cs-l">单双周</label>
+              {!p.single && <div className="cs-field cs-f-full"><label className="cs-l">单双周</label>
                 <select className="cs-input" value={p.single ? 'every' : p.type} disabled={p.single} onChange={(e) => setPeriod(pi, { type: e.target.value })}>
                   <option value="every">每周</option><option value="odd">单周</option><option value="even">双周</option>
-                </select></div>
+                </select></div>}
               <div className="cs-field cs-f-full">
                 <label className="cs-l cs-custom-toggle" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <input type="checkbox" checked={p.customOn} onChange={(e) => setPeriod(pi, { customOn: e.target.checked })} />
@@ -2348,10 +2357,11 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
                 )}
               </div>
             </div>
+            </details>
           </div>
         ))}
-        <div className="cs-row" style={{ marginTop: 10 }}>
-          <button type="button" className="cs-btn" onClick={() => setForm((f) => ({ ...f, periods: [...f.periods, newPeriod()] }))}><Plus size={14} />添加时段</button>
+        <div className="cs-add-period">
+          <button type="button" className="cs-btn" onClick={() => setForm((f) => ({ ...f, periods: [...f.periods, quickEntry ? {...newPeriod(),f:clampWeek(currentWeek),t:clampWeek(currentWeek),single:true} : newPeriod()] }))}><Plus size={15} />添加另一个上课时段</button>
         </div>
         </section>
       </div>
