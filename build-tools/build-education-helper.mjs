@@ -1,11 +1,13 @@
 import {build} from 'esbuild';
 import {readFile,writeFile} from 'node:fs/promises';
+import {EDU_VERSION} from '../src/lib/education-automation.js';
 const metadata=`// ==UserScript==
 // @name         Voyra 教务课表导入
 // @namespace    https://lxlrwxs.top/
-// @version      2.0.0
+// @version      ${EDU_VERSION}
 // @description  湖南人文科技学院：内网优先、外网回退、登录后逐周识别，返回 Voyra 核对保存。不读取账号密码。
 // @match        https://lxlrwxs.top/*
+// @match        https://voyra-overseas.edgeone.dev/*
 // @match        http://localhost/*
 // @match        http://127.0.0.1/*
 // @match        http://10.1.1.149/*
@@ -20,7 +22,6 @@ const metadata=`// ==UserScript==
 // @grant        GM_addValueChangeListener
 // @grant        GM_xmlhttpRequest
 // @grant        GM_openInTab
-// @noframes
 // @run-at       document-idle
 // @updateURL    https://lxlrwxs.top/jsxsd-import.user.js
 // @downloadURL  https://lxlrwxs.top/jsxsd-import.user.js

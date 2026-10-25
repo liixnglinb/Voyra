@@ -1115,8 +1115,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   };
   const closeModal = () => { setModal(modalBack); setModalBack(null); if (onClosePanel) onClosePanel(); };
   useEffect(() => {
-    const id = new URLSearchParams(route.search).get('eduImport');
-    if (validJobId(id)) { setImportMode('edu'); setEduStep(1); setEduManual(false); openModal('import'); }
+    const params=new URLSearchParams(route.search),id=params.get('eduImport');
+    if (validJobId(id)||params.get('eduSetup')==='1') { setImportMode('edu'); setEduStep(1); setEduManual(false); openModal('import'); }
   }, [route.search]);
 
   /* 页头「功能」菜单（ScheduleHub）点选的面板 id → 打开对应居中弹窗。
@@ -2137,8 +2137,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
       {/* 导入 */}
       <Sheet open={modal === 'import'} onClose={closeModal} icon={<Upload size={16} />}
-        variant="import" title="导入课表" sub="选择导入方式，预览核对后再写入课表。"
-        actions={importMode === 'share' ? <button type="button" className="cs-btn primary" onClick={closeModal}>完成</button> : <><button type="button" className="cs-btn" onClick={closeModal}>关闭</button><button type="button" className="cs-btn primary" onClick={addParsed} disabled={!parsed.length}><Upload size={15} />{parsed.length ? `导入 ${parsed.length} 门课程` : '确认导入'}</button></>}>
+        variant="import" title="导入课表" sub={importMode === 'edu' && !eduManual ? '连接助手后，登录学校即可自动读取整学期课表。' : '选择导入方式，预览核对后再写入课表。'}
+        actions={importMode === 'share' || (importMode === 'edu' && !eduManual && eduStep !== 3) ? <button type="button" className="cs-btn primary" onClick={closeModal}>{importMode === 'edu' ? '关闭面板' : '完成'}</button> : <><button type="button" className="cs-btn" onClick={closeModal}>关闭</button><button type="button" className="cs-btn primary" onClick={addParsed} disabled={!parsed.length}><Upload size={15} />{parsed.length ? `导入 ${parsed.length} 门课程` : '确认导入'}</button></>}>
         <div className="cs-card" style={{ border: 0, boxShadow: 'none', padding: 0, background: 'transparent' }}>
         {/* 三种方式共用下面同一套「识别 → 预览 → 导入」确认流程 */}
         <div className="cs-row cs-modes" style={{ gap: 6, marginBottom: 10 }}>
@@ -2164,7 +2164,18 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
         </>)}
 
         {importMode === 'edu' && (<>
-          {eduStep !== 3 && <EducationAssistant owner={storageKey} guard={guard} onManual={() => { setEduManual(true); setEduStep(1); }} onCourses={(list,info) => { setParsed(list); setEduResult({ ...info, owner: storageKey }); setEduStep(3); setEduError(''); }} />}
+          {eduStep !== 3 && <EducationAssistant owner={storageKey} guard={guard} syncStatus={currentSnapshot.status} accountName={username} onManual={() => { setEduManual(true); setEduStep(1); }} onCourses={(list,info) => {
+            if(info.autoSave){
+              const save=()=>{
+                if(LS_READ()!==storageKey)return {ok:false,error:'账号已切换，请切回发起导入的账号后重试保存。'};
+                scheduleStore.refreshLocal();const merged=mergeReceivedCourses(scheduleStore.payload.courses,list);
+                if(!persist(merged.courses,null))return {ok:false,error:'保存未完成，已读取的课表仍保留，请重新登录或检查本机存储后重试。'};
+                setEduError('');return {ok:true,added:merged.added};
+              };
+              return navigator.locks?.request?navigator.locks.request('voyra-education-save:'+storageKey,save):save();
+            }
+            setParsed(list);setEduResult({...info,owner:storageKey});setEduStep(3);setEduError('');return {ok:true};
+          }} />}
           {(eduManual || eduStep === 3) && <>
           <nav className="cs-edu-progress" aria-label="教务导入步骤">{(eduResult ? ['选择入口','逐周识别','核对保存'] : ['打开教务','复制课表','核对保存']).map((label,index) => <button key={label} type="button" aria-current={eduStep === index + 1 ? 'step' : undefined} disabled={eduResult ? index !== 2 : index === 2 && !parsed.length} onClick={() => setEduStep(index + 1)}><b>{index + 1}</b><span>{label}</span></button>)}</nav>
           {eduStep === 1 && <div className="cs-edu-guide">

@@ -329,3 +329,21 @@ body:has(.cs-page) .agm-overlay{z-index:3200}
 
 .cs-dialog--add .cs-form-sessions .cs-period{margin:0 0 12px}
 .cs-session-editor>summary:focus-visible,.cs-course-extras>summary:focus-visible{outline:2px solid #9e812b;outline-offset:3px;border-radius:9px}
+
+/* Guided helper setup and real weekly progress. */
+.cs-edu-pipeline{list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:0;margin:20px 0}
+.cs-edu-pipeline li{display:grid;justify-items:center;gap:7px;min-width:0;color:#9da48f}
+.cs-edu-pipeline li>span{display:grid;place-items:center;width:26px;height:26px;border:1px solid #e3e6d8;background:#f5f7ef;border-radius:50%;font:500 11px/1 ui-monospace,monospace}
+.cs-edu-pipeline li>small{font-size:10px;white-space:nowrap}.cs-edu-pipeline li[data-state=current]{color:#9a7d2b}.cs-edu-pipeline li[data-state=current]>span{background:#f9edc7;border-color:#cfba76}.cs-edu-pipeline li[data-state=done]{color:#76905c}.cs-edu-pipeline li[data-state=done]>span{background:#edf5e6;border-color:#d9e7c9}
+.cs-edu-setup{display:grid;gap:12px;margin:16px 0}.cs-edu-setup>div{padding:14px 12px;background:#fffefa;border:1px solid #e7e4d5;border-radius:12px;min-width:0}.cs-edu-setup>div>b{display:flex;align-items:center;gap:8px;font-size:12px;color:#657253}.cs-edu-setup b>span{display:grid;place-items:center;flex:none;width:23px;height:23px;background:#f5efd9;color:#a58b40;border-radius:8px;font-size:11px}
+.cs-edu-setup p,.cs-edu-setup>div>a:not(.cs-btn){font-size:11px;line-height:1.9;color:#8c967d;margin:10px 0}.cs-edu-setup>div>a:not(.cs-btn){color:#9d8437;text-underline-offset:3px}.cs-edu-setup .cs-btn{width:100%;display:flex;align-items:center;gap:7px;margin-top:9px;min-height:46px;font-size:12px}
+.cs-edu-manager-check,.cs-edu-save-option{display:flex;align-items:center;gap:9px;min-height:48px;font-size:11px;line-height:1.8;color:#768365;padding:9px 0;cursor:pointer}.cs-edu-manager-check>input,.cs-edu-save-option>input{flex:none}
+.cs-edu-install-help{border:1px dashed #dce1cc;border-radius:11px;padding:0 12px 10px;background:#fbfcf7}.cs-edu-install-help>summary{font-size:11px;color:#879573;min-height:44px;cursor:pointer;line-height:1.8;padding-block:11px}.cs-edu-setup .cs-edu-setup-message{background:#f5f7ec;border:1px solid #e4e8d6;padding:12px;border-radius:10px;margin:0;color:#7a8a61;font-size:11px}
+.cs-edu-progress-numbers{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#89966f;font-size:10px;margin-top:12px}.cs-edu-progress-numbers strong{font-size:13px;font-weight:650;color:#9a8343}
+.cs-edu-week-board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-top:6px}.cs-edu-week-board>span{display:grid;justify-items:center;gap:4px;border:1px solid #e6e9dd;background:#f7f8f3;color:#9ba58c;padding:8px 2px;border-radius:8px;font-size:10px;line-height:1.6}.cs-edu-week-board small{font-size:9px;color:inherit}.cs-edu-week-board [data-state=done]{background:#eff5e6;border-color:#dfe9cd;color:#819963}.cs-edu-week-board [data-state=reading]{background:#fbf0d1;border-color:#dcca91;color:#a58a41}.cs-edu-week-board [data-state=error]{background:#fff1e9;border-color:#efd3bf;color:#ad8569}
+.cs-edu-complete{display:flex;gap:11px;align-items:flex-start;background:#f3f8eb;border:1px solid #e0e9d2;border-radius:13px;padding:16px 13px;margin:16px 0;color:#83a365}.cs-edu-complete>svg{flex:none;margin-top:2px}.cs-edu-complete>div{min-width:0}.cs-edu-complete b{font-size:14px;color:#6f8758}.cs-edu-complete p{font-size:11px;line-height:1.9;margin:8px 0;color:#899d73}.cs-edu-complete small{font-size:10px;color:#93a47c;line-height:1.8}
+@media(max-width:360px){.cs-edu-pipeline li>small{font-size:9px}.cs-edu-pipeline{gap:3px}.cs-edu-auto-title h3{font-size:13px}.cs-edu-progress-numbers{font-size:9px}.cs-edu-progress-numbers strong{font-size:12px}.cs-edu-week-board{gap:4px}.cs-edu-week-board>span{font-size:9px}}
+
+
+@media(max-width:767px){.cs-edu-week-board{grid-template-columns:repeat(4,minmax(0,1fr))}.cs-edu-week-board>span{white-space:nowrap}}
+@media(max-width:360px){.cs-edu-week-board{grid-template-columns:repeat(3,minmax(0,1fr))}}

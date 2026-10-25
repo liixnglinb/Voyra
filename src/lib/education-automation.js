@@ -1,10 +1,11 @@
 import {htmlTimetableRows,parseEducationRows,educationSlot} from './education-import.js';
+import {scheduleHash} from './schedule-share.js';
 
 export const HUHST={id:'huhst',name:'湖南人文科技学院',intranet:'http://10.1.1.149/jsxsd/',vpn:'http://vpn.huhst.edu.cn:9900/'};
-export const EDU_VERSION='2.0.0';
+export const EDU_VERSION='3.0.0';
 export const EDU_TTL=60*60*1000;
 export const validJobId=id=>typeof id==='string'&&/^[a-f0-9]{32}$/.test(id);
-export const allowedReturnOrigin=origin=>origin==='https://lxlrwxs.top'||/^http:\/\/(?:127\.0\.0\.1|localhost):\d+$/.test(origin);
+export const allowedReturnOrigin=origin=>['https://lxlrwxs.top','https://voyra-overseas.edgeone.dev'].includes(origin)||/^http:\/\/(?:127\.0\.0\.1|localhost):\d+$/.test(origin);
 export const allowedSchoolURL=url=>{
   try{const u=new URL(url);return ['http:','https:'].includes(u.protocol)&&['10.1.1.149','vpn.huhst.edu.cn'].includes(u.hostname);}catch{return false;}
 };
@@ -53,14 +54,22 @@ export function timetableDocument(doc){
   return null;
 }
 function weekNumber(option){
-  const match=option.textContent.trim().match(/^(?:第\s*)?(\d{1,2})\s*(?:周)?$/);
+  const match=option.textContent.trim().match(/^(?:第\s*)?(\d{1,2})\s*(?:周(?:\s|[（(]|$)|$)/);
   return match?Number(match[1]):null;
+}
+export function educationTimetableLink(docs){
+  for(const doc of docs)for(const node of doc.querySelectorAll('a[href],[data-href],[data-url],[onclick]')){
+    if(node.closest('[data-voyra-helper]')||!/我的课表|个人课表|学期理论课表|课表查询|课程表/.test(node.textContent.trim()))continue;
+    const candidates=[node.getAttribute('href'),node.getAttribute('data-href'),node.getAttribute('data-url'),...[...(node.getAttribute('onclick')||'').matchAll(/['"]([^'"]*(?:xskb|xskbcx|kbxx)[^'"]*)['"]/gi)].map(m=>m[1])];
+    for(const value of candidates)try{if(!value)continue;const url=new URL(value,doc.location.href);if(allowedSchoolURL(url.href)&&/\/jsxsd\/(?:xskb|kbxx|xskbcx)\//i.test(url.pathname)&&!/logout|delete|save|remove/i.test(url.pathname+url.search))return url.href;}catch{/* Ignore non-navigation menu entries. */}
+  }
+  return null;
 }
 export function describeTimetable(doc,url=doc.location?.href){
   const found=timetableDocument(doc);if(!found)return null;
   const selectors=[...doc.querySelectorAll('select')].map(select=>({select,weeks:[...select.options].map(option=>({week:weekNumber(option),value:option.value})).filter(option=>option.week>=1&&option.week<=30)}));
   const control=selectors.find(({select,weeks})=>weeks.length>=2&&(/zc|week|zhou/i.test(select.name)||/周/.test(select.textContent)));
-  if(!control)return {...found,url,weeks:[],semester:semesterLabel(doc)};
+  if(!control){if(selectors.some(({select})=>/zc|week|zhou/i.test(select.name)))throw Error('未能识别完整周次列表，请切换到学期课表后重新检测。');return {...found,url,weeks:[],semester:semesterLabel(doc)};}
   if(control.weeks.some(option=>option.week>20))throw Error('教务系统超过 20 周，当前课表暂不支持完整保存；请先使用 Excel 分段导入。');
   const form=control.select.form;
   if(!form||!control.select.name)throw Error('未找到周次查询表单。请选择「学期理论课表」后重试，或使用手动导入。');
@@ -71,7 +80,9 @@ export function describeTimetable(doc,url=doc.location?.href){
     if(!el.name||el.disabled||/password|file|submit|button|reset/i.test(el.type)||((el.type==='checkbox'||el.type==='radio')&&!el.checked))continue;
     if(el.tagName==='SELECT'&&el.multiple){for(const option of el.selectedOptions)params.append(el.name,option.value);}else params.append(el.name,el.value);
   }
-  return {...found,url,form:{url:action.href,method:form.method.toUpperCase()==='POST'?'POST':'GET',params,weekName:control.select.name},weeks:[...new Map(control.weeks.map(option=>[option.week,option])).values()].sort((a,b)=>a.week-b.week),semester:semesterLabel(doc)};
+  const weeks=[...new Map(control.weeks.map(option=>[option.week,option])).values()].sort((a,b)=>a.week-b.week);
+  if(weeks.some((option,index)=>option.week!==index+1))throw Error('学校周次列表不完整，已停止读取以免漏课。请切换完整学期后重试。');
+  return {...found,url,form:{url:action.href,method:form.method.toUpperCase()==='POST'?'POST':'GET',params,weekName:control.select.name},weeks,semester:semesterLabel(doc)};
 }
 function semesterLabel(doc){
   const select=[...doc.querySelectorAll('select')].find(el=>/xnxq|semester|term/i.test(el.name));
@@ -84,21 +95,23 @@ export async function collectEducationTimetable(description,{read,signal,onProgr
     if(!courses.length)throw Error('当前课表没有有效课程，请先选择正确学期。');
     return {courses:mergeEducationWeeks([courses]),weeks:[],semester:description.semester,mode:'semester'};
   }
-  const key=JSON.stringify([description.form.url,description.form.params.toString(),description.semester,description.weeks]);
+  const params=[...description.form.params].filter(([name])=>name!==description.form.weekName&&!/csrf|token|viewstate/i.test(name));
+  const key=scheduleHash([description.form.url,params,description.semester,description.weeks]);
   if(checkpoint.key!==key){checkpoint.clear();checkpoint.key=key;}
   const total=description.weeks.length;
+  const progress=week=>({done:checkpoint.size,total,week,completed:[...checkpoint.keys()],counts:Object.fromEntries([...checkpoint].map(([w,courses])=>[w,mergeEducationWeeks([courses]).length])),courseCount:mergeEducationWeeks([...checkpoint.values()]).length});
   for(const option of description.weeks){
     signal?.throwIfAborted();if(checkpoint.has(option.week))continue;
-    onProgress({done:checkpoint.size,total,week:option.week});
+    onProgress(progress(option.week));
     const doc=await read(description.form,option,signal);
     signal?.throwIfAborted();
     const found=timetableDocument(doc);
     if(!found&&doc.querySelector('input[type=password]'))throw Error('学校登录已失效，请重新登录后点「重新检测」。');
     if(!found)throw Error(`第 ${option.week} 周未返回完整课表，已暂停。请重新检测以继续；已读取的周次会保留。`);
-    const echo=[...doc.querySelectorAll('select')].find(el=>el.name===description.form.weekName);
+    const echo=[...doc.querySelectorAll('select,input[type=hidden]')].find(el=>el.name===description.form.weekName);
     if(!echo||echo.value!==option.value)throw Error(`第 ${option.week} 周的返回页面未确认周次，已暂停以免误导入。可改用学期课表。`);
     checkpoint.set(option.week,parseEducationRows(found.rows,{week:option.week}));
-    onProgress({done:checkpoint.size,total,week:option.week});
+    onProgress(progress(option.week));
   }
   const courses=mergeEducationWeeks([...checkpoint.values()]);
   if(!courses.length)throw Error('这些周次都没有课程，请检查所选学期。');

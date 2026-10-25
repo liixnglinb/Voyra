@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {HUHST,chooseEducationNetwork,mergeEducationWeeks,activeJob,allowedSchoolURL,allowedReturnOrigin} from '../src/lib/education-automation.js';
+import {HUHST,chooseEducationNetwork,mergeEducationWeeks,activeJob,allowedSchoolURL,allowedReturnOrigin,educationTimetableLink} from '../src/lib/education-automation.js';
 import {parseEducationRows} from '../src/lib/education-import.js';
 test('real school login response keeps intranet; elapsed login time is irrelevant',async()=>{
   const result=await chooseEducationNetwork(async url=>({status:200,text:'湖南人文科技学院 教务系统 <input type="password">',url}));
@@ -26,4 +26,14 @@ test('job IDs, return origin, school URL and TTL are bounded',()=>{
   const job={id:'a'.repeat(32),created:Date.now(),returnOrigin:'https://lxlrwxs.top'};assert.ok(activeJob(job));
   assert.ok(!activeJob({...job,created:Date.now()-3600001}));assert.ok(!activeJob({...job,id:'guessable'}));assert.ok(!activeJob({...job,returnOrigin:'https://evil.test'}));
   assert.equal(allowedSchoolURL('http://10.1.1.149.attacker.test/jsxsd'),false);assert.equal(allowedSchoolURL('javascript:alert(1)'),false);assert.equal(allowedReturnOrigin('http://127.0.0.1.evil:5173'),false);
+});
+test('the named overseas preview is supported without allowing arbitrary return sites',()=>{
+ assert.ok(allowedReturnOrigin('https://voyra-overseas.edgeone.dev'));assert.ok(!allowedReturnOrigin('https://evil.edgeone.dev'));assert.ok(!allowedReturnOrigin('https://voyra-overseas.edgeone.dev.evil.test'));
+});
+test('student homepage menus resolve only read-only personal timetable links',()=>{
+ const node=attrs=>({textContent:'我的课表',closest:()=>null,getAttribute:key=>attrs[key]||null});
+ const doc=nodes=>({location:{href:'http://10.1.1.149/jsxsd/framework/xsMain.htmlx'},querySelectorAll:()=>nodes});
+ assert.equal(educationTimetableLink([doc([node({'data-url':'/jsxsd/xskb/xskb_list.htmlx'})])]),'http://10.1.1.149/jsxsd/xskb/xskb_list.htmlx');
+ assert.equal(educationTimetableLink([doc([node({onclick:"openMenu('/jsxsd/xskb/xskb_list.htmlx')"})])]),'http://10.1.1.149/jsxsd/xskb/xskb_list.htmlx');
+ for(const href of['https://evil.test/jsxsd/xskb/list','javascript:alert(1)','/jsxsd/xskb/delete.do'])assert.equal(educationTimetableLink([doc([node({href})])]),null);
 });

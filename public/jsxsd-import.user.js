@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Voyra 教务课表导入
 // @namespace    https://lxlrwxs.top/
-// @version      2.0.0
+// @version      3.0.0
 // @description  湖南人文科技学院：内网优先、外网回退、登录后逐周识别，返回 Voyra 核对保存。不读取账号密码。
 // @match        https://lxlrwxs.top/*
+// @match        https://voyra-overseas.edgeone.dev/*
 // @match        http://localhost/*
 // @match        http://127.0.0.1/*
 // @match        http://10.1.1.149/*
@@ -18,7 +19,6 @@
 // @grant        GM_addValueChangeListener
 // @grant        GM_xmlhttpRequest
 // @grant        GM_openInTab
-// @noframes
 // @run-at       document-idle
 // @updateURL    https://lxlrwxs.top/jsxsd-import.user.js
 // @downloadURL  https://lxlrwxs.top/jsxsd-import.user.js
@@ -140,12 +140,68 @@
     return courses;
   }
 
+  // src/lib/schedule-share.js
+  var SCHEDULE_SLOTS = ["1-2", "3-4", "5-6", "7-8", "\u665A\u81EA\u4E601", "\u665A\u81EA\u4E602"];
+  var TYPES = ["every", "odd", "even"];
+  var stableSchedule = (value) => JSON.stringify(value, (_key, v) => v && typeof v === "object" && !Array.isArray(v) ? Object.keys(v).sort().reduce((out, key) => {
+    out[key] = v[key];
+    return out;
+  }, {}) : v);
+  function scheduleHash(value) {
+    let n = 2166136261;
+    for (const ch of stableSchedule(value)) n = Math.imul(n ^ ch.charCodeAt(0), 16777619);
+    return (n >>> 0).toString(36);
+  }
+  var b64encode = (value) => {
+    const bytes = new TextEncoder().encode(value);
+    let text = "";
+    for (const byte of bytes) text += String.fromCharCode(byte);
+    return btoa(text).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  };
+  function sharedCourseShape(course) {
+    const periods = Array.isArray(course.periods) && course.periods.length ? course.periods : [course];
+    return {
+      name: String(course.name || "").trim(),
+      teacher: String(course.teacher || ""),
+      room: String(course.room || ""),
+      credit: String(course.credit || ""),
+      note: String(course.note || ""),
+      ...Number.isInteger(course.color) ? { color: course.color } : {},
+      periods: periods.map((p) => ({
+        day: Number(p.day),
+        slot: p.slot,
+        f: Number(p.f) || 1,
+        t: Number(p.t) || 16,
+        type: TYPES.includes(p.type) ? p.type : "every",
+        ...p.customTime?.start && p.customTime?.end ? { customTime: { start: p.customTime.start, end: p.customTime.end } } : {}
+      }))
+    };
+  }
+  function validateSharedCourses(courses) {
+    if (!Array.isArray(courses) || !courses.length || courses.length > 300) throw Error("\u5206\u4EAB\u5185\u5BB9\u6CA1\u6709\u6709\u6548\u8BFE\u7A0B\uFF0C\u6216\u8D85\u8FC7 300 \u95E8\u8BFE\u7A0B\u3002");
+    return courses.map((course, i) => {
+      if (!course || typeof course !== "object") throw Error("\u5206\u4EAB\u5185\u5BB9\u683C\u5F0F\u4E0D\u6B63\u786E\u3002");
+      const row = sharedCourseShape(course);
+      if (!row.name || row.name.length > 200 || !row.periods.length || row.periods.length > 100) throw Error("\u5206\u4EAB\u4E2D\u6709\u65E0\u6548\u7684\u8BFE\u7A0B\u540D\u79F0\u6216\u4E0A\u8BFE\u65F6\u6BB5\u3002");
+      for (const p of row.periods) {
+        if (!Number.isInteger(p.day) || p.day < 1 || p.day > 7 || !SCHEDULE_SLOTS.includes(p.slot) || !Number.isInteger(p.f) || !Number.isInteger(p.t) || p.f < 1 || p.t > 20 || p.f > p.t) throw Error("\u5206\u4EAB\u4E2D\u6709\u65E0\u6548\u7684\u661F\u671F\u3001\u8282\u6B21\u6216\u5468\u6B21\u3002");
+        if (p.customTime && (!/^\d{2}:\d{2}$/.test(p.customTime.start) || !/^\d{2}:\d{2}$/.test(p.customTime.end) || p.customTime.start >= p.customTime.end)) throw Error("\u5206\u4EAB\u4E2D\u6709\u65E0\u6548\u7684\u81EA\u5B9A\u4E49\u65F6\u95F4\u3002");
+      }
+      return { ...row, id: `shared-${scheduleHash(row)}-${i}` };
+    });
+  }
+  function encodeScheduleShare(courses, settings, withDetail = true) {
+    const rows = validateSharedCourses(courses).map(({ id, ...row }) => withDetail ? row : { ...row, teacher: "", room: "" });
+    const data = { version: 3, courses: rows, settings: { startDate: settings?.startDate || "", overrideWeek: settings?.overrideWeek ?? null, timeSlots: settings?.timeSlots || null } };
+    return "VOYRA3:" + b64encode(JSON.stringify(data));
+  }
+
   // src/lib/education-automation.js
   var HUHST = { id: "huhst", name: "\u6E56\u5357\u4EBA\u6587\u79D1\u6280\u5B66\u9662", intranet: "http://10.1.1.149/jsxsd/", vpn: "http://vpn.huhst.edu.cn:9900/" };
-  var EDU_VERSION = "2.0.0";
+  var EDU_VERSION = "3.0.0";
   var EDU_TTL = 60 * 60 * 1e3;
   var validJobId = (id) => typeof id === "string" && /^[a-f0-9]{32}$/.test(id);
-  var allowedReturnOrigin = (origin) => origin === "https://lxlrwxs.top" || /^http:\/\/(?:127\.0\.0\.1|localhost):\d+$/.test(origin);
+  var allowedReturnOrigin = (origin) => ["https://lxlrwxs.top", "https://voyra-overseas.edgeone.dev"].includes(origin) || /^http:\/\/(?:127\.0\.0\.1|localhost):\d+$/.test(origin);
   var allowedSchoolURL = (url) => {
     try {
       const u = new URL(url);
@@ -207,15 +263,31 @@
     return null;
   }
   function weekNumber(option) {
-    const match = option.textContent.trim().match(/^(?:第\s*)?(\d{1,2})\s*(?:周)?$/);
+    const match = option.textContent.trim().match(/^(?:第\s*)?(\d{1,2})\s*(?:周(?:\s|[（(]|$)|$)/);
     return match ? Number(match[1]) : null;
+  }
+  function educationTimetableLink(docs) {
+    for (const doc of docs) for (const node of doc.querySelectorAll("a[href],[data-href],[data-url],[onclick]")) {
+      if (node.closest("[data-voyra-helper]") || !/我的课表|个人课表|学期理论课表|课表查询|课程表/.test(node.textContent.trim())) continue;
+      const candidates = [node.getAttribute("href"), node.getAttribute("data-href"), node.getAttribute("data-url"), ...[...(node.getAttribute("onclick") || "").matchAll(/['"]([^'"]*(?:xskb|xskbcx|kbxx)[^'"]*)['"]/gi)].map((m) => m[1])];
+      for (const value of candidates) try {
+        if (!value) continue;
+        const url = new URL(value, doc.location.href);
+        if (allowedSchoolURL(url.href) && /\/jsxsd\/(?:xskb|kbxx|xskbcx)\//i.test(url.pathname) && !/logout|delete|save|remove/i.test(url.pathname + url.search)) return url.href;
+      } catch {
+      }
+    }
+    return null;
   }
   function describeTimetable(doc, url = doc.location?.href) {
     const found = timetableDocument(doc);
     if (!found) return null;
     const selectors = [...doc.querySelectorAll("select")].map((select) => ({ select, weeks: [...select.options].map((option) => ({ week: weekNumber(option), value: option.value })).filter((option) => option.week >= 1 && option.week <= 30) }));
-    const control = selectors.find(({ select, weeks }) => weeks.length >= 2 && (/zc|week|zhou/i.test(select.name) || /周/.test(select.textContent)));
-    if (!control) return { ...found, url, weeks: [], semester: semesterLabel(doc) };
+    const control = selectors.find(({ select, weeks: weeks2 }) => weeks2.length >= 2 && (/zc|week|zhou/i.test(select.name) || /周/.test(select.textContent)));
+    if (!control) {
+      if (selectors.some(({ select }) => /zc|week|zhou/i.test(select.name))) throw Error("\u672A\u80FD\u8BC6\u522B\u5B8C\u6574\u5468\u6B21\u5217\u8868\uFF0C\u8BF7\u5207\u6362\u5230\u5B66\u671F\u8BFE\u8868\u540E\u91CD\u65B0\u68C0\u6D4B\u3002");
+      return { ...found, url, weeks: [], semester: semesterLabel(doc) };
+    }
     if (control.weeks.some((option) => option.week > 20)) throw Error("\u6559\u52A1\u7CFB\u7EDF\u8D85\u8FC7 20 \u5468\uFF0C\u5F53\u524D\u8BFE\u8868\u6682\u4E0D\u652F\u6301\u5B8C\u6574\u4FDD\u5B58\uFF1B\u8BF7\u5148\u4F7F\u7528 Excel \u5206\u6BB5\u5BFC\u5165\u3002");
     const form = control.select.form;
     if (!form || !control.select.name) throw Error("\u672A\u627E\u5230\u5468\u6B21\u67E5\u8BE2\u8868\u5355\u3002\u8BF7\u9009\u62E9\u300C\u5B66\u671F\u7406\u8BBA\u8BFE\u8868\u300D\u540E\u91CD\u8BD5\uFF0C\u6216\u4F7F\u7528\u624B\u52A8\u5BFC\u5165\u3002");
@@ -228,7 +300,9 @@
         for (const option of el.selectedOptions) params.append(el.name, option.value);
       } else params.append(el.name, el.value);
     }
-    return { ...found, url, form: { url: action.href, method: form.method.toUpperCase() === "POST" ? "POST" : "GET", params, weekName: control.select.name }, weeks: [...new Map(control.weeks.map((option) => [option.week, option])).values()].sort((a, b) => a.week - b.week), semester: semesterLabel(doc) };
+    const weeks = [...new Map(control.weeks.map((option) => [option.week, option])).values()].sort((a, b) => a.week - b.week);
+    if (weeks.some((option, index) => option.week !== index + 1)) throw Error("\u5B66\u6821\u5468\u6B21\u5217\u8868\u4E0D\u5B8C\u6574\uFF0C\u5DF2\u505C\u6B62\u8BFB\u53D6\u4EE5\u514D\u6F0F\u8BFE\u3002\u8BF7\u5207\u6362\u5B8C\u6574\u5B66\u671F\u540E\u91CD\u8BD5\u3002");
+    return { ...found, url, form: { url: action.href, method: form.method.toUpperCase() === "POST" ? "POST" : "GET", params, weekName: control.select.name }, weeks, semester: semesterLabel(doc) };
   }
   function semesterLabel(doc) {
     const select = [...doc.querySelectorAll("select")].find((el) => /xnxq|semester|term/i.test(el.name));
@@ -242,85 +316,31 @@
       if (!courses2.length) throw Error("\u5F53\u524D\u8BFE\u8868\u6CA1\u6709\u6709\u6548\u8BFE\u7A0B\uFF0C\u8BF7\u5148\u9009\u62E9\u6B63\u786E\u5B66\u671F\u3002");
       return { courses: mergeEducationWeeks([courses2]), weeks: [], semester: description.semester, mode: "semester" };
     }
-    const key = JSON.stringify([description.form.url, description.form.params.toString(), description.semester, description.weeks]);
+    const params = [...description.form.params].filter(([name]) => name !== description.form.weekName && !/csrf|token|viewstate/i.test(name));
+    const key = scheduleHash([description.form.url, params, description.semester, description.weeks]);
     if (checkpoint.key !== key) {
       checkpoint.clear();
       checkpoint.key = key;
     }
     const total = description.weeks.length;
+    const progress = (week) => ({ done: checkpoint.size, total, week, completed: [...checkpoint.keys()], counts: Object.fromEntries([...checkpoint].map(([w, courses2]) => [w, mergeEducationWeeks([courses2]).length])), courseCount: mergeEducationWeeks([...checkpoint.values()]).length });
     for (const option of description.weeks) {
       signal?.throwIfAborted();
       if (checkpoint.has(option.week)) continue;
-      onProgress({ done: checkpoint.size, total, week: option.week });
+      onProgress(progress(option.week));
       const doc = await read(description.form, option, signal);
       signal?.throwIfAborted();
       const found = timetableDocument(doc);
       if (!found && doc.querySelector("input[type=password]")) throw Error("\u5B66\u6821\u767B\u5F55\u5DF2\u5931\u6548\uFF0C\u8BF7\u91CD\u65B0\u767B\u5F55\u540E\u70B9\u300C\u91CD\u65B0\u68C0\u6D4B\u300D\u3002");
       if (!found) throw Error(`\u7B2C ${option.week} \u5468\u672A\u8FD4\u56DE\u5B8C\u6574\u8BFE\u8868\uFF0C\u5DF2\u6682\u505C\u3002\u8BF7\u91CD\u65B0\u68C0\u6D4B\u4EE5\u7EE7\u7EED\uFF1B\u5DF2\u8BFB\u53D6\u7684\u5468\u6B21\u4F1A\u4FDD\u7559\u3002`);
-      const echo = [...doc.querySelectorAll("select")].find((el) => el.name === description.form.weekName);
+      const echo = [...doc.querySelectorAll("select,input[type=hidden]")].find((el) => el.name === description.form.weekName);
       if (!echo || echo.value !== option.value) throw Error(`\u7B2C ${option.week} \u5468\u7684\u8FD4\u56DE\u9875\u9762\u672A\u786E\u8BA4\u5468\u6B21\uFF0C\u5DF2\u6682\u505C\u4EE5\u514D\u8BEF\u5BFC\u5165\u3002\u53EF\u6539\u7528\u5B66\u671F\u8BFE\u8868\u3002`);
       checkpoint.set(option.week, parseEducationRows(found.rows, { week: option.week }));
-      onProgress({ done: checkpoint.size, total, week: option.week });
+      onProgress(progress(option.week));
     }
     const courses = mergeEducationWeeks([...checkpoint.values()]);
     if (!courses.length) throw Error("\u8FD9\u4E9B\u5468\u6B21\u90FD\u6CA1\u6709\u8BFE\u7A0B\uFF0C\u8BF7\u68C0\u67E5\u6240\u9009\u5B66\u671F\u3002");
     return { courses, weeks: description.weeks.map((option) => option.week), semester: description.semester, mode: "weekly" };
-  }
-
-  // src/lib/schedule-share.js
-  var SCHEDULE_SLOTS = ["1-2", "3-4", "5-6", "7-8", "\u665A\u81EA\u4E601", "\u665A\u81EA\u4E602"];
-  var TYPES = ["every", "odd", "even"];
-  var stableSchedule = (value) => JSON.stringify(value, (_key, v) => v && typeof v === "object" && !Array.isArray(v) ? Object.keys(v).sort().reduce((out, key) => {
-    out[key] = v[key];
-    return out;
-  }, {}) : v);
-  function scheduleHash(value) {
-    let n = 2166136261;
-    for (const ch of stableSchedule(value)) n = Math.imul(n ^ ch.charCodeAt(0), 16777619);
-    return (n >>> 0).toString(36);
-  }
-  var b64encode = (value) => {
-    const bytes = new TextEncoder().encode(value);
-    let text = "";
-    for (const byte of bytes) text += String.fromCharCode(byte);
-    return btoa(text).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  };
-  function sharedCourseShape(course) {
-    const periods = Array.isArray(course.periods) && course.periods.length ? course.periods : [course];
-    return {
-      name: String(course.name || "").trim(),
-      teacher: String(course.teacher || ""),
-      room: String(course.room || ""),
-      credit: String(course.credit || ""),
-      note: String(course.note || ""),
-      ...Number.isInteger(course.color) ? { color: course.color } : {},
-      periods: periods.map((p) => ({
-        day: Number(p.day),
-        slot: p.slot,
-        f: Number(p.f) || 1,
-        t: Number(p.t) || 16,
-        type: TYPES.includes(p.type) ? p.type : "every",
-        ...p.customTime?.start && p.customTime?.end ? { customTime: { start: p.customTime.start, end: p.customTime.end } } : {}
-      }))
-    };
-  }
-  function validateSharedCourses(courses) {
-    if (!Array.isArray(courses) || !courses.length || courses.length > 300) throw Error("\u5206\u4EAB\u5185\u5BB9\u6CA1\u6709\u6709\u6548\u8BFE\u7A0B\uFF0C\u6216\u8D85\u8FC7 300 \u95E8\u8BFE\u7A0B\u3002");
-    return courses.map((course, i) => {
-      if (!course || typeof course !== "object") throw Error("\u5206\u4EAB\u5185\u5BB9\u683C\u5F0F\u4E0D\u6B63\u786E\u3002");
-      const row = sharedCourseShape(course);
-      if (!row.name || row.name.length > 200 || !row.periods.length || row.periods.length > 100) throw Error("\u5206\u4EAB\u4E2D\u6709\u65E0\u6548\u7684\u8BFE\u7A0B\u540D\u79F0\u6216\u4E0A\u8BFE\u65F6\u6BB5\u3002");
-      for (const p of row.periods) {
-        if (!Number.isInteger(p.day) || p.day < 1 || p.day > 7 || !SCHEDULE_SLOTS.includes(p.slot) || !Number.isInteger(p.f) || !Number.isInteger(p.t) || p.f < 1 || p.t > 20 || p.f > p.t) throw Error("\u5206\u4EAB\u4E2D\u6709\u65E0\u6548\u7684\u661F\u671F\u3001\u8282\u6B21\u6216\u5468\u6B21\u3002");
-        if (p.customTime && (!/^\d{2}:\d{2}$/.test(p.customTime.start) || !/^\d{2}:\d{2}$/.test(p.customTime.end) || p.customTime.start >= p.customTime.end)) throw Error("\u5206\u4EAB\u4E2D\u6709\u65E0\u6548\u7684\u81EA\u5B9A\u4E49\u65F6\u95F4\u3002");
-      }
-      return { ...row, id: `shared-${scheduleHash(row)}-${i}` };
-    });
-  }
-  function encodeScheduleShare(courses, settings, withDetail = true) {
-    const rows = validateSharedCourses(courses).map(({ id, ...row }) => withDetail ? row : { ...row, teacher: "", room: "" });
-    const data = { version: 3, courses: rows, settings: { startDate: settings?.startDate || "", overrideWeek: settings?.overrideWeek ?? null, timeSlots: settings?.timeSlots || null } };
-    return "VOYRA3:" + b64encode(JSON.stringify(data));
   }
 
   // build-tools/education-helper.entry.js
@@ -331,6 +351,12 @@
     const expired = get();
     if (expired && !activeJob(expired)) set(null);
     const emit = (value) => document.dispatchEvent(new CustomEvent(REPLY, { detail: JSON.stringify(value) }));
+    const returnURL = (job) => {
+      const url = new URL("/", job.returnOrigin), query = new URLSearchParams(job.returnQuery || "");
+      for (const key of ["eo_token", "eo_time"]) if (query.has(key)) url.searchParams.set(key, query.get(key));
+      url.hash = "/timetable?tab=courses&eduImport=" + job.id;
+      return url.href;
+    };
     function request(url, { method = "GET", body, signal, timeout = 1e4 } = {}) {
       return new Promise((resolve, reject) => {
         if (signal?.aborted) {
@@ -391,7 +417,7 @@
         if (command.type === "cancel" || command.type === "ack") {
           if (current?.id === command.id && current.returnOrigin === location.origin) {
             controller?.abort();
-            set({ ...current, status: command.type === "ack" ? "saved" : "cancelled", code: void 0, progress: void 0 });
+            set({ ...current, status: command.type === "ack" ? "saved" : "cancelled", code: void 0, checkpoint: void 0 });
             publish(get());
           }
           return;
@@ -404,7 +430,9 @@
         controller?.abort();
         controller = new AbortController();
         const probeController = controller;
-        const job = { id: command.id, created: Date.now(), returnOrigin: location.origin, status: "probing", message: "\u6B63\u5728\u68C0\u6D4B\u6821\u56ED\u5185\u7F51\u2026" };
+        const access = new URLSearchParams(location.search), returnQuery = new URLSearchParams();
+        for (const key of ["eo_token", "eo_time"]) if (access.has(key)) returnQuery.set(key, access.get(key));
+        const job = { id: command.id, created: Date.now(), returnOrigin: location.origin, returnQuery: returnQuery.toString(), autoSave: command.autoSave === true, status: "probing", message: "\u6B63\u5728\u68C0\u6D4B\u6821\u56ED\u5185\u7F51\u2026" };
         set(job);
         publish(job);
         try {
@@ -423,7 +451,7 @@
         }
       });
       emit({ type: "ready", version: EDU_VERSION });
-    } else if (allowedSchoolURL(location.href) && window.top === window.self) {
+    } else if (allowedSchoolURL(location.href)) {
       let render = function(job) {
         if (!job || job.id !== id || !activeJob(job)) {
           stop();
@@ -432,21 +460,35 @@
         }
         if (["cancelled", "saved"].includes(job.status)) {
           stop();
-          title.textContent = job.status === "saved" ? "\u5DF2\u4FDD\u5B58\u5230 Voyra" : "\u5DF2\u505C\u6B62\u5BFC\u5165";
-          message.textContent = "\u4F60\u53EF\u4EE5\u5173\u95ED\u6B64\u9875\u9762\u3002";
+          title.textContent = job.status === "saved" ? "\u8BFE\u8868\u5DF2\u81EA\u52A8\u4FDD\u5B58" : "\u5DF2\u505C\u6B62\u5BFC\u5165";
+          message.textContent = job.status === "saved" ? "\u5DF2\u5408\u5E76\u5230\u53D1\u8D77\u5BFC\u5165\u7684\u8D26\u53F7\uFF0C\u539F\u6709\u8BFE\u7A0B\u4FDD\u7559\u3002\u4F60\u53EF\u4EE5\u5173\u95ED\u5B66\u6821\u9875\u9762\u3002" : "\u4F60\u53EF\u4EE5\u5173\u95ED\u6B64\u9875\u9762\u3002";
           progress.hidden = true;
           back.hidden = true;
           return;
         }
         title.textContent = job.status === "ready" ? "\u8BFE\u8868\u5DF2\u8BC6\u522B\uFF0C\u7B49\u5F85\u6838\u5BF9" : job.status === "scanning" ? "\u6B63\u5728\u8BFB\u53D6\u5404\u5468\u8BFE\u8868" : job.status === "error" ? "\u8BC6\u522B\u5DF2\u6682\u505C" : "\u8BF7\u5728\u5B66\u6821\u9875\u9762\u5B8C\u6210\u767B\u5F55";
         message.textContent = job.message || "";
-        progress.hidden = !job.progress || job.status !== "scanning";
+        progress.hidden = !job.progress;
         if (job.progress) {
           progress.max = job.progress.total;
           progress.value = job.progress.done;
         }
         back.hidden = job.status !== "ready";
         root.querySelector(".retry").disabled = job.status === "scanning";
+        let board = root.querySelector(".weeks");
+        if (!board) {
+          board = document.createElement("div");
+          board.className = "weeks";
+          board.style.cssText = "display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:7px 0 12px;font-size:10px";
+          progress.after(board);
+        }
+        board.replaceChildren();
+        if (job.progress) for (let week = 1; week <= job.progress.total; week++) {
+          const item = document.createElement("span"), done = job.progress.completed?.includes(week);
+          item.textContent = `${week}\u5468 ${done ? "\u2713" : week === job.progress.week ? job.status === "error" ? "!" : "\u2026" : "\xB7"}`;
+          item.style.cssText = `padding:5px 2px;text-align:center;border-radius:6px;background:${done ? "#edf4e5" : week === job.progress.week ? "#fbefd1" : "#f1f3ec"};color:${done ? "#587340" : "#8b865f"}`;
+          board.append(item);
+        }
       }, update = function(patch) {
         const job = get();
         if (job?.id !== id || ["cancelled", "saved"].includes(job.status) || !activeJob(job)) return;
@@ -457,11 +499,23 @@
         controller?.abort();
         clearInterval(timer);
       };
+      try {
+        if (window.parent !== window.self && allowedSchoolURL(window.parent.location.href) && window.parent.location.origin === location.origin) return;
+      } catch {
+      }
       let controller = null, checking = false, paused = false, lastSignature = "", checkpoint = /* @__PURE__ */ new Map(), timer, navTried = false, wasLogin = false;
       const scanId = [...crypto.getRandomValues(new Uint8Array(12))].map((v) => v.toString(16).padStart(2, "0")).join("");
       let initial = get();
       if (!activeJob(initial) || !["waiting", "scanning", "error", "ready"].includes(initial.status)) return;
       const id = initial.id;
+      if (initial.checkpoint?.entries) {
+        try {
+          checkpoint = new Map(initial.checkpoint.entries);
+          checkpoint.key = initial.checkpoint.key;
+        } catch {
+          checkpoint = /* @__PURE__ */ new Map();
+        }
+      }
       const host = document.createElement("div");
       host.dataset.voyraHelper = "";
       host.style.cssText = "position:fixed;right:12px;bottom:max(12px,env(safe-area-inset-bottom));width:calc(100vw - 24px);max-width:340px;z-index:2147483647";
@@ -476,11 +530,11 @@
       };
       root.querySelector(".stop").onclick = () => {
         stop();
-        update({ status: "cancelled", code: void 0, progress: void 0 });
+        update({ status: "cancelled", code: void 0, checkpoint: void 0 });
       };
       back.onclick = () => {
         const job = get();
-        if (activeJob(job) && job.id === id) GM_openInTab(job.returnOrigin + "/#/timetable?tab=courses&eduImport=" + id, { active: true, insert: true });
+        if (activeJob(job) && job.id === id) GM_openInTab(returnURL(job), { active: true, insert: true });
       };
       root.querySelector(".retry").onclick = () => {
         controller?.abort();
@@ -527,19 +581,11 @@
         }
         if (!description) {
           if (!navTried) {
-            const links = docs.flatMap((doc) => [...doc.querySelectorAll("a[href]")]).filter((link2) => /^(?:我的课表|个人课表|学期理论课表|学生个人课表|个人课表查询|课表查询)$/.test(link2.textContent.trim()));
-            const link = links.find((link2) => {
-              try {
-                const url = new URL(link2.getAttribute("href"), link2.ownerDocument.location.href);
-                return allowedSchoolURL(url.href) && !/logout|delete|save/i.test(url.pathname) && /xskb|xskbcx|skb/i.test(url.pathname);
-              } catch {
-                return false;
-              }
-            });
-            if (link) {
+            const target = educationTimetableLink(docs);
+            if (target) {
               navTried = true;
-              link.click();
-              update({ status: "waiting", message: "\u5DF2\u6253\u5F00\u8BFE\u8868\u67E5\u8BE2\uFF0C\u8BF7\u786E\u8BA4\u5B66\u671F\uFF1B\u8BFE\u8868\u52A0\u8F7D\u540E\u81EA\u52A8\u8BC6\u522B\u3002" });
+              update({ status: "waiting", message: "\u5DF2\u767B\u5F55\uFF0C\u6B63\u5728\u8FDB\u5165\u4E2A\u4EBA\u8BFE\u8868\uFF1B\u52A0\u8F7D\u540E\u4F1A\u81EA\u52A8\u8BFB\u53D6\u6240\u6709\u5468\u6B21\u3002" });
+              location.assign(target);
               return;
             }
           }
@@ -550,33 +596,39 @@
         if (!force && lastSignature === signature) return;
         lastSignature = signature;
         checking = true;
-        controller = new AbortController();
+        const scanController = new AbortController();
+        controller = scanController;
         try {
-          update({ status: "scanning", lease: { owner: scanId, until: Date.now() + 3e4 }, message: description.semester ? `\u6B63\u5728\u8BC6\u522B ${description.semester}\u2026` : "\u6B63\u5728\u8BFB\u53D6\u6240\u9009\u5B66\u671F\u8BFE\u8868\u2026", progress: void 0, code: void 0 });
+          update({ status: "scanning", lease: { owner: scanId, until: Date.now() + 3e4 }, message: description.semester ? `\u6B63\u5728\u8BC6\u522B ${description.semester}\u2026` : "\u6B63\u5728\u8BFB\u53D6\u6240\u9009\u5B66\u671F\u8BFE\u8868\u2026", code: void 0 });
           await new Promise((resolve) => setTimeout(resolve, 120));
-          controller.signal.throwIfAborted();
+          scanController.signal.throwIfAborted();
           if (get()?.lease?.owner !== scanId) return;
           const result = await collectEducationTimetable(description, {
             read: readWeek,
-            signal: controller.signal,
+            signal: scanController.signal,
             checkpoint,
             onProgress: (value) => {
-              if (get()?.lease?.owner !== scanId) controller.abort();
-              else update({ status: "scanning", lease: { owner: scanId, until: Date.now() + 3e4 }, progress: value, message: `\u5DF2\u8BFB\u53D6 ${value.done} / ${value.total} \u5468\uFF0C\u6B63\u5728\u68C0\u67E5\u7B2C ${value.week} \u5468\u2026` });
+              if (get()?.lease?.owner !== scanId) scanController.abort();
+              else update({ status: "scanning", lease: { owner: scanId, until: Date.now() + 3e4 }, checkpoint: { key: checkpoint.key, entries: [...checkpoint] }, progress: value, message: `\u5DF2\u8BFB\u53D6 ${value.done} / ${value.total} \u5468\uFF0C${value.completed.includes(value.week) ? "\u5DF2\u5B8C\u6210" : "\u6B63\u5728\u68C0\u67E5"}\u7B2C ${value.week} \u5468\uFF0C\u8BC6\u522B ${value.courseCount} \u95E8\u8BFE\u7A0B\u3002` });
             }
           });
-          controller.signal.throwIfAborted();
+          scanController.signal.throwIfAborted();
           const code = encodeScheduleShare(result.courses, {}, true);
           if (code.length > 2e5) throw Error("\u8BFE\u8868\u5185\u5BB9\u8FC7\u5927\uFF0C\u8BF7\u4F7F\u7528 Excel \u5BFC\u5165\u3002");
           if (get()?.lease?.owner !== scanId) return;
-          update({ status: "ready", lease: void 0, code, semester: result.semester, weeks: result.weeks, progress: void 0, message: `${result.semester ? result.semester + "\uFF1A" : ""}\u5DF2\u8BC6\u522B ${result.courses.length} \u95E8\u8BFE\u7A0B${result.mode === "weekly" ? "\uFF0C\u5B8C\u6574\u68C0\u67E5 " + result.weeks.length + " \u4E2A\u5468\u6B21" : ""}\u3002\u8FD4\u56DE\u6838\u5BF9\u540E\u4FDD\u5B58\uFF1B\u5B66\u671F\u4E0D\u5BF9\u65F6\uFF0C\u8BF7\u6539\u5B66\u671F\u540E\u70B9\u300C\u91CD\u65B0\u68C0\u6D4B\u300D\u3002` });
+          update({ status: "ready", lease: void 0, code, semester: result.semester, weeks: result.weeks, message: `${result.semester ? result.semester + "\uFF1A" : ""}\u5DF2\u8BFB\u53D6 ${result.courses.length} \u95E8\u8BFE\u7A0B${result.mode === "weekly" ? "\uFF0C\u5B8C\u6574\u68C0\u67E5 " + result.weeks.length + " \u4E2A\u5468\u6B21" : ""}\u3002${job.autoSave ? "\u5373\u5C06\u8FD4\u56DE Voyra \u81EA\u52A8\u4FDD\u5B58\u3002" : "\u8FD4\u56DE\u6838\u5BF9\u540E\u4FDD\u5B58\u3002"}` });
+          if (job.autoSave && !get()?.autoReturned) {
+            const current = get();
+            set({ ...current, autoReturned: true });
+            GM_openInTab(returnURL(current), { active: true, insert: true });
+          }
         } catch (error) {
-          if (!controller.signal.aborted) {
+          if (!scanController.signal.aborted) {
             paused = true;
-            update({ status: "error", lease: void 0, message: error.message, progress: void 0 });
+            update({ status: "error", lease: void 0, message: error.message });
           }
         } finally {
-          checking = false;
+          if (controller === scanController) checking = false;
         }
       }
       render(initial);
@@ -585,7 +637,7 @@
       addEventListener("pagehide", () => {
         controller?.abort();
         clearInterval(timer);
-        if (get()?.lease?.owner === scanId) update({ status: "waiting", lease: void 0, progress: void 0, message: "\u8BFE\u8868\u9875\u9762\u5DF2\u5207\u6362\uFF0C\u6B63\u5728\u7B49\u5F85\u65B0\u9875\u9762\u7EE7\u7EED\u68C0\u6D4B\u3002" });
+        if (get()?.lease?.owner === scanId) update({ status: "waiting", lease: void 0, message: "\u8BFE\u8868\u9875\u9762\u5DF2\u5207\u6362\uFF0C\u5DF2\u5B8C\u6210\u5468\u6B21\u5DF2\u4FDD\u7559\uFF0C\u7B49\u5F85\u7EE7\u7EED\u68C0\u6D4B\u3002" });
       }, { once: true });
     }
   }
