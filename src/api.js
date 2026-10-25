@@ -5,6 +5,21 @@
    ============================================================ */
 import Bmob, { currentUserId, USER_TABLE, BMOB_READY } from './lib/bmob';
 import { currentUid } from './lib/auth';
+import { createScheduleCloud, SCHEDULE_CLOUD_KEY } from './lib/schedule-cloud';
+
+const scheduleClouds=new Map();
+function scheduleCloud(expectedUid){
+  const uid=currentUid();
+  const assertCurrent=()=>{
+    const sdk=Bmob.User.current?.();
+    if(!uid||currentUid()!==uid||(expectedUid&&expectedUid!==uid)||String(sdk?.objectId||sdk?.id||'')!==String(uid)||!sdk?.sessionToken){
+      const error=Error('请重新登录以恢复云端同步，本机课表已保留。');error.code='AUTH_REQUIRED';throw error;
+    }
+  };
+  assertCurrent();
+  if(!scheduleClouds.has(uid))scheduleClouds.set(uid,createScheduleCloud({Bmob,uid,storage:localStorage,assertCurrent}));
+  return scheduleClouds.get(uid);
+}
 
 /* 云端未配置（缺环境变量）时快速失败，调用方已有 catch，页面自动降级为本地模式 */
 function ensureCloud() {
@@ -26,8 +41,9 @@ async function findRow(uid, key) {
   return rows && rows[0] ? rows[0] : null;
 }
 
-export async function saveData(key, value) {
+export async function saveData(key, value, options={}) {
   ensureCloud();
+  if(key===SCHEDULE_CLOUD_KEY)return scheduleCloud(options.uid).save(value);
   const uid = await requireUid();
   const row = await findRow(uid, key);
   const q = Bmob.Query(USER_TABLE);
@@ -45,8 +61,9 @@ export async function saveData(key, value) {
   return { ok: true };
 }
 
-export async function loadData(key) {
+export async function loadData(key, options={}) {
   ensureCloud();
+  if(key===SCHEDULE_CLOUD_KEY)return scheduleCloud(options.uid).load();
   const uid = await requireUid();
   const row = await findRow(uid, key);
   if (!row) return null;

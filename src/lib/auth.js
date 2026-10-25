@@ -43,7 +43,8 @@ export function currentUid() {
 /** 退出登录 */
 export function clearSession() {
   try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
-  try { Bmob.User.logout(); } catch { /* ignore */ }
+  // hydrogen-js-sdk logout() calls localStorage.clear(), including unsynced tools and backups.
+  try { localStorage.removeItem('bmob'); } catch { /* ignore */ }
 }
 
 /** 按用户隔离的本地存储 key（日程中心 / 思维导图用） */
@@ -55,6 +56,7 @@ export function userKey(base) {
 function setSession(user) {
   const uid = (user && (user.objectId || user.id)) || null;
   if (!uid) return null;
+  if(user.sessionToken)localStorage.setItem('bmob',JSON.stringify(user));
   const s = {
     uid,
     username: user.username || '',
@@ -130,8 +132,9 @@ export async function login(username, password) {
 export async function register(username, password) {
   const user = await Bmob.User.register({ username, password });
   const uid = user.objectId || user.id;
+  // SDK register() does not persist the returned session token; private ACL rows need it.
+  setSession({...user,username:user.username||username});
   await writeMeta(uid, { lastLoginAt: Date.now() });
-  setSession(user);
   return user;
 }
 

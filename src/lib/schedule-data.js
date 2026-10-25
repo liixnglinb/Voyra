@@ -9,6 +9,10 @@ export function unpackSchedule(value){
   if(typeof value!=='object'||!Array.isArray(value.courses)||value.courses.some(c=>!c||typeof c!=='object'))throw Error('课表数据无法读取，原数据已保留，请先导出备份。');
   return {...copy(value),settings:value.settings||{...DEFAULT_SCHEDULE_SETTINGS},_scheduleSync:{modified:{...value._scheduleSync?.modified},removed:{...value._scheduleSync?.removed},settingsAt:timestamp(value._scheduleSync?.settingsAt)}};
 }
+export function sameSchedule(a,b){
+  const canonical=value=>{const payload=unpackSchedule(value);payload.courses.sort((x,y)=>keyOf(x).localeCompare(keyOf(y)));return stableSchedule(payload);};
+  return canonical(a)===canonical(b);
+}
 export function mergeSchedule(localValue,remoteValue){
   const local=unpackSchedule(localValue),remote=unpackSchedule(remoteValue);
   const modified=maxMap(local._scheduleSync.modified,remote._scheduleSync.modified),removed=maxMap(local._scheduleSync.removed,remote._scheduleSync.removed),rows=new Map();
@@ -31,10 +35,10 @@ export function mergeSchedule(localValue,remoteValue){
 }
 export class ScheduleStore{
   constructor({storage,key,cloud,isCurrent=()=>true,now=()=>Date.now()}){
-    Object.assign(this,{storage,key,cloud,isCurrent,now});this.listeners=new Set();this.generation=0;this.running=null;this.status='local';this.error='';
+    Object.assign(this,{storage,key,cloud,isCurrent,now});this.listeners=new Set();this.generation=0;this.running=null;this.status='local';this.error='';this.errorCode='';this.lastSyncedAt=0;
     try{this.payload=unpackSchedule(JSON.parse(storage.getItem(key)||'null'));}catch(e){this.payload=unpackSchedule(null);this.error=e.message;this.invalid=true;this.status='error';}
   }
-  snapshot(){return {payload:this.payload,status:this.status,error:this.error};}
+  snapshot(){return {payload:this.payload,status:this.status,error:this.error,errorCode:this.errorCode,lastSyncedAt:this.lastSyncedAt};}
   subscribe(fn){this.listeners.add(fn);return()=>this.listeners.delete(fn);}
   emit(){for(const fn of this.listeners)fn(this.snapshot());}
   write(payload){
@@ -56,19 +60,29 @@ export class ScheduleStore{
     if(this.running)return this.running;if(!this.cloud||!this.isCurrent()||this.invalid)return Promise.resolve();
     this.running=this.reconcile().finally(()=>{this.running=null;});return this.running;
   }
+  refreshLocal(){
+    if(!this.isCurrent()||this.invalid)return;
+    try{const disk=unpackSchedule(JSON.parse(this.storage.getItem(this.key)||'null')),next=mergeSchedule(this.payload,disk);
+      if(!sameSchedule(next,this.payload)){this.payload=next;this.generation++;this.emit();}
+    }catch(e){this.invalid=true;this.status='error';this.error=e.message;this.emit();}
+  }
   async reconcile(){
-    this.status='syncing';this.error='';this.emit();
+    this.status='syncing';this.error='';this.errorCode='';this.emit();
     try{
       while(this.isCurrent()){
         const remote=await this.cloud.load();if(!this.isCurrent())return;
+        this.refreshLocal();if(this.invalid)throw Error(this.error);
         if(remote!=null&&this.storage.getItem(`${this.key}.cloud-original-v2`)===null)this.storage.setItem(`${this.key}.cloud-original-v2`,JSON.stringify(remote));
         const next=mergeSchedule(this.payload,remote);
         if(stableSchedule(next)!==stableSchedule(this.payload)){this.write(next);this.emit();}
         const generation=this.generation;
-        if(stableSchedule(next)!==stableSchedule(unpackSchedule(remote))){this.status='saving';this.emit();await this.cloud.save(copy(next));if(!this.isCurrent())return;}
+        if(!sameSchedule(next,remote)){this.status='saving';this.emit();const receipt=await this.cloud.save(copy(next));if(!this.isCurrent())return;
+          if(receipt?.ok===false)throw Error(receipt.error||'云端未确认保存，本机课表已保留。');
+          if(receipt?.value){const acknowledged=mergeSchedule(this.payload,receipt.value);if(!sameSchedule(acknowledged,this.payload)){this.write(acknowledged);this.emit();}}
+        }
         if(generation===this.generation)break;
       }
-      if(this.isCurrent()){this.status='synced';this.emit();}
-    }catch(e){if(this.isCurrent()){this.status='error';this.error=e.message||'暂时无法同步，课表已保存在本机。';this.emit();}}
+      if(this.isCurrent()){this.status='synced';this.lastSyncedAt=this.now();this.emit();}
+    }catch(e){if(this.isCurrent()){this.status='error';this.error=e.message||'暂时无法同步，课表已保存在本机。';this.errorCode=e.code||'';this.emit();}}
   }
 }

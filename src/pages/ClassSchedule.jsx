@@ -168,7 +168,7 @@ function WeekPicker({ value, onChange, max = MAX_WEEK }) {
    ============================================================ */
 
 const LS_KEY = 'ClassScheduleData';
-import { userKey, isAuthed } from '../lib/auth';
+import { userKey, isAuthed, currentUid } from '../lib/auth';
 const LS_READ = () => userKey(LS_KEY);
 const ACCENT = '#A48830';
 const ACCENT_SOFT = '#FFF9DF';
@@ -916,17 +916,18 @@ export function useIsMobile() {
 }
 
 export default function ClassSchedule({ stats = null, active = true, drawerPanel = null, drawerHost = null, onWeekLabel = null, onClosePanel = null, onOpenPanel = null }) {
-  const { guard, authed, username } = useAuth();
+  const { guard, authed, username, openLogin, sessionId } = useAuth();
   const route = useLocation(), navigate = useNavigate();
   const CLOUD_KEY = 'schedule-classes-v1';   // 云端同步键（2026-09-20：登录后跨设备跟随）
   const storageKey = LS_READ();
+  const ownerUid = authed ? currentUid() : null;
   const scheduleStore = useMemo(() => new ScheduleStore({ storage: localStorage, key: storageKey,
     isCurrent: () => LS_READ() === storageKey,
     cloud: authed ? {
-      async load() { if (!window.electronAPI?.loadData) throw Error('云端暂时不可用'); return window.electronAPI.loadData(CLOUD_KEY); },
-      async save(value) { if (!window.electronAPI?.saveData) throw Error('云端暂时不可用'); return window.electronAPI.saveData(CLOUD_KEY, value); },
+      async load() { if (!window.electronAPI?.loadData) throw Error('云端暂时不可用'); return window.electronAPI.loadData(CLOUD_KEY, { uid: ownerUid }); },
+      async save(value) { if (!window.electronAPI?.saveData) throw Error('云端暂时不可用'); return window.electronAPI.saveData(CLOUD_KEY, value, { uid: ownerUid }); },
     } : null,
-  }), [storageKey, authed]);
+  }), [storageKey, authed, ownerUid, sessionId]);
   const [scheduleSnapshot, setScheduleSnapshot] = useState(() => ({ owner: scheduleStore, ...scheduleStore.snapshot() }));
   const currentSnapshot = scheduleSnapshot.owner === scheduleStore ? scheduleSnapshot : scheduleStore.snapshot();
   const courses = useMemo(() => currentSnapshot.payload.courses.map(normalizeCourse), [currentSnapshot.payload.courses]);
@@ -934,10 +935,18 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   useEffect(() => {
     const update = snapshot => setScheduleSnapshot({ owner: scheduleStore, ...snapshot });
     update(scheduleStore.snapshot());
-    const off = scheduleStore.subscribe(update), online = () => scheduleStore.sync();
-    scheduleStore.sync(); window.addEventListener('online', online);
-    return () => { off(); window.removeEventListener('online', online); };
-  }, [scheduleStore]);
+    const off = scheduleStore.subscribe(update);
+    const refresh = () => {
+      if (!active || document.visibilityState === 'hidden') return;
+      scheduleStore.refreshLocal(); scheduleStore.sync();
+    };
+    const storage = event => { if (event.key === scheduleStore.key) refresh(); };
+    refresh();
+    for (const type of ['online','focus','pageshow']) window.addEventListener(type, refresh);
+    document.addEventListener('visibilitychange', refresh); window.addEventListener('storage', storage);
+    const timer = setInterval(refresh, 30000);
+    return () => { off(); clearInterval(timer); for (const type of ['online','focus','pageshow']) window.removeEventListener(type, refresh); document.removeEventListener('visibilitychange', refresh); window.removeEventListener('storage', storage); };
+  }, [scheduleStore, active]);
   const [timeEdit, setTimeEdit] = useState(null); // { key, side: 's'|'e' } 正在滚动编辑的时段
   const [importText, setImportText] = useState('');
   const [parsed, setParsed] = useState([]);
@@ -1467,11 +1476,11 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
   };
 
   const exportBackup = () => {
-    const raw = localStorage.getItem(storageKey), original = localStorage.getItem(storageKey + '.original-v2'), cloudOriginal = localStorage.getItem(storageKey + '.cloud-original-v2');
+    const raw = localStorage.getItem(storageKey), original = localStorage.getItem(storageKey + '.original-v2'), cloudOriginal = localStorage.getItem(storageKey + '.cloud-original-v2'), cloudRows = localStorage.getItem(storageKey + '.cloud-rows-v1');
     if (!courses.length && !raw && !original) { say('课表还是空的，没什么可导出'); return; }
     const parse = value => { try { return JSON.parse(value); } catch { return value; } };
     const data = JSON.stringify({ app: BACKUP_APP, v: 1, at: new Date().toISOString(), courses, settings,
-      recovery: { original: parse(original || raw), cloudOriginal: parse(cloudOriginal) } });
+      recovery: { original: parse(original || raw), cloudOriginal: parse(cloudOriginal), cloudRows: parse(cloudRows) } });
     const url = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url; a.download = `voyra-课表备份-${new Date().toISOString().slice(0, 10)}.json`;
@@ -1532,7 +1541,8 @@ export default function ClassSchedule({ stats = null, active = true, drawerPanel
 
   return (
     <div className="cs-page">
-      {currentSnapshot.status === 'error' && <div className="cs-sync-notice" role="status"><span>{scheduleStore.invalid ? '原课表无法读取，原文已保留，请先导出备份。' : '课表已保存在本机，云端暂未同步。'}</span><button type="button" onClick={() => scheduleStore.invalid ? exportBackup() : scheduleStore.sync()}>{scheduleStore.invalid ? '导出备份' : '重试同步'}</button></div>}
+      <section className="cs-sync-bar" aria-label="课表同步状态"><span role="status">{['syncing','saving'].includes(currentSnapshot.status) ? '正在同步课表…' : currentSnapshot.status === 'synced' ? '云端已同步' : currentSnapshot.status === 'error' ? '仅保存在本机 · 需要同步' : authed ? '课表保存在本机' : '登录后可跨设备同步'}{currentSnapshot.status === 'synced' && currentSnapshot.lastSyncedAt > 0 && <small> · {new Date(currentSnapshot.lastSyncedAt).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</small>}</span><button type="button" aria-label="同步课表" disabled={['syncing','saving'].includes(currentSnapshot.status)} onClick={() => !authed || currentSnapshot.errorCode === 'AUTH_REQUIRED' ? openLogin() : scheduleStore.sync()}><RefreshCw size={13} className={['syncing','saving'].includes(currentSnapshot.status) ? 'cs-spinning' : undefined}/><span>{authed ? '同步课表' : '登录同步'}</span></button></section>
+      {currentSnapshot.status === 'error' && <aside className="cs-sync-notice" role="status"><span>{scheduleStore.invalid ? '原课表无法读取，原文已保留，请先导出备份。' : currentSnapshot.error || '课表已保存在本机，云端暂未同步。'}</span><button type="button" onClick={() => scheduleStore.invalid ? exportBackup() : currentSnapshot.errorCode === 'AUTH_REQUIRED' ? openLogin() : scheduleStore.sync()}>{scheduleStore.invalid ? '导出备份' : currentSnapshot.errorCode === 'AUTH_REQUIRED' ? '重新登录' : '重试同步'}</button></aside>}
       <style>{`
         .cs-page { display:flex; flex-direction:column; gap:18px; }
         .cs-card { background:#fff;border:1px solid rgba(20,24,33,.09);border-radius:14px;box-shadow:0 1px 2px rgba(16,20,30,.04);padding:18px 20px; }

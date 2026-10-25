@@ -50,6 +50,7 @@ export function useAuth() {
  */
 export default function AuthGate({ children, variant = 'light' }) {
   const [authed, setAuthed] = useState(isAuthed());
+  const [, setAuthIdentity] = useState(() => { const s=getSession(); return `${s?.uid || ''}:${s?.loginAt || ''}`; });
   const [open, setOpen] = useState(false);
   const [toast, setToast] = useState('');
   const toastRef = useRef(null);
@@ -59,6 +60,12 @@ export default function AuthGate({ children, variant = 'light' }) {
   const acctRef = useRef(null);
   const username = session ? session.username : '';
   const avatarUri = useMemo(() => avatarFor(username), [username]);
+  useEffect(() => {
+    const refresh = () => { const current = getSession(); setAuthed(Boolean(current)); setAuthIdentity(`${current?.uid || ''}:${current?.loginAt || ''}`); };
+    const changed = event => { if (event.key === 'voyra_session_v1' || event.key === 'bmob' || event.key == null) refresh(); };
+    window.addEventListener('storage', changed); window.addEventListener('focus', refresh); window.addEventListener('pageshow', refresh);
+    return () => { window.removeEventListener('storage', changed); window.removeEventListener('focus', refresh); window.removeEventListener('pageshow', refresh); };
+  }, []);
 
   /* 头像面板：点外部或 Esc 收起 */
   useEffect(() => {
@@ -97,6 +104,7 @@ export default function AuthGate({ children, variant = 'light' }) {
 
   const ctx = useMemo(() => ({
     authed,
+    sessionId: session?.loginAt || 0,
     username: session ? session.username : '',
     openLogin: () => setOpen(true),
     guard,
