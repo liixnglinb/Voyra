@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import ArticleCover from '../components/ArticleCover';
 import { ARTICLES } from '../data/articles';
-import { PELICAN_MODEL_COUNT } from './PelicanGallery';
+import { PELICAN_MODEL_COUNT } from '../data/pelican-models';
 import useCardEffects from '../hooks/useCardEffects';
 import { ProductCard, SHOWCASE_GROUPS, CARD_BY_ID } from '../components/ShowcaseCards';
 import { toHashUrl } from '../lib/hash-url';

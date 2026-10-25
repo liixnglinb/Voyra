@@ -6,8 +6,9 @@ import AuthGate from './components/AuthGate'
 import RouteLoader from './components/RouteLoader'
 import Dashboard from './pages/Dashboard'
 import ArticleDetail from './pages/ArticleDetail'
+import { installIntentPrefetch, loadPromptLibrary } from './lib/route-prefetch'
 
-const PromptLibrary = lazy(() => import('./pages/PromptLibrary'))
+const PromptLibrary = lazy(loadPromptLibrary)
 const LearningHub = lazy(() => import('./pages/LearningHub'))
 const MindMap = lazy(() => import('./pages/MindMap'))
 const BabyCare = lazy(() => import('./pages/BabyCare'))
@@ -22,16 +23,7 @@ const DietCheckin = lazy(() => import('./pages/DietCheckin'))
 
 
 function App() {
-  /* 首页空闲时预载提示词库分包，消除进入 /prompts 时的加载白屏 */
-  useEffect(() => {
-    const warm = () => { import('./pages/PromptLibrary'); };
-    if ('requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(warm, { timeout: 3000 });
-      return () => window.cancelIdleCallback(id);
-    }
-    const timer = setTimeout(warm, 1500);
-    return () => clearTimeout(timer);
-  }, [])
+  useEffect(() => installIntentPrefetch(), [])
 
   return (
     <ErrorBoundary>

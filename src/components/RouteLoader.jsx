@@ -1,6 +1,6 @@
 import React from 'react';
 import { Heart } from 'lucide-react';
-import { PELICAN_MODEL_COUNT } from '../pages/PelicanGallery';
+import { PELICAN_MODEL_COUNT } from '../data/pelican-models';
 
 /**
  * RouteLoader — 工具页路由级等待加载动效
