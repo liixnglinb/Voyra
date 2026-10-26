@@ -62,8 +62,8 @@ async function make({viewport={width:390,height:844},installed=true,network='cam
   if(installed){page.on('domcontentloaded',()=>inject(page.mainFrame()));page.on('framenavigated',frame=>{if(frame!==page.mainFrame())frame.waitForLoadState('domcontentloaded').then(()=>inject(frame)).catch(()=>{});});}
  }
  context.on('page',wire);
- const page=await context.newPage();await page.goto((process.env.EDUCATION_ENTRY||origin+'/')+'#/timetable?tab=courses',{waitUntil:'domcontentloaded'});
- await page.getByRole('button',{name:'功能',exact:true}).click();await page.getByRole('menuitem').filter({hasText:'导入课表'}).click();
+ const page=await context.newPage();await page.goto((process.env.EDUCATION_ENTRY||origin+'/')+'#/timetable?tab=courses&eduAssistant=1',{waitUntil:'domcontentloaded'});
+ await page.locator('.cs-dialog').waitFor();
  if(installed){await page.getByText('助手已连接',{exact:true}).waitFor();if(!autoSave)await page.getByRole('checkbox',{name:'读取完成后自动保存到当前账号'}).uncheck();}
  return {context,page,opened,requests,getJob:()=>job,getSchool:()=>schoolPage,release:()=>releaseWeek?.(),injectionErrors};
 }
@@ -90,7 +90,7 @@ try{
  const saved=await main.page.evaluate(()=>JSON.parse(localStorage.getItem('ClassScheduleData_schedule-ui-preview')));assert.equal(saved.courses.length,4);assert.equal(saved.courses.find(c=>c.name==='数学分析').teacher,'王老师');assert.equal(saved.courses.find(c=>c.name==='数学分析').room,'致远-120');assert.deepEqual(saved.courses.find(c=>c.name==='数学分析').periods.map(p=>[p.f,p.t]),[[1,2],[4,4]]);assert.equal(main.getJob().status,'saved');assert.ok(!main.getJob().code);assert.equal(saved.courses.find(c=>c.id==='preview-math').credit,'4');assert.deepEqual(main.injectionErrors,[]);
  report.flows.push('Intranet login waits without timeout redirects; failure on week 3 pauses without result, retry resumes 3–4, receiver confirms exact sparse weeks and keeps original courses');await main.context.close();
  const external=await make({network:'vpn',full:true});await external.page.getByRole('button',{name:'自动选择入口并开始'}).click();await until(()=>external.getSchool());assert.equal(external.opened[0],vpn+'/');const vp=external.getSchool();await vp.getByRole('link',{name:'模拟完成学校登录'}).click();await until(()=>external.getJob()?.status==='ready');assert.equal(external.requests.filter(r=>r.body).length,0,'Semester table does not make unnecessary weekly requests');
- await external.page.reload();await external.page.getByRole('button',{name:'功能',exact:true}).click();await external.page.getByRole('menuitem').filter({hasText:'导入课表'}).click();await external.page.getByText('已识别 2 门课程',{exact:true}).waitFor();
+ await external.page.reload();await external.page.locator('.cs-dialog').waitFor();await external.page.getByText('已识别 2 门课程',{exact:true}).waitFor();
  assert.equal(await external.page.evaluate(()=>JSON.parse(localStorage.getItem('ClassScheduleData_schedule-ui-preview')).courses.length),2);assert.deepEqual(external.injectionErrors,[]);report.flows.push('Failed private probe falls back to actual VPN root; complete semester table returns exact ranges and helper result survives app reload without saving automatically');await external.context.close();
  // A different account must never receive the prior account's pending import.
  const isolated=await make();await isolated.page.evaluate(()=>{localStorage.setItem('voyra.education.pending.v2',JSON.stringify({id:'b'.repeat(32),owner:'ClassScheduleData_someone-else',created:Date.now()}));location.hash='#/timetable?tab=courses&eduImport='+'b'.repeat(32);});await isolated.page.getByRole('alert').filter({hasText:'不属于当前账号'}).waitFor();assert.equal(await isolated.page.getByRole('button',{name:'导入 2 门课程',exact:true}).count(),0);report.flows.push('Returning task IDs are bound to the initiating account, unknown or stale tasks cannot populate preview');await isolated.context.close();

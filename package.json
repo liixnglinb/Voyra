@@ -34,7 +34,9 @@
     "cards:verify": "node scripts/verify-cards.mjs",
     "cards:a11y": "node scripts/verify-a11y.mjs",
     "cards:shots": "node scripts/shot-clean.mjs",
-    "cards:shots:each": "node scripts/shot-per-card.mjs"
+    "cards:shots:each": "node scripts/shot-per-card.mjs",
+    "test:education:web:data": "node --test build-tools/education-web.test.mjs",
+    "test:education:web:ui": "node build-tools/verify-education-web.mjs"
   },
   "dependencies": {
     "@dicebear/core": "^9.4.3",

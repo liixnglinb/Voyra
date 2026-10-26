@@ -641,11 +641,11 @@ export const SHOWCASE_CARDS = [
   },
 ];
 
-/** 按 Tab 分组，供 Dashboard 直接消费（禁止改动 SHOWCASE_GROUPS 的成员与顺序） */
+/** 按 Tab 分组，首页仅展示当前保留的卡片；历史下载地址继续兼容。 */
 export const SHOWCASE_GROUPS = {
   products: ['api', 'timetable', 'voyraai-mall', 'health'],
   skills: ['mathmodel'],
-  apps: ['checkin', 'toolbox', 'billtrace', 'token', 'chronicle'],
+  apps: ['checkin', 'toolbox', 'billtrace'],
 };
 
 export const CARD_BY_ID = Object.fromEntries(SHOWCASE_CARDS.map((c) => [c.id, c]));

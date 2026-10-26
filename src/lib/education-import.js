@@ -94,3 +94,63 @@ export function parseEducationRows(rows,options={}){
   }
   return courses;
 }
+
+// File/paste imports require explicit weeks. They cannot prove that an unseen
+// school week is empty, so they never invent a semester for missing metadata.
+function checkEducationWeeks(value){
+  const text=String(value||'').replace(/\[\s*周\s*\]|\(\s*\[?周\]?\s*\)/g,'周');
+  for(const match of text.matchAll(/(\d{1,2}(?:\s*[-—–~至到,，、]\s*\d{1,2})*)\s*周/g)){
+    if(match[1].match(/\d+/g).some(n=>Number(n)<1||Number(n)>20))throw Error('课程周次超出 1–20 周，未导入任何课程。请检查原课表。');
+  }
+  return text;
+}
+export function parseEducationTable(rows){
+  for(const row of rows)for(const value of row)checkEducationWeeks(value);
+  const grid=parseEducationRows(rows,{requireWeeks:true});
+  if(grid.length)return grid;
+  const headers={name:/^(?:课程名称|课程名|科目|课名)$/,teacher:/^(?:授课教师|授课老师|教师|老师)$/,room:/^(?:上课地点|上课教室|教室|地点|场地)$/,day:/^(?:星期|周几)$/,slot:/^(?:节次|上课节次)$/,weeks:/^(?:周次|周数|上课周|起止周)$/};
+  let columns=null;const result=[];
+  for(const [index,row]of rows.entries()){
+    const candidate={};row.forEach((value,col)=>{const text=String(value||'').replace(/\s/g,'');for(const [key,re]of Object.entries(headers))if(re.test(text))candidate[key]=col;});
+    if(candidate.name!==undefined&&candidate.day!==undefined&&candidate.slot!==undefined){columns=candidate;continue;}
+    if(!columns)continue;
+    const name=String(row[columns.name]||'').trim();if(!name)continue;
+    const dayText=String(row[columns.day]||'').trim(),day=/^[1-7]$/.test(dayText)?Number(dayText):CN[dayText.match(/^(?:(?:星期|周)\s*)?([一二三四五六日天])$/)?.[1]];
+    const slotText=String(row[columns.slot]||''),slots=[...new Set(slotText.split(/[、,，;；]/).map(educationSlot).filter(Boolean))];
+    if(!day||!slots.length)throw Error(`第 ${index+1} 行「${name}」的星期或节次无法识别，未导入任何课程。`);
+    let weeks=columns.weeks===undefined?'':String(row[columns.weeks]||'').trim();
+    if(!weeks)throw Error(`「${name}」没有周次，请导出带周次的学期课表后重试。`);
+    if(!/周/.test(weeks))weeks+='周';checkEducationWeeks(weeks);
+    const ranges=weekPeriods(weeks,{requireWeeks:true});
+    result.push({id:`edu-list-${index}`,name,teacher:String(row[columns.teacher]||'').trim(),room:String(row[columns.room]||'').trim(),periods:slots.flatMap(slot=>ranges.map(range=>({day,slot,...range})))});
+  }
+  return result;
+}
+export function decodeEducationText(buffer){
+  const bytes=buffer instanceof Uint8Array?buffer:new Uint8Array(buffer),text=new TextDecoder().decode(bytes);
+  return /charset\s*=\s*["']?\s*(?:gb2312|gbk|gb18030)/i.test(text.slice(0,2048))||text.includes('\uFFFD')?new TextDecoder('gb18030').decode(bytes):text;
+}
+export async function readEducationFile(file,onProgress=()=>{}){
+  if(!file||file.size>8*1024*1024)throw Error('请选择小于 8 MB 的课表文件。');
+  onProgress({phase:'reading',name:file.name,done:0,total:0});
+  const buffer=await file.arrayBuffer(),extension=file.name.split('.').at(-1)?.toLowerCase(),head=decodeEducationText(new Uint8Array(buffer).slice(0,2048));
+  const courses=[];let total=1;
+  if(['html','htm','txt','tsv'].includes(extension)||/<(?:!doctype|html|table)\b/i.test(head)){
+    const text=decodeEducationText(buffer),rows=/<table\b/i.test(text)?htmlTimetableRows(text):parseTabularText(text);
+    onProgress({phase:'parsing',name:file.name,done:0,total});courses.push(...parseEducationTable(rows));
+    onProgress({phase:'parsing',name:file.name,done:1,total});
+  }else if(['xls','xlsx'].includes(extension)){
+    const XLSX=await import('xlsx'),book=XLSX.read(buffer,{type:'array'});total=book.SheetNames.length;
+    for(const [index,name]of book.SheetNames.entries()){
+      const sheet=book.Sheets[name],rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+      for(const merge of sheet['!merges']||[])for(let r=merge.s.r;r<=Math.min(merge.e.r,rows.length-1);r++)for(let c=merge.s.c;c<=merge.e.c;c++){
+        rows[r]||=[];if(rows[r][c]===''||rows[r][c]===undefined)rows[r][c]=rows[merge.s.r]?.[merge.s.c]||'';
+      }
+      onProgress({phase:'parsing',name:file.name,sheet:name,done:index,total});
+      courses.push(...parseEducationTable(rows));onProgress({phase:'parsing',name:file.name,sheet:name,done:index+1,total});
+      await new Promise(done=>setTimeout(done,0));
+    }
+  }else throw Error('请选择 Excel、HTML 网页或制表符文本课表文件。');
+  if(!courses.length)throw Error('没有识别到课程。请导出带星期、节次和周次的完整课表，或改用复制粘贴。');
+  return {courses,source:file.name,sheets:total};
+}
