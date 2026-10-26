@@ -19,7 +19,7 @@ import '../styles/product-shots.css';
 import '../styles/showcase-cards.css';
 
 const FEATURED = [
-  { theme: 'theme-api', to: 'https://apilxl.bbroot.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
+  { theme: 'theme-api', to: 'https://voyra-relay-test.onrender.com/', external: true, no: '01', name: 'Voyra Relay API', desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。', cta: '访问网关', Icon: Globe, art: 'api' },
   { theme: 'theme-timetable', to: '/timetable', no: '02', name: '日程中心', desc: '课程表与日历日程二合一，每周课程与每日安排一站管理。', cta: '打开日程', Icon: CalendarRange, art: 'timetable' },
   { theme: 'theme-pelican', to: '/pelican-gallery', no: '03', name: 'AI 模型对比秀', desc: '同一题交给 16 个 AI 模型分别生成，效果一页对比。', cta: '查看对比', Icon: Film, art: 'pelican' },
   { theme: 'theme-prompts', to: '/prompts', no: '04', name: '提示词库', desc: '把常用指令、模板和使用场景放在一个随时可检索的位置。', cta: '管理提示词', Icon: Lightbulb, art: 'prompts' },

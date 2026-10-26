@@ -39,7 +39,7 @@ export const SHOWCASE_CARDS = [
     name: 'Voyra Relay API',
     desc: '统一 API 网关，接入海量 AI 模型，集中管理请求、路由与成本。',
     cta: '访问网关',
-    href: 'https://apilxl.bbroot.com/',
+    href: 'https://voyra-relay-test.onrender.com/',
     external: true,
     family: 'core',
     tone: 'ink',
