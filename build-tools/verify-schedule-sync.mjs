@@ -1,15 +1,17 @@
-// Exercise the shipped browser bundle and real Bmob SDK against a shared fake REST backend.
+// Exercise the shipped browser bundle and actual device-session handlers against isolated SQLite and a rotating upstream fixture.
 // No electronAPI replacement and no requests or writes to real user accounts.
 import {chromium} from 'playwright-core';
 import {createServer} from 'node:http';
 import {readFile,mkdir,writeFile} from 'node:fs/promises';
 import {resolve,sep,extname} from 'node:path';
 import assert from 'node:assert/strict';
-const root=resolve(process.argv[2]||'dist'),out=resolve('output/schedule-sync-20261025'),uid='schedule-sync-e2e',key=`ClassScheduleData_${uid}`;
+import {authHandler,cloudHandler} from '../functions/_device-sessions.js';
+import {sessionFixture} from './device-session-fixtures.mjs';
+const root=resolve(process.argv[2]||'dist'),out=resolve(process.env.SCHEDULE_SYNC_OUTPUT||'output/session-multidevice-20261026/browser'),uid='schedule-sync-e2e',key=`ClassScheduleData_${uid}`;
 const c=id=>({id,name:id,periods:[{day:1,slot:'1-2',f:1,t:20,type:'every'}]});
 const payload=(...ids)=>({courses:ids.map(c),settings:{startDate:'2026-10-19',overrideWeek:1,timeSlots:null}});
-const rows=[{objectId:'legacy-a',userKey:uid,key:'schedule-classes-v1',value:JSON.stringify(payload('旧课表'))},{objectId:'legacy-b',userKey:uid,key:'schedule-classes-v1',value:JSON.stringify(payload('历史手机课程'))}],writes=[],errors=[],flows=[];
-let failUpload=false,seq=0;
+const initialRows=[{objectId:'legacy-a',userKey:uid,key:'schedule-classes-v1',value:JSON.stringify(payload('旧课表'))},{objectId:'legacy-b',userKey:uid,key:'schedule-classes-v1',value:JSON.stringify(payload('历史手机课程'))}];
+const backend=sessionFixture(initialRows,uid),rows=backend.rows,writes=backend.writes,errors=[],flows=[];
 const csp=(await readFile(resolve(root,'_headers'),'utf8')).match(/Content-Security-Policy:\s*(.+)/)[1];
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.woff2':'font/woff2'};
 const servers=[];
@@ -23,30 +25,13 @@ async function pageFor(index,{sdk=true,expired=false,authed=true,local=payload()
   if(sdk)localStorage.setItem('bmob',JSON.stringify({objectId:user,username:user,sessionToken:`fake-token-${user}`}));
   localStorage.setItem(`ClassScheduleData_${user}`,JSON.stringify(local));localStorage.setItem('voyra-sched-guide-v1','1');localStorage.setItem('keep-health-backup','original');
  },{sdk,expired,authed,local,user});
- await context.route('**/*',async route=>{const req=route.request(),url=new URL(req.url());
-  if(url.hostname!=='api.bmobcloud.com'){if(origins.some(o=>new URL(o).origin===url.origin))return route.continue();return route.abort();}
-  const reply=(body,status=200)=>route.fulfill({status,contentType:'application/json',headers:{'access-control-allow-origin':'*','access-control-allow-headers':'*'},body:JSON.stringify(body)});
-  try{
-   if(req.method()==='OPTIONS')return reply({});
-   if(/\/login$/.test(url.pathname)||(/\/users$/.test(url.pathname)&&req.method()==='POST')){
-    const name=req.method()==='GET'?url.searchParams.get('username'):req.postDataJSON().username;
-    return reply({objectId:name,username:name,sessionToken:`fake-token-${name}`,createdAt:'2026-10-25 19:00:00'});
-   }
-   assert.ok(url.pathname.includes('/classes/user_data'),'unexpected SDK route');
-   const auth=req.headers()['x-bmob-session-token'];
-   if(!auth&&req.method()==='GET'){const raw=JSON.parse(url.searchParams.get('where')||'{}'),where=Object.assign({},...(raw.$and||[raw]));assert.notEqual(where.key,'schedule-classes-v1','unauthenticated timetable query');return reply({results:[]});}
-   assert.ok(auth?.startsWith('fake-token-'),'SDK session missing');const owner=auth.slice('fake-token-'.length);
-   if(req.method()==='GET'){
-    const raw=JSON.parse(url.searchParams.get('where')||'{}'),where=Object.assign({},...(raw.$and||[raw]));assert.equal(where.userKey,owner,'query owner');
-    const selected=rows.filter(r=>r.userKey===where.userKey&&r.key===where.key),skip=Number(url.searchParams.get('skip')||0),limit=Number(url.searchParams.get('limit')||100);
-    return reply({results:selected.slice(skip,skip+limit)});
-   }
-   if(failUpload)return reply({code:100,error:'simulated upload unavailable'},503);
-   assert.ok(['POST','PUT'].includes(req.method()),'no deletes allowed');const data=req.postDataJSON();assert.equal(data.userKey,owner);assert.deepEqual(data.ACL,{[owner]:{read:true,write:true}});
-   const id=url.pathname.split('/').filter(Boolean).at(-1);let row;
-   if(req.method()==='PUT'){row=rows.find(r=>r.objectId===id);assert.equal(row?.userKey,owner);Object.assign(row,data);}else{row={...data,objectId:`device-${++seq}`,createdAt:'2026-10-25 19:00:00'};rows.push(row);}
-   writes.push({owner,key:data.key,method:req.method()});return reply({objectId:row.objectId,updatedAt:'2026-10-25 19:00:00'});
-  }catch(e){errors.push(e.message);return reply({error:'isolated test backend rejected request',code:400},400);}
+ await context.route('**/*',async route=>{
+  const req=route.request(),url=new URL(req.url());
+  if(origins.some(o=>new URL(o).origin===url.origin)&&['/auth','/cloud-data'].includes(url.pathname)){
+   try{const pending=[],request=new Request(url.href,{method:req.method(),headers:req.headers(),body:req.method()==='GET'?undefined:req.postDataBuffer()}),response=await (url.pathname==='/auth'?authHandler:cloudHandler)({env:backend.env,request,waitUntil:p=>pending.push(p)});await Promise.all(pending);await route.fulfill({status:response.status,headers:Object.fromEntries(response.headers),body:await response.text()});}catch(e){if(!/closed/i.test(e.message))errors.push(e.message);await route.abort().catch(()=>{});}return;
+  }
+  if(url.hostname==='api.bmobcloud.com'){errors.push('A browser request bypassed the shared device session service');return route.abort();}
+  if(origins.some(o=>new URL(o).origin===url.origin))return route.continue();return route.abort();
  });
  const page=await context.newPage();pages.push(page);page.on('pageerror',e=>errors.push(e.message));await page.goto(origins[index]+'#/timetable?tab=courses',{waitUntil:'domcontentloaded'});await page.getByRole('button',{name:'功能',exact:true}).waitFor();return {context,page};
 }
@@ -59,13 +44,21 @@ try{
  assert.equal((await saved(pc.page)).courses.length,2);assert.equal((await saved(phone.page)).courses.length,3);
  await pc.page.evaluate(()=>window.dispatchEvent(new Event('focus')));await pc.page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).courses.length===3,key);flows.push('separate origins merge local phone data and every historical cloud row');
  await add(phone.page,'手机新添加');await synced(phone.page);await pc.page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));await pc.page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).courses.some(c=>c.name==='手机新添加'),key);flows.push('already-open desktop refreshes on visibility change');
- await add(pc.page,'电脑新添加');await synced(pc.page);await phone.page.evaluate(()=>window.dispatchEvent(new Event('focus')));await synced(phone.page);assert.ok((await saved(phone.page)).courses.some(c=>c.name==='电脑新添加'));flows.push('desktop to phone background sync uses real SDK authentication and private ACL');
- failUpload=true;await add(phone.page,'断网上传保留');await phone.page.locator('.cs-page[data-sync-state="error"]').waitFor();assert.ok((await saved(phone.page)).courses.some(c=>c.name==='断网上传保留'));
- failUpload=false;await phone.page.getByRole('button',{name:'重试同步'}).click();await synced(phone.page);await pc.page.evaluate(()=>window.dispatchEvent(new Event('focus')));await pc.page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).courses.some(c=>c.name==='断网上传保留'),key);flows.push('failed upload remains local; retry reaches the other device');
+ await add(pc.page,'电脑新添加');await synced(pc.page);await phone.page.evaluate(()=>window.dispatchEvent(new Event('focus')));await synced(phone.page);assert.ok((await saved(phone.page)).courses.some(c=>c.name==='电脑新添加'));flows.push('desktop to phone background sync uses independent server sessions and private ACL');
+ backend.failUpload=true;await add(phone.page,'断网上传保留');await phone.page.locator('.cs-page[data-sync-state="error"]').waitFor();assert.ok((await saved(phone.page)).courses.some(c=>c.name==='断网上传保留'));
+ backend.failUpload=false;await phone.page.getByRole('button',{name:'重试同步'}).click();await synced(phone.page);await pc.page.evaluate(()=>window.dispatchEvent(new Event('focus')));await pc.page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).courses.some(c=>c.name==='断网上传保留'),key);flows.push('failed upload remains local; retry reaches the other device');
  await phone.page.screenshot({path:resolve(out,'mobile-synced.png')});await pc.context.close();await phone.context.close();
+ const simultaneousPC=await pageFor(0,{sdk:false,authed:false,local:payload('电脑原有记录')}),simultaneousPhone=await pageFor(1,{sdk:false,authed:false,local:payload('手机原有记录')});
+ await simultaneousPC.page.locator('.ag-fab-login').click();await login(simultaneousPC.page,uid);await synced(simultaneousPC.page);const pcToken=await simultaneousPC.page.evaluate(()=>JSON.parse(localStorage.getItem('voyra_session_v1')).deviceToken);
+ await simultaneousPhone.page.locator('.ag-fab-login').click();await login(simultaneousPhone.page,uid);await synced(simultaneousPhone.page);const phoneToken=await simultaneousPhone.page.evaluate(()=>JSON.parse(localStorage.getItem('voyra_session_v1')).deviceToken);assert.notEqual(pcToken,phoneToken);
+ await add(simultaneousPC.page,'手机登录后电脑仍可添加');await synced(simultaneousPC.page);await simultaneousPhone.page.evaluate(()=>window.dispatchEvent(new Event('focus')));await simultaneousPhone.page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).courses.some(c=>c.name==='手机登录后电脑仍可添加'),key);
+ await add(simultaneousPhone.page,'两端同时在线的手机新课');await synced(simultaneousPhone.page);await simultaneousPC.page.evaluate(()=>window.dispatchEvent(new Event('focus')));await simultaneousPC.page.waitForFunction(key=>JSON.parse(localStorage.getItem(key)).courses.some(c=>c.name==='两端同时在线的手机新课'),key);
+ await simultaneousPC.page.evaluate(()=>window.electronAPI.saveData('device-session-generic-qa',{records:[{sys:120,dia:80,note:'isolated-fixture'}]}));assert.equal((await simultaneousPhone.page.evaluate(()=>window.electronAPI.loadData('device-session-generic-qa'))).records[0].note,'isolated-fixture');await simultaneousPhone.page.evaluate(()=>window.electronAPI.saveData('device-session-generic-qa',{records:[{sys:121,dia:81,note:'phone-update'}]}));assert.equal((await simultaneousPC.page.evaluate(()=>window.electronAPI.loadData('device-session-generic-qa'))).records[0].note,'phone-update');await simultaneousPC.page.evaluate(()=>window.electronAPI.deleteData('device-session-generic-qa'));assert.equal(await simultaneousPhone.page.evaluate(()=>window.electronAPI.loadData('device-session-generic-qa')),null);flows.push('Generic account data including health payloads can create, read, update and delete through independently authenticated devices');
+ await simultaneousPhone.page.getByRole('button',{name:'账户',exact:true}).click();const loggedOut=simultaneousPhone.page.waitForResponse(r=>new URL(r.url()).pathname==='/auth'&&r.request().postDataJSON()?.action==='logout');await simultaneousPhone.page.getByRole('button',{name:'退出登录',exact:true}).click();await loggedOut;await add(simultaneousPC.page,'手机退出后电脑保持在线');await synced(simultaneousPC.page);assert.equal(await simultaneousPC.page.evaluate(()=>JSON.parse(localStorage.getItem('voyra_session_v1')).deviceToken),pcToken);assert.ok((await saved(simultaneousPhone.page)).courses.some(c=>c.name==='手机原有记录'));await simultaneousPC.context.close();await simultaneousPhone.context.close();
+ flows.push('Two real login forms get distinct device sessions; upstream token rotation cannot kick the first device, bidirectional timetable writes work, and single-device logout leaves the other device online');
  const missing=await pageFor(1,{sdk:false,local:payload('凭据失效保留')});await missing.page.getByRole('button',{name:'重新登录',exact:true}).waitFor();assert.ok((await saved(missing.page)).courses.length===1);await missing.page.getByRole('button',{name:'重新登录',exact:true}).click();await login(missing.page,uid);await synced(missing.page);assert.ok((await saved(missing.page)).courses.some(c=>c.name==='凭据失效保留'));flows.push('missing SDK session shows guidance; same-account login immediately uploads retained data');
  await missing.page.getByRole('button',{name:'账户',exact:true}).click();await missing.page.getByRole('button',{name:'退出登录',exact:true}).click();assert.ok((await saved(missing.page)).courses.length>0);assert.equal(await missing.page.evaluate(()=>localStorage.getItem('keep-health-backup')),'original');await missing.context.close();flows.push('logout preserves timetable, health data and backups');
  const expired=await pageFor(1,{expired:true,local:payload('过期保留')});assert.equal((await saved(expired.page)).courses[0].name,'过期保留');assert.equal(await expired.page.evaluate(()=>localStorage.getItem('keep-health-backup')),'original');await expired.context.close();flows.push('expired custom session preserves local records');
- const fresh=await pageFor(1,{sdk:false,authed:false,user:'new-sync-user',local:payload('注册前本机记录')});await fresh.page.locator('.ag-fab-login').click();await fresh.page.getByRole('button',{name:'注册一个',exact:true}).click();await fresh.page.locator('#agm-user').fill('new-sync-user');await fresh.page.locator('#agm-pass').fill('fake-password-123');await fresh.page.locator('#agm-confirm').fill('fake-password-123');await fresh.page.locator('.agm-submit').click();await synced(fresh.page);assert.ok(rows.some(r=>r.userKey==='new-sync-user'&&r.key==='schedule-classes-v1'));assert.equal(await fresh.page.evaluate(()=>JSON.parse(localStorage.getItem('bmob')).objectId),'new-sync-user');await fresh.context.close();flows.push('registration persists real SDK session before private cloud writes');
+ const fresh=await pageFor(1,{sdk:false,authed:false,user:'new-sync-user',local:payload('注册前本机记录')});await fresh.page.locator('.ag-fab-login').click();await fresh.page.getByRole('button',{name:'注册一个',exact:true}).click();await fresh.page.locator('#agm-user').fill('new-sync-user');await fresh.page.locator('#agm-pass').fill('fake-password-123');await fresh.page.locator('#agm-confirm').fill('fake-password-123');await fresh.page.locator('.agm-submit').click();await synced(fresh.page);assert.ok(rows.some(r=>r.userKey==='new-sync-user'&&r.key==='schedule-classes-v1'));assert.equal(await fresh.page.evaluate(()=>JSON.parse(localStorage.getItem('voyra_session_v1')).uid),'new-sync-user');assert.match(await fresh.page.evaluate(()=>JSON.parse(localStorage.getItem('voyra_session_v1')).deviceToken),/^[a-f0-9]{64}$/);assert.equal(await fresh.page.evaluate(()=>localStorage.getItem('bmob')),null);await fresh.context.close();flows.push('registration creates an independent device session before private cloud writes without caching passwords');
  assert.deepEqual(errors,[]);await mkdir(out,{recursive:true});await writeFile(resolve(out,'browser-report.json'),JSON.stringify({flows,errors,isolatedWrites:writes.length,sites:origins.map(u=>new URL(u).origin)},null,2));console.log(JSON.stringify({passed:true,flows,errors,isolatedWrites:writes.length}));
-}catch(error){console.log(JSON.stringify({errors,flows,pages:await Promise.all(pages.filter(p=>!p.isClosed()).map(async p=>({notice:await p.locator('.cs-sync-notice').allTextContents(),bar:await p.locator('.cs-sync-bar').allTextContents(),rows:rows.length})))}));throw error;}finally{await browser.close();await Promise.all(servers.map(s=>new Promise(r=>s.close(r))));}
+}catch(error){console.log(JSON.stringify({errors,flows,pages:await Promise.all(pages.filter(p=>!p.isClosed()).map(async p=>({notice:await p.locator('.cs-sync-notice').allTextContents(),bar:await p.locator('.cs-sync-bar').allTextContents(),rows:rows.length})))}));throw error;}finally{await browser.close();await Promise.all(servers.map(s=>new Promise(r=>s.close(r))));backend.close();}

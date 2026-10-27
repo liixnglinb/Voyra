@@ -3,7 +3,7 @@ import {mergeSchedule,unpackSchedule,sameSchedule} from './schedule-data.js';
 export const SCHEDULE_CLOUD_KEY='schedule-classes-v1';
 const DEVICE_KEY='voyra.schedule.device.v1';
 const normalError=error=>{
-  if(error?.code===209){const result=Error('登录凭据已过期，请重新登录后同步。本机课表已保留。');result.code='AUTH_REQUIRED';return result;}
+  if(['AUTH_REQUIRED','UPSTREAM_AUTH_REQUIRED',211].includes(error?.code)||([122,209].includes(Number(error?.code))&&/session|登录|expired|凭据/i.test(error?.message||error?.error||''))){const result=Error('请在任意一台设备验证账号，其他已登录设备会自动恢复同步。本机课表已保留。');result.code='AUTH_REQUIRED';return result;}
   if(error instanceof Error)return error;
   return Object.assign(Error(error?.error||error?.message||'云端暂时不可用，本机课表已保留。'),{code:error?.code});
 };

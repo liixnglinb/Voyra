@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Lock, UserRound, X, LogOut, ShieldCheck } from 'lucide-react';
 import { createAvatar } from '@dicebear/core';
 import * as pixelArt from '@dicebear/pixel-art';
-import { isAuthed, login, register, logout as doLogout, getSession, RETENTION_DAYS, SESSION_DAYS } from '../lib/auth';
+import { isAuthed, login, register, logout as doLogout, getSession, SESSION_DAYS } from '../lib/auth';
 
 /* ============================================================
    统一登录（日程中心 / 思维导图 / 宝宝护理 共用）
@@ -477,11 +477,11 @@ function LoginModal({ onClose, onSuccess }) {
             </div>
             <div className="agm-note-row">
               <span className="agm-no">02</span>
-              <p>超过 <b>{RETENTION_DAYS} 天</b>未登录，你的数据将被<b>自动删除</b>。</p>
+              <p>退出或重新登录不会清空本机课表、健康记录和备份。</p>
             </div>
             <div className="agm-note-row">
               <span className="agm-no">03</span>
-              <p>一次登录有效 <b>{SESSION_DAYS} 天</b>，到期后重新登录即可，数据不会丢失。</p>
+              <p>本机登录状态保留最多 <b>{SESSION_DAYS} 天</b>。手机和电脑可同时使用，在本机退出不影响其他设备；云端凭据失效时需要验证账号。</p>
             </div>
           </div>
         </div>

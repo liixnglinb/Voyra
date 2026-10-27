@@ -21,3 +21,12 @@ test('unrecognized routes cannot turn this function into an arbitrary proxy',asy
 test('network failure returns a retryable error without claiming that data was saved',async()=>{
   const response=await forwardOrigin(new Request('https://preview.example/share?id=ABC1234'),async()=>{throw Error('offline');});assert.equal(response.status,502);assert.equal((await response.json()).ok,false);
 });
+
+test('both device-session routes preserve bearer authentication, origin, body and no-store responses',async()=>{
+  for(const path of ['/auth','/cloud-data']){
+    const body=JSON.stringify({action:path==='/auth'?'logout':'list',key:'schedule-classes-v1'});
+    const result=await forwardOrigin(new Request('https://voyra-overseas.edgeone.dev'+path,{method:'POST',headers:{Origin:'https://voyra-overseas.edgeone.dev',Authorization:'Bearer isolated-device-token','Content-Type':'application/json'},body}),async(url,options)=>{
+      assert.equal(url,'https://voyra-121.pages.dev'+path);assert.equal(options.headers.get('Authorization'),'Bearer isolated-device-token');assert.equal(options.headers.get('Origin'),'https://voyra-overseas.edgeone.dev');assert.equal(new TextDecoder().decode(options.body),body);return Response.json({ok:true});
+    });assert.equal(result.status,200);assert.equal(result.headers.get('Cache-Control'),'no-store');
+  }
+});

@@ -1,5 +1,5 @@
 const ORIGIN='https://voyra-121.pages.dev';
-const route=/^(?:\/share\/?|\/s\/[A-Za-z0-9]{7}\/?|\/ocr\/?|\/(?:ac-api|bt-api|tm-api)\/latest\/?|\/prompt-admin\/verify\/?|\/modelflow\/api\/[a-z/-]+)$/;
+const route=/^(?:\/(?:auth|cloud-data)\/?|\/share\/?|\/s\/[A-Za-z0-9]{7}\/?|\/ocr\/?|\/(?:ac-api|bt-api|tm-api)\/latest\/?|\/prompt-admin\/verify\/?|\/modelflow\/api\/[a-z/-]+)$/;
 
 // The preview serves its static site locally while all existing API state remains in Cloudflare.
 // Preserve Origin and authentication: the proxy does not override the upstream access checks.

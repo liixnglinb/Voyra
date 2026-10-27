@@ -34,3 +34,9 @@
 /jsxsd-import.user.js
   Cache-Control: no-cache
   Content-Type: application/javascript; charset=utf-8
+
+/auth
+  Cache-Control: no-store
+
+/cloud-data
+  Cache-Control: no-store

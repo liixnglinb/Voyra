@@ -14,6 +14,7 @@
     "test:schedule": "node build-tools/verify-schedule-dialogs.mjs",
     "test:schedule:import:data": "node --test build-tools/schedule-import.test.mjs",
     "test:schedule:sync:data": "node --test build-tools/schedule-cloud.test.mjs",
+    "test:session:data": "node --test build-tools/device-sessions.test.mjs",
     "test:schedule:sync:ui": "node build-tools/verify-schedule-sync.mjs",
     "test:schedule:import:ui": "node build-tools/verify-schedule-import.mjs",
     "build:education": "node build-tools/build-education-helper.mjs",

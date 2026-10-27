@@ -3,21 +3,21 @@
    数据读写走 Bmob user_data 表（按用户隔离）。
    接口签名与原 electronAPI 一致，页面代码无需改动。
    ============================================================ */
-import Bmob, { currentUserId, USER_TABLE, BMOB_READY } from './lib/bmob';
+import { USER_TABLE, BMOB_READY } from './lib/bmob';
 import { currentUid } from './lib/auth';
+import { accountCloudQuery, ensureDeviceSession, sessionRequest } from './lib/device-session';
 import { createScheduleCloud, SCHEDULE_CLOUD_KEY } from './lib/schedule-cloud';
 
 const scheduleClouds=new Map();
 function scheduleCloud(expectedUid){
   const uid=currentUid();
   const assertCurrent=()=>{
-    const sdk=Bmob.User.current?.();
-    if(!uid||currentUid()!==uid||(expectedUid&&expectedUid!==uid)||String(sdk?.objectId||sdk?.id||'')!==String(uid)||!sdk?.sessionToken){
+    if(!uid||currentUid()!==uid||(expectedUid&&expectedUid!==uid)){
       const error=Error('请重新登录以恢复云端同步，本机课表已保留。');error.code='AUTH_REQUIRED';throw error;
     }
   };
   assertCurrent();
-  if(!scheduleClouds.has(uid))scheduleClouds.set(uid,createScheduleCloud({Bmob,uid,storage:localStorage,assertCurrent}));
+  if(!scheduleClouds.has(uid))scheduleClouds.set(uid,createScheduleCloud({Bmob:{Query:accountCloudQuery(uid)},uid,storage:localStorage,assertCurrent}));
   return scheduleClouds.get(uid);
 }
 
@@ -27,13 +27,13 @@ function ensureCloud() {
 }
 
 async function requireUid() {
-  // 登录体系：数据按登录账号隔离；未登录时回退本地 ID
-  const uid = currentUid() || currentUserId();
-  return uid || 'local-user';
+  const uid=currentUid();
+  if(!uid)throw Object.assign(Error('请登录后同步，本机数据已保留。'),{code:'AUTH_REQUIRED'});
+  return uid;
 }
 
 async function findRow(uid, key) {
-  const q = Bmob.Query(USER_TABLE);
+  const q = accountCloudQuery(uid)(USER_TABLE);
   q.equalTo('userKey', '==', uid);
   q.equalTo('key', '==', key);
   q.limit(1);
@@ -46,17 +46,12 @@ export async function saveData(key, value, options={}) {
   if(key===SCHEDULE_CLOUD_KEY)return scheduleCloud(options.uid).save(value);
   const uid = await requireUid();
   const row = await findRow(uid, key);
-  const q = Bmob.Query(USER_TABLE);
+  const q = accountCloudQuery(uid)(USER_TABLE);
   if (row && row.objectId) { q.set('id', row.objectId); }
   q.set('userKey', uid);
   q.set('key', key);
   q.set('value', JSON.stringify(value));
-  // 行级 ACL（2026-09-06 安全修复）：登录用户的数据仅本人可读写。
-  // SDK 无原生 ACL API，但 save() 会把 set 的字段原样透传到 REST（query.js saveData）。
-  // 未登录 local-user 行保持公开，访客只读不受影响。
-  if (uid !== 'local-user') {
-    q.set('ACL', { [uid]: { read: true, write: true } });
-  }
+  // The server sets account ownership and a private ACL from the verified device session.
   await q.save();
   return { ok: true };
 }
@@ -74,7 +69,7 @@ export async function deleteData(key) {
   ensureCloud();
   const uid = await requireUid();
   const row = await findRow(uid, key);
-  if (row && row.objectId) { const q = Bmob.Query(USER_TABLE); await q.destroy(row.objectId); }
+  if (row && row.objectId) { const token=await ensureDeviceSession(uid); await sessionRequest('/cloud-data',{action:'delete',key,objectId:row.objectId},token); }
   return { ok: true };
 }
 
