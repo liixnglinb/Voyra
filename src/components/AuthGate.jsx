@@ -395,8 +395,8 @@ function LoginModal({ onClose, onSuccess }) {
         await register(u, password);
         onSuccess('注册成功，已自动登录');
       }
-    } catch {
-      setError(mode === 'login' ? '登录失败：账号或密码不正确' : '注册失败：该账号可能已被注册');
+    } catch (error) {
+      setError(error?.code && error?.message ? error.message : '网络暂不可用，请稍后重试。本机数据已保留。');
     } finally {
       setBusy(false);
     }

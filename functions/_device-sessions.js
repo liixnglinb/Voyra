@@ -30,8 +30,8 @@ export async function upstream(env,path,method='GET',data=null,sessionToken='',q
  if(sessionToken)headers['X-Bmob-Session-Token']=sessionToken;
  const url=new URL(API+path);if(query)for(const [k,v]of Object.entries(query))url.searchParams.set(k,String(v));
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),10000);
- try{const response=await (typeof env.__fetch==='function'?env.__fetch:fetch)(url.href,{method,headers,body:body||undefined,signal:controller.signal,redirect:'error'});let result;try{result=await response.json();}catch{throw new ServiceError('UPSTREAM_UNAVAILABLE','云端响应异常，本机数据已保留。',502);}
-  if(!response.ok||result.error){const error=new ServiceError(result.code||'UPSTREAM_UNAVAILABLE',String(result.error||'云端暂不可用。'),502);throw error;}return result;
+ try{const response=await (typeof env.__fetch==='function'?env.__fetch:fetch)(url.href,{method,headers,body:body||undefined,signal:controller.signal,redirect:'manual'});if(response.status>=300&&response.status<400)throw new ServiceError('UPSTREAM_UNAVAILABLE','云端连接地址异常，本机数据已保留。',502);let result;try{result=await response.json();}catch{throw new ServiceError('UPSTREAM_UNAVAILABLE','云端响应异常，本机数据已保留。',502);}
+  if(!response.ok||result.error){const status=({101:401,202:409,122:403,211:401})[Number(result.code)]||(response.status>=400&&response.status<500?response.status:502);const error=new ServiceError(result.code||'UPSTREAM_UNAVAILABLE',String(result.error||'云端暂不可用。'),status);throw error;}return result;
  }catch(error){if(error instanceof ServiceError)throw error;throw new ServiceError('UPSTREAM_UNAVAILABLE','云端连接暂不可用，本机数据已保留。',502);}finally{clearTimeout(timer);}
 }
 export function bearer(request){const value=request.headers.get('Authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];if(!value)throw new ServiceError('AUTH_REQUIRED','请验证当前账号以恢复同步，本机数据已保留。',401);return value;}
